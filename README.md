@@ -306,7 +306,6 @@ Example structures for business, engineering, project management and educational
 | Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site//languages.html)             |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
-| Business               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processplant.html)         |
 | Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
 | Business               | [Software Development](https://atlasstructure.tiiny.site/softwaredev.html)        |
@@ -314,6 +313,7 @@ Example structures for business, engineering, project management and educational
 | Business               | [Web Design](https://atlasstructure.tiiny.site/webdesign.html)                  |
 | Construction           | [Environmental Remediation](https://atlasstructure.tiiny.site/envmgmt.html)   |
 | Construction           | [Factory Construction](https://atlasstructure.tiiny.site/processplant.html)        |
+| Construction               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
 | Research & Development | [Research Project](https://atlasstructure.tiiny.site/research.html)            |
 | Research & Development | [New Compound](https://atlasstructure.tiiny.site/compound.html)                |
 | MIL-STD-811F           | [Aircraft System](https://atlasstructure.tiiny.site/aircraft.html)             |
