@@ -21,10 +21,11 @@ The same data set can be leveraged in multiple structures, leaving the user free
 * **Analysts** can construct reports across structures for comparative and historical analysis.
 * **Generative AI Consumers** can structure GenAI output for human curation, research, and annotation
 * **Instructors** can distribute syllabus and other assets, and gather assets from **learners**, who can leverage it for structured notetaking aligning to a syllabus or learning plan, or independent learning
-* **Content Managers** can construct multiple views and hierarchies of content to provide persona-aligned navigation experiences
+* **Content Managers** can deliver re-imaged interfaces to legacy record systems, constructing persona-aligned navigation experiences
 * **Buy-side planners** can collect and report on assets from vendors, suppliers and distributors.
 * **UX designers** can quickly re-imagine legacy records and navigation experiences, using the Atlas backend to combine and enrich data from multiple sources.
 * **Consultants** can create flexible, semi-structured data sets and no-code UIs for comparative analysis.
+* **UX Designers** can create user-friendly rhizomatic data collection patterns, with progressive detail exposure
 
 ## User Types
 * **Structure Owner**: Add Collaborators, Structure and Structure Link CRUD, Export Structure
