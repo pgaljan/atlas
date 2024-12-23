@@ -289,7 +289,7 @@ Record {
 
 ## Reference and Mock Data Sets
 ### [Atlas Kickstarter](./AtlasKickstarter.xlsx)
-create a structure in excel, and preview its WBS numbering
+Create a structure in excel, preview its WBS numbering, and import it into the Atlas platform
 
 ### [Example Structures](./unitTestData/element/structureLibrary.csv)
-example structures for business, engineering, project management and educational use cases
+Example structures for business, engineering, project management and educational use cases
