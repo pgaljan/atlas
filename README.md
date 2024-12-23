@@ -302,8 +302,8 @@ Example structures for business, engineering, project management and educational
 |------------------------|-----------------------------|
 | Platform Test          | [Bicycle](https://atlasstructure.tiiny.site/bicycle.html)                     |
 | Platform Test          | [Bicycle for UI Sim](https://atlasstructure.tiiny.site/bicyclesim.html)          |
-| Platform Test          | [Depth Gauge](./unitTestData/expectedResults/depthGauge.html)                 |
-| Platform Test          | [Width Gauge](./unitTestData/expectedResults/widthGauge.html)                 |
+| Platform Test          | [Depth Gauge](https://atlasstructure.tiiny.site/depthGauge.html)                 |
+| Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site//languages.html)             |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
 | Business               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
