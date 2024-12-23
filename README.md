@@ -290,6 +290,7 @@ Record {
 ## Reference and Mock Data Sets
 ### Kickstarter
 Create a structure in excel, preview its WBS numbering, and import it into the Atlas platform
+
 [Download](./AtlasKickstarter.xlsx)
 
 ### Example Structures
@@ -299,30 +300,30 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
-| Platform Test          | [Bicycle](./sim/bicycle.html)                     |
-| Platform Test          | [Bicycle for UI Sim](./sim/bicyclesim.html)          |
+| Platform Test          | [Bicycle](https://atlasstructure.tiiny.site/bicycle.html)                     |
+| Platform Test          | [Bicycle for UI Sim](https://atlasstructure.tiiny.site/bicyclesim.html)          |
 | Platform Test          | [Depth Gauge](./unitTestData/expectedResults/depthGauge.html)                 |
 | Platform Test          | [Width Gauge](./unitTestData/expectedResults/widthGauge.html)                 |
-| Education              | [Human Languages](./sim//languages.html)             |
-| Business               | [Design/Build Project](./sim/designbuild.html)        |
-| Business               | [Production Platform](./sim/prodplatform.html)         |
-| Business               | [Process Improvement](./sim/processplant.html)         |
-| Business               | [Outsourcing Project](./sim/outsource.html)         |
-| Business               | [Software Development](./sim/softwaredev.html)        |
-| Business               | [Telecom](./sim/telecom.html)                    |
-| Business               | [Web Design](./sim/webdesign.html)                  |
-| Construction           | [Environmental Remediation](./sim/envmgmt.html)   |
-| Construction           | [Factory Construction](./sim/processplant.html)        |
-| Research & Development | [Research Project](./sim/research.html)            |
-| Research & Development | [New Compound](./sim/compound.html)                |
-| MIL-STD-811F           | [Aircraft System](./sim/aircraft.html)             |
-| MIL-STD-811F           | [Electronics/Avionics](./sim/avionics.html)        |
-| MIL-STD-811F           | [Missile/Ordnance](./sim/ordnance.html)            |
-| MIL-STD-811F           | [Strategic Missile System](./sim/sms.html)    |
-| MIL-STD-811F           | [Sea System](./sim/seasystem.html)                  |
-| MIL-STD-811F           | [Space System](./sim/spacesystem.html)                |
-| MIL-STD-811F           | [Ground Vehicle](./sim/groundvehicle.html)              |
-| MIL-STD-811F           | [Unmanned Maritime System](./sim/unmannedmaritime.html)    |
-| MIL-STD-811F           | [Launch Vehicle](./sim/launchvehicle.html)              |
-| MIL-STD-811F           | [Information/Business System](./sim/infosys.html) |
-| MIL-STD-811F           | [Sustainment](./sim/sustainment.html)                 |
+| Education              | [Human Languages](https://atlasstructure.tiiny.site//languages.html)             |
+| Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
+| Business               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
+| Business               | [Process Improvement](https://atlasstructure.tiiny.site/processplant.html)         |
+| Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
+| Business               | [Software Development](https://atlasstructure.tiiny.site/softwaredev.html)        |
+| Business               | [Telecom](https://atlasstructure.tiiny.site/telecom.html)                    |
+| Business               | [Web Design](https://atlasstructure.tiiny.site/webdesign.html)                  |
+| Construction           | [Environmental Remediation](https://atlasstructure.tiiny.site/envmgmt.html)   |
+| Construction           | [Factory Construction](https://atlasstructure.tiiny.site/processplant.html)        |
+| Research & Development | [Research Project](https://atlasstructure.tiiny.site/research.html)            |
+| Research & Development | [New Compound](https://atlasstructure.tiiny.site/compound.html)                |
+| MIL-STD-811F           | [Aircraft System](https://atlasstructure.tiiny.site/aircraft.html)             |
+| MIL-STD-811F           | [Electronics/Avionics](https://atlasstructure.tiiny.site/avionics.html)        |
+| MIL-STD-811F           | [Missile/Ordnance](https://atlasstructure.tiiny.site/ordnance.html)            |
+| MIL-STD-811F           | [Strategic Missile System](https://atlasstructure.tiiny.site/sms.html)    |
+| MIL-STD-811F           | [Sea System](https://atlasstructure.tiiny.site/seasystem.html)                  |
+| MIL-STD-811F           | [Space System](https://atlasstructure.tiiny.site/spacesystem.html)                |
+| MIL-STD-811F           | [Ground Vehicle](https://atlasstructure.tiiny.site/groundvehicle.html)              |
+| MIL-STD-811F           | [Unmanned Maritime System](https://atlasstructure.tiiny.site/unmannedmaritime.html)    |
+| MIL-STD-811F           | [Launch Vehicle](https://atlasstructure.tiiny.site/launchvehicle.html)              |
+| MIL-STD-811F           | [Information/Business System](https://atlasstructure.tiiny.site/infosys.html) |
+| MIL-STD-811F           | [Sustainment](https://atlasstructure.tiiny.site/sustainment.html)                 |
