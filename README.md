@@ -14,6 +14,7 @@ The front-end is paired with a simple, flexible and scalable multi-user key/valu
 The same data set can be leveraged in multiple structures, leaving the user free to create multiple structures of the same library. The links between each element in the renderer can carry its own attributes, allowing for dynamic re-representation, aggregation, and summarization of data based on the rendered view.  This allows visual and quantitative comparison based on the relationships defined by the user in the renderer. 
 
 ###### example implementation
+
 ![map](./img/author-atlas.drawio.png)
 
 # Use Cases
@@ -27,12 +28,7 @@ The same data set can be leveraged in multiple structures, leaving the user free
 * **Consultants** can create flexible, semi-structured data sets and no-code UIs for comparative analysis.
 * **UX Designers** can create user-friendly rhizomatic data collection patterns, with progressive detail exposure.
 
-## User Types
-* **Structure Owner**: Add Collaborators, Structure and Structure Link CRUD, Export Structure
-* **Structure Editor**: Edit Structure Map and Records
-* **Structure Commenter**:  Browse and comment on structure map and records
-* **Structure Viewer**: Browse structure map and records
-* **Instance Admininstrator**:  Instance CRUD, Structure Owner CRUD 
+
 
 # Architecture
 
@@ -285,6 +281,14 @@ Record {
 }
 ```
 
+## User Roles
+
+* **Structure Owner**: Add Collaborators, Structure and Structure Link CRUD, Export Structure
+* **Structure Editor**: Edit Structure Map and Records
+* **Structure Commenter**:  Browse and comment on structure map and records
+* **Structure Viewer**: Browse structure map and records
+* **Instance Admininstrator**:  Instance CRUD, Structure Owner CRUD 
+  
 ## Reference and Mock Data Sets
 
 ### Kickstarter
