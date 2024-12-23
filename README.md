@@ -308,6 +308,8 @@ Example structures for business, engineering, project management and educational
 | Platform Test          | [Depth Gauge](https://atlasstructure.tiiny.site/depthGauge.html)                 |
 | Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
+| Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
+| Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processplant.html)         |
 | Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
