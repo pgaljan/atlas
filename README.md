@@ -299,30 +299,30 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
-| Platform Test          | Bicycle                     |
-| Platform Test          | Bicycle for UI Sim          |
+| Platform Test          | [Bicycle](./sim/bicycle.html)                     |
+| Platform Test          | [Bicycle for UI Sim](./sim/bicyclesim.html)          |
 | Platform Test          | [Depth Gauge](./unitTestData/expectedResults/depthGauge.html)                 |
 | Platform Test          | [Width Gauge](./unitTestData/expectedResults/widthGauge.html)                 |
-| Education              | Human Languages             |
-| Business               | Design/Build Project        |
-| Business               | Production Platform         |
-| Business               | Process Improvement         |
-| Business               | Outsourcing Project         |
-| Business               | Software Development        |
-| Business               | Telecom                     |
-| Business               | Web Design                  |
-| Construction           | Environmental Remediation   |
-| Construction           | Factory Construction        |
-| Research & Development | Research Project            |
-| Research & Development | New Compound                |
-| MIL-STD-811F           | Aircraft System             |
-| MIL-STD-811F           | Electronics/Avionics        |
-| MIL-STD-811F           | Missile/Ordnance            |
-| MIL-STD-811F           | Strategic Missile System    |
-| MIL-STD-811F           | Sea System                  |
-| MIL-STD-811F           | Space System                |
-| MIL-STD-811F           | Ground Vehicle              |
-| MIL-STD-811F           | Unmanned Maritime System    |
-| MIL-STD-811F           | Launch Vehicle              |
-| MIL-STD-811F           | Information/Business System |
-| MIL-STD-811F           | Sustainment                 |
+| Education              | [Human Languages](./sim//languages.html)             |
+| Business               | [Design/Build Project](./sim/designbuild.html)        |
+| Business               | [Production Platform](./sim/prodplatform.html)         |
+| Business               | [Process Improvement](./sim/processplant.html)         |
+| Business               | [Outsourcing Project](./sim/outsource.html)         |
+| Business               | [Software Development](./sim/softwaredev.html)        |
+| Business               | [Telecom](./sim/telecom.html)                    |
+| Business               | [Web Design](./sim/webdesign.html)                  |
+| Construction           | [Environmental Remediation](./sim/envmgmt.html)   |
+| Construction           | [Factory Construction](./sim/processplant.html)        |
+| Research & Development | [Research Project](./sim/research.html)            |
+| Research & Development | [New Compound](./sim/compound.html)                |
+| MIL-STD-811F           | [Aircraft System](./sim/aircraft.html)             |
+| MIL-STD-811F           | [Electronics/Avionics](./sim/avionics.html)        |
+| MIL-STD-811F           | [Missile/Ordnance](./sim/ordnance.html)            |
+| MIL-STD-811F           | [Strategic Missile System](./sim/sms.html)    |
+| MIL-STD-811F           | [Sea System](./sim/seasystem.html)                  |
+| MIL-STD-811F           | [Space System](./sim/spacesystem.html)                |
+| MIL-STD-811F           | [Ground Vehicle](./sim/groundvehicle.html)              |
+| MIL-STD-811F           | [Unmanned Maritime System](./sim/unmannedmaritime.html)    |
+| MIL-STD-811F           | [Launch Vehicle](./sim/launchvehicle.html)              |
+| MIL-STD-811F           | [Information/Business System](./sim/infosys.html) |
+| MIL-STD-811F           | [Sustainment](./sim/sustainment.html)                 |
