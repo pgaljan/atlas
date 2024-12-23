@@ -334,24 +334,27 @@ Example structures for business, engineering, project management and educational
 | MIL-STD-811F           | [Sustainment](https://atlasstructure.tiiny.site/sustainment.html)                 |
 
 ## Editions
+
+🅿️ - Prototype Feature
+
 |   | Personal | Educator | Analyst | Business |
 | -----: | :-----: | :-----: | :-----: | :-----: |
 | price | free | $ | $$ | $$$|
-| Structures[🅿️](./drawio/phase1.png) | 5 | 50 | unlimited | unlimited |
+| Structures🅿️ | 5 | 50 | unlimited | unlimited |
 | Collaborators |  | 500 | unlimited | unlimited |
 | Storage & Transfer* | 100 MiB | 1 GiB | 10 GiB | 100 GiB | 
-| Visual structure map[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ | 
+| Visual structure map🅿️ | ✅ | ✅ | ✅ | ✅ | 
 | Passwordless login   | ✅ | ✅ | ✅ | ✅ |
-| Rich Text Annotation[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ |
-| Import from Excel[🅿️](./drawio/phase1.png)  | ✅ | ✅ | ✅ | ✅ |
-| Export to html, md[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ |
+| Rich Text Annotation🅿️ | ✅ | ✅ | ✅ | ✅ |
+| Import from Excel🅿️  | ✅ | ✅ | ✅ | ✅ |
+| Export to html, md🅿️ | ✅ | ✅ | ✅ | ✅ |
 |**Document Editing**   |
-| Math Typesetting (KaTeX)[🖼️](./drawio/katex.png)|  | ✅ | ✅ | ✅ |
+| Math Typesetting (KaTeX)|  | ✅ | ✅ | ✅ |
 | File/Image Hosting |  |  | ✅ | ✅ |
 | AI Assistant |  |  | ✅ | ✅ |
 | Full Document Formatting |  |  | ✅ | ✅ | 
 |**Structure Management**   |
-| Structure Backup/Restore[🅿️](./drawio/phase1.png) |  | ✅ | ✅ | ✅ |
+| Structure Backup/Restore🅿️ |  | ✅ | ✅ | ✅ |
 | Structure marketplace |  | ✅ | ✅ | ✅ |
 | Custom Records  |  |  | ✅ | ✅ |
 | Object Tagging |  |  | ✅ | ✅ |
@@ -369,7 +372,7 @@ Example structures for business, engineering, project management and educational
 | @Mentions and Comments |  |  |  | ✅ |
 | Tasks and Planner |  |  |  | ✅ |
 | Survey Module |  |  |  | ✅ |
-| Dynamic WBS[🅿️](./drawio/phase1.png) |  |  |  | ✅ |
+| Dynamic WBS🅿️ |  |  |  | ✅ |
 | Proposal Builder |  |  |  | ✅ |
 | Custom Template |  |  |  | ✅ |
 | Custom Tooltips |  |  |  | ✅ |
