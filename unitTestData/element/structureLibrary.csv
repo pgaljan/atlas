@@ -1,0 +1,2355 @@
+﻿dataset,level,element
+Aircraft System,1,WBS for MIL-STD-811f Appendix A: Aircraft System
+Aircraft System,2,Aircraft System
+Aircraft System,2,Air Vehicle
+Aircraft System,3,Air Vehicle Integration
+Aircraft System,3,Air Frame
+Aircraft System,4,Airframe Integration
+Aircraft System,4,Fuselage
+Aircraft System,4,Wing
+Aircraft System,4,Empennage
+Aircraft System,4,Nacelle
+Aircraft System,4,Other Airframe Components 1…n (Specify)
+Aircraft System,3,Propulsion
+Aircraft System,3,Vehicle Subsystems
+Aircraft System,4,Vehicle Subsystem Integration
+Aircraft System,4,Flight Control Subsystem
+Aircraft System,4,Auxiliary Power Subsystem
+Aircraft System,4,Hydraulic Subsystem
+Aircraft System,4,Electrical Subsystem
+Aircraft System,4,Crew Station Subsystem
+Aircraft System,4,Environmental Control Subsystem
+Aircraft System,4,Fuel Subsystem
+Aircraft System,4,Landing Gear
+Aircraft System,4,Rotor Group
+Aircraft System,4,Drive Group
+Aircraft System,4,Vehicle Subsystem Software Release 1...n (Specify)
+Aircraft System,4,Other Subsystems 1...n (Specify)
+Aircraft System,3,Avionics
+Aircraft System,4,Avionics Integration
+Aircraft System,4,Communication/Identification
+Aircraft System,4,Navigation/Guidance
+Aircraft System,4,Mission Computer/Processing
+Aircraft System,4,Fire Control
+Aircraft System,4,Data Display and Controls
+Aircraft System,4,Survivability
+Aircraft System,4,Reconnaissance
+Aircraft System,4,Electronic Warfare
+Aircraft System,4,Automatic Flight Control
+Aircraft System,4,Health Monitoring System
+Aircraft System,4,Stores Management
+Aircraft System,4,Avionics Software Release 1...n (Specify)
+Aircraft System,4,Other Avionics Subsystems 1...n (Specify)
+Aircraft System,3,Armament/Weapons Delivery
+Aircraft System,3,Auxiliary Equipment
+Aircraft System,3,Furnishings and Equipment
+Aircraft System,3,Air Vehicle Software Release 1...n (Specify)
+Aircraft System,3,Other Air Vehicle 1...n (Specify)
+Aircraft System,2,Payload/Mission System
+Aircraft System,3,Payload Integration
+Aircraft System,3,Survivability Payload 1...n (Specify)
+Aircraft System,3,Reconnaissance Payload 1...n (Specify)
+Aircraft System,3,Electronic Warfare Payload 1...n (Specify)
+Aircraft System,3,Armament/Weapons Delivery Payload 1...n (Specify)
+Aircraft System,3,Payload Software Release 1...n (Specify)
+Aircraft System,3,Other Payload 1...n (Specify)
+Aircraft System,2,Ground/Host Segment
+Aircraft System,3,Ground Segment Integration
+Aircraft System,3,Ground Control Systems
+Aircraft System,3,Command and Control Subsystem
+Aircraft System,3,Launch Equipment
+Aircraft System,3,Recovery Equipment
+Aircraft System,3,Transport Vehicles
+Aircraft System,3,Ground Segment Software Release 1...n (Specify)
+Aircraft System,3,Other Ground/Host Segment 1...n (Specify)
+Aircraft System,2,Aircraft System Software Release 1...n (Specify)
+Aircraft System,2,Systems Engineering
+Aircraft System,3,Software Systems Engineering
+Aircraft System,3,Integrated Logistics Support (ILS) Systems Engineering
+Aircraft System,3,Cybersecurity Systems Engineering
+Aircraft System,3,Core Systems Engineering
+Aircraft System,3,Other Systems Engineering 1...n (Specify)
+Aircraft System,2,Program Management
+Aircraft System,3,Software Program Management
+Aircraft System,3,Integrated Logistics Support (ILS) Program Management
+Aircraft System,3,Cybersecurity Management
+Aircraft System,3,Core Program Management
+Aircraft System,3,Other Program Management 1...n (Specify)
+Aircraft System,2,System Test and Evaluation
+Aircraft System,3,Developmental Test and Evaluation
+Aircraft System,4,System Acceptance Test
+Aircraft System,4,Wind Tunnel Tests
+Aircraft System,4,Structural Tests
+Aircraft System,4,Flight Tests
+Aircraft System,4,Ground Tests
+Aircraft System,4,Cybersecurity Test and Evaluation
+Aircraft System,4,Other DT&E Tests 1…n (Specify)
+Aircraft System,3,Operational Test and Evaluation
+Aircraft System,4,Limited User Evaluation (LUE/M-LUT/FUE)
+Aircraft System,4,Interoperability Testing
+Aircraft System,4,Flight Tests
+Aircraft System,4,Ground Tests
+Aircraft System,4,Cybersecurity Test and Evaluation
+Aircraft System,4,Other OT&E Tests 1…n (Specify)
+Aircraft System,3,Live Fire Test and Evaluation
+Aircraft System,3,Mock-ups/System Integration Labs (SILs)
+Aircraft System,3,Test and Evaluation Support
+Aircraft System,3,Test Facilities
+Aircraft System,2,Training
+Aircraft System,3,Equipment
+Aircraft System,4,Operator Instructional Equipment
+Aircraft System,4,Maintainer Instructional Equipment
+Aircraft System,4,Services
+Aircraft System,4,Operator Instructional Services
+Aircraft System,4,Maintainer Instructional Services
+Aircraft System,3,Facilities
+Aircraft System,3,Training Software 1...n (Specify)
+Aircraft System,2,Data
+Aircraft System,3,Data Deliverables 1...n (Specify)
+Aircraft System,3,Data Repository
+Aircraft System,3,Data Rights 1...n (Specify)
+Aircraft System,2,Peculiar Support Equipment
+Aircraft System,3,Test and Measurement Equipment
+Aircraft System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Aircraft System,4,Test and Measurement Equipment (Propulsion)
+Aircraft System,4,Test and Measurement Equipment (Electronics/Avionics)
+Aircraft System,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Aircraft System,3,Support and Handling Equipment
+Aircraft System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Aircraft System,4,Support and Handling Equipment (Propulsion)
+Aircraft System,4,Support and Handling Equipment (Electronics/Avionics)
+Aircraft System,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Aircraft System,2,Common Support Equipment
+Aircraft System,3,Test and Measurement Equipment
+Aircraft System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Aircraft System,4,Test and Measurement Equipment (Propulsion)
+Aircraft System,4,Test and Measurement Equipment (Electronics/Avionics)
+Aircraft System,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Aircraft System,3,Support and Handling Equipment
+Aircraft System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Aircraft System,4,Support and Handling Equipment (Propulsion)
+Aircraft System,4,Support and Handling Equipment (Electronics/Avionics)
+Aircraft System,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Aircraft System,2,Operational/Site Activation by Site 1...n (Specify)
+Aircraft System,3,System Assembly
+Aircraft System,3,Contractor Technical Support
+Aircraft System,3,Site Construction
+Aircraft System,3,Site/Ship/Vehicle Conversion
+Aircraft System,3,Interim Contractor Support (ICS)
+Aircraft System,2,Contractor Logistics Support (CLS)
+Aircraft System,2,Industrial Facilities
+Aircraft System,3,Construction/Conversion/Expansion
+Aircraft System,3,Equipment Acquisition or Modernization
+Aircraft System,3,Maintenance (Industrial Facilities)
+Aircraft System,2,Initial Spares and Repair Parts
+Bicycle,1,WBS for Bicycle
+Bicycle,2,Frame Set
+Bicycle,3,Frame
+Bicycle,3,Handlebar
+Bicycle,3,Fork
+Bicycle,3,Seat
+Bicycle,2,Crank Set
+Bicycle,2,Wheels
+Bicycle,3,Front Wheel
+Bicycle,3,Rear Wheel
+Bicycle,2,Braking System
+Bicycle,2,Shifting System
+Bicycle,2,Integration
+Bicycle,3,Concept
+Bicycle,3,Design
+Bicycle,3,Assembly
+Bicycle,3,Testing
+Bicycle,4,Component Test
+Bicycle,4,Product Test
+Bicycle,4,Customer Test
+Bicycle,2,Project Management
+Bicycle for UI Sim,1,WBS for Bicycle UI Simulation
+Bicycle for UI Sim,2,Frame Set
+Bicycle for UI Sim,3,Frame
+Bicycle for UI Sim,3,Handlebar
+Bicycle for UI Sim,3,Fork
+Bicycle for UI Sim,3,Seat
+Bicycle for UI Sim,2,Crank Set
+Bicycle for UI Sim,2,Wheels
+Bicycle for UI Sim,3,Front Wheel
+Bicycle for UI Sim,3,Rear Wheel
+Bicycle for UI Sim,2,Braking System
+Bicycle for UI Sim,2,Shifting System
+Bicycle for UI Sim,2,Integration
+Bicycle for UI Sim,3,Concept
+Bicycle for UI Sim,3,Design
+Bicycle for UI Sim,3,Assembly
+Bicycle for UI Sim,3,Testing
+Bicycle for UI Sim,4,Component Test RFP
+Bicycle for UI Sim,5,Mechanical Engineer
+Bicycle for UI Sim,6,mechEngrL4_JD.docx
+Bicycle for UI Sim,5,Industrial Designer
+Bicycle for UI Sim,5,Materials Scientist
+Bicycle for UI Sim,6,acme_SOW.docx
+Bicycle for UI Sim,6,acme_quote.xlsx
+Bicycle for UI Sim,5,Prototypes
+Bicycle for UI Sim,6,supplierA.xlsx
+Bicycle for UI Sim,6,supplierB.xlsx
+Bicycle for UI Sim,5,Test Engineer
+Bicycle for UI Sim,5,ComponentTestPlan.docx
+Bicycle for UI Sim,5,ProtoBreakdown.xlsx
+Bicycle for UI Sim,4,Product Test
+Bicycle for UI Sim,5,Product Test Engineer
+Bicycle for UI Sim,5,Mechanical Engineer
+Bicycle for UI Sim,4,Customer Test
+Bicycle for UI Sim,5,Product Test Engineer
+Bicycle for UI Sim,5,User Testing
+Bicycle for UI Sim,2,Project Management
+Bicycle for UI Sim,3,Testing
+Bicycle for UI Sim,4,Project Manager
+Electronics/Avionics,1,WBS for MIL-STD-811f Appendix B: Electronics/Avionics/Generic Systems
+Electronics/Avionics,2,Prime Mission Product (PMP) 1...n (Specify)
+Electronics/Avionics,3,PMP Integration
+Electronics/Avionics,3,PMP Subsystem 1...n (Specify)
+Electronics/Avionics,4,Subsystem Integration
+Electronics/Avionics,4,Subsystem Hardware 1...n (Specify)
+Electronics/Avionics,4,Subsystem Software Release 1...n (Specify)
+Electronics/Avionics,3,PMP Software Release 1...n (Specify)
+Electronics/Avionics,4,Computer Software Configuration Item (CSCI) 1...n (Specify)
+Electronics/Avionics,4,PMP Software Integration
+Electronics/Avionics,2,Platform Integration
+Electronics/Avionics,2,Systems Engineering
+Electronics/Avionics,3,Software Systems Engineering
+Electronics/Avionics,3,Integrated Logistics Support (ILS) Systems Engineering
+Electronics/Avionics,3,Cybersecurity Systems Engineering
+Electronics/Avionics,3,Core Systems Engineering
+Electronics/Avionics,3,Other Systems Engineering 1...n (Specify)
+Electronics/Avionics,2,Program Management
+Electronics/Avionics,3,Software Program Management
+Electronics/Avionics,3,Integrated Logistics Support (ILS) Program Management
+Electronics/Avionics,3,Cybersecurity Management
+Electronics/Avionics,3,Core Program Management
+Electronics/Avionics,3,Other Program Management 1...n (Specify)
+Electronics/Avionics,2,System Test and Evaluation
+Electronics/Avionics,3,Developmental Test and Evaluation
+Electronics/Avionics,4,Engineering Development Test
+Electronics/Avionics,4,System Qualification Test
+Electronics/Avionics,4,Cybersecurity Test and Evaluation
+Electronics/Avionics,4,Other DT&E Tests 1…n (Specify)
+Electronics/Avionics,3,Operational Test and Evaluation
+Electronics/Avionics,4,Cybersecurity Test and Evaluation
+Electronics/Avionics,4,Other OT&E Tests 1…n (Specify) 
+Electronics/Avionics,3,Live Fire Test and Evaluation
+Electronics/Avionics,3,Mock-ups/System Integration Labs (SILs)
+Electronics/Avionics,3,Test and Evaluation Support
+Electronics/Avionics,3,Test Facilities
+Electronics/Avionics,2,Training
+Electronics/Avionics,3,Equipment
+Electronics/Avionics,4,Operator Instructional Equipment
+Electronics/Avionics,4,Maintainer Instructional Equipment
+Electronics/Avionics,3,Services
+Electronics/Avionics,4,Operator Instructional Services
+Electronics/Avionics,4,Maintainer Instructional Services
+Electronics/Avionics,3,Facilities
+Electronics/Avionics,3,Training Software 1...n (Specify)
+Electronics/Avionics,2,Data
+Electronics/Avionics,3,Data Deliverables 1...n (Specify)
+Electronics/Avionics,3,Data Repository
+Electronics/Avionics,3,Data Rights 1...n (Specify)
+Electronics/Avionics,2,Peculiar Support Equipment
+Electronics/Avionics,3,Test and Measurement Equipment
+Electronics/Avionics,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Electronics/Avionics,4,Test and Measurement Equipment (Propulsion)
+Electronics/Avionics,4,Test and Measurement Equipment (Electronics/Avionics)
+Electronics/Avionics,4,Test and Measurement Equipment (Other Major Subsystems 1...n) (Specify))
+Electronics/Avionics,3,Support and Handling Equipment
+Electronics/Avionics,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Electronics/Avionics,4,Support and Handling Equipment (Propulsion)
+Electronics/Avionics,4,Support and Handling Equipment (Electronics/Avionics)
+Electronics/Avionics,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Electronics/Avionics,2,Common Support Equipment
+Electronics/Avionics,3,Test and Measurement Equipment
+Electronics/Avionics,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Electronics/Avionics,4,Test and Measurement Equipment (Propulsion)
+Electronics/Avionics,4,Test and Measurement Equipment (Electronics/Avionics)
+Electronics/Avionics,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Electronics/Avionics,3,Support and Handling Equipment
+Electronics/Avionics,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Electronics/Avionics,4,Support and Handling Equipment (Propulsion)
+Electronics/Avionics,4,Support and Handling Equipment (Electronics/Avionics)
+Electronics/Avionics,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Electronics/Avionics,2,Operational/Site Activation by Site 1...n (Specify)
+Electronics/Avionics,3,System Assembly
+Electronics/Avionics,3,Contractor Technical Support 
+Electronics/Avionics,3,Site Construction 
+Electronics/Avionics,3,Site /Ship/Vehicle Conversion
+Electronics/Avionics,3,Interim Contractor Support (ICS)
+Electronics/Avionics,2,Contractor Logistics Support (CLS)
+Electronics/Avionics,2,Industrial Facilities
+Electronics/Avionics,3,Construction/Conversion/Expansion
+Electronics/Avionics,3,Equipment Acquisition or Modernization
+Electronics/Avionics,3,Maintenance (Industrial Facilities)
+Electronics/Avionics,2,Initial Spares and Repair Parts
+Missile/Ordnance,1,WBS for MIL-STD-811f Appendix C: Missile/Ordnance System
+Missile/Ordnance,2,Missile/Ordnance System Integration
+Missile/Ordnance,2,Air Vehicle/Munition
+Missile/Ordnance,3,Air Vehicle/Munition Integration
+Missile/Ordnance,3,Airframe
+Missile/Ordnance,4,Airframe Integration
+Missile/Ordnance,4,Primary Structure
+Missile/Ordnance,4,Secondary Structure
+Missile/Ordnance,4,Aero-Structures
+Missile/Ordnance,4,Other Airframe Components 1...n (Specify)
+Missile/Ordnance,3,Propulsion Subsystem 1...n (Specify)
+Missile/Ordnance,4,Propulsion Integration
+Missile/Ordnance,4,Motor/Engine (Specify)
+Missile/Ordnance,4,Fuel Management
+Missile/Ordnance,4,Thrust Vector Actuation
+Missile/Ordnance,4,Attitude Control System
+Missile/Ordnance,4,Arm/Fire Device
+Missile/Ordnance,4,Flight Termination/Mission Termination
+Missile/Ordnance,4,Propulsion Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Propulsion Subsystems 1...n (Specify)
+Missile/Ordnance,3,Power and Distribution
+Missile/Ordnance,4,Power and Distribution Integration
+Missile/Ordnance,4,Primary Power
+Missile/Ordnance,4,Power Conditioning Electronics
+Missile/Ordnance,4,Distribution Harness
+Missile/Ordnance,4,Power and Distribution Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Power and Distribution Subsystems 1...n (Specify)
+Missile/Ordnance,3,Guidance
+Missile/Ordnance,4,Guidance Integration
+Missile/Ordnance,4,Dome Assembly
+Missile/Ordnance,4,Seeker Assemblies
+Missile/Ordnance,4,Mission Computer
+Missile/Ordnance,4,Guidance Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Guidance Subsystems 1...n (Specify)
+Missile/Ordnance,3,Navigation
+Missile/Ordnance,4,Navigation Integration
+Missile/Ordnance,4,Sensor Assemblies
+Missile/Ordnance,4,Navigation Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Navigation Subsystems 1...n (Specify)
+Missile/Ordnance,3,Controls
+Missile/Ordnance,4,Controls Integration
+Missile/Ordnance,4,Primary Structure
+Missile/Ordnance,4,Fin/Canard Deployment System
+Missile/Ordnance,4,Actuators
+Missile/Ordnance,4,Control Power
+Missile/Ordnance,4,Controls Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Control Subsystems 1...n (Specify)
+Missile/Ordnance,3,Communications
+Missile/Ordnance,4,Communications Integration
+Missile/Ordnance,4,Antenna Assembly
+Missile/Ordnance,4,Transmitter
+Missile/Ordnance,4,Receiver
+Missile/Ordnance,4,Communications Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Communications Subsystems 1...n (Specify)
+Missile/Ordnance,3,Payload
+Missile/Ordnance,4,Payload Integration
+Missile/Ordnance,4,Target Defeat Mechanism
+Missile/Ordnance,4,Target Detection Device
+Missile/Ordnance,4,Fuze
+Missile/Ordnance,4,Payload Software Release 1...n (Specify)
+Missile/Ordnance,4,Other Payload Subsystems 1...n (Specify)
+Missile/Ordnance,3,On Board Test Equipment
+Missile/Ordnance,3,On Board Training Equipment
+Missile/Ordnance,3,Auxiliary Equipment
+Missile/Ordnance,3,Air Vehicle Software Release 1...n (Specify)
+Missile/Ordnance,2,Encasement Device
+Missile/Ordnance,3,Encasement Device Integration
+Missile/Ordnance,3,Encasement Device Structure
+Missile/Ordnance,3,Encasement Device Software Release 1...n (Specify)
+Missile/Ordnance,3,Other Encasement Device Subsystems 1...n (Specify)
+Missile/Ordnance,2,Command and/or Launch
+Missile/Ordnance,3,Command and/or Launch Integration
+Missile/Ordnance,3,Surveillance
+Missile/Ordnance,3,Communications
+Missile/Ordnance,3,Launcher
+Missile/Ordnance,3,Adapter Kits
+Missile/Ordnance,3,Launch and Guidance Control
+Missile/Ordnance,3,Ready Magazine
+Missile/Ordnance,3,Auxiliary Equipment
+Missile/Ordnance,3,Command and/or Launch Software Release 1...n (Specify)
+Missile/Ordnance,3,Other Command and/or Launch 1...n (Specify)
+Missile/Ordnance,2,Missile/Ordnance System Software Release 1...n (Specify)
+Missile/Ordnance,2,Platform Integration
+Missile/Ordnance,2,Systems Engineering
+Missile/Ordnance,3,Software Systems Engineering
+Missile/Ordnance,3,Integrated Logistics Support (ILS) Systems Engineering
+Missile/Ordnance,3,Cybersecurity Systems Engineering
+Missile/Ordnance,3,Core Systems Engineering
+Missile/Ordnance,3,Other Systems Engineering 1...n (Specify)
+Missile/Ordnance,2,Program Management
+Missile/Ordnance,3,Software Program Management
+Missile/Ordnance,3,Integrated Logistics Support (ILS) Program Management
+Missile/Ordnance,3,Cybersecurity Management
+Missile/Ordnance,3,Core Program Management
+Missile/Ordnance,3,Other Program Management 1...n (Specify)
+Missile/Ordnance,2,System Test and Evaluation
+Missile/Ordnance,3,Developmental Test and Evaluation
+Missile/Ordnance,4,Engineering Development Test
+Missile/Ordnance,4,System Qualification Test
+Missile/Ordnance,4,Test Instrumentation Kits (TIK)
+Missile/Ordnance,4,Cybersecurity Test and Evaluation
+Missile/Ordnance,4,Other DT&E Tests 1…n (Specify)
+Missile/Ordnance,3,Operational Test and Evaluation
+Missile/Ordnance,4,Cybersecurity Test and Evaluation
+Missile/Ordnance,4,Other OT&E Tests 1…n (Specify) 
+Missile/Ordnance,3,Live Fire Test and Evaluation
+Missile/Ordnance,3,Mock-ups/System Integration Labs (SILs)
+Missile/Ordnance,3,Test and Evaluation Support
+Missile/Ordnance,3,Test Facilities
+Missile/Ordnance,2,Training
+Missile/Ordnance,3,Equipment
+Missile/Ordnance,4,Operator Instructional Equipment
+Missile/Ordnance,4,Maintainer Instructional Equipment
+Missile/Ordnance,3,Services
+Missile/Ordnance,4,Operator Instructional Services
+Missile/Ordnance,4,Maintainer Instructional Services
+Missile/Ordnance,3,Facilities
+Missile/Ordnance,3,Training Software 1...n (Specify)
+Missile/Ordnance,2,Data
+Missile/Ordnance,3,Data Deliverables 1...n (Specify)
+Missile/Ordnance,3,Data Repository
+Missile/Ordnance,3,Data Rights 1...n (Specify)
+Missile/Ordnance,2,Peculiar Support Equipment
+Missile/Ordnance,3,Test and Measurement Equipment
+Missile/Ordnance,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Missile/Ordnance,4,Test and Measurement Equipment (Propulsion)
+Missile/Ordnance,4,Test and Measurement Equipment (Electronics/Avionics)
+Missile/Ordnance,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Missile/Ordnance,3,Support and Handling Equipment
+Missile/Ordnance,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Missile/Ordnance,4,Support and Handling Equipment (Propulsion)
+Missile/Ordnance,4,Support and Handling Equipment (Electronics/Avionics)
+Missile/Ordnance,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Missile/Ordnance,2,Common Support Equipment
+Missile/Ordnance,3,Test and Measurement Equipment
+Missile/Ordnance,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Missile/Ordnance,4,Test and Measurement Equipment (Propulsion)
+Missile/Ordnance,4,Test and Measurement Equipment (Electronics/Avionics)
+Missile/Ordnance,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Missile/Ordnance,3,Support and Handling Equipment
+Missile/Ordnance,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Missile/Ordnance,4,Support and Handling Equipment (Propulsion)
+Missile/Ordnance,4,Support and Handling Equipment (Electronics/Avionics)
+Missile/Ordnance,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Missile/Ordnance,2,Operational/Site Activation by Site 1...n (Specify)
+Missile/Ordnance,3,System Assembly
+Missile/Ordnance,3,Contractor Technical Support
+Missile/Ordnance,3,Site Construction
+Missile/Ordnance,3,Site/Ship/Vehicle Conversion
+Missile/Ordnance,3,Interim Contractor Support (ICS)
+Missile/Ordnance,2,Contractor Logistics Support (CLS)
+Missile/Ordnance,2,Industrial Facilities
+Missile/Ordnance,3,Construction/Conversion/Expansion
+Missile/Ordnance,3,Equipment Acquisition or Modernization
+Missile/Ordnance,3,Maintenance (Industrial Facilities)
+Missile/Ordnance,2,Initial Spares and Repair Parts
+Depth Gauge,1,Depth Gauge - creates 10 deep hierarchy (L00)
+Depth Gauge,2,Level 1 (L01)
+Depth Gauge,3,Level 2 (L02)
+Depth Gauge,4,Level 4 (L03)
+Depth Gauge,5,Level 5 (L05)
+Depth Gauge,6,Level 6 (L06)
+Depth Gauge,7,Level 7 (L07)
+Depth Gauge,8,Level 8 (L08)
+Depth Gauge,9,Level 9 (L09)
+Depth Gauge,10,Level 10 (L10)
+Strategic Missile System,1,WBS for MIL-STD-811f Appendix D: Strategic Missile Systems
+Strategic Missile System,2,Strategic Missile Systems Integration
+Strategic Missile System,2,Air Vehicle Equipment (AVE)/Flight Vehicle Equipment (FVE)
+Strategic Missile System,3,AVE/FVE SEIT/PM and Support Equipment
+Strategic Missile System,3,Aero-Structures (Non-Stage Related)
+Strategic Missile System,3,Stage (1...3) Interstage
+Strategic Missile System,4,Stage 1 Interstage
+Strategic Missile System,5,Stage 1 Interstage SEIT/PM and Support Equipment
+Strategic Missile System,5,Structures and Mechanisms
+Strategic Missile System,5,Separation Ordnance
+Strategic Missile System,5,Attitude Control System (ACS)
+Strategic Missile System,5,Interstage Peculiar Avionics
+Strategic Missile System,5,Cable and Harness Assembly
+Strategic Missile System,5,Flight Termination/Mission Termination
+Strategic Missile System,5,Instrumentation/Telemetry
+Strategic Missile System,4,Stage 2 Interstage
+Strategic Missile System,4,Stage 3 Interstage
+Strategic Missile System,3,Other AVE/FVE Structures 1...n (Specify)
+Strategic Missile System,3,Stage (1...3)
+Strategic Missile System,4,Stage 1
+Strategic Missile System,5,Stage SEIT/PM and Support Equipment
+Strategic Missile System,5,Structures and Mechanisms
+Strategic Missile System,5,Propulsion System
+Strategic Missile System,5,Attitude Control System
+Strategic Missile System,5,Stage Peculiar Avionics
+Strategic Missile System,5,Cable Assembly
+Strategic Missile System,5,Flight Termination/Mission Termination
+Strategic Missile System,5,Instrumentation/Telemetry
+Strategic Missile System,4,Stage 2
+Strategic Missile System,4,Stage 3
+Strategic Missile System,3,Power and Distribution
+Strategic Missile System,4,Power and Distribution SEIT/PM and Support Equipment
+Strategic Missile System,4,Primary Power
+Strategic Missile System,4,Power Conditioning Electronics
+Strategic Missile System,4,Distribution Harness
+Strategic Missile System,4,Power and Distribution Software Release 1...n (Specify)
+Strategic Missile System,3,Guidance and Control
+Strategic Missile System,4,Guidance and Control SEIT/PM and Support Equipment
+Strategic Missile System,4,Guidance Computer
+Strategic Missile System,4,Guidance and Control Electronics
+Strategic Missile System,4,Navigation/Inertial Measurement Unit (IMU)
+Strategic Missile System,4,Guidance and Control Cooling System
+Strategic Missile System,4,Computer Memory Battery
+Strategic Missile System,4,Guidance and Control Cables
+Strategic Missile System,4,Guidance and Control Software Release 1...n (Specify)
+Strategic Missile System,3,Communications
+Strategic Missile System,4,Communications SEIT/PM and Support Equipment
+Strategic Missile System,4,Antenna Assembly 1...n (Specify)
+Strategic Missile System,4,Transceiver Assembly 1...n (Specify)
+Strategic Missile System,4,Communications Software Release 1...n (Specify)
+Strategic Missile System,3,Post Boost/Attitude Control Module (PBACM)
+Strategic Missile System,4,PBACM SEIT/PM and Support Equipment
+Strategic Missile System,4,Structures and Mechanisms
+Strategic Missile System,4,Propulsion System
+Strategic Missile System,4,Countermeasures
+Strategic Missile System,4,PBACM Peculiar Avionics
+Strategic Missile System,4,Cable Assembly
+Strategic Missile System,4,Flight Termination/Mission Termination
+Strategic Missile System,4,Instrumentation/Telemetry
+Strategic Missile System,3,Payload/Reentry Systems
+Strategic Missile System,4,Payload/Reentry Systems SEIT/PM and Support Equipment
+Strategic Missile System,4,Payload/Reentry Vehicle 1...n (Specify)
+Strategic Missile System,4,Countermeasures
+Strategic Missile System,4,Deployment Housing/Bulkheads
+Strategic Missile System,3,Ordnance Initiation Set
+Strategic Missile System,3,On Board Test Equipment
+Strategic Missile System,2,Encasement Device
+Strategic Missile System,3,Encasement Device SEIT/PM and Support Equipment
+Strategic Missile System,3,Encasement Device Structure
+Strategic Missile System,3,Encasement Device Software Release 1...n (Specify)
+Strategic Missile System,3,Other Encasement Device Subsystems 1...n (Specify)
+Strategic Missile System,2,Command and Launch
+Strategic Missile System,3,Command and Launch SEIT/PM and Support Equipment
+Strategic Missile System,3,Launch and Guidance Control/Fire Control
+Strategic Missile System,3,Communications
+Strategic Missile System,3,Launch and Encasement Equipment
+Strategic Missile System,3,Auxiliary Equipment
+Strategic Missile System,3,Command and Launch (Ground) Software Release 1...n (Specify)
+Strategic Missile System,3,Infrastructure
+Strategic Missile System,3,Other Command and Launch 1...n (Specify)
+Strategic Missile System,2,Systems Engineering
+Strategic Missile System,3,Software Systems Engineering
+Strategic Missile System,3,Integrated Logistics Support (ILS) Systems Engineering
+Strategic Missile System,3,Cybersecurity Systems Engineering
+Strategic Missile System,3,Nuclear Hardening and Survivability (NH&S)
+Strategic Missile System,3,System Safety
+Strategic Missile System,3,Nuclear Surety
+Strategic Missile System,3,Core Systems Engineering
+Strategic Missile System,3,Other Systems Engineering 1...n (Specify)
+Strategic Missile System,2,Program Management
+Strategic Missile System,3,Software Program Management
+Strategic Missile System,3,Integrated Logistics Support (ILS) Program Management
+Strategic Missile System,3,Cybersecurity Management
+Strategic Missile System,3,Program Control
+Strategic Missile System,3,Core Program Management
+Strategic Missile System,3,Other Program Management 1...n (Specify)
+Strategic Missile System,2,System Test and Evaluation
+Strategic Missile System,3,Developmental Test and Evaluation
+Strategic Missile System,4,Prototype (Pathfinder) Testing
+Strategic Missile System,4,Qualification Test (X & PEM)
+Strategic Missile System,4,Static Testing
+Strategic Missile System,4,System Integration Testing
+Strategic Missile System,4,System Acceptance Testing
+Strategic Missile System,4,Cybersecurity Test and Evaluation
+Strategic Missile System,4,Other DT&E Tests 1…n (Specify)
+Strategic Missile System,3,Operational Test and Evaluation
+Strategic Missile System,4,Initial Commander Evaluation Test 
+Strategic Missile System,4,Ground/Simulated Electronic Launch
+Strategic Missile System,4,Flight Testing 1…n (Specify)
+Strategic Missile System,4,Cybersecurity Test and Evaluation
+Strategic Missile System,4,Contractor Support 1…n (Specify)
+Strategic Missile System,4,Operational Test and Evaluation Software Release 1…n (Specify)
+Strategic Missile System,4,Other OT&E Tests 1…n (Specify)
+Strategic Missile System,3,Mock-ups/System Integration Labs (SILs)
+Strategic Missile System,3,Test and Evaluation Support
+Strategic Missile System,4,Test Planning
+Strategic Missile System,4,Pretest Activities
+Strategic Missile System,4,Post-Test Analysis
+Strategic Missile System,3,Test Facilities
+Strategic Missile System,4,Commercial
+Strategic Missile System,4,Government
+Strategic Missile System,4,Test Equipment
+Strategic Missile System,4,Instrumentation Testing
+Strategic Missile System,3,Specialized Test Equipment
+Strategic Missile System,2,Training
+Strategic Missile System,3,Equipment
+Strategic Missile System,4,Operator Instructional Equipment
+Strategic Missile System,4,Maintainer Instructional Equipment
+Strategic Missile System,3,Services
+Strategic Missile System,4,Operator Instructional Services
+Strategic Missile System,4,Maintainer Instructional Services
+Strategic Missile System,3,Facilities
+Strategic Missile System,3,Training Software Release 1...n (Specify)
+Strategic Missile System,2,Data
+Strategic Missile System,3,Data Deliverables 1...n (Specify)
+Strategic Missile System,3,Data Repository
+Strategic Missile System,3,Data Rights 1...n (Specify)
+Strategic Missile System,2,Peculiar Support Equipment
+Strategic Missile System,3,Test and Measurement Equipment
+Strategic Missile System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Strategic Missile System,4,Test and Measurement Equipment (Propulsion)
+Strategic Missile System,4,Test and Measurement Equipment (Electronics/Avionics)
+Strategic Missile System,4,Test and Measurement Equipment (Other Major Subsystem 1...n (Specify))
+Strategic Missile System,3,Support and Handling Equipment
+Strategic Missile System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Strategic Missile System,4,Support and Handling Equipment (Propulsion)
+Strategic Missile System,4,Support and Handling Equipment (Electronics/Avionics)
+Strategic Missile System,4,Support and Handling Equipment (Other Major Subsystem 1...n (Specify))
+Strategic Missile System,2,Common Support Equipment
+Strategic Missile System,3,Test and Measurement Equipment
+Strategic Missile System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Strategic Missile System,4,Test and Measurement Equipment (Propulsion)
+Strategic Missile System,4,Test and Measurement Equipment (Electronics/Avionics)
+Strategic Missile System,4,Test and Measurement Equipment (Other Major Subsystem 1...n (Specify))
+Strategic Missile System,3,Support and Handling Equipment
+Strategic Missile System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Strategic Missile System,4,Support and Handling Equipment (Propulsion)
+Strategic Missile System,4,Support and Handling Equipment (Electronics/Avionics)
+Strategic Missile System,4,Support and Handling Equipment (Other Major Subsystem 1...n (Specify))
+Strategic Missile System,2,Operational/Site Activation by Site 1...n (Specify)
+Strategic Missile System,3,System Assembly
+Strategic Missile System,3,Contractor Technical Support
+Strategic Missile System,3,Site Construction
+Strategic Missile System,3,Site/Ship/Vehicle Conversion
+Strategic Missile System,3,Deployment Planning
+Strategic Missile System,3,Aerospace Ground Equipment
+Strategic Missile System,3,Real Property Installed Equipment
+Strategic Missile System,3,Interim Contractor Support (ICS)
+Strategic Missile System,2,Contractor Logistics Support (CLS)
+Strategic Missile System,2,Initial Spares/Repair Parts
+Environmental Remediation,1,WBS for Environmental Management Project  to Conduct  a Bio-Venting Test for the Remediation of Hydrocarbon Impacted Soils
+Environmental Remediation,2,System Design
+Environmental Remediation,3,Initial Design
+Environmental Remediation,3,Client Meeting
+Environmental Remediation,3,Draft Design
+Environmental Remediation,3,Client and Regulatory Agency Meeting
+Environmental Remediation,3,Final Design
+Environmental Remediation,2,System Installation
+Environmental Remediation,3,Facility Planning Meeting
+Environmental Remediation,3,Well Installation
+Environmental Remediation,3,Electrical Power Drop Installation
+Environmental Remediation,3,Blower and Piping Installation
+Environmental Remediation,2,Soil Permeability Test
+Environmental Remediation,3,System Operation Check
+Environmental Remediation,3,Soil Permeability Test
+Environmental Remediation,3,Test Report
+Environmental Remediation,2,Initial In Situ Respiration Test
+Environmental Remediation,3,In Situ Respiration Test
+Environmental Remediation,3,Test Report
+Environmental Remediation,2,Long-Term Bio-Venting Test
+Environmental Remediation,3,Ambient Air Monitoring
+Environmental Remediation,3,Operation
+Environmental Remediation,3,Three-Month In Situ Respiration Test
+Environmental Remediation,3,Test Report
+Environmental Remediation,3,Six-month In Situ Respiration Test
+Environmental Remediation,3,Test Report
+Environmental Remediation,2,Confirmation Sampling
+Environmental Remediation,3,Soil Boring and Sampling
+Environmental Remediation,3,Data Validation
+Environmental Remediation,2,Report Preparation
+Environmental Remediation,3,Pre-Draft Report
+Environmental Remediation,3,Client Meeting
+Environmental Remediation,3,Draft Report
+Environmental Remediation,3,Client and Regulatory Agency Meeting
+Environmental Remediation,3,Final Report
+Environmental Remediation,2,Project Management
+Sea System,1,WBS for MIL-STD-811f Appendix E: Sea System
+Sea System,2,Ship
+Sea System,3,Hull Structure
+Sea System,3,Propulsion Plant
+Sea System,3,Electric Plant
+Sea System,3,Command
+Sea System,3,Auxiliary Systems
+Sea System,3,Outfit and Furnishings
+Sea System,3,Armament
+Sea System,3,Total Ship Integration/Engineering
+Sea System,3,Ship Assembly and Support Services
+Sea System,2,Systems Engineering
+Sea System,3,Software Systems Engineering
+Sea System,3,Integrated Logistics Support (ILS) Systems Engineering
+Sea System,3,Cybersecurity Systems Engineering
+Sea System,3,Core Systems Engineering
+Sea System,3,Other Systems Engineering 1...n (Specify)
+Sea System,2,Program Management
+Sea System,3,Software Program Management
+Sea System,3,Integrated Logistics Support (ILS) Program Management
+Sea System,3,Cybersecurity Management
+Sea System,3,Core Program Management
+Sea System,3,Other Program Management 1...n (Specify)
+Sea System,2,System Test and Evaluation
+Sea System,3,Developmental Test and Evaluation
+Sea System,4,Cybersecurity Test and Evaluation
+Sea System,4,Other DT&E Tests 1…n (Specify)
+Sea System,3,Operational Test and Evaluation
+Sea System,4,Cybersecurity Test and Evaluation
+Sea System,4,Other OT&E Tests 1…n (Specify)
+Sea System,3,Live Fire Test and Evaluation
+Sea System,3,Mock-ups/System Integration Labs (SILs)
+Sea System,3,Test and Evaluation Support
+Sea System,3,Test Facilities
+Sea System,2,Training
+Sea System,3,Equipment
+Sea System,4,Operator Instructional Equipment
+Sea System,4,Maintainer Instructional Equipment
+Sea System,3,Services
+Sea System,4,Operator Instructional Services
+Sea System,4,Maintainer Instructional Services
+Sea System,3,Facilities
+Sea System,3,Training Software 1...n (Specify)
+Sea System,2,Data
+Sea System,3,Data Deliverables 1...n (Specify)
+Sea System,3,Data Repository
+Sea System,3,Data Rights 1...n (Specify)
+Sea System,2,Peculiar Support Equipment
+Sea System,3,Test and Measurement Equipment
+Sea System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Sea System,4,Test and Measurement Equipment (Propulsion)
+Sea System,4,Test and Measurement Equipment (Electronics/Avionics)
+Sea System,4,Test and Measurement Equipment (Other Major Subsystem 1...n (Specify))
+Sea System,3,Support and Handling Equipment
+Sea System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Sea System,4,Support and Handling Equipment (Propulsion)
+Sea System,4,Support and Handling Equipment (Electronics/Avionics)
+Sea System,4,Support and Handling Equipment (Other Major Subsystem 1...n (Specify))
+Sea System,2,Common Support Equipment
+Sea System,3,Test and Measurement Equipment
+Sea System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Sea System,4,Test and Measurement Equipment (Propulsion)
+Sea System,4,Test and Measurement Equipment (Electronics/Avionics)
+Sea System,4,Test and Measurement Equipment (Other Major Subsystem 1...n (Specify))
+Sea System,3,Support and Handling Equipment
+Sea System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Sea System,4,Support and Handling Equipment (Propulsion)
+Sea System,4,Support and Handling Equipment (Electronics/Avionics)
+Sea System,4,Support and Handling Equipment (Other Major Subsystem 1...n (Specify))
+Sea System,2,Operational/Site Activation by Site 1...n (Specify)
+Sea System,3,System Assembly
+Sea System,3,Contractor Technical Support
+Sea System,3,Site Construction
+Sea System,3,Site/Ship/Vehicle Conversion
+Sea System,3,Interim Contractor Support (ICS)
+Sea System,2,Contractor Logistics Support (CLS)
+Sea System,2,Industrial Facilities
+Sea System,3,Construction/Conversion/Expansion
+Sea System,3,Equipment Acquisition or Modernization
+Sea System,3,Maintenance (Industrial Facilities)
+Sea System,2,Initial Spares and Repair Parts
+Space System,1,WBS for MIL-STD-811f Appendix F: Space System
+Space System,2,SEIT/PM and Support Equipment
+Space System,3,Systems Engineering
+Space System,3,Assembly
+Space System,3,Program Management
+Space System,3,Support Equipment
+Space System,2,Space Vehicle 1...n (Specify)
+Space System,3,SEIT/PM and Support Equipment
+Space System,4,Systems Engineering
+Space System,4,Assembly
+Space System,4,Program Management
+Space System,4,Support Equipment
+Space System,3,Bus
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Structures and Mechanisms Subsystem (SMS)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Structures
+Space System,5,Mechanisms and Pyrotechnics
+Space System,5,SMS Other
+Space System,4,Thermal Control Subsystem (TCS)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Cryogenic Devices
+Space System,5,Liquid Loops
+Space System,5,Electric Coolers
+Space System,5,Heaters
+Space System,5,Passive Devices
+Space System,5,TCS Other
+Space System,4,Electrical Power Subsystem (EPS)
+Space System,5,SEPM 
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Solar Array
+Space System,5,Solar Array Positioner
+Space System,5,Radioisotope Thermionic Generator
+Space System,5,Other Power Sources
+Space System,5,Power Control
+Space System,5,Power Conditioning
+Space System,5,Power Dissipation Devices
+Space System,5,Rechargeable Batteries
+Space System,5,Charge Control Electronics
+Space System,5,Harnesses and Cables
+Space System,5,EPS Other
+Space System,4,Attitude Control Subsystem (ACS)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Star Tracker/Sensors 1...n (Specify)
+Space System,5,Earth (Horizon) Sensors 1...n (Specify)
+Space System,5,Sun Sensors 1...n (Specify)
+Space System,5,Magnetometers
+Space System,5,Global Positioning System (GPS) Receiver
+Space System,5,Inertial Reference Unit (IRU)/Inertial Measurement Unit (IMU) 1...n (Specify)
+Space System,5,Rate Gyros 1...n (Specify)
+Space System,5,Accelerometers 1...n (Specify)
+Space System,5,Bearing and Power Transfer Assembly (BAPTA)
+Space System,5,Attitude Control Wheels 1...n (Specify)
+Space System,5,Magnetic Control Devices
+Space System,5,Spin Control Devices
+Space System,5,Control Electronics 1...n (Specify)
+Space System,5,ACS Other
+Space System,4,Propulsion Subsystem 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Tanks 1...n (Specify)
+Space System,5,Plumbing
+Space System,5,Thrusters 1...n (Specify)
+Space System,5,Solid Rocket Motors
+Space System,5,Liquid Propellant and Pressurant
+Space System,5,Power Electronics
+Space System,5,Propulsion Other
+Space System,4,Telemetry
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Antennas
+Space System,5,Passive Signal Flow Control
+Space System,5,Transmitter/Receiver/Transceiver/Transponder 1...n (Specify)
+Space System,5,Modulators/Demodulators/Modems
+Space System,5,Amplifiers
+Space System,5,Frequency Upconverter/Downconverter
+Space System,5,Computers and Processors 1...n (Specify)
+Space System,5,Command/Telemetry Units 1...n (Specify)
+Space System,5,Command Sensor or Situational Awareness Sensor 1...n (Specify)
+Space System,5,Frequency and Timing
+Space System,5,Signal Conditioners
+Space System,5,Communications Security 1...n (Specify)
+Space System,5,Data Storage
+Space System,5,TT&C Other
+Space System,4,Bus Flight Software
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,CSCI 1...n (Specify)
+Space System,3,SEIT/PM and Support Equipment (If applicable for integration of Multiple Payloads)
+Space System,4,Systems Engineering
+Space System,4,Assembly
+Space System,4,Program Management
+Space System,4,Support Equipment
+Space System,3,Payload 1...n (Specify)
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Structures and Mechanisms
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Structures
+Space System,5,Mechanisms and Pyrotechnics
+Space System,5,Structures and Mechanisms Other
+Space System,4,Thermal Control
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Cryogenic Devices
+Space System,5,Liquid Loops
+Space System,5,Electric Coolers
+Space System,5,Electric Heaters
+Space System,5,Passive Devices
+Space System,5,Sun Shields
+Space System,5,Thermal Control Other
+Space System,4,Electrical Power
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Power Sources
+Space System,5,Power Control
+Space System,5,Power Conditioning
+Space System,5,Harnesses and Cables
+Space System,5,Electrical Power Other
+Space System,4,Pointing
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Computers and Processors 1...n (Specify)
+Space System,5,Command/Telemetry Units 1...n (Specify)
+Space System,5,Control Electronics 1...n (Specify)
+Space System,5,Pointing Sensors 1...n (Specify)
+Space System,5,Payload Positioners1...n (Specify)
+Space System,5,Security
+Space System,5,Data Storage
+Space System,5,Multifunctional Digital Electronic Boxes 1...n (Specify)
+Space System,5,Pointing
+Space System,4,Payload Antenna 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Structures and Mechanisms
+Space System,5,Antenna Positioners
+Space System,5,Reflector/Horn 1...n (Specify)
+Space System,5,Feed 1...n (Specify)
+Space System,5,Waveguide/Coax/Cabling
+Space System,5,Transmit/Receive Modules
+Space System,5,Antenna Other
+Space System,4,Payload Signal Electronics
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Passive Signal Flow Control
+Space System,5,Transmitter/Receiver/Transceiver/Transponder 1...n (Specify)
+Space System,5,Modulators/Demodulators/Modems 1...n (Specify)
+Space System,5,Multiplexers/Demultiplexers 1...n (Specify)
+Space System,5,Amplifiers 1...n (Specify)
+Space System,5,Frequency Upconverters/Downconverters 1...n (Specify)
+Space System,5,Frequency and Timing 1...n (Specify)
+Space System,5,Signal Conditioners 1...n (Specify)
+Space System,5,Multifunctional Signal Electronic Boxes 1...n (Specify)
+Space System,5,Signal Electronics Other
+Space System,4,Optical Assembly
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Structure/Outerbarrel/Cover
+Space System,5,Mirrors/Optics 1...n (Specify)
+Space System,5,Aft Optics Assembly
+Space System,5,Alignment and Calibration 1...n (Specify)
+Space System,5,Thermal 1...n (Specify)
+Space System,5,Control Electronics 1...n (Specify)
+Space System,5,Optical Assembly Other
+Space System,4,Sensor
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Payload Structure 1...n (Specify)
+Space System,5,Focal Plane Array 1...n (Specify)
+Space System,5,Sensor Positioners 1...n (Specify)
+Space System,5,Sensor Electronics 1...n (Specify)
+Space System,5,Alignment and Calibration 1...n (Specify)
+Space System,5,Magnetometer 1...n (Specify)
+Space System,5,Spectrometer 1...n (Specify)
+Space System,5,Radiometer 1...n (Specify)
+Space System,5,Camera 1...n (Specify)
+Space System,5,Sounder 1...n (Specify)
+Space System,5,Flight Sensor Software
+Space System,5,Other Sensor Types 1...n (Specify)
+Space System,5,Mission Sensor Other
+Space System,4,Payload Flight Software
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,CSCI 1...n (Specify)
+Space System,4,Payload Other
+Space System,3,Booster Adapter
+Space System,3,Space Vehicle Storage
+Space System,3,Launch Systems Integration (LSI)
+Space System,3,Launch Operations
+Space System,3,Mission Operations Support
+Space System,3,Space Vehicle Other
+Space System,2,Ground Segment
+Space System,3,SEIT/PM and Support Equipment
+Space System,4,Systems Engineering
+Space System,4,Assembly
+Space System,4,Program Management
+Space System,4,Support Equipment
+Space System,3,Ground Functions 1...n (Specify)
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,COTS Hardware 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Workstations 1...n (Specify)
+Space System,5,Servers 1...n (Specify)
+Space System,5,Storage and Archive 1...n (Specify)
+Space System,5,Network Equipment
+Space System,5,Interface Equipment
+Space System,5,Security Encryption/Decryption 1...n (Specify)
+Space System,5,Data Processing 1...n (Specify)
+Space System,5,COTS Hardware Other
+Space System,5,Pre-Operations Maintenance 1...n (Specify)
+Space System,5,Environments 1...n (Specify)
+Space System,4,Custom Hardware 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Custom Hardware Configured Item 1...n (Specify)
+Space System,5,Pre-Operations Maintenance 1...n (Specify)
+Space System,4,Ground Function Software
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,GF Software CSCI 1...n (Specify)
+Space System,5,Pre-Operations Maintenance 1...n (Specify)
+Space System,4,Pre-Operations Mission Support
+Space System,3,Ground Terminal/Gateway (GT) 1...n (Specify)
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Antenna 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Pedestal
+Space System,5,Radome
+Space System,5,Other Structure and Mechanisms
+Space System,5,Aperture
+Space System,5,Feed 1...n (Specify)
+Space System,5,Waveguide/Coax/Cabling
+Space System,5,Antenna Other
+Space System,4,Optical Communication Assembly 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Structure/Outerbarrel/Cover
+Space System,5,Mirrors/Optics 1...n (Specify)
+Space System,5,Aft Optics and Bench
+Space System,5,Alignment Sensors/Calibration
+Space System,5,Optical Assembly Other
+Space System,4,RF Electronics Band 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Passive Signal Flow Control
+Space System,5,Transmitter/Receiver/Transceiver/Transponder 1...n (Specify)
+Space System,5,Modulators/Demodulators/Modems 1...n (Specify)
+Space System,5,Multiplexers/Demultiplexers 1...n (Specify)
+Space System,5,Power Amplifiers 1...n (Specify)
+Space System,5,Frequency Upconverters/Downconverters 1...n (Specify)
+Space System,5,Signal Conditioners 1...n (Specify)
+Space System,5,Signal Electronic Boxes 1...n (Specify)
+Space System,5,Focal Plane Array 1...n (Specify)
+Space System,5,RF Electronics Other
+Space System,4,Timing
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Receiver
+Space System,5,Antenna 1...n (Specify)
+Space System,5,Frequency and Timing Generators
+Space System,5,Amplifier and Distribution 1...n (Specify)
+Space System,5,Timing Other
+Space System,4,Baseband-Network
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Switches/Hubs and Routers
+Space System,5,Network Interface and Other Hardware
+Space System,5,Modems
+Space System,5,Security/Encryption and Decryption Devices 1...n (Specify)
+Space System,5,Baseband-Network Electronic Boxes 1...n (Specify)
+Space System,5,Baseband-Network Other
+Space System,4,Monitor and Control Hardware
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Workstations 1...n (Specify)
+Space System,5,Servers 1...n (Specify)
+Space System,5,Storage and Archive 1...n (Specify)
+Space System,5,Hardware Configured Item 1...n (Specify)
+Space System,4,GT Software
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,CSCI 1...n (Specify)
+Space System,4,Pre-Operations Maintenance 1...n (Specify)
+Space System,4,Pre-Operations Mission Support
+Space System,3,External Network (T-COMM)
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Leased Circuit 1...n (Specify)
+Space System,4,Purchased Circuits
+Space System,5,Purchased Circuit 1...n (Specify)
+Space System,5,Pre-Operations Maintenance 1...n (Specify)
+Space System,3,User Equipment
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Equipment 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Hardware Configured Item 1…n (Specify)
+Space System,5,Equipment Software 1...n (Specify)
+Space System,4,Pre-Operations Maintenance 1...n (Specify)
+Space System,3,Facilities 1...n (Specify)
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Site Preparation
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Graded Land
+Space System,5,Roads
+Space System,5,Pads
+Space System,5,Retaining Walls/Fencing
+Space System,5,Utilities
+Space System,5,Site Preparation Other
+Space System,4,Landscape
+Space System,4,Buildings 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Foundation and Sub Structure
+Space System,5,Superstructure and Finishing
+Space System,5,Buildings Other
+Space System,4,Equipment and Building Fit Out 1...n (Specify)
+Space System,5,SEPM
+Space System,5,Assembly
+Space System,5,Support Equipment
+Space System,5,Heating Venting and Air Conditioning (HVAC)
+Space System,5,Power Conditioning/UPS
+Space System,5,Network Wiring/Cable Trays
+Space System,5,Generators
+Space System,5,Computer Flooring
+Space System,5,Appliances
+Space System,5,Furniture
+Space System,5,Fire Protection
+Space System,5,Security Systems
+Space System,5,Equipment and Building Fit Out Other
+Space System,4,Pre-Operations Maintenance 1...n (Specify)
+Space System,3,Vehicles and Shelters
+Space System,4,SEIT/PM and Support Equipment
+Space System,5,Systems Engineering
+Space System,5,Assembly
+Space System,5,Program Management
+Space System,5,Support Equipment
+Space System,4,Vehicles 1...n (Specify)
+Space System,4,Shelters 1...n (Specify)
+Space System,4,Pre-Operations Maintenance 1...n (Specify)
+Space System,2,Orbital Transfer Vehicle (OTV)
+Space System,2,Launch Vehicle 1...n (Specify) (See Appendix I for WBS breakout)
+Design/Build Project,1,WBS for Government-sponsored Design-Bid-Build Project
+Design/Build Project,2,Phase 1: Prospectus  
+Design/Build Project,3,Project Management Plans for Phase 1
+Design/Build Project,3,Description of Customer Needs
+Design/Build Project,3,Preliminary Plans of Alternatives
+Design/Build Project,3,Estimates for Alternatives
+Design/Build Project,3,Cost/Benefit Analysis
+Design/Build Project,3,Report
+Design/Build Project,2,Phase 2: Selected Alternative (may be combined with Phase 1
+Design/Build Project,3,Project Management Plans for Phase 2 (seven plans
+Design/Build Project,3,Environmental Studies
+Design/Build Project,3,More Detailed Plans of Alternatives
+Design/Build Project,3,Estimates for Alternatives
+Design/Build Project,3,Draft Report
+Design/Build Project,3,Final Report
+Design/Build Project,2,Phase 3: Real Property
+Design/Build Project,3,Project Management Plans for Phase 3 (seven plans
+Design/Build Project,3,Appraisal
+Design/Build Project,3,Acquisition
+Design/Build Project,3,Relocation of Occupants
+Design/Build Project,3,Demolition
+Design/Build Project,3,Relocation of Utilities
+Design/Build Project,3,Hazardous Waste Removal
+Design/Build Project,3,Environmental Mitigation
+Design/Build Project,2,Phase 4: Contract Award Documents
+Design/Build Project,3,Project Management Plans for Phase 4 (seven plans
+Design/Build Project,3,Detailed Plans of Selected Alternative
+Design/Build Project,3,Specifications
+Design/Build Project,3,Estimate
+Design/Build Project,3,Bid Documents
+Design/Build Project,3,Signed Contract
+Design/Build Project,2,Phase 5: Physical Improvement (construction)
+Design/Build Project,3,Project Management Plans for Phase 5 (seven plans
+Design/Build Project,3,Civil Work
+Design/Build Project,3,Water Supply
+Design/Build Project,3,Structural Work
+Design/Build Project,3,Furnishings
+Ground Vehicle,1,WBS for MIL-STD-811f Appendix G: Ground Vehicle System
+Ground Vehicle,2,Family of Vehicles
+Ground Vehicle,3,Lead Variant
+Ground Vehicle,4,Lead Variant Integration
+Ground Vehicle,4,Hull/Frame/Body/Cab
+Ground Vehicle,4,System Survivability
+Ground Vehicle,4,Turret Assembly
+Ground Vehicle,4,Suspension/Steering
+Ground Vehicle,4,Vehicle Electronics
+Ground Vehicle,4,Power Package/Drive Train
+Ground Vehicle,4,Auxiliary Automotive
+Ground Vehicle,4,Fire Control
+Ground Vehicle,4,Armament
+Ground Vehicle,4,Automatic Ammunition Handling
+Ground Vehicle,4,Navigation and Remote Piloting Systems
+Ground Vehicle,4,Special Equipment
+Ground Vehicle,4,Communications
+Ground Vehicle,4,Lead Variant Software Release 1...n (Specify)
+Ground Vehicle,4,Other Lead Variant Subsystems 1...n (Specify)
+Ground Vehicle,3,Variant 2...n (Specify)
+Ground Vehicle,4,Variant Integration
+Ground Vehicle,4,Hull/Frame/Body/Cab
+Ground Vehicle,4,System Survivability
+Ground Vehicle,4,Turret Assembly
+Ground Vehicle,4,Suspension/Steering
+Ground Vehicle,4,Vehicle Electronics
+Ground Vehicle,4,Power Package/Drive Train
+Ground Vehicle,4,Auxiliary Automotive
+Ground Vehicle,4,Fire Control
+Ground Vehicle,4,Armament
+Ground Vehicle,4,Automatic Ammunition Handling
+Ground Vehicle,4,Navigation and Remote Piloting Systems
+Ground Vehicle,4,Special Equipment
+Ground Vehicle,4,Communications
+Ground Vehicle,4,Variant Software Release 1...n (Specify)
+Ground Vehicle,4,Other Variant Subsystems 1...n (Specify)
+Ground Vehicle,3,Equipment Kits 1...n (Specify)
+Ground Vehicle,2,Secondary Vehicle (See Note at G.4.3)
+Ground Vehicle,2,Systems Engineering
+Ground Vehicle,3,Software Systems Engineering
+Ground Vehicle,3,Integrated Logistics Support (ILS) Systems Engineering
+Ground Vehicle,3,Cybersecurity Systems Engineering
+Ground Vehicle,3,Core Systems Engineering
+Ground Vehicle,3,Other Systems Engineering 1...n (Specify)
+Ground Vehicle,2,Program Management
+Ground Vehicle,3,Software Program Management
+Ground Vehicle,3,Integrated Logistics Support (ILS) Program Management
+Ground Vehicle,3,Cybersecurity Management
+Ground Vehicle,3,Core Program Management
+Ground Vehicle,3,Other Program Management 1...n (Specify)
+Ground Vehicle,2,System Test and Evaluation
+Ground Vehicle,3,Developmental Test and Evaluation
+Ground Vehicle,4,Cybersecurity Test and Evaluation
+Ground Vehicle,4,Other DT&E Tests 1…n (Specify)
+Ground Vehicle,3,Operational Test and Evaluation
+Ground Vehicle,4,Cybersecurity Test and Evaluation
+Ground Vehicle,4,Other OT&E Tests 1…n (Specify)
+Ground Vehicle,3,Live Fire Test and Evaluation
+Ground Vehicle,3,Mock-ups/System Integration Labs (SILs)
+Ground Vehicle,3,Test and Evaluation Support
+Ground Vehicle,3,Test Facilities
+Ground Vehicle,2,Training
+Ground Vehicle,3,Equipment
+Ground Vehicle,4,Operator Instructional Equipment
+Ground Vehicle,4,Maintainer Instructional Equipment
+Ground Vehicle,3,Services
+Ground Vehicle,4,Operator Instructional Services
+Ground Vehicle,4,Maintainer Instructional Services
+Ground Vehicle,3,Facilities
+Ground Vehicle,3,Training Software 1...n (Specify)
+Ground Vehicle,2,Data
+Ground Vehicle,3,Data Deliverables 1...n (Specify)
+Ground Vehicle,3,Data Repository
+Ground Vehicle,3,Data Rights 1...n (Specify)
+Ground Vehicle,2,Peculiar Support Equipment
+Ground Vehicle,3,Test and Measurement Equipment
+Ground Vehicle,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Ground Vehicle,4,Test and Measurement Equipment (Propulsion)
+Ground Vehicle,4,Test and Measurement Equipment (Electronics/Avionics)
+Ground Vehicle,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Ground Vehicle,3,Support and Handling Equipment
+Ground Vehicle,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Ground Vehicle,4,Support and Handling Equipment (Propulsion)
+Ground Vehicle,4,Support and Handling Equipment (Electronics/Avionics)
+Ground Vehicle,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Ground Vehicle,2,Common Support Equipment
+Ground Vehicle,3,Test and Measurement Equipment
+Ground Vehicle,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Ground Vehicle,4,Test and Measurement Equipment (Propulsion)
+Ground Vehicle,4,Test and Measurement Equipment (Electronics/Avionics)
+Ground Vehicle,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Ground Vehicle,3,Support and Handling Equipment
+Ground Vehicle,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Ground Vehicle,4,Support and Handling Equipment (Propulsion)
+Ground Vehicle,4,Support and Handling Equipment (Electronics/Avionics)
+Ground Vehicle,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Ground Vehicle,2,Operational/Site Activation by Site 1...n (Specify)
+Ground Vehicle,3,System Assembly
+Ground Vehicle,3,Contractor Technical Support
+Ground Vehicle,3,Site Construction
+Ground Vehicle,3,Site/Ship/Vehicle Conversion
+Ground Vehicle,3,Interim Contractor Support
+Ground Vehicle,2,Contractor Logistics Support (CLS)
+Ground Vehicle,2,Industrial Facilities
+Ground Vehicle,3,Construction/Conversion/Expansion
+Ground Vehicle,3,Equipment Acquisition or Modernization
+Ground Vehicle,3,Maintenance (Industrial Facilities)
+Ground Vehicle,2,Initial Spares and Repair Parts
+Unmanned Maritime System,1,WBS for MIL-STD-811f Appendix H: Unmanned Maritime System
+Unmanned Maritime System,2,UMS Integration
+Unmanned Maritime System,2,Maritime Vehicle
+Unmanned Maritime System,3,Vehicle Integration
+Unmanned Maritime System,3,Hull and Structure
+Unmanned Maritime System,3,Propulsion
+Unmanned Maritime System,3,Energy/Storage/Conversion
+Unmanned Maritime System,3,Electrical Power
+Unmanned Maritime System,3,Vehicle Command and Control
+Unmanned Maritime System,4,Vehicle Command and Control Integration
+Unmanned Maritime System,4,Mission Control
+Unmanned Maritime System,4,Navigation
+Unmanned Maritime System,4,Guidance and Control
+Unmanned Maritime System,4,Health Status Monitoring
+Unmanned Maritime System,4,Rendezvous
+Unmanned Maritime System,4,Fire Control
+Unmanned Maritime System,4,Vehicle Command and Control Software Release 1...n (Specify)
+Unmanned Maritime System,4,Other Vehicle Command and Control 1...n (Specify)
+Unmanned Maritime System,3,Surveillance
+Unmanned Maritime System,3,Communications/Identification
+Unmanned Maritime System,3,Ship Control System
+Unmanned Maritime System,4,Ship Control System Integration
+Unmanned Maritime System,4,Steering and Dive Control
+Unmanned Maritime System,4,Hovering and Depth Control
+Unmanned Maritime System,4,Ballast and Trim
+Unmanned Maritime System,4,Maneuvering System
+Unmanned Maritime System,4,Ship Control Systems Software Release 1...n (Specify)
+Unmanned Maritime System,4,Other Ship Control Systems 1...n (Specify)
+Unmanned Maritime System,3,Auxiliary Systems
+Unmanned Maritime System,4,Auxiliary Equipment Integration
+Unmanned Maritime System,4,Emergency Systems
+Unmanned Maritime System,4,Launch and Recovery System
+Unmanned Maritime System,4,Environmental Control System
+Unmanned Maritime System,4,Anchoring
+Unmanned Maritime System,4,Miscellaneous Fluid Systems
+Unmanned Maritime System,4,Auxiliary Systems Software Release 1...n (Specify)
+Unmanned Maritime System,4,Other Auxiliary Systems 1...n (Specify)
+Unmanned Maritime System,3,Vehicle Software Release 1...n (Specify)
+Unmanned Maritime System,2,Payload 1...n (Specify)
+Unmanned Maritime System,3,Payload Integration
+Unmanned Maritime System,3,Survivability Payload 1...n (Specify)
+Unmanned Maritime System,3,Intelligence
+Unmanned Maritime System,3,Armament/Weapons Delivery Payload 1...n (Specify)
+Unmanned Maritime System,3,Mission Payload 1...n (Specify)
+Unmanned Maritime System,3,Payload Software Release 1...n (Specify)
+Unmanned Maritime System,3,Other Payload 1...n (Specify)
+Unmanned Maritime System,2,Shipboard Segment
+Unmanned Maritime System,3,Shipboard Segment Integration
+Unmanned Maritime System,3,Unmanned Maritime System Command and Control Subsystem
+Unmanned Maritime System,4,Unmanned Maritime System Control Console(s)
+Unmanned Maritime System,4,Payload Control Console(s)
+Unmanned Maritime System,3,Communication Subsystem
+Unmanned Maritime System,3,Power Subsystem
+Unmanned Maritime System,3,Launch and Recovery Equipment
+Unmanned Maritime System,3,Storage Subsystems
+Unmanned Maritime System,3,Vehicle Handling Equipment
+Unmanned Maritime System,3,Auxiliary Equipment
+Unmanned Maritime System,3,Shipboard Software Release 1...n (Specify)
+Unmanned Maritime System,3,Other Shipboard Subsystems 1...n (Specify)
+Unmanned Maritime System,2,Shore Segment
+Unmanned Maritime System,2,Transportation Segment/Vehicles
+Unmanned Maritime System,2,UM System Software Release 1...n (Specify)
+Unmanned Maritime System,2,Systems Engineering
+Unmanned Maritime System,3,Software Systems Engineering
+Unmanned Maritime System,3,Integrated Logistics Support (ILS) Systems Engineering
+Unmanned Maritime System,3,Cybersecurity Systems Engineering
+Unmanned Maritime System,3,Core Systems Engineering
+Unmanned Maritime System,3,Other Systems Engineering 1...n (Specify)
+Unmanned Maritime System,2,Program Management
+Unmanned Maritime System,3,Software Program Management
+Unmanned Maritime System,3,Integrated Logistics Support (ILS) Program Management
+Unmanned Maritime System,3,Cybersecurity Management
+Unmanned Maritime System,3,Core Program Management
+Unmanned Maritime System,3,Other Program Management 1...n (Specify)
+Unmanned Maritime System,2,System Test and Evaluation
+Unmanned Maritime System,3,Developmental Test and Evaluation
+Unmanned Maritime System,4,Cybersecurity Test and Evaluation
+Unmanned Maritime System,4,Other DT&E Tests 1…n (Specify)
+Unmanned Maritime System,3,Operational Test and Evaluation
+Unmanned Maritime System,4,Cybersecurity Test and Evaluation
+Unmanned Maritime System,4,Other OT&E Tests 1…n (Specify)
+Unmanned Maritime System,3,Live Fire Test and Evaluation
+Unmanned Maritime System,3,Mock-ups/System Integration Labs (SILs)
+Unmanned Maritime System,3,Test and Evaluation Support
+Unmanned Maritime System,3,Test Facilities
+Unmanned Maritime System,2,Training
+Unmanned Maritime System,3,Equipment
+Unmanned Maritime System,4,Operator Instructional Equipment
+Unmanned Maritime System,4,Maintainer Instructional Equipment
+Unmanned Maritime System,3,Services
+Unmanned Maritime System,4,Operator Instructional Services
+Unmanned Maritime System,4,Maintainer Instructional Services
+Unmanned Maritime System,3,Facilities
+Unmanned Maritime System,3,Training Software 1...n (Specify)
+Unmanned Maritime System,2,Data
+Unmanned Maritime System,3,Data Deliverables 1...n (Specify)
+Unmanned Maritime System,3,Data Depository
+Unmanned Maritime System,3,Data Rights 1...n (Specify)
+Unmanned Maritime System,2,Peculiar Support Equipment
+Unmanned Maritime System,3,Test and Measurement Equipment
+Unmanned Maritime System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Unmanned Maritime System,4,Test and Measurement Equipment (Propulsion)
+Unmanned Maritime System,4,Test and Measurement Equipment (Electronics/Avionics)
+Unmanned Maritime System,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Unmanned Maritime System,3,Support and Handling Equipment
+Unmanned Maritime System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Unmanned Maritime System,4,Support and Handling Equipment (Propulsion)
+Unmanned Maritime System,4,Support and Handling Equipment (Electronics/Avionics)
+Unmanned Maritime System,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Unmanned Maritime System,2,Common Support Equipment
+Unmanned Maritime System,3,Test and Measurement Equipment
+Unmanned Maritime System,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Unmanned Maritime System,4,Test and Measurement Equipment (Propulsion)
+Unmanned Maritime System,4,Test and Measurement Equipment (Electronics/Avionics)
+Unmanned Maritime System,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Unmanned Maritime System,3,Support and Handling Equipment
+Unmanned Maritime System,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Unmanned Maritime System,4,Support and Handling Equipment (Propulsion)
+Unmanned Maritime System,4,Support and Handling Equipment (Electronics/Avionics)
+Unmanned Maritime System,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Unmanned Maritime System,2,Operational/Site Activation by Site 1...n (Specify)
+Unmanned Maritime System,3,System Assembly
+Unmanned Maritime System,3,Contractor Technical Support
+Unmanned Maritime System,3,Site Construction
+Unmanned Maritime System,3,Site/Ship/Vehicle Conversion
+Unmanned Maritime System,3,Interim Contractor Support (ICS)
+Unmanned Maritime System,2,Contractor Logistics Support (CLS)
+Unmanned Maritime System,2,Industrial Facilities
+Unmanned Maritime System,3,Construction/Conversion/Expansion
+Unmanned Maritime System,3,Equipment Acquisition or Modernization
+Unmanned Maritime System,3,Maintenance (Industrial Facilities)
+Unmanned Maritime System,2,Initial Spares and Repair Parts
+Launch Vehicle,1,WBS for MIL-STD-811f Appendix I: Launch Vehicle System
+Launch Vehicle,2,Systems Engineering
+Launch Vehicle,3,Systems Engineering (SE)
+Launch Vehicle,3,Assembly
+Launch Vehicle,3,Program Management (PM)
+Launch Vehicle,2,Launch Vehicle
+Launch Vehicle,3,SEIT/PM
+Launch Vehicle,3,Stages 1...n (Specify)
+Launch Vehicle,4,SEIT/PM
+Launch Vehicle,4,Structures and Mechanisms
+Launch Vehicle,4,Propulsions System
+Launch Vehicle,4,Reaction Control System
+Launch Vehicle,4,Recovery System
+Launch Vehicle,4,Environmental Control System
+Launch Vehicle,4,Stage Peculiar Avionics
+Launch Vehicle,4,Other Systems 1...n (Specify)
+Launch Vehicle,3,Payload Accommodations 1...n (Specify)
+Launch Vehicle,4,SEIT/PM
+Launch Vehicle,4,Payload Fairings
+Launch Vehicle,4,Payload Adapter (Pedestals)
+Launch Vehicle,4,Mission Unique Hardware (Launch Vehicle) 1...n (Specify)
+Launch Vehicle,3,Avionics
+Launch Vehicle,4,SEIT/PM
+Launch Vehicle,4,Guidance
+Launch Vehicle,4,Power
+Launch Vehicle,4,Data Acquisition and Telemetry
+Launch Vehicle,4,Range Tracking and Safety (Airborne)
+Launch Vehicle,4,Flight Software Release 1...n (Specify)
+Launch Vehicle,4,Other Avionics 1...n (Specify)
+Launch Vehicle,2,Mission Integration and Analysis 1...f (Specify)
+Launch Vehicle,3,Mission Standard Integration and Analysis
+Launch Vehicle,3,Mission Unique Integration and Analysis 1...n (Specify)
+Launch Vehicle,2,Launch Operations Site 1...n (Specify)
+Launch Vehicle,3,SEIT/PM
+Launch Vehicle,3,Vehicle Processing and Checkout
+Launch Vehicle,3,Mission Services
+Launch Vehicle,4,Mission Unique Hardware (Launch Operations) 1...n (Specify)
+Launch Vehicle,4,Space Vehicle Processing
+Launch Vehicle,3,Launch
+Launch Vehicle,3,Flight Operations
+Launch Vehicle,3,Post Launch
+Launch Vehicle,4,Recovery Operations and Services
+Launch Vehicle,4,Post Launch Refurbishment
+Launch Vehicle,3,Site Maintenance
+Launch Vehicle,3,Base Support
+Launch Vehicle,3,Range Tracking and Safety (Ground)
+Launch Vehicle,4,Range Ground System
+Launch Vehicle,4,Range Operations
+Launch Vehicle,2,Launch Site 1...n (Specify)
+Launch Vehicle,3,SEIT/PM
+Launch Vehicle,3,Operational/Site Activation
+Launch Vehicle,3,Peculiar Support Equipment
+Launch Vehicle,3,Ground Command
+Launch Vehicle,4,SEIT/PM
+Launch Vehicle,4,Command
+Launch Vehicle,4,Other Ground Command
+Launch Vehicle,2,System Test and Evaluation
+Launch Vehicle,3,Developmental Test and Evaluation
+Launch Vehicle,4,Cybersecurity Test and Evaluation
+Launch Vehicle,4,Other DT&E Tests 1…n (Specify)
+Launch Vehicle,3,Operational Test and Evaluation
+Launch Vehicle,4,Cybersecurity Test and Evaluation
+Launch Vehicle,4,Other OT&E Tests 1…n (Specify)
+Launch Vehicle,3,Live Fire Test and Evaluation
+Launch Vehicle,3,Mock-ups/System Integration Labs (SILs)
+Launch Vehicle,3,Test and Evaluation Support
+Launch Vehicle,3,Test Facilities
+Launch Vehicle,2,Training
+Launch Vehicle,3,Equipment
+Launch Vehicle,4,Operator Instructional Equipment
+Launch Vehicle,4,Maintainer Instructional Equipment
+Launch Vehicle,3,Services
+Launch Vehicle,4,Operator Instructional Services
+Launch Vehicle,4,Maintainer Instructional Services
+Launch Vehicle,3,Facilities
+Launch Vehicle,3,Training Software 1...n (Specify)
+Launch Vehicle,2,Data
+Launch Vehicle,3,Data Deliverables 1...n (Specify)
+Launch Vehicle,3,Data Repository
+Launch Vehicle,3,Data Rights 1...n (Specify)
+Launch Vehicle,2,Peculiar Support Equipment
+Launch Vehicle,3,Test and Measurement Equipment
+Launch Vehicle,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Launch Vehicle,4,Test and Measurement Equipment (Propulsion)
+Launch Vehicle,4,Test and Measurement Equipment (Electronics/Avionics)
+Launch Vehicle,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Launch Vehicle,3,Support and Handling Equipment
+Launch Vehicle,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Launch Vehicle,4,Support and Handling Equipment (Propulsion)
+Launch Vehicle,4,Support and Handling Equipment (Electronics/Avionics)
+Launch Vehicle,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Launch Vehicle,2,Common Support Equipment
+Launch Vehicle,3,Test and Measurement Equipment
+Launch Vehicle,4,Test and Measurement Equipment (Airframe/Hull/Vehicle)
+Launch Vehicle,4,Test and Measurement Equipment (Propulsion)
+Launch Vehicle,4,Test and Measurement Equipment (Electronics/Avionics)
+Launch Vehicle,4,Test and Measurement Equipment (Other Major Subsystems 1...n (Specify))
+Launch Vehicle,3,Support and Handling Equipment
+Launch Vehicle,4,Support and Handling Equipment (Airframe/Hull/Vehicle)
+Launch Vehicle,4,Support and Handling Equipment (Propulsion)
+Launch Vehicle,4,Support and Handling Equipment (Electronics/Avionics)
+Launch Vehicle,4,Support and Handling Equipment (Other Major Subsystems 1...n (Specify))
+Launch Vehicle,2,Industrial Facilities
+Launch Vehicle,3,Construction/Conversion/Expansion
+Launch Vehicle,3,Equipment Acquisition or Modernization
+Launch Vehicle,3,Maintenance (Industrial Facilities)
+Launch Vehicle,2,Initial Spares and Repair Parts
+Information/Business System,1,WBS for MIL-STD-811f Appendix J: Information Systems (IS)/Defense Business Systems (DBS) (Investment)
+Information/Business System,2,IS/DBS Development/Customization/Configuration
+Information/Business System,3,Custom Application 1...n (Specify)
+Information/Business System,4,Subsystem Hardware (Specify)
+Information/Business System,4,Subsystem Software CSCI 1...n (Specify)
+Information/Business System,4,Subsystem Software Level Integration
+Information/Business System,3,Enterprise Service Element 1...n (Specify)
+Information/Business System,4,Enterprise Service Element Hardware (Specify)
+Information/Business System,4,Enterprise Service Element Software CSCI 1...n (Specify)
+Information/Business System,4,Enterprise Service Element Integration
+Information/Business System,3,Enterprise/Management Information System 1...n (Specify)
+Information/Business System,4,Business Area Hardware (Specify)
+Information/Business System,4,Business Area Software CSCI 1...n (Specify)
+Information/Business System,4,Business Area Integration
+Information/Business System,3,External System Interface Development 1...n (Specify)
+Information/Business System,4,External System Interface Hardware (Specify)
+Information/Business System,4,External System Interface Software CSCI 1...n (Specify)
+Information/Business System,4,External System Interface Integration
+Information/Business System,3,System Level Infrastructure (Specify)
+Information/Business System,4,System Level Hardware (Specify)
+Information/Business System,4,Service Infrastructure 1...n (Specify)
+Information/Business System,2,System Level Integration
+Information/Business System,2,Systems Engineering
+Information/Business System,3,Software Systems Engineering
+Information/Business System,3,Integrated Logistics Support (ILS) Systems Engineering
+Information/Business System,3,Cybersecurity Systems Engineering
+Information/Business System,3,Core Systems Engineering
+Information/Business System,3,Other Systems Engineering 1...n (Specify)
+Information/Business System,2,Program Management
+Information/Business System,3,Software Program Management
+Information/Business System,3,Integrated Logistics Support (ILS) Program Management
+Information/Business System,3,Cybersecurity Program Management
+Information/Business System,3,Core Program Management
+Information/Business System,3,Other Program Management 1...n (Specify)
+Information/Business System,2,Change Management
+Information/Business System,2,Data Management
+Information/Business System,2,System Test and Evaluation
+Information/Business System,3,Developmental Test and Evaluation
+Information/Business System,4,Cybersecurity Test and Evaluation
+Information/Business System,4,Other DT&E Tests 1…n (Specify)
+Information/Business System,3,Operational Test and Evaluation
+Information/Business System,4,Cybersecurity Test and Evaluation
+Information/Business System,4,Other OT&E Tests 1…n (Specify)
+Information/Business System,3,Mock-ups/System Integration Labs (SILs
+Information/Business System,3,Test and Evaluation Management/Support
+Information/Business System,3,Test Facilities
+Information/Business System,2,Training
+Information/Business System,3,Equipment
+Information/Business System,3,Services
+Information/Business System,3,Facilities
+Information/Business System,3,Training Software 1...n (Specify)
+Information/Business System,2,Data
+Information/Business System,3,Data Deliverables 1...n (Specify)
+Information/Business System,3,Data Repository
+Information/Business System,3,Data Rights 1...n (Specify)
+Information/Business System,2,Peculiar Support Equipment
+Information/Business System,3,Test and Measurement Equipment
+Information/Business System,3,Support and Handling Equipment
+Information/Business System,2,Common Support Equipment
+Information/Business System,3,Test and Measurement Equipment
+Information/Business System,3,Support and Handling Equipment
+Information/Business System,2,Operational Infrastructure/Site Activation by Site 1...n (Specify)
+Information/Business System,3,Initial Hardware Procurement
+Information/Business System,4,End User Equipment
+Information/Business System,4,Cybersecurity Equipment
+Information/Business System,4,IT Infrastructure and Enterprise Software Equipment
+Information/Business System,4,Other 1...n (Specify)
+Information/Business System,3,Initial Software License Procurement
+Information/Business System,4,End User Software License
+Information/Business System,4,Cybersecurity Software Licenses/Services
+Information/Business System,4,IT Infrastructure and Equipment
+Information/Business System,4,Other 1...n (Specify)
+Information/Business System,3,Initial Software Release (Pre-IOC) Modification/Enhancement
+Information/Business System,4,Routine Fixes/Deficiency Correction
+Information/Business System,4,Deployment Independent Verification and Validation
+Information/Business System,4,Installation/Test
+Information/Business System,3,Site Activation
+Information/Business System,4,Data Migration
+Information/Business System,4,User Training
+Information/Business System,4,User Documentation
+Information/Business System,4,Management/Engineering Support
+Information/Business System,4,Site Installation
+Information/Business System,3,Interim Operations and Support (Pre-IOC)
+Information/Business System,4,Help Desk
+Information/Business System,4,System Database Administrator
+Information/Business System,4,Installation
+Information/Business System,4,IT Equipment Maintenance
+Information/Business System,2,Industrial Facilities
+Information/Business System,3,Construction/Conversion/Expansion
+Information/Business System,3,Equipment Acquisition or Modernization
+Information/Business System,3,Maintenance (Industrial Facilities)
+Information/Business System,2,Initial Spares and Repair Parts
+Sustainment,1,WBS for MIL-STD-811f Appendix L: Sustainment
+Sustainment,2,Unit-Level Manpower 
+Sustainment,3,Operations 
+Sustainment,3,Unit-Level Maintenance 
+Sustainment,3,Other Unit-Level (1…n Specify)
+Sustainment,2,Unit Operations
+Sustainment,3,Energy (Fuel
+Sustainment,3,Training Munitions and Expendable Stores
+Sustainment,3,Support Services
+Sustainment,3,Temporary Duty (TDY) Travel
+Sustainment,3,Second Destination Transportation
+Sustainment,2,Maintenance
+Sustainment,3,Consumables
+Sustainment,3,Depot Level Reparables (DLRs) 
+Sustainment,3,Intermediate Maintenance (External to Unit-Level)
+Sustainment,3,Depot Maintenance
+Sustainment,4,Scheduled Depot Maintenance
+Sustainment,4,Unscheduled Depot Maintenance
+Sustainment,2,Sustaining Support
+Sustainment,3,System-Specific Training
+Sustainment,4,System-Specific Operator Training
+Sustainment,4,System-Specific Maintenance Training
+Sustainment,3,Support Equipment Replacement and Repair
+Sustainment,3,Sustaining/Systems Engineering
+Sustainment,3,Program Management
+Sustainment,3,Data and Technical Publications
+Sustainment,3,Simulator Operations and Repair
+Sustainment,4,Simulator/Training Device Operations
+Sustainment,4,Simulator/Training Device Hardware Repair and Replace
+Sustainment,4,Simulator/Training Device Software Support
+Sustainment,3,Other Sustaining Support 1…n (Specify)
+Sustainment,2,Continuing System Improvements
+Sustainment,3,Hardware Modifications
+Sustainment,4,Mod Kit Development
+Sustainment,4,Mod Kit Procurement
+Sustainment,4,Mod Kit Initial Spares
+Sustainment,4,Mod Kit Installation
+Sustainment,3,Software Maintenance
+Sustainment,4,Software Changes
+Sustainment,4,Software Program Management
+Sustainment,4,Software Sustaining Engineering
+Sustainment,4,System Facilities
+Sustainment,4,Field Service Engineers
+Sustainment,4,Certification and Accreditation
+Sustainment,4,Help Desk
+Sustainment,4,Hosting
+Sustainment,4,Software Licenses
+Research Project,1,WBS for NIH Research Project
+Research Project,2,Project initiation
+Research Project,3,Literature review
+Research Project,3,IRB protocol development
+Research Project,3,Study design
+Research Project,3,Recruitment strategy
+Research Project,2,Data collection
+Research Project,3,Participant recruitment
+Research Project,3,Informed consent process
+Research Project,3,Data collection procedures
+Research Project,3,Quality control checks
+Research Project,2,Data analysis
+Research Project,3,Data cleaning
+Research Project,3,Statistical analysis
+Research Project,3,Interpretation of results
+Research Project,2,Dissemination
+Research Project,3,Manuscript preparation
+Research Project,3,Conference presentations
+Research Project,3,Grant reporting
+Production Platform,1,WBS for Production Platform Project 
+Production Platform,2,Project Management
+Production Platform,2,Engineering
+Production Platform,3,General
+Production Platform,4,Preliminary Engineering Acceptance
+Production Platform,4,Preliminary Engineering Acceptance
+Production Platform,4,Design Basis and Specifications
+Production Platform,4,Calculations and Engineering Data Books
+Production Platform,4,Summary Reports
+Production Platform,4,Platform Equipment Manuals
+Production Platform,3,Jacket
+Production Platform,4,Structural Engineering and Drafting
+Production Platform,5,Jacket In-Service Analyses
+Production Platform,5,Jacket Pre-Service Analyses
+Production Platform,5,Jacket Design Details
+Production Platform,5,Jacket Cathodic Protection
+Production Platform,5,Jacket Weights and Material Takeoffs
+Production Platform,5,Jacket Approved for Construction (AFC) Drawings
+Production Platform,5,Jacket Detailed Engineering and Design Report
+Production Platform,4,Mechanical Engineering & Drafting
+Production Platform,5,Flood and Vent System
+Production Platform,5,Grouting System
+Production Platform,3,Piling – Structural Engineering and Drafting
+Production Platform,4,Piling In-Service Analyses
+Production Platform,4,Piling Pre-Service Analyses
+Production Platform,4,Piling Design Details
+Production Platform,4,Piling Weights and Material Takeoffs
+Production Platform,4,Piling AFC Drawings
+Production Platform,4,Piling Detailed Engineering and Design Report
+Production Platform,3,Topsides
+Production Platform,4,Structural Engineering and Drafting
+Production Platform,5,Deck In-Service Analyses
+Production Platform,5,Deck Pre-Service Analyses
+Production Platform,5,Deck Design Details
+Production Platform,5,Deck Weights and Material Takeoffs
+Production Platform,5,Deck AFC Drawings
+Production Platform,5,Deck Detailed Engineering and Design Report
+Production Platform,4,Mechanical/Process Engineering and Drafting
+Production Platform,5,Process Simulation/Calculations
+Production Platform,5,Equipment Design/Sizing
+Production Platform,5,Pipe Stress Analysis
+Production Platform,5,Hazard Analysis
+Production Platform,5,Specifications
+Production Platform,5,Vendor Data Reviews
+Production Platform,5,Weight
+Production Platform,5,AFC Drawings for:
+Production Platform,6,Process Flow Diagrams/Utility Flow Diagrams
+Production Platform,6, Mechanical Flow Diagrams/Piping and Instrument Drawings
+Production Platform,6,Equipment Layouts/Arrangements/Skid Layouts
+Production Platform,6,Piping Supports
+Production Platform,6,Piping General Arrangements
+Production Platform,6, Other AFC Drawings
+Production Platform,5,Data Books
+Production Platform,4,Electrical Engineering & Drafting
+Production Platform,5,Electrical Engineering and Design
+Production Platform,5,Electrical Specifications
+Production Platform,5,Electrical Load Study/List
+Production Platform,5,Vendor Data Reviews
+Production Platform,5,Weight
+Production Platform,5,AFC Drawings for:
+Production Platform,6, Area Classifications
+Production Platform,6, Electrical Symbol Legend
+Production Platform,6, Electrical One-Line Drawings
+Production Platform,6, Schematics/Schedule/Plans
+Production Platform,6, Buildings and Equipment Layouts
+Production Platform,6, Electrical Arrangement and Cable Tray Routing
+Production Platform,6, Electrical Installation Details
+Production Platform,6, Other AFC Drawings
+Production Platform,5,Data Books
+Production Platform,4,Instrument Engineering & Drafting
+Production Platform,5,Instrument Engineering & Design
+Production Platform,5,Fire & Safety Engineering & Design
+Production Platform,5,Relief Systems Sizing Calculations
+Production Platform,5,Instrument Specification
+Production Platform,5,Instrument Index
+Production Platform,5,Vendor Data Reviews
+Production Platform,4,Weight
+Production Platform,4,AFC Drawings for:
+Production Platform,5,SAFE Charts/PSFDs
+Production Platform,5,Control Panels
+Production Platform,5,PLC System
+Production Platform,5,Tubing Tray Routing
+Production Platform,5,Loop Diagrams
+Production Platform,5,Instrument Installation Details
+Production Platform,5,Fire and Safety
+Production Platform,5,Pressure Relief Systems
+Production Platform,5,Other AFC Drawings
+Production Platform,4,Data Books
+Production Platform,2,Procurement
+Production Platform,3,General
+Production Platform,4,Procurement Procedures
+Production Platform,4,Expediting and Inspection Procedures
+Production Platform,3,Jacket
+Production Platform,4,Owner Furnished Equipment (OFE)
+Production Platform,4,Contractor Furnished Reimbursable Equipment (CFRE)
+Production Platform,4,All Other Contractor Supplied Equipment
+Production Platform,4,Bulk Materials—Contractor Supplied
+Production Platform,5,Structural
+Production Platform,5,Anodes
+Production Platform,3,Piling
+Production Platform,4,Bulk Materials—Contractor Supplied
+Production Platform,5,Structural
+Production Platform,3,Topsides
+Production Platform,4,Owner Furnished Equipment (OFE)
+Production Platform,5,Rotating Equipment
+Production Platform,5,Pressure Vessels
+Production Platform,5,Electrical Generation
+Production Platform,4,Contractor Furnished Reimbursable Equipment (CFRE)
+Production Platform,5,Rotating Equipment
+Production Platform,5,Pressure Vessels
+Production Platform,5,Other CFRE
+Production Platform,4,All Other Contractor Supplied Equipment
+Production Platform,4,Bulk Materials—Contractor Supplied
+Production Platform,5,Structural
+Production Platform,5,Piping
+Production Platform,5,Electrical
+Production Platform,5,Instrument
+Production Platform,2,Fabrication
+Production Platform,3,General
+Production Platform,4,Safety Manual and Plan
+Production Platform,4,Yard and Work-Force Mobilization
+Production Platform,4,Qualification of Welding Procedures and Welders
+Production Platform,5,Structural
+Production Platform,5,Piping
+Production Platform,4,Shop Drawings
+Production Platform,5,Structural
+Production Platform,5,Piping Isometrics
+Production Platform,5,Piping Spools
+Production Platform,4,Receipt of Materials
+Production Platform,4,QA/QC
+Production Platform,4,Weight Control Reports
+Production Platform,4,As-Built Drawings and Certification Dossier
+Production Platform,3,Jacket
+Production Platform,4,Frames
+Production Platform,5,Frame 1
+Production Platform,5,Frame 2
+Production Platform,5,Frame A
+Production Platform,5,Frame B
+Production Platform,4,Horizontal Levels
+Production Platform,5,Level 1
+Production Platform,5,Level 2
+Production Platform,5,Level 3
+Production Platform,5,Level 4
+Production Platform,4,Appurtenances
+Production Platform,5,Disposal Pile
+Production Platform,5,Caissons
+Production Platform,5,Risers
+Production Platform,5,Boat Landing
+Production Platform,5,Corrosion Protection
+Production Platform,5,Stairs
+Production Platform,4,Installation Aids
+Production Platform,4,Loadout and Seafasten
+Production Platform,3,Piling
+Production Platform,4,Pile A1
+Production Platform,4,Pile A2
+Production Platform,4,Pile B1
+Production Platform,4,Pile B2
+Production Platform,4,Loadout and Seafasten
+Production Platform,3,Topsides
+Production Platform,4,Main Deck
+Production Platform,5,Plate Girders
+Production Platform,5,Deck Panels
+Production Platform,5,Tertiary Steel
+Production Platform,4,Cellar Deck
+Production Platform,5,Plate Girders
+Production Platform,5,Deck Panels
+Production Platform,5,Tertiary Steel
+Production Platform,4,Sub-Cellar Deck
+Production Platform,4,Legs
+Production Platform,4,Bracing
+Production Platform,4,Equipment Installation
+Production Platform,4,Interconnect Piping
+Production Platform,4,Electrical
+Production Platform,4,Instrumentation
+Production Platform,4,Precommissioning
+Production Platform,4,Appurtenances
+Production Platform,5,Flare Boom
+Production Platform,5,Stairs
+Production Platform,5,Installation Aids
+Production Platform,4,Loadout and Seafasten
+Production Platform,2,Transportation
+Production Platform,3,General
+Production Platform,4,Safety Manual and Plan
+Production Platform,4,Seafastening Drawings
+Production Platform,4,Marine Warranty Surveyor Review and Approval
+Production Platform,3,Jacket
+Production Platform,3,Piling
+Production Platform,3,Topsides
+Production Platform,2,Installation
+Production Platform,3,General
+Production Platform,4,Safety Manual and Plan
+Production Platform,4,Installation Procedures and Drawings
+Production Platform,4,Qualification of Welding Procedures and Welders
+Production Platform,5,Structural
+Production Platform,5,Piping
+Production Platform,4,As-Installed Drawings
+Production Platform,4,Mobilization
+Production Platform,4,Demobilization
+Production Platform,3,Jacket
+Production Platform,3,Piling
+Production Platform,3,Topsides
+Production Platform,4,Hookup
+Production Platform,4,Commissioning
+Production Platform,4,Startup
+New Compound,1,WBS for New Compound Development Project
+New Compound,2,Project Initiation
+New Compound,3,Decision to Develop Business Case
+New Compound,3,Business Case
+New Compound,3,Project Initiation Decision
+New Compound,2,Marketing/Sales Support
+New Compound,3,Market Research Program
+New Compound,3,Branding Program
+New Compound,3,Pricing Program
+New Compound,3,Sales Development Program
+New Compound,3,Other Marketing/Sales Support
+New Compound,2,Regulatory Support
+New Compound,3,IND Submission
+New Compound,4,Pre-IND Meeting
+New Compound,4,IND Preparation
+New Compound,5,Preclinical Package
+New Compound,5,Clinical Package
+New Compound,5,Clinical Pharmacology Package
+New Compound,5,CM&C Package
+New Compound,4,IND Submission
+New Compound,3,End of Phase 2 Meeting
+New Compound,4,Pre-Meeting Package
+New Compound,4,End of Phase 2 Meeting
+New Compound,3,BLA/NDA Submission
+New Compound,4,Pre-BLA/NDA Meeting
+New Compound,4,BLA/NDA Preparation
+New Compound,5,Preclinical Package
+New Compound,5,Clinical Package
+New Compound,5,Clinical Pharmacology Package
+New Compound,5,CM&C Package
+New Compound,4,BLA/NDA Submission
+New Compound,4,Advisory Committee Meeting
+New Compound,4,FDA review support
+New Compound,4,Pre-Approval Inspection
+New Compound,4,Approval
+New Compound,3,Post-approval Regulatory Support Program
+New Compound,4,Annual Reports
+New Compound,4,Adverse Event Reporting
+New Compound,4,Post-market Commitment Administration
+New Compound,2,Lead Identification Program
+New Compound,3,Hypothesis Generation
+New Compound,3,Assay Screening
+New Compound,3,Lead Optimization
+New Compound,3,Other Discovery Support
+New Compound,2,Clinical Pharmacology Support
+New Compound,3,Pharmacokinetic Study(ies)
+New Compound,3,Drug Interaction Study(ies)
+New Compound,3,Renal Effect Study(ies)
+New Compound,3,Hepatic Effect Study(ies)
+New Compound,3,Bioequivalency Study(ies)
+New Compound,3,Other Clinical Pharmacology Study(ies)
+New Compound,2,Preclinical Program
+New Compound,3,Tox/ADME Support
+New Compound,4,Non-GLP Animal Studies
+New Compound,4,Bioanalytical Assay Development
+New Compound,4,ADME Evaluations
+New Compound,4,Acute Toxicological Studies
+New Compound,4,Sub-Chronic Toxicological Studies
+New Compound,4,Chronic Toxicological Studies
+New Compound,4,Other Tox/ADME Support
+New Compound,3,Clinical Pharmacology Support
+New Compound,4,Pharmacokinetic Study(ies)
+New Compound,4,Drug Interaction Study(ies)
+New Compound,4,Renal Effect Study(ies)
+New Compound,4,Hepatic Effect Study(ies)
+New Compound,4,Bioequivalency Study(ies)
+New Compound,4,Other Clinical Pharmacology Study(ies)
+New Compound,2,Phase I Clinical Study Program
+New Compound,3,Pharmacokinetic/Pharmacodynamic Study(ies)
+New Compound,3,Dose Ranging Study(ies)
+New Compound,3,Multiple Dose Safety Study(ies)
+New Compound,4,Pre-Enrollment Activities
+New Compound,4,Enrollment
+New Compound,4,Treatment
+New Compound,4,Follow-up
+New Compound,4,Data Management
+New Compound,4,Data analysis
+New Compound,4,Study Report1.10
+New Compound,2,Phase II Clinical Study Program
+New Compound,3,Multiple Dose Efficacy Study(ies)
+New Compound,3,Other Clinical Study(ies)
+New Compound,2,Phase III Clinical Study Program
+New Compound,3,Pivotal Registration Study(ies)
+New Compound,3,Other Clinical Study(ies)
+New Compound,2,Submission/Launch Phase
+New Compound,3,Pre-Launch preparation
+New Compound,3,Launch
+New Compound,3,Post-Launch Support
+New Compound,2,Phase IV/Commercialization Clinical Study Program
+New Compound,3,Investigator-Sponsored Studies
+New Compound,3,Registry Studies
+New Compound,2,Legal Support
+New Compound,3,Publications
+New Compound,3,Patents/Intellectual Property
+New Compound,3,Trademarks
+New Compound,3,Other Legal Support
+New Compound,2,Program Management Support
+New Compound,3,Program-Level Project Management
+New Compound,3,Preclinical Project Management
+New Compound,3,Clinical Project Management
+New Compound,3,CM&C Project Management
+New Compound,3,Other Project Management Support
+Process Improvement,1,WBS for Process Improvement Project
+Process Improvement,2,Phase 1:  Research and Recommendations
+Process Improvement,3,Phase 1 Charter
+Process Improvement,3,Project Management Plans for Phase 1
+Process Improvement,3,Research
+Process Improvement,4,"Documentation of the ""State of the Art"""
+Process Improvement,5,Document Search
+Process Improvement,5,Consultation with Experts
+Process Improvement,5,Benchmarking
+Process Improvement,5,Product and Software Review
+Process Improvement,4,Documentation of the Current State in the Subject Organization
+Process Improvement,5,Interviews
+Process Improvement,5,Surveys
+Process Improvement,5,Statistical Analysis
+Process Improvement,5,Flow Charts of Current Processes
+Process Improvement,3,Identification of Improvement Needs
+Process Improvement,4,Determination of Desired State (Vision Statement)
+Process Improvement,4,Gap Analysis
+Process Improvement,4,Most Likely Solutions 
+Process Improvement,5,Brainstorming
+Process Improvement,5,Statistical Analysis
+Process Improvement,5,Flow Charts of Desired Processes
+Process Improvement,3,Recommendations
+Process Improvement,4,Recommendation 1
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Process Improvement,4,Recommendation 2
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Process Improvement,4,Recommendation 3
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Process Improvement,2,Phase 2: Implementation of Approved Recommendation (This portion of the WBS is repeated for each approved recommendation)
+Process Improvement,3,Recommendation x Charter (approved and amended version of the draft from 1.1.5)
+Process Improvement,3,Project Management Plans for Phase 2 (seven plans
+Process Improvement,3,Process Documentation
+Process Improvement,4,Draft process (policy
+Process Improvement,4,Review
+Process Improvement,4,Revision (1.2.3.2 and 1.2.3.3 are iterative—repeat until there is consensus)
+Process Improvement,4,Publication
+Process Improvement,5,Hardcopy
+Process Improvement,5,Internet or Intranet
+Process Improvement,5,Other
+Process Improvement,3,Tools (software
+Process Improvement,4,Design
+Process Improvement,4,Build
+Process Improvement,4,Test
+Process Improvement,4,Revision (1.2.4.3 and 1.2.4.4 are iterative—repeat until the product meets its goals)
+Process Improvement,4,Implementation
+Process Improvement,3,Training
+Process Improvement,4,Instructors
+Process Improvement,5,Hiring
+Process Improvement,5,Training (“Train the Trainers”)
+Process Improvement,4,Development
+Process Improvement,5,Draft Training Materials
+Process Improvement,5,Review and Pilot
+Process Improvement,5,Revision (1.2.5.2.2 and 1.2.5.2.3 are iterative—repeat until the class meets its goals)
+Process Improvement,4,Delivery
+Process Improvement,2,Phase 3: Evaluation
+Process Improvement,3,Project Management Plans for Phase 3 (seven plans
+Process Improvement,3,Documentation of the New State in the Subject Organization
+Process Improvement,4,Interviews
+Process Improvement,4,Surveys
+Process Improvement,4,Statistical Analysis
+Process Improvement,4,Flow Charts of New Processes
+Process Improvement,3,Identification of Deficiencies
+Process Improvement,4,Flow Charts of Desired Processes (from 1.4.3.3)
+Process Improvement,4,Gap Analysis
+Process Improvement,3,Recommendations for New Projects
+Process Improvement,4,Recommendation 1
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Process Improvement,4,Recommendation 2
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Process Improvement,4,Recommendation n
+Process Improvement,5,Draft Charter
+Process Improvement,5,Estimated Cost
+Factory Construction,1,WBS for Process Plant Construction Project
+Factory Construction,2,Plant System Design
+Factory Construction,3,Business requirements
+Factory Construction,4,System Engineering
+Factory Construction,4,Site Development
+Factory Construction,4,Civil Structures
+Factory Construction,4,Thermal Systems
+Factory Construction,4,Flow Systems
+Factory Construction,4,Storage Systems
+Factory Construction,4,Electrical Systems
+Factory Construction,4,Mechanical Systems
+Factory Construction,4,Environmental Systems
+Factory Construction,4,Instrumentation and Control Systems
+Factory Construction,4,Auxiliary Systems
+Factory Construction,4,Security Systems
+Factory Construction,3,Process Models
+Factory Construction,4,System Engineering
+Factory Construction,4,Site Development
+Factory Construction,4,Civil Structures
+Factory Construction,4,Thermal Systems
+Factory Construction,4,Flow Systems
+Factory Construction,4,Storage Systems
+Factory Construction,4,Electrical Systems
+Factory Construction,4,Mechanical Systems
+Factory Construction,4,Environmental Systems
+Factory Construction,4,Instrumentation and Control Systems
+Factory Construction,4,Auxiliary Systems
+Factory Construction,4,Safety systems
+Factory Construction,2,Construction
+Factory Construction,3,Site Development
+Factory Construction,3,Civil Structures
+Factory Construction,3,Thermal Systems
+Factory Construction,3,Flow Systems
+Factory Construction,3,Storage Systems
+Factory Construction,3,Electrical Systems
+Factory Construction,3,Mechanical Systems
+Factory Construction,3,Instrument and Control Systems
+Factory Construction,3,Environmental Systems
+Factory Construction,3,Temporary Structure
+Factory Construction,3,Auxiliary Systems
+Factory Construction,3,Safety Systems
+Factory Construction,2,Legal and Regulatory
+Factory Construction,3,Licensing (Non-Government)/Permitting (government)
+Factory Construction,4,Licensing (Non-Government)
+Factory Construction,5,Roofing
+Factory Construction,5,Electric
+Factory Construction,5,Plumbing
+Factory Construction,5,Commercial Signs
+Factory Construction,5,Elevators
+Factory Construction,5,Steam/Hot Water Boilers
+Factory Construction,5,Air Conditioning
+Factory Construction,5,Commercial Fire Suppression Systems
+Factory Construction,5,Forced Air Furnaces/Ventilation
+Factory Construction,5,Water Heaters and Gas Lines
+Factory Construction,4,Permitting (Government)
+Factory Construction,5,Application
+Factory Construction,5,Acceptance Criteria
+Factory Construction,5,Issuance of License
+Factory Construction,3,Environmental Impact
+Factory Construction,4,Preliminary Assessment
+Factory Construction,4,Impact Review
+Factory Construction,4,Magnitude Assessment
+Factory Construction,4,Mitigation Plan
+Factory Construction,3,Labor Agreements
+Factory Construction,4,Agreement
+Factory Construction,4,Collective Bargaining
+Factory Construction,4,Agreement Finalization
+Factory Construction,3,Land Acquisition
+Factory Construction,4,Available Property
+Factory Construction,4,Local Government Zoning Rights/Restrictions
+Factory Construction,4,Price Comparisons
+Factory Construction,4,Professional Survey
+Factory Construction,4,Financing
+Factory Construction,3,Other Legal/Regulatory Requirements
+Factory Construction,2,Testing
+Factory Construction,3,System Test
+Factory Construction,4,System Test Plans and Procedures
+Factory Construction,4,System Testing
+Factory Construction,3,Acceptance Test
+Factory Construction,4,Acceptance Test Plans
+Factory Construction,4,Acceptance Testing
+Factory Construction,4,Formal Acceptance
+Factory Construction,2,Startup
+Factory Construction,2,Project Management
+Outsourcing Project,1,WBS for Outsourcing Project
+Outsourcing Project,3,Needs Analysis
+Outsourcing Project,3,Needs Analysis 
+Outsourcing Project,4,Feasibility Study
+Outsourcing Project,4,Historical Information
+Outsourcing Project,3,Definition and Baseline Requirements
+Outsourcing Project,4,Project Approach Strategy
+Outsourcing Project,4,High-Level Project Plan
+Outsourcing Project,4,Cost Estimates
+Outsourcing Project,4,Scope Statement
+Outsourcing Project,3,Specifications
+Outsourcing Project,3,High-Level Statement of Work
+Outsourcing Project,2,Market Analysis
+Outsourcing Project,3,Internal Capability Plus Cost
+Outsourcing Project,3,Qualified Vendors
+Outsourcing Project,3,RFI (Information)
+Outsourcing Project,3,RFI Submissions
+Outsourcing Project,3,Decision Analysis (Includes Make/Buy)
+Outsourcing Project,2,Request for Proposal (RFP)
+Outsourcing Project,3, RFP Development
+Outsourcing Project,4,Solution Criteria
+Outsourcing Project,4,Background and General Scope of Work
+Outsourcing Project,4,Priorities/Requirements
+Outsourcing Project,4,Type of Solution Sought
+Outsourcing Project,4,Maintenance and Support; Warranty; Training
+Outsourcing Project,3,Acceptance Requirements
+Outsourcing Project,3,Schedule
+Outsourcing Project,3,Budget
+Outsourcing Project,3, RFP Package
+Outsourcing Project,4, Instructions for Preparation/Delivery of Submissions
+Outsourcing Project,4, Evaluation Criteria
+Outsourcing Project,4, Site Inspection Requirements
+Outsourcing Project,4, Withdrawal or Modifications of Proposals
+Outsourcing Project,4,Responsibility for Proposal Costs
+Outsourcing Project,2,Solicitation
+Outsourcing Project,3,RFP Issuance
+Outsourcing Project,3,Bids
+Outsourcing Project,3,Bidder Conference
+Outsourcing Project,3,RFP submissions/Receipt
+Outsourcing Project,3,Response Evaluation
+Outsourcing Project,3,Vendor Criteria Matrix
+Outsourcing Project,3,Scorecard
+Outsourcing Project,3,Vendor Qualification
+Outsourcing Project,4,Prior Experience
+Outsourcing Project,4,Available Vendor Resources/Available Time
+Outsourcing Project,4,Quality references 
+Outsourcing Project,3,Vendor Award 
+Outsourcing Project,4,Management Approvals
+Outsourcing Project,4,Legal Review and Approvals
+Outsourcing Project,3,Letter of Intent (LOI)
+Outsourcing Project,2,Contract
+Outsourcing Project,3,Master Agreement
+Outsourcing Project,4,Contract Negotiation
+Outsourcing Project,4,Finalized Terms and Conditions
+Outsourcing Project,4,Finalized Scope/Schedule/Cost
+Outsourcing Project,3,Contract Orders/Task Orders/CSOWs
+Outsourcing Project,4,Specific Deliverables
+Outsourcing Project,4,Identified Resources
+Outsourcing Project,4,Defined SLAs
+Outsourcing Project,4,Defined Acceptance Criteria
+Outsourcing Project,4,Defined Performance Measures
+Outsourcing Project,4,Issued PO/Task Order
+Outsourcing Project,3,Executed Agreement/Signed Contract
+Outsourcing Project,2,Task Order/Contract Order SOW
+Outsourcing Project,2,Project Management
+Software Development,1,WBS for Software Implementation Project 
+Software Development,2,Project Management
+Software Development,2,Product Requirements
+Software Development,3,Software Requirements
+Software Development,4,Draft Software Requirements
+Software Development,4,Final Software Requirements
+Software Development,4,Software Requirements Approval
+Software Development,3,User Documentation
+Software Development,4,Draft User Documentation
+Software Development,4,Final User Documentation
+Software Development,4,User Documentation Approval
+Software Development,3,Training Program Materials
+Software Development,4,Initial Training Requirements
+Software Development,4,Initial Training Materials
+Software Development,4,Trial Course Delivery
+Software Development,3,Hardware
+Software Development,4,Draft Hardware Requirements
+Software Development,4,Final Hardware Requirements
+Software Development,4,Hardware Requirements Approval
+Software Development,3,Implementation & Future Support
+Software Development,2,Detail Software Design
+Software Development,3,Initial Software Design
+Software Development,3,Final Software Design
+Software Development,3,Software Design Approval
+Software Development,2,System Construction
+Software Development,3,Configured Software
+Software Development,3,Customized User Documentation
+Software Development,3,Customized Training Program Materials
+Software Development,3,Installed Hardware
+Software Development,3,Implementation & Future Support
+Software Development,2,Test
+Software Development,3,System Test Plan
+Software Development,3,System Test Cases
+Software Development,3,System Test Results
+Software Development,3,Acceptance Test Plan
+Software Development,3,Acceptance Test Cases
+Software Development,3,Acceptance Test Results
+Software Development,3,Approved User Documentation
+Software Development,2,Go Live
+Software Development,2,Support
+Software Development,3,Training
+Software Development,3,End User Support
+Software Development,3,Product Support
+Telecom,1,WBS for Telecom Project
+Telecom,2,Concept/Feasibility
+Telecom,3,Concept
+Telecom,3, Marketing Analysis
+Telecom,3,Market Plan
+Telecom,3,Technical Analysis
+Telecom,3,Product Scope Definition
+Telecom,3,Prototype
+Telecom,2,Requirements
+Telecom,3,End-User Requirements
+Telecom,3,Application Requirements
+Telecom,3,Infrastructure (Systems) Requirements
+Telecom,3,Operations/Maintenance Requirements
+Telecom,3,Service Requirements
+Telecom,2,Go/No Go Decision
+Telecom,3,Prototype Review
+Telecom,3,Financial Review 
+Telecom,3,Schedule Review
+Telecom,3,Technical Capabilities Review
+Telecom,3,Financial Commitment Review
+Telecom,3,Go/No-Go Decision 
+Telecom,2,Development
+Telecom,3,End-User Systems
+Telecom,3,Application
+Telecom,3,Infrastructure Systems
+Telecom,3,Network
+Telecom,3,Operations/Maintenance Systems
+Telecom,3,Service Plan
+Telecom,2,Testing
+Telecom,3,Test Plans
+Telecom,3,Tests
+Telecom,3,Results
+Telecom,3,Corrective Actions 
+Telecom,3,Retests
+Telecom,3,Retest Results
+Telecom,2,Deployment
+Telecom,3,Trial in a Non-Penalty Environment
+Telecom,3,First Action Site
+Telecom,3,Deployment 
+Telecom,2,Life-cycle Support
+Telecom,3,Customer Training & Education
+Telecom,3,Turnover to Customer
+Telecom,3,Customer Acceptance
+Telecom,3,Support & Maintenance
+Telecom,2,Project Management
+Web Design,1,WBS for Web Design Project
+Web Design,2,Planning 
+Web Design,3,Product Definition
+Web Design,3,Stakeholder Approval
+Web Design,2,Definition
+Web Design,3,Requirements Development
+Web Design,4,Business Requirements Development
+Web Design,4,System Requirements Development
+Web Design,3,Conceptual Design Development
+Web Design,4,Conceptual Data Design
+Web Design,4,Conceptual Process Design
+Web Design,3,Architectural Design Development
+Web Design,4,Web Design Methods Evaluation
+Web Design,4,Web Design Method Selection
+Web Design,3,Bill of Materials (BoM) Creation
+Web Design,3,Resource Procurement
+Web Design,4,Human Resources Procurement
+Web Design,4,Hardware Procurement
+Web Design,4,Software Procurement
+Web Design,4,Telecommunications Procurement
+Web Design,2,Construction
+Web Design,3,Detailed Design Development
+Web Design,4,Data Design
+Web Design,4,Business Logic Design
+Web Design,4,User Interface Design
+Web Design,4,Internal Design Standards Consultation
+Web Design,4,Industry Design Standards Consultation
+Web Design,3,High-Level Test Plan Development
+Web Design,3,System Components—Code
+Web Design,4,Database Components
+Web Design,4,Code/Logic Components
+Web Design,4,Web GUI Interface Components
+Web Design,3,System Installation (Configure)
+Web Design,2,Testing
+Web Design,3,Testing Execution
+Web Design,4,System Test
+Web Design,4,User Acceptance Test
+Web Design,4,Performance Test
+Web Design,3,Analyze Defects/Correct
+Web Design,3,Production Readiness Verification
+Web Design,2,Deployment
+Web Design,3,Transition
+Web Design,4,Support Personnel Training
+Web Design,4,Support Procedures Documentation
+Web Design,4,Software
+Web Design,4,Hardware
+Web Design,3,Legacy System Decommissioning
+Web Design,2,Project Management
