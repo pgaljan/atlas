@@ -289,3 +289,4 @@ Record {
 
 ## Reference and Mock Data Sets
 [Atlas Kickstarter](./AtlasKickstarter.xlsx)
+[Sample Structures](./unitTestData/element/structureLibrary.csv)
