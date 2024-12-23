@@ -332,3 +332,52 @@ Example structures for business, engineering, project management and educational
 | MIL-STD-811F           | [Launch Vehicle](https://atlasstructure.tiiny.site/launchvehicle.html)              |
 | MIL-STD-811F           | [Information/Business System](https://atlasstructure.tiiny.site/infosys.html) |
 | MIL-STD-811F           | [Sustainment](https://atlasstructure.tiiny.site/sustainment.html)                 |
+
+## Editions
+|   | Personal | Educator | Analyst | Business |
+| -----: | :-----: | :-----: | :-----: | :-----: |
+| price | free | $ | $$ | $$$|
+| Structures[🅿️](./drawio/phase1.png) | 5 | 50 | unlimited | unlimited |
+| Collaborators |  | 500 | unlimited | unlimited |
+| Storage & Transfer* | 100 MiB | 1 GiB | 10 GiB | 100 GiB | 
+| Visual structure map[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ | 
+| Passwordless login   | ✅ | ✅ | ✅ | ✅ |
+| Rich Text Annotation[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ |
+| Import from Excel[🅿️](./drawio/phase1.png)  | ✅ | ✅ | ✅ | ✅ |
+| Export to html, md[🅿️](./drawio/phase1.png) | ✅ | ✅ | ✅ | ✅ |
+|**Document Editing**   |
+| Math Typesetting (KaTeX)[🖼️](./drawio/katex.png)|  | ✅ | ✅ | ✅ |
+| File/Image Hosting |  |  | ✅ | ✅ |
+| AI Assistant |  |  | ✅ | ✅ |
+| Full Document Formatting |  |  | ✅ | ✅ | 
+|**Structure Management**   |
+| Structure Backup/Restore[🅿️](./drawio/phase1.png) |  | ✅ | ✅ | ✅ |
+| Structure marketplace |  | ✅ | ✅ | ✅ |
+| Custom Records  |  |  | ✅ | ✅ |
+| Object Tagging |  |  | ✅ | ✅ |
+| Element-level export |  |  | ✅ | ✅ |
+| Export to docx, pdf, pptx |  |  | ✅ | ✅ |
+| Structure-level Attributes |  |  | ✅ | ✅ |
+| Custom Views |  |  | ✅ | ✅ | 
+| Snapshots |  |  | ✅ | ✅ |
+| Cross-structure reporting |  |  | ✅ | ✅ |
+| Structure differencing |  |  | ✅ | ✅ |
+|**Collaboration**   |
+| Report Sharing[🖼️](./drawio/reports.png) |  |  | ✅ | ✅ |
+| View Sharing |  |  |  | ✅ |
+| Strict Record Formatting |  |  |  | ✅ | 
+| @Mentions and Comments |  |  |  | ✅ |
+| Tasks and Planner |  |  |  | ✅ |
+| Survey Module |  |  |  | ✅ |
+| Dynamic WBS[🅿️](./drawio/phase1.png) |  |  |  | ✅ |
+| Proposal Builder |  |  |  | ✅ |
+| Custom Template |  |  |  | ✅ |
+| Custom Tooltips |  |  |  | ✅ |
+| Structure linking |  |  |  | ✅ |
+| MIL-STD-811F templates |  |  |  | ✅ |
+|**Platform Management &<br> Interoperability**   |
+| Single Sign-On |  |  |  | ✅ |
+| Webhooks |  |  |  | ✅ |
+| API Access |  |  |  | ✅ |
+
+*Additional Storage and Transfer $0.10/GiB-Month
