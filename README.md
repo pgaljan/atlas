@@ -288,8 +288,41 @@ Record {
 
 
 ## Reference and Mock Data Sets
-### [Atlas Kickstarter](./AtlasKickstarter.xlsx)
+### Kickstarter
 Create a structure in excel, preview its WBS numbering, and import it into the Atlas platform
+[Download](./AtlasKickstarter.xlsx)
 
-### [Example Structures](./unitTestData/element/structureLibrary.csv)
+### Example Structures
 Example structures for business, engineering, project management and educational use cases
+
+[Download](./unitTestData/element/structureLibrary.csv)
+
+| type                   | dataset                     |
+|------------------------|-----------------------------|
+| Platform Test          | Bicycle                     |
+| Platform Test          | Bicycle for UI Sim          |
+| Platform Test          | [Depth Gauge](./unitTestData/expectedResults/depthGauge.html)                 |
+| Platform Test          | [Width Gauge](./unitTestData/expectedResults/widthGauge.html)                 |
+| Education              | Human Languages             |
+| Business               | Design/Build Project        |
+| Business               | Production Platform         |
+| Business               | Process Improvement         |
+| Business               | Outsourcing Project         |
+| Business               | Software Development        |
+| Business               | Telecom                     |
+| Business               | Web Design                  |
+| Construction           | Environmental Remediation   |
+| Construction           | Factory Construction        |
+| Research & Development | Research Project            |
+| Research & Development | New Compound                |
+| MIL-STD-811F           | Aircraft System             |
+| MIL-STD-811F           | Electronics/Avionics        |
+| MIL-STD-811F           | Missile/Ordnance            |
+| MIL-STD-811F           | Strategic Missile System    |
+| MIL-STD-811F           | Sea System                  |
+| MIL-STD-811F           | Space System                |
+| MIL-STD-811F           | Ground Vehicle              |
+| MIL-STD-811F           | Unmanned Maritime System    |
+| MIL-STD-811F           | Launch Vehicle              |
+| MIL-STD-811F           | Information/Business System |
+| MIL-STD-811F           | Sustainment                 |
