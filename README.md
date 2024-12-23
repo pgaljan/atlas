@@ -25,7 +25,7 @@ The same data set can be leveraged in multiple structures, leaving the user free
 * **Buy-side planners** can collect and report on assets from vendors, suppliers and distributors.
 * **UX designers** can quickly re-imagine legacy records and navigation experiences, using the Atlas backend to combine and enrich data from multiple sources.
 * **Consultants** can create flexible, semi-structured data sets and no-code UIs for comparative analysis.
-* **UX Designers** can create user-friendly rhizomatic data collection patterns, with progressive detail exposure
+* **UX Designers** can create user-friendly rhizomatic data collection patterns, with progressive detail exposure.
 
 ## User Types
 * **Structure Owner**: Add Collaborators, Structure and Structure Link CRUD, Export Structure
