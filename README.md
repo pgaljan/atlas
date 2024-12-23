@@ -7,7 +7,7 @@
 This document is intended solely for personal use and may not be shared, reproduced, or modified without prior written consent. Violators may be subject to legal action.
 
 # Overview
-Atlas is a conceptual structure visualization and annotation platform featuring a modular interactive renderer that allows the user to create or calculate multiple structured or unstructured views of their data (represented as "Elements" in the object model). These views can be shared with others, and the same data may be represented in different views while maintaining consistency.
+Atlas is a conceptual multi-user structure visualization and annotation platform featuring a modular interactive renderer that allows the user to create or calculate multiple structured or unstructured views of a shared dataset (represented as "Elements" and "Records" in the object model). These views can be shared with others, and the same data may be represented in different views while maintaining consistency.
 
 The front-end is paired with a simple, flexible and scalable multi-user key/value store for user annotation of the data, along with subsequent reporting.
 
@@ -15,9 +15,6 @@ The same data set can be leveraged in multiple structures, leaving the user free
 
 ###### example implementation
 ![map](./img/author-atlas.drawio.png)
-
-
-
 
 # Use Cases
 * **Strategy teams** can collaborate to quickly generate, iterate, assess, and compare business plan and proposal assets.
@@ -41,13 +38,15 @@ The same data set can be leveraged in multiple structures, leaving the user free
 ![](./img/arch.svg)
 
 ## Object Model
+
 Each `Structure User` can create, read, update, delete, and share `Structures`, which represent an idea acted on by an individual or group of people.  In an educational setting, this could be a class syllabus or group project, in an academic setting this might represent a field of research or domain specialty, in a corporate setting it could represent a business proposal.
 
-Structures are comprised of `Elements`.  Each Element is associated with a single uniquely identitified `Record`.  Each Record can contain data of any type as defined by the Structure Owners.  Additionally, the Structure Owner can define an `Element Type`, which can be used to associated a library of record formats to element types.
+Structures are comprised of `Elements`.  Each Element is associated with a single uniquely identitified `Record`.  Each Record can contain data of any type as defined by the Structure Owner(s).  Additionally, the Structure Owner can define an `Element Type`, which can be used to associate a library of record formats to element types, and filtering in downstream analysis.
 
 Elements are represented on one or more `Structure Maps`, which are graphical representations of the elements on an infinite scroll 2D canvas.  Elements may be connected to other Elements in the Structure Map via zero or more `Element Links`, which are also associated with a single uniquely identified Record, the attributes of which are separately defined by the Structure Owner.  Structure Maps may also be linked to Elements residing in external Structures via `Structure Links`.
 
 ## Data Model
+
 ```mermaid
 erDiagram
 
@@ -285,15 +284,16 @@ Record {
 }
 ```
 
-
-
 ## Reference and Mock Data Sets
+
 ### Kickstarter
+
 Create a structure in excel, preview its WBS numbering, and import it into the Atlas platform
 
 [Download](./AtlasKickstarter.xlsx)
 
 ### Example Structures
+
 Example structures for business, engineering, project management and educational use cases
 
 [Download](./unitTestData/element/structureLibrary.csv)
