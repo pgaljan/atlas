@@ -288,5 +288,8 @@ Record {
 
 
 ## Reference and Mock Data Sets
-[Atlas Kickstarter](./AtlasKickstarter.xlsx)
-[Sample Structures](./unitTestData/element/structureLibrary.csv)
+### [Atlas Kickstarter](./AtlasKickstarter.xlsx)
+create a structure in excel, and preview its WBS numbering
+
+### [Example Structures](./unitTestData/element/structureLibrary.csv)
+example structures for business, engineering, project management and educational use cases
