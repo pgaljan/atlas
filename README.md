@@ -350,7 +350,7 @@ Example structures for business, engineering, project management and educational
 | Import from Excel🅿️  | ✅ | ✅ | ✅ | ✅ |
 | Export to html, md🅿️ | ✅ | ✅ | ✅ | ✅ |
 |**Document Editing**   |
-| Math Typesetting (KaTeX)|  | ✅ | ✅ | ✅ |
+| Math Typesetting ([LaTeX](https://latex.js.org/playground.html))|  | ✅ | ✅ | ✅ |
 | File/Image Hosting |  |  | ✅ | ✅ |
 | AI Assistant |  |  | ✅ | ✅ |
 | Full Document Formatting |  |  | ✅ | ✅ | 
@@ -367,7 +367,7 @@ Example structures for business, engineering, project management and educational
 | Cross-structure reporting |  |  | ✅ | ✅ |
 | Structure differencing |  |  | ✅ | ✅ |
 |**Collaboration**   |
-| Report Sharing[🖼️](./drawio/reports.png) |  |  | ✅ | ✅ |
+| Report Sharing |  |  | ✅ | ✅ |
 | View Sharing |  |  |  | ✅ |
 | Strict Record Formatting |  |  |  | ✅ | 
 | @Mentions and Comments |  |  |  | ✅ |
