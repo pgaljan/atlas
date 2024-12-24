@@ -371,6 +371,7 @@ Example structures for business, engineering, project management and educational
 |**Collaboration**   |
 | Report Sharing |  |  | ✅ | ✅ |
 | View Sharing |  |  |  | ✅ |
+| Embed codes |  |  |  | ✅ |
 | Strict Record Formatting |  |  |  | ✅ | 
 | @Mentions and Comments |  |  |  | ✅ |
 | Tasks and Planner |  |  |  | ✅ |
