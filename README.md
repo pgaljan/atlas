@@ -40,6 +40,8 @@ Structures are comprised of `Elements`.  Each Element is associated with a singl
 
 Elements are represented on one or more `Structure Maps`, which are graphical representations of the elements on an infinite scroll 2D canvas.  Elements may be connected to other Elements in the Structure Map via zero or more `Element Links`, which are also associated with a single uniquely identified Record, the attributes of which are separately defined by the Structure Owner.  Structure Maps may also be linked to Elements residing in external Structures via `Structure Links`.
 
+Structure Users are also mapped to typical objects required for IAM and billing in a multi-user SaaS delivery model.
+
 ## Data Model
 
 ```mermaid
@@ -303,10 +305,6 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
-| Platform Test          | [Bicycle](https://atlasstructure.tiiny.site/bicycle.html)                     |
-| Platform Test          | [Bicycle for UI Sim](https://atlasstructure.tiiny.site/bicyclesim.html)          |
-| Platform Test          | [Depth Gauge](https://atlasstructure.tiiny.site/depthGauge.html)                 |
-| Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
@@ -332,6 +330,10 @@ Example structures for business, engineering, project management and educational
 | MIL-STD-811F           | [Launch Vehicle](https://atlasstructure.tiiny.site/launchvehicle.html)              |
 | MIL-STD-811F           | [Information/Business System](https://atlasstructure.tiiny.site/infosys.html) |
 | MIL-STD-811F           | [Sustainment](https://atlasstructure.tiiny.site/sustainment.html)                 |
+| Platform Test          | [Bicycle](https://atlasstructure.tiiny.site/bicycle.html)                     |
+| Platform Test          | [Bicycle for UI Sim](https://atlasstructure.tiiny.site/bicyclesim.html)          |
+| Platform Test          | [Depth Gauge](https://atlasstructure.tiiny.site/depthGauge.html)                 |
+| Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
 
 ## Editions
 
