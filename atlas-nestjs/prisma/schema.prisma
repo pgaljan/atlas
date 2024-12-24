@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum SubscriptionStatus {
+  active
+  inactive
+  suspended
+  cancelled
+}
+
+enum Visibility {
+  public
+  private
+  archived
+  restricted
+}
+
+model User {
+  id           Int           @id @default(autoincrement())
+  username     String
+  email        String        @unique
+  roleId       Int
+  password     String
+  createdAt    DateTime      @default(now())
+  deletedAt    DateTime?
+  apiKeys      ApiKey[]
+  attachments  Attachment[]
+  auditLogs    AuditLog[]
+  backups      Backup[]
+  deletionLogs DeletionLog[]
+  structures   Structure[]
+  subscription Subscription?
+  tokens       Token[]
+  role         Role          @relation("UserRole", fields: [roleId], references: [id])
+  roles        Role[]        @relation("UserRoles")
+}
+
+model Role {
+  id          Int     @id @default(autoincrement())
+  name        String  @unique
+  description String?
+  User        User[]  @relation("UserRole")
+  users       User[]  @relation("UserRoles")
+}
+
+model Token {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  key       String
+  value     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, key])
+}
+
+model Subscription {
+  id        Int                @id @default(autoincrement())
+  userId    Int                @unique
+  planId    Int
+  features  Json
+  startDate DateTime           @default(now())
+  endDate   DateTime
+  status    SubscriptionStatus @default(active)
+  plan      Plan               @relation(fields: [planId], references: [id])
+  user      User               @relation(fields: [userId], references: [id])
+}
+
+model Plan {
+  id            Int            @id @default(autoincrement())
+  name          String
+  description   String
+  price         Decimal
+  features      Json
+  subscriptions Subscription[]
+}
+
+model Structure {
+  id           Int             @id @default(autoincrement())
+  name         String
+  description  String?
+  ownerId      Int
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
+  deletedAt    DateTime?
+  markmapMM    String?
+  visibility   Visibility      @default(private)
+  wbsPrefix    String          @default("1.")
+  elements     Element[]
+  parsedData   ParsedContent[]
+  renderers    Renderer[]
+  owner        User            @relation(fields: [ownerId], references: [id])
+  StructureMap StructureMap[]
+  Webhook      Webhook[]
+}
+
+model Element {
+  id              Int            @id @default(autoincrement())
+  structureId     Int
+  recordId        Int?
+  parentId        Int?
+  type            String?
+  Guid            String         @unique @default(uuid())
+  uniqWBS         String?
+  wbsLevel        Int?
+  wbsNumber       String         @default("1")
+  markmapMM       String?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  deletedAt       DateTime?
+  parsedContentId Int?
+  elementLinkId   Int?
+  ElementLink     ElementLink?   @relation(fields: [elementLinkId], references: [id])
+  parent          Element?       @relation("ParentChild", fields: [parentId], references: [id])
+  children        Element[]      @relation("ParentChild")
+  parsedData      ParsedContent? @relation(fields: [parsedContentId], references: [id])
+  Record          Record?        @relation(fields: [recordId], references: [id])
+  structure       Structure      @relation(fields: [structureId], references: [id])
+  sourceLinks     ElementLink[]  @relation("SourceElement")
+  targetLinks     ElementLink[]  @relation("TargetElement")
+  StructureMap    StructureMap[] @relation("MapElements")
+}
+
+model Record {
+  id        Int       @id @default(autoincrement())
+  metadata  Json
+  tags      Json?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Element   Element[]
+}
+
+model ParsedContent {
+  id             Int        @id @default(autoincrement())
+  Guid           String     @unique @default(uuid())
+  structureId    Int?
+  type           String
+  wbs            String
+  level          Int
+  element        String
+  uniqWBS        String?    @unique
+  markmapMM      String?
+  additionalData Json?
+  createdAt      DateTime   @default(now())
+  elements       Element[]
+  structure      Structure? @relation(fields: [structureId], references: [id])
+}
+
+model ElementLink {
+  id              Int       @id @default(autoincrement())
+  sourceElementId Int
+  targetElementId Int
+  attributes      Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  Element         Element[]
+  sourceElement   Element   @relation("SourceElement", fields: [sourceElementId], references: [id])
+  targetElement   Element   @relation("TargetElement", fields: [targetElementId], references: [id])
+}
+
+model StructureMap {
+  id          Int       @id @default(autoincrement())
+  structureId Int
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  structure   Structure @relation(fields: [structureId], references: [id])
+  elements    Element[] @relation("MapElements")
+}
+
+model Backup {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  backupData Json
+  fileUrl    String?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id])
+}
+
+model DeletionLog {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  element   String
+  elementId Int?
+  deletedAt DateTime @default(now())
+  reason    String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Attachment {
+  id        Int      @id @default(autoincrement())
+  userId    Int
+  fileUrl   String
+  fileType  String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Renderer {
+  id             Int       @id @default(autoincrement())
+  type           String
+  config         Json
+  customSettings Json
+  structureId    Int
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  structure      Structure @relation(fields: [structureId], references: [id])
+}
+
+model ApiKey {
+  id        Int      @id @default(autoincrement())
+  key       String   @unique
+  userId    Int
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        Int      @id @default(autoincrement())
+  action    String
+  element   String?
+  elementId String?
+  details   Json
+  createdAt DateTime @default(now())
+  userId    Int?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model ExternalIntegration {
+  id        Int      @id @default(autoincrement())
+  name      String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Webhook {
+  id          Int       @id @default(autoincrement())
+  url         String
+  events      String[]
+  structureId Int
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  structure   Structure @relation(fields: [structureId], references: [id])
+}
