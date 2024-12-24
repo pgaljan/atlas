@@ -40,7 +40,7 @@ Structures are comprised of `Elements`.  Each Element is associated with a singl
 
 Elements are represented on one or more `Structure Maps`, which are graphical representations of the elements on an infinite scroll 2D canvas.  Elements may be connected to other Elements in the Structure Map via zero or more `Element Links`, which are also associated with a single uniquely identified Record, the attributes of which are separately defined by the Structure Owner.  Structure Maps may also be linked to Elements residing in external Structures via `Structure Links`.
 
-Structure Users are also mapped to typical objects required for IAM and billing in a multi-user SaaS delivery model.
+Structure Users are also mapped to objects required for IAM, billing, and feature flagging as typically required in a multi-user SaaS delivery model.
 
 ## Data Model
 
