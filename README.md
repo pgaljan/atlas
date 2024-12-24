@@ -337,6 +337,7 @@ Example structures for business, engineering, project management and educational
 
 🅿️ - Prototype Feature
 
+
 |   | Personal | Educator | Analyst | Business |
 | -----: | :-----: | :-----: | :-----: | :-----: |
 | price | free | $ | $$ | $$$|
