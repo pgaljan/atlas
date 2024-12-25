@@ -305,11 +305,14 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
+| Personal              | [Vacation Plan](https://atlasstructure.tiiny.site/vacation.html) |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
 | Business               | [Product Breakdown Structure](https://atlasstructure.tiiny.site/autonomous.html)        |
+| Business               | [Insurance Sales Plan](https://atlasstructure.tiiny.site/autonomous.html)        |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
+| Business               | [Marketing Plan](https://atlasstructure.tiiny.site/marketing.html)        |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processimprove.html)         |
 | Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
 | Business               | [Software Development](https://atlasstructure.tiiny.site/softwaredev.html)        |
@@ -318,6 +321,7 @@ Example structures for business, engineering, project management and educational
 | Construction           | [Environmental Remediation](https://atlasstructure.tiiny.site/envmgmt.html)   |
 | Construction           | [Factory Construction](https://atlasstructure.tiiny.site/processplant.html)        |
 | Construction               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
+| Medical              | [Patient Medical Record](https://atlasstructure.tiiny.site/pmr.html)                  |
 | Research & Development | [Research Project](https://atlasstructure.tiiny.site/research.html)            |
 | Research & Development | [New Compound](https://atlasstructure.tiiny.site/compound.html)                |
 | MIL-STD-811F           | [Aircraft System](https://atlasstructure.tiiny.site/aircraft.html)             |
