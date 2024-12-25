@@ -308,6 +308,7 @@ Example structures for business, engineering, project management and educational
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
+| Business               | [Product Breakdown Structure](https://atlasstructure.tiiny.site/autonomous.html)        |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processimprove.html)         |
 | Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
