@@ -311,7 +311,7 @@ Example structures for business, engineering, project management and educational
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
 | Business               | [Product Breakdown Structure](https://atlasstructure.tiiny.site/autonomous.html)        |
-| Business               | [Insurance Sales Plan](https://atlasstructure.tiiny.site/autonomous.html)        |
+| Business               | [Insurance Sales Plan](https://atlasstructure.tiiny.site/insurance.html)        |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
 | Business               | [Marketing Plan](https://atlasstructure.tiiny.site/marketing.html)        |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processimprove.html)         |
