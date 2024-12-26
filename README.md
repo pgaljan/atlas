@@ -305,7 +305,8 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
-| Personal              | [Vacation Plan](https://atlasstructure.tiiny.site/vacation.html) |
+| Personal              | [Vacation Plans](https://atlasstructure.tiiny.site/vacation.html) |
+| Personal              | [Film Library](https://atlasstructure.tiiny.site/film.html) |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
