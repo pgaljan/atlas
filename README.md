@@ -40,7 +40,7 @@ Structures are comprised of `Elements`.  Each Element is associated with a singl
 
 Elements are represented on one or more `Structure Maps`, which are graphical representations of the elements on an infinite scroll 2D canvas.  Elements may be connected to other Elements in the Structure Map via zero or more `Element Links`, which are also associated with a single uniquely identified Record, the attributes of which are separately defined by the Structure Owner.  Structure Maps may also be linked to Elements residing in external Structures via `Structure Links`.
 
-Structure Users are also mapped to typical objects required for IAM and billing in a multi-user SaaS delivery model.
+Structure Users are also mapped to objects required for IAM, billing, and feature flagging as typically required in a multi-user SaaS delivery model.
 
 ## Data Model
 
@@ -305,10 +305,15 @@ Example structures for business, engineering, project management and educational
 
 | type                   | dataset                     |
 |------------------------|-----------------------------|
+| Personal              | [Vacation Plans](https://atlasstructure.tiiny.site/vacation.html) |
+| Personal              | [Film Library](https://atlasstructure.tiiny.site/film.html) |
 | Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
 | Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
 | Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
+| Business               | [Product Breakdown Structure](https://atlasstructure.tiiny.site/autonomous.html)        |
+| Business               | [Insurance Sales Plan](https://atlasstructure.tiiny.site/insurance.html)        |
 | Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
+| Business               | [Marketing Plan](https://atlasstructure.tiiny.site/marketing.html)        |
 | Business               | [Process Improvement](https://atlasstructure.tiiny.site/processimprove.html)         |
 | Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
 | Business               | [Software Development](https://atlasstructure.tiiny.site/softwaredev.html)        |
@@ -317,6 +322,7 @@ Example structures for business, engineering, project management and educational
 | Construction           | [Environmental Remediation](https://atlasstructure.tiiny.site/envmgmt.html)   |
 | Construction           | [Factory Construction](https://atlasstructure.tiiny.site/processplant.html)        |
 | Construction               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
+| Medical              | [Patient Medical Record](https://atlasstructure.tiiny.site/pmr.html)                  |
 | Research & Development | [Research Project](https://atlasstructure.tiiny.site/research.html)            |
 | Research & Development | [New Compound](https://atlasstructure.tiiny.site/compound.html)                |
 | MIL-STD-811F           | [Aircraft System](https://atlasstructure.tiiny.site/aircraft.html)             |
@@ -371,6 +377,7 @@ Example structures for business, engineering, project management and educational
 |**Collaboration**   |
 | Report Sharing |  |  | ✅ | ✅ |
 | View Sharing |  |  |  | ✅ |
+| Embed codes |  |  |  | ✅ |
 | Strict Record Formatting |  |  |  | ✅ | 
 | @Mentions and Comments |  |  |  | ✅ |
 | Tasks and Planner |  |  |  | ✅ |
