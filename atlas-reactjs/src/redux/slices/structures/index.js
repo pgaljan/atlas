@@ -23,6 +23,19 @@ export const createStructure = createAsyncThunk(
   }
 );
 
+// Async thunk for getting structures by userId
+export const getStructuresByUserId = createAsyncThunk(
+  "structures/getStructuresByUserId",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/structure/user/${userId}`);
+      return response.data.structures;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Async thunk for getting a structure by ID
 export const getStructure = createAsyncThunk(
   "structures/getStructure",
@@ -41,6 +54,7 @@ export const updateStructure = createAsyncThunk(
   "structures/updateStructure",
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
+      console.log(updateData)
       const response = await axiosInstance.patch(
         `/structure/update/${id}`,
         updateData
@@ -128,6 +142,18 @@ const structureSlice = createSlice({
         state.structures.push(action.payload);
       })
       .addCase(createStructure.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Get structures by userId
+      .addCase(getStructuresByUserId.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getStructuresByUserId.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.structures = action.payload; 
+      })
+      .addCase(getStructuresByUserId.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

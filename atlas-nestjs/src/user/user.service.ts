@@ -13,7 +13,7 @@ export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
   // Fetch user by ID
-  async getUserById(id: number) {
+  async getUserById(id: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
@@ -32,7 +32,7 @@ export class UserService {
   }
 
   // Update user details and log action
-  async updateUser(id: number, updateUserDto: UpdateUserDto, userId: number) {
+  async updateUser(id: string, updateUserDto: UpdateUserDto, userId: string) {
     try {
       const existingUser = await this.prisma.user.findUnique({
         where: { id },
@@ -66,7 +66,7 @@ export class UserService {
   }
 
   // Soft delete user (mark as deleted) and log the deletion
-  async deleteUser(id: number, reason: string, userId: number) {
+  async deleteUser(id: string, reason: string, userId: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
@@ -100,10 +100,10 @@ export class UserService {
 
   // Change user password and log the action
   async changePassword(
-    id: number,
+    id: string,
     oldPassword: string,
     newPassword: string,
-    userId: number,
+    userId: string,
   ) {
     try {
       const user = await this.prisma.user.findUnique({

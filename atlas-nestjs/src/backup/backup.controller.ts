@@ -20,28 +20,21 @@ export class BackupController {
     @Query('structureId') structureId?: string,
   ) {
     try {
-      const parsedUserId = parseInt(userId, 10);
-      const parsedStructureId = structureId
-        ? parseInt(structureId, 10)
-        : undefined;
-
-      if (isNaN(parsedUserId)) {
+      if (!userId || !this.isValidUUID(userId)) {
         throw new HttpException(
-          'Invalid userId provided',
+          'Invalid or missing userId provided',
           HttpStatus.BAD_REQUEST,
         );
       }
-      if (structureId && isNaN(parsedStructureId)) {
+
+      if (structureId && !this.isValidUUID(structureId)) {
         throw new HttpException(
           'Invalid structureId provided',
           HttpStatus.BAD_REQUEST,
         );
       }
 
-      return await this.backupService.createBackup(
-        parsedUserId,
-        parsedStructureId,
-      );
+      return await this.backupService.createBackup(userId, structureId);
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -52,6 +45,12 @@ export class BackupController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  private isValidUUID(uuid: string): boolean {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   }
 
   @Get(':id')
@@ -65,7 +64,7 @@ export class BackupController {
         );
       }
 
-      return await this.backupService.getBackup(parsedBackupId);
+      return await this.backupService.getBackup(parsedBackupId.toString());
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -89,7 +88,7 @@ export class BackupController {
         );
       }
 
-      return await this.backupService.deleteBackup(parsedBackupId);
+      return await this.backupService.deleteBackup(parsedBackupId.toString());
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -114,7 +113,7 @@ export class BackupController {
         );
       }
 
-      return await this.backupService.getAllBackups(parsedUserId);
+      return await this.backupService.getAllBackups(parsedUserId?.toString());
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;

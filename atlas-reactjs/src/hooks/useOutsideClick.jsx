@@ -1,23 +1,23 @@
-import { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react";
 
-const useOutsideClick = callback => {
-  const ref = useRef()
+const useOutsideClick = (callback) => {
+  const ref = useRef();
 
   useEffect(() => {
-    const handleClickOutside = event => {
+    const handleClickOutside = (event) => {
       if (ref.current && !ref.current.contains(event.target)) {
-        callback()
+        callback();
       }
-    }
+    };
 
-    document.addEventListener("pointerdown", handleClickOutside)
+    document.addEventListener("pointerdown", handleClickOutside);
 
     return () => {
-      document.removeEventListener("pointerdown", handleClickOutside)
-    }
-  }, [callback])
+      document.removeEventListener("pointerdown", handleClickOutside);
+    };
+  }, [callback]);
 
-  return ref
-}
+  return ref;
+};
 
-export default useOutsideClick
+export default useOutsideClick;

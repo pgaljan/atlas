@@ -14,6 +14,7 @@ import { RestoreBackupModule } from './restore-backup/restore-backup.module';
 import { RoleModule } from './role/role.module';
 import { StructureModule } from './structure/structure.module';
 import { UserModule } from './user/user.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { UserModule } from './user/user.module';
     RecordModule,
     BackupModule,
     RestoreBackupModule,
+    SubscriptionsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

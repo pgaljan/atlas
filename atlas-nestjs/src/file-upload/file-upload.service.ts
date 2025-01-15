@@ -12,7 +12,7 @@ export class FileUploadService {
   constructor(private readonly prisma: PrismaService) {}
 
   async createAttachment(
-    userId: number,
+    userId: string,
     file: Express.Multer.File,
     fileUrl: string,
   ) {
@@ -48,7 +48,7 @@ export class FileUploadService {
     }
   }
 
-  async findOne(id: number): Promise<Attachment> {
+  async findOne(id: string): Promise<Attachment> {
     try {
       const attachment = await this.prisma.attachment.findUnique({
         where: { id },
@@ -74,7 +74,7 @@ export class FileUploadService {
     }
   }
 
-  async remove(id: number): Promise<void> {
+  async remove(id: string): Promise<void> {
     try {
       const attachment = await this.prisma.attachment.findUnique({
         where: { id },
@@ -101,16 +101,16 @@ export class FileUploadService {
   async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     try {
       await this.prisma.auditLog.create({
         data: {
           action,
           element,
-          elementId: elementId.toString(),
+          elementId: elementid,
           details: details,
           userId: userId || null,
         },

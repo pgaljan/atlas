@@ -15,24 +15,24 @@ export class RecordService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prisma.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId: elementid,
         details: details,
         userId: userId || null,
       },
     });
   }
 
-  async createRecord(elementId: number, createRecordDto: CreateRecordDto) {
+  async createRecord(elementid: string, createRecordDto: CreateRecordDto) {
     const element = await this.prisma.element.findUnique({
-      where: { id: elementId },
+      where: { id: elementid },
     });
     if (!element) throw new NotFoundException('Element not found');
 
@@ -40,13 +40,14 @@ export class RecordService {
       const newRecord = await this.prisma.record.create({
         data: {
           ...createRecordDto,
+          metadata: createRecordDto.metadata,
           tags: createRecordDto.tags ?? null,
-          Element: { connect: { id: elementId } },
+          Element: { connect: { id: elementid } },
         },
       });
 
       // Log the audit for create action
-      await this.logAudit('CREATE', 'Record', newRecord.id, {
+      await this.logAudit('CREATE', 'Record', newRecord.id.toString(), {
         data: createRecordDto,
       });
 
@@ -56,22 +57,23 @@ export class RecordService {
     }
   }
 
-  async updateRecord(recordId: number, updateRecordDto: UpdateRecordDto) {
+  async updateRecord(recordid: string, updateRecordDto: UpdateRecordDto) {
     const record = await this.prisma.record.findUnique({
-      where: { id: recordId },
+      where: { id: recordid },
     });
     if (!record) throw new NotFoundException('Record not found');
 
     try {
       const updatedRecord = await this.prisma.record.update({
-        where: { id: recordId },
+        where: { id: recordid },
         data: {
           ...updateRecordDto,
+          metadata: updateRecordDto.metadata,
         },
       });
 
       // Log the audit for update action
-      await this.logAudit('UPDATE', 'Record', updatedRecord.id, {
+      await this.logAudit('UPDATE', 'Record', updatedRecord.id.toString(), {
         updatedFields: updateRecordDto,
       });
 
@@ -81,13 +83,13 @@ export class RecordService {
     }
   }
 
-  async getRecordById(recordId: number) {
-    if (!recordId || isNaN(recordId)) {
+  async getRecordById(recordid: string) {
+    if (!recordid) {
       throw new BadRequestException('Invalid record ID');
     }
 
     const record = await this.prisma.record.findUnique({
-      where: { id: recordId },
+      where: { id: recordid },
       include: { Element: true },
     });
 
@@ -98,20 +100,20 @@ export class RecordService {
     return record;
   }
 
-  async getAllRecords(elementId: number) {
-    if (isNaN(elementId)) {
+  async getAllRecords(elementid: string) {
+    if (!elementid) {
       throw new BadRequestException('Invalid element ID');
     }
 
     return this.prisma.record.findMany({
-      where: { Element: { some: { id: elementId } } },
+      where: { Element: { some: { id: elementid } } },
       include: { Element: true },
     });
   }
 
-  async deleteRecord(recordId: number) {
+  async deleteRecord(recordid: string) {
     const record = await this.prisma.record.findUnique({
-      where: { id: recordId },
+      where: { id: recordid },
     });
 
     if (!record) {
@@ -120,11 +122,11 @@ export class RecordService {
 
     try {
       const deletedRecord = await this.prisma.record.delete({
-        where: { id: recordId },
+        where: { id: recordid },
       });
 
       // Log the audit for delete action
-      await this.logAudit('DELETE', 'Record', deletedRecord.id, {
+      await this.logAudit('DELETE', 'Record', deletedRecord.id.toString(), {
         deletedRecord,
       });
 

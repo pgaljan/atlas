@@ -35,22 +35,22 @@ export class BackupService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prisma.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId: elementid,
         details: details,
         userId: userId || null,
       },
     });
   }
 
-  async createBackup(userId: number, structureId?: number) {
+  async createBackup(userId: string, structureId?: string) {
     try {
       // Fetch user data with a condition for the specific structureId
       const user = await this.prisma.user.findUnique({
@@ -84,6 +84,8 @@ export class BackupService {
       const structuresSheet = user.structures.map((structure: any) => ({
         id: structure.id,
         name: structure.name,
+        title: structure.title,
+        description: structure.description,
         ownerId: structure.ownerId,
         createdAt: structure.createdAt,
         updatedAt: structure.updatedAt,
@@ -93,8 +95,10 @@ export class BackupService {
       const elementsSheet = user.structures.flatMap((structure: any) =>
         structure.elements.map((element: any) => ({
           id: element.id,
+          name: element.name,
           structureId: element.structureId,
           recordId: element.recordId,
+          parentId: element.parentId,
           type: element.type,
           createdAt: element.createdAt,
           updatedAt: element.updatedAt,
@@ -191,7 +195,7 @@ export class BackupService {
     }
   }
 
-  async getBackup(backupId: number) {
+  async getBackup(backupId: string) {
     try {
       const backup = await this.prisma.backup.findUnique({
         where: { id: backupId },
@@ -211,7 +215,7 @@ export class BackupService {
     }
   }
 
-  async deleteBackup(backupId: number) {
+  async deleteBackup(backupId: string) {
     try {
       const backup = await this.prisma.backup.findUnique({
         where: { id: backupId },
@@ -240,7 +244,7 @@ export class BackupService {
     }
   }
 
-  async getAllBackups(userId?: number) {
+  async getAllBackups(userId?: string) {
     try {
       const backups = userId
         ? await this.prisma.backup.findMany({ where: { userId } })

@@ -2,7 +2,7 @@ import { IsInt, IsString, IsOptional, isString } from 'class-validator';
 
 export class CreateBackupDto {
   @IsInt()
-  userId: number;
+  userId: string;
 }
 
 export class BackupResponseDto {

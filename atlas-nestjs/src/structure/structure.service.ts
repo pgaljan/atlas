@@ -7,7 +7,7 @@ import { Visibility } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStructureDto } from './dto';
 
-@Injectable()
+@Injectable() 
 export class StructureService {
   constructor(private readonly prisma: PrismaService) {}
 
@@ -16,6 +16,15 @@ export class StructureService {
       createStructureDto;
 
     try {
+      // Check if a structure with the same name already exists
+      const existingStructure = await this.prisma.structure.findFirst({
+        where: { name },
+      });
+
+      if (existingStructure) {
+        throw new InternalServerErrorException(`"${name}" already exists.`);
+      }
+
       const owner = await this.prisma.user.findUnique({
         where: { id: ownerId },
       });
@@ -29,7 +38,6 @@ export class StructureService {
         elements.map((element) => ({
           type: element.type,
           wbsLevel: element.wbsLevel,
-          wbsNumber: element.wbsNumber,
           children: element.children
             ? { create: formatElements(element.children) }
             : undefined,
@@ -41,7 +49,6 @@ export class StructureService {
           description,
           visibility: visibility || Visibility.private,
           ownerId,
-          markmapMM: '#',
           elements: {
             create: elements ? formatElements(elements) : [],
           },
@@ -59,8 +66,7 @@ export class StructureService {
             description,
             visibility,
             elements: elementsToProcess.map((element) => ({
-              wbsNumber: element.wbsNumber,
-              type: element.type,
+              type: element.name,
             })),
           },
           userId: ownerId,
@@ -69,18 +75,17 @@ export class StructureService {
 
       return structure;
     } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to create structure: ${error.message}`,
-      );
+      throw new InternalServerErrorException(`${error.message}`);
     }
   }
 
-  async getStructure(id: number) {
+  async getStructure(id: string) {
     try {
       const structure = await this.prisma.structure.findUnique({
         where: { id },
         include: {
           elements: {
+            where: { deletedAt: null },
             include: {
               sourceLinks: true,
               targetLinks: true,
@@ -110,9 +115,30 @@ export class StructureService {
     }
   }
 
-  async updateStructure(id: number, updateData: Partial<CreateStructureDto>) {
+  async getStructuresByUserId(userId: string) {
     try {
-      const { name, description, visibility, elements, maps } = updateData;
+      const structures = await this.prisma.structure.findMany({
+        where: { ownerId: userId },
+      });
+
+      if (!structures || structures.length === 0) {
+        throw new NotFoundException(
+          `No structures found for user with id ${userId}`,
+        );
+      }
+
+      return structures;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to retrieve structures: ${error.message}`,
+      );
+    }
+  }
+
+  async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
+    try {
+      const { name, title, description, visibility, elements, maps } =
+        updateData;
 
       const structure = await this.prisma.structure.findUnique({
         where: { id },
@@ -128,6 +154,7 @@ export class StructureService {
         where: { id },
         data: {
           name: name || undefined,
+          title: title || undefined,
           description: description || undefined,
           visibility: visibility || undefined,
           updatedAt: new Date(),
@@ -157,8 +184,7 @@ export class StructureService {
             description,
             visibility,
             elements: elementsToProcess.map((element) => ({
-              wbsNumber: element.wbsNumber,
-              type: element.type,
+              type: element.name,
             })),
           },
           userId: structure.ownerId,
@@ -173,7 +199,7 @@ export class StructureService {
     }
   }
 
-  async deleteStructure(id: number) {
+  async deleteStructure(id: string) {
     try {
       const structure = await this.prisma.structure.findUnique({
         where: { id },
@@ -255,7 +281,7 @@ export class StructureService {
     }
   }
 
-  async deleteBatchStructures(ids: number[]) {
+  async deleteBatchStructures(ids: string[]) {
     try {
       return Promise.all(ids.map((id) => this.deleteStructure(id)));
     } catch (error) {

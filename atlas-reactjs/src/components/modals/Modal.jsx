@@ -1,15 +1,27 @@
-import React from "react"
+import React, { useRef, useEffect } from "react";
+import Icons from "../../constants/icons";
 
 const ModalComponent = ({
   isOpen,
   onClose,
   title,
   children,
+  loading,
   onSubmit,
   submitText = "Submit",
   cancelText = "Cancel",
+  showBottomButton = false,
+  onImportAsJSON,
 }) => {
-  if (!isOpen) return null
+  const focusRef = useRef(null);
+
+  useEffect(() => {
+    if (isOpen && focusRef.current) {
+      focusRef.current.focus();
+    }
+  }, [isOpen]);
+
+  if (!isOpen) return null;
 
   return (
     <>
@@ -50,24 +62,56 @@ const ModalComponent = ({
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 overflow-y-auto space-y-2">{children}</div>
+          <div className="p-6 overflow-y-auto space-y-2">
+            {React.Children.map(children, (child) => {
+              if (React.isValidElement(child)) {
+                return React.cloneElement(child, { ref: focusRef });
+              }
+              return child || null;
+            })}
+          </div>
 
           {/* Modal Footer */}
-          <div className="flex justify-end items-center gap-x-2 py-3 px-4 ">
-            <button
-              type="button"
-              className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
-              onClick={onClose}
-            >
-              {cancelText}
-            </button>
-            <button
-              type="button"
-              onClick={onSubmit}
-              className="py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-custom-main text-white hover:bg-custom-main focus:outline-none"
-            >
-              {submitText}
-            </button>
+          <div className="flex justify-between py-3 px-4 items-center">
+            {/* Left Section */}
+            <div>
+              {showBottomButton && (
+                <button
+                  onClick={onImportAsJSON}
+                  className="text-blue-500 hover:underline cursor-pointer text-sm"
+                >
+                  Import from JSON
+                </button>
+              )}
+            </div>
+
+            {/* Right Section (Always Fixed on Right) */}
+            <div className="flex gap-x-2 ml-auto">
+              <button
+                type="button"
+                className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
+                onClick={onClose}
+              >
+                {cancelText}
+              </button>
+              {loading ? (
+                <button
+                  type="button"
+                  disabled
+                  className="py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-custom-main text-white hover:bg-custom-main focus:outline-none"
+                >
+                  <Icons.LoadingIcon />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onSubmit}
+                  className="py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent bg-custom-main text-white hover:bg-custom-main focus:outline-none"
+                >
+                  {submitText}
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -79,7 +123,7 @@ const ModalComponent = ({
         }
       `}</style>
     </>
-  )
-}
+  );
+};
 
-export default ModalComponent
+export default ModalComponent;

@@ -91,7 +91,7 @@ export class FileUploadController {
           'File',
           file.filename,
           { type: fileType, recordsCount: insertedRecords.length },
-          userIdInt,
+          userIdInt.toString(),
         );
 
         return {
@@ -101,7 +101,11 @@ export class FileUploadController {
           insertedRecordsCount: insertedRecords.length,
         };
       } else if (allowedImageTypes.includes(fileType)) {
-        await this.fileUploadService.createAttachment(userIdInt, file, fileUrl);
+        await this.fileUploadService.createAttachment(
+          userIdInt.toString(),
+          file,
+          fileUrl,
+        );
 
         // Log audit for image upload
         await this.fileUploadService.logAudit(
@@ -109,7 +113,7 @@ export class FileUploadController {
           'Attachment',
           file.filename,
           { type: fileType },
-          userIdInt,
+          userIdInt.toString(),
         );
 
         return {
@@ -199,7 +203,7 @@ export class FileUploadController {
   }
 
   @Get(':id')
-  async getFile(@Param('id') id: number): Promise<Attachment> {
+  async getFile(@Param('id') id: string): Promise<Attachment> {
     try {
       return await this.fileUploadService.findOne(id);
     } catch (error) {
@@ -218,14 +222,19 @@ export class FileUploadController {
   }
 
   @Delete(':id')
-  async deleteFile(@Param('id') id: number): Promise<void> {
+  async deleteFile(@Param('id') id: string): Promise<void> {
     try {
       const file = await this.fileUploadService.findOne(id);
 
       // Log audit for file deletion
-      await this.fileUploadService.logAudit('DELETE', 'Attachment', id, {
-        fileName: file.fileUrl,
-      });
+      await this.fileUploadService.logAudit(
+        'DELETE',
+        'Attachment',
+        id.toString(),
+        {
+          fileName: file.fileUrl,
+        },
+      );
 
       await this.fileUploadService.remove(id);
     } catch (error) {

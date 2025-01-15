@@ -22,10 +22,10 @@ enum Visibility {
 }
 
 model User {
-  id           Int           @id @default(autoincrement())
+  id           String        @id @default(uuid())
   username     String
   email        String        @unique
-  roleId       Int
+  roleId       String
   password     String
   createdAt    DateTime      @default(now())
   deletedAt    DateTime?
@@ -42,7 +42,7 @@ model User {
 }
 
 model Role {
-  id          Int     @id @default(autoincrement())
+  id          String  @id @default(uuid())
   name        String  @unique
   description String?
   User        User[]  @relation("UserRole")
@@ -50,8 +50,8 @@ model Role {
 }
 
 model Token {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   key       String
   value     String
   expiresAt DateTime
@@ -63,9 +63,9 @@ model Token {
 }
 
 model Subscription {
-  id        Int                @id @default(autoincrement())
-  userId    Int                @unique
-  planId    Int
+  id        String             @id @default(uuid())
+  userId    String             @unique
+  planId    String
   features  Json
   startDate DateTime           @default(now())
   endDate   DateTime
@@ -75,7 +75,7 @@ model Subscription {
 }
 
 model Plan {
-  id            Int            @id @default(autoincrement())
+  id            String         @id @default(uuid())
   name          String
   description   String
   price         Decimal
@@ -84,16 +84,15 @@ model Plan {
 }
 
 model Structure {
-  id           Int             @id @default(autoincrement())
+  id           String          @id @default(uuid())
+  title        String? 
   name         String
   description  String?
-  ownerId      Int
+  ownerId      String
   createdAt    DateTime        @default(now())
   updatedAt    DateTime        @updatedAt
   deletedAt    DateTime?
-  markmapMM    String?
   visibility   Visibility      @default(private)
-  wbsPrefix    String          @default("1.")
   elements     Element[]
   parsedData   ParsedContent[]
   renderers    Renderer[]
@@ -103,34 +102,27 @@ model Structure {
 }
 
 model Element {
-  id              Int            @id @default(autoincrement())
-  structureId     Int
-  recordId        Int?
-  parentId        Int?
-  type            String?
-  Guid            String         @unique @default(uuid())
-  uniqWBS         String?
-  wbsLevel        Int?
-  wbsNumber       String         @default("1")
-  markmapMM       String?
-  createdAt       DateTime       @default(now())
-  updatedAt       DateTime       @updatedAt
-  deletedAt       DateTime?
-  parsedContentId Int?
-  elementLinkId   Int?
-  ElementLink     ElementLink?   @relation(fields: [elementLinkId], references: [id])
-  parent          Element?       @relation("ParentChild", fields: [parentId], references: [id])
-  children        Element[]      @relation("ParentChild")
-  parsedData      ParsedContent? @relation(fields: [parsedContentId], references: [id])
-  Record          Record?        @relation(fields: [recordId], references: [id])
-  structure       Structure      @relation(fields: [structureId], references: [id])
-  sourceLinks     ElementLink[]  @relation("SourceElement")
-  targetLinks     ElementLink[]  @relation("TargetElement")
-  StructureMap    StructureMap[] @relation("MapElements")
+  id            String         @id @default(uuid())
+  structureId   String
+  recordId      String?
+  parentId      String?
+  name          String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  elementLinkId String?
+  ElementLink   ElementLink?   @relation(fields: [elementLinkId], references: [id])
+  parent        Element?       @relation("ParentChild", fields: [parentId], references: [id])
+  children      Element[]      @relation("ParentChild")
+  Record        Record?        @relation(fields: [recordId], references: [id])
+  structure     Structure      @relation(fields: [structureId], references: [id])
+  sourceLinks   ElementLink[]  @relation("SourceElement")
+  targetLinks   ElementLink[]  @relation("TargetElement")
+  StructureMap  StructureMap[] @relation("MapElements")
 }
 
 model Record {
-  id        Int       @id @default(autoincrement())
+  id        String    @id @default(uuid())
   metadata  Json
   tags      Json?
   createdAt DateTime  @default(now())
@@ -139,9 +131,9 @@ model Record {
 }
 
 model ParsedContent {
-  id             Int        @id @default(autoincrement())
+  id             String     @id @default(uuid())
   Guid           String     @unique @default(uuid())
-  structureId    Int?
+  structureId    String?
   type           String
   wbs            String
   level          Int
@@ -150,14 +142,13 @@ model ParsedContent {
   markmapMM      String?
   additionalData Json?
   createdAt      DateTime   @default(now())
-  elements       Element[]
   structure      Structure? @relation(fields: [structureId], references: [id])
 }
 
 model ElementLink {
-  id              Int       @id @default(autoincrement())
-  sourceElementId Int
-  targetElementId Int
+  id              String    @id @default(uuid())
+  sourceElementId String
+  targetElementId String
   attributes      Json?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -167,8 +158,8 @@ model ElementLink {
 }
 
 model StructureMap {
-  id          Int       @id @default(autoincrement())
-  structureId Int
+  id          String    @id @default(uuid())
+  structureId String
   name        String
   description String?
   createdAt   DateTime  @default(now())
@@ -178,8 +169,8 @@ model StructureMap {
 }
 
 model Backup {
-  id         Int      @id @default(autoincrement())
-  userId     Int
+  id         String   @id @default(uuid())
+  userId     String
   backupData Json
   fileUrl    String?
   createdAt  DateTime @default(now())
@@ -188,10 +179,10 @@ model Backup {
 }
 
 model DeletionLog {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   element   String
-  elementId Int?
+  elementId String?
   deletedAt DateTime @default(now())
   reason    String?
   status    String   @default("pending")
@@ -201,8 +192,8 @@ model DeletionLog {
 }
 
 model Attachment {
-  id        Int      @id @default(autoincrement())
-  userId    Int
+  id        String   @id @default(uuid())
+  userId    String
   fileUrl   String
   fileType  String
   data      Json
@@ -212,38 +203,38 @@ model Attachment {
 }
 
 model Renderer {
-  id             Int       @id @default(autoincrement())
+  id             String    @id @default(uuid())
   type           String
   config         Json
   customSettings Json
-  structureId    Int
+  structureId    String
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
   structure      Structure @relation(fields: [structureId], references: [id])
 }
 
 model ApiKey {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   key       String   @unique
-  userId    Int
+  userId    String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
   user      User     @relation(fields: [userId], references: [id])
 }
 
 model AuditLog {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   action    String
   element   String?
   elementId String?
   details   Json
   createdAt DateTime @default(now())
-  userId    Int?
+  userId    String?
   user      User?    @relation(fields: [userId], references: [id])
 }
 
 model ExternalIntegration {
-  id        Int      @id @default(autoincrement())
+  id        String   @id @default(uuid())
   name      String
   config    Json
   createdAt DateTime @default(now())
@@ -251,10 +242,10 @@ model ExternalIntegration {
 }
 
 model Webhook {
-  id          Int       @id @default(autoincrement())
+  id          String    @id @default(uuid())
   url         String
   events      String[]
-  structureId Int
+  structureId String
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   structure   Structure @relation(fields: [structureId], references: [id])

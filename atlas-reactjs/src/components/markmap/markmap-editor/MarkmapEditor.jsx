@@ -1,6 +1,9 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useEffect, useState } from "react";
 import useUndo from "use-undo";
+import { useDispatch } from "react-redux";
+import { getStructure } from "../../../redux/slices/structures";
+import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
 import {
   addNodeToTarget,
   assignWbsNumbers,
@@ -12,15 +15,13 @@ import NodeModal from "../../modals/NodeModal";
 import { useMarkmap } from "../markmap-context/MarkmapContext";
 import MarkmapHeader from "../markmap-layout/MarkmapHeader";
 
-import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
-
-const MarkmapEditor = ({ initialContent }) => {
+const MarkmapEditor = ({ structureId }) => {
+  const dispatch = useDispatch();
   const { markmapInstance, svgRef } = useMarkmap();
-
   const [treeDataState, { set: setTreeData, undo, redo, canUndo, canRedo }] =
     useUndo(null);
   const treeData = treeDataState.present;
-
+  const [isLoading, setIsLoading] = useState(true);
   const [draggedNode, setDraggedNode] = useState(null);
   const [modalData, setModalData] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
@@ -63,8 +64,8 @@ const MarkmapEditor = ({ initialContent }) => {
       }
     }
 
-    // If nothing in localStorage, load default or initialContent
-    const content = initialContent || "Default Structrue";
+    // If nothing in localStorage, load default or structureId
+    const content = structureId || "Default Structrue";
     return updateNodeLevels(assignWbsNumbers({ content, children: [] }));
   };
 
@@ -142,7 +143,7 @@ const MarkmapEditor = ({ initialContent }) => {
     }
   };
 
-  // Close the modal if user scrolls or zooms away so it doesn't float incorrectly
+  // close the modal if user scrolls or zooms away so it doesn't float incorrectly
   useEffect(() => {
     if (modalData) {
       const handleInteraction = () => {
@@ -181,11 +182,52 @@ const MarkmapEditor = ({ initialContent }) => {
     }
   }, [modalData, modalPosition, svgRef]);
 
+  const fetchStructure = async (
+    structureId,
+    dispatch,
+    setTreeData,
+    setIsLoading,
+    localStorageKey
+  ) => {
+    if (!structureId) return;
+
+    try {
+      const data = await dispatch(getStructure(structureId)).unwrap();
+      const treeWithWbs = assignWbsNumbers({
+        content: data.name,
+        children: data.elements,
+        structureId: data.id,
+      });
+      const treeWithLevels = updateNodeLevels(treeWithWbs);
+
+      setTreeData(treeWithLevels);
+      localStorage.setItem(localStorageKey, JSON.stringify(treeWithLevels));
+    } catch (error) {
+      console.error("Error fetching structure:", error);
+      cogoToast.error("Failed to fetch structure data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchStructure(
+      structureId,
+      dispatch,
+      setTreeData,
+      setIsLoading,
+      localStorageKey
+    );
+  }, [structureId, dispatch, setTreeData, localStorageKey]);
+
   // Load initial tree data on mount
   useEffect(() => {
     const initialTreeData = loadInitialTreeData();
     setTreeData(initialTreeData);
     setShouldFitView(true);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
   }, []);
 
   useMarkmapInteractions({
@@ -203,6 +245,53 @@ const MarkmapEditor = ({ initialContent }) => {
     updateTreeData,
   });
 
+  const addChildNode = (parentContent, newChildContent) => {
+    const addNode = (node) => {
+      if (node.originalContent === parentContent) {
+        return {
+          ...node,
+          children: [
+            ...(node.children || []),
+            {
+              content: newChildContent,
+              originalContent: newChildContent,
+              children: [],
+            },
+          ],
+        };
+      }
+      return {
+        ...node,
+        children: node.children ? node.children.map(addNode) : [],
+      };
+    };
+
+    const updatedTree = addNode(treeData);
+    const treeWithWbsAndLevels = updateNodeLevels(
+      assignWbsNumbers(updatedTree)
+    );
+    setTreeData(treeWithWbsAndLevels);
+    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
+  };
+
+  const deleteNode = (targetContent) => {
+    const removeNode = (node) => {
+      if (node.originalContent === targetContent) return null;
+
+      return {
+        ...node,
+        children: node.children?.map(removeNode).filter(Boolean),
+      };
+    };
+
+    const updatedTree = removeNode(treeData);
+    const treeWithWbsAndLevels = updateNodeLevels(
+      assignWbsNumbers(updatedTree)
+    );
+    setTreeData(treeWithWbsAndLevels);
+    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
+  };
+
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
@@ -210,7 +299,17 @@ const MarkmapEditor = ({ initialContent }) => {
     >
       <div className="flex-1 border border-gray-300 rounded-md bg-white overflow-hidden">
         <MarkmapHeader
+          onSuccess={() =>
+            fetchStructure(
+              structureId,
+              dispatch,
+              setTreeData,
+              setIsLoading,
+              localStorageKey
+            )
+          }
           showWbs={showWbs}
+          structureId={structureId}
           setShowWbs={setShowWbs}
           undo={undo}
           redo={redo}
@@ -219,9 +318,14 @@ const MarkmapEditor = ({ initialContent }) => {
           canRedo={canRedo}
         />
         <svg ref={svgRef} className="w-full h-full dotted-bg" />
+        {isLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+          </div>
+        )}
         {filteredTree === "no-results" && (
           <div className="absolute inset-0 dotted-bg flex items-center justify-center text-gray-500">
-            No records found.
+            No elements found.
           </div>
         )}
       </div>
@@ -236,8 +340,27 @@ const MarkmapEditor = ({ initialContent }) => {
       {modalData && (
         <NodeModal
           position={modalPosition}
-          content={modalData}
+          structureId={structureId}
+          parentId={modalData.elementId}
+          elementId={modalData.elementId}
+          recordId={modalData.recordId}
+          structureName={modalData.structureName}
           onClose={() => setModalData(null)}
+          wbs={modalData.wbs}
+          onAddChild={(newChildContent) =>
+            addChildNode(modalData, newChildContent)
+          }
+          onDelete={() => deleteNode(modalData)}
+          onSuccess={() =>
+            fetchStructure(
+              structureId,
+              dispatch,
+              setTreeData,
+              setIsLoading,
+              localStorageKey
+            )
+          }
+          nodeData={modalData}
         />
       )}
     </div>

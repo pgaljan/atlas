@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for record slice
 const initialState = {
   records: [],
@@ -13,6 +14,7 @@ export const createRecord = createAsyncThunk(
   "records/create",
   async ({ elementId, createRecordDto }, { rejectWithValue }) => {
     try {
+      console.log(createRecordDto);
       const response = await axiosInstance.post(
         `/records/create?elementId=${elementId}`,
         createRecordDto
@@ -86,9 +88,10 @@ export const getRecordsByTags = createAsyncThunk(
   "records/getByTags",
   async (tags, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get("/records/filter-by-tags", {
-        data: tags,
-      });
+      const response = await axiosInstance.post(
+        "/records/filter-by-tags",
+        tags
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

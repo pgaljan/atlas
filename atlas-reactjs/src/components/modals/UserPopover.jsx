@@ -1,8 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-
+import Cookies from "js-cookie";
+import { Link } from "react-router-dom";
 const UserPopover = () => {
   const [isOpen, setIsOpen] = useState(true);
   const popoverRef = useRef(null);
+  const username = Cookies.get("atlas_username");
 
   const handleClickOutside = (event) => {
     if (popoverRef.current && !popoverRef.current.contains(event.target)) {
@@ -57,7 +59,7 @@ const UserPopover = () => {
                   </div>
                   <div>
                     <div className="text-sm font-medium text-gray-800">
-                      John Doe
+                      {username || "User"}
                       <span className="ml-2 text-xs text-gray-400">Online</span>
                     </div>
                     <div className="text-xs text-gray-500">Atlas owner</div>
@@ -72,10 +74,8 @@ const UserPopover = () => {
         <div className="p-4 bg-gray-100 rounded-b-lg">
           <ul role="menu">
             <li role="menuitem">
-              <a
-                href="#"
-                target="_self"
-                rel="noopener noreferrer"
+              <Link
+                to="/app/team-members"
                 className="flex items-center space-x-2 p-2 text-gray-800 hover:bg-gray-200 rounded-lg"
               >
                 <div className="w-5 h-5 text-gray-600">
@@ -89,7 +89,7 @@ const UserPopover = () => {
                   </svg>
                 </div>
                 <span className="text-sm">Manage Team Members</span>
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

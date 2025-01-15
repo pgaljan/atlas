@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import React, { useEffect, useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
-import { isTokenValid } from "../../middleware/axiosInstance";
+import { isTokenValid } from "../middleware/axiosInstance";
 
 const PublicRoute = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(null);
@@ -21,7 +21,7 @@ const PublicRoute = ({ children }) => {
   }
 
   if (isAuthenticated && location.pathname === "/") {
-    return <Navigate to="/home" />;
+    return <Navigate to="/app/dashboard" />;
   }
 
   return children;

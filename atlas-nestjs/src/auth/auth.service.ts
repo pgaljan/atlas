@@ -23,15 +23,15 @@ export class AuthService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prismaService.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId: elementid,
         details: details,
         userId: userId || null,
       },
@@ -152,24 +152,10 @@ export class AuthService {
   // Login method
   async login(user: any) {
     try {
-      // Validate password
-      const isPasswordValid = await bcrypt.compare(
-        user.password,
-        user.storedPassword,
-      );
-
-      if (!isPasswordValid) {
-        throw new UnauthorizedException(
-          'Invalid credentials. Please check your password.',
-        );
-      }
-
-      // Generate JWT token if password is valid
       const payload = { email: user.email, sub: user.id };
       const accessToken = this.jwtService.sign(payload);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
-
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
@@ -178,7 +164,6 @@ export class AuthService {
           },
         },
       });
-
       if (existingToken) {
         await this.prismaService.token.update({
           where: { id: existingToken.id },
@@ -194,10 +179,8 @@ export class AuthService {
           },
         });
       }
-
       // Log the audit action for login
       await this.logAudit('User Login', 'User', user.id, { email: user.email });
-
       // Return user data and the access token
       return {
         message: 'Login successful',

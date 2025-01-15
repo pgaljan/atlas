@@ -1,31 +1,27 @@
 import { Visibility } from '@prisma/client';
 
 export class CreateStructureDto {
-  id: number;
+  id: string;
   name: string;
   description: string;
   visibility?: Visibility;
-  ownerId: number;
+  title: string;
+  ownerId: string;
   elements?: CreateElementDto[];
   maps?: CreateStructureMapDto[];
+  userId: any;
 }
 
 export class CreateElementDto {
-  structureId: number;
+  structureid: string;
   parentId?: number;
-  type: string;
+  name: string;
   recordId?: number;
-  wbsLevel: number;
-  wbsNumber: string; 
-  markmapMM?: string;
 }
 
 export class AddChildElementDto {
   type: string;
   recordId?: number;
-  wbsLevel: number;
-  wbsNumber: string;
-  markmapMM?: string;
 }
 
 export class CreateStructureMapDto {

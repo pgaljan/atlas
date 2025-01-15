@@ -21,6 +21,22 @@ export class ElementController {
   @Post('create')
   async createElement(@Body() createElementDto: CreateElementDto) {
     try {
+      const { parentId, structureId } = createElementDto;
+
+      if (!structureId) {
+        throw new BadRequestException('structureId is required');
+      }
+
+      // If parentId is provided, treat it as nested element creation
+      if (parentId) {
+        const elementsArray = Array.isArray(createElementDto)
+          ? createElementDto
+          : [createElementDto];
+        await this.elementService.createNestedElements(parentId, elementsArray);
+        return { message: 'Nested elements created successfully' };
+      }
+
+      // Otherwise, create a standalone element
       await this.elementService.createElement(createElementDto);
       return { message: 'Element created successfully' };
     } catch (error) {
@@ -34,32 +50,6 @@ export class ElementController {
     }
   }
 
-  @Post('create-nested/:parentId')
-  async createNestedElements(
-    @Param('parentId') parentId: string,
-    @Body() nestedElements: CreateElementDto | CreateElementDto[],
-  ) {
-    try {
-      const elementsArray = Array.isArray(nestedElements)
-        ? nestedElements
-        : [nestedElements];
-
-      await this.elementService.createNestedElements(
-        parseInt(parentId),
-        elementsArray,
-      );
-      return { message: 'Nested elements created successfully' };
-    } catch (error) {
-      if (
-        error instanceof NotFoundException ||
-        error instanceof BadRequestException
-      ) {
-        throw error;
-      }
-      throw new BadRequestException('Error creating nested elements');
-    }
-  }
-
   @Get()
   async getAllElements() {
     return this.elementService.getAllElements();
@@ -68,7 +58,7 @@ export class ElementController {
   @Get(':id')
   async getElement(@Param('id') id: string) {
     try {
-      return await this.elementService.getElement(parseInt(id));
+      return await this.elementService.getElement(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(`Element with id ${id} not found`);
@@ -83,7 +73,7 @@ export class ElementController {
     @Body() updateElementDto: UpdateElementDto,
   ) {
     try {
-      await this.elementService.updateElement(parseInt(id), updateElementDto);
+      await this.elementService.updateElement(id, updateElementDto);
       return { message: 'Element updated successfully' };
     } catch (error) {
       if (
@@ -115,7 +105,7 @@ export class ElementController {
   @Delete('delete/:id')
   async deleteElement(@Param('id') id: string) {
     try {
-      await this.elementService.deleteElement(parseInt(id));
+      await this.elementService.deleteElement(id);
       return { message: 'Element deleted successfully' };
     } catch (error) {
       if (

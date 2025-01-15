@@ -41,20 +41,20 @@ export function SidebarPage({ onSubmit }) {
     {
       name: "Dashboard",
       icon: TbLayoutDashboardFilled,
-      link: "/home",
+      link: "/app/dashboard",
     },
-    { name: "Media", icon: FaImages, link: "/media" },
+    { name: "Media", icon: FaImages, link: "/app/media" },
     {
       name: "Team Members",
       icon: FaUsersGear,
-      link: "/team-members",
+      link: "/app/team-members",
     },
     {
       name: "My Backups",
       icon: BsDatabaseFillCheck,
-      link: "/backups",
+      link: "/app/backups",
     },
-    { name: "Trash", icon: BsFillTrashFill, link: "/trash" },
+    { name: "Trash", icon: BsFillTrashFill, link: "/app/trash" },
   ];
 
   return (
@@ -99,29 +99,17 @@ export function SidebarPage({ onSubmit }) {
                   {item.name}
                 </Sidebar.Item>
               ))}
-
-              {/* <Sidebar.Collapse icon={HiShoppingBag} label="E-commerce">
-                {["Products", "Sales", "Refunds", "Shipping"].map(subItem => (
-                  <Sidebar.Item
-                    key={subItem}
-                    href="#"
-                    onClick={() => handleItemClick(subItem)}
-                    className={`${
-                      activeItem === subItem && `${ownTheme.item.active}`
-                    }`}
-                  >
-                    {subItem}
-                  </Sidebar.Item>
-                ))}
-              </Sidebar.Collapse> */}
             </Sidebar.ItemGroup>
           </Sidebar.Items>
 
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 mb-4">
-            <button className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white">
+            <Link
+              to="/app/upgrade-plans"
+              className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white"
+            >
               <FaRocket />
               <span>Upgrade</span>
-            </button>
+            </Link>
           </div>
         </div>
       </Sidebar>

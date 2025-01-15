@@ -11,11 +11,11 @@ const initialState = {
 // Async thunk for creating an element
 export const createElement = createAsyncThunk(
   "element/create",
-  async (createElementDto, { rejectWithValue }) => {
+  async (createElementData, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post(
         "/element/create",
-        createElementDto
+        createElementData
       );
       return response.data;
     } catch (error) {
@@ -53,12 +53,11 @@ export const fetchElementById = createAsyncThunk(
 // Async thunk for updating an element
 export const updateElement = createAsyncThunk(
   "element/update",
-  async ({ id, updateElementDto }, { rejectWithValue }) => {
+  async ({ id, updateElementData }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(
-        `/element/update/${id}`,
-        updateElementDto
-      );
+      const response = await axiosInstance.patch(`/element/update/${id}`, {
+        name: updateElementData,
+      });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

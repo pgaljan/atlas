@@ -40,23 +40,18 @@ export class AuthController {
   async login(@Request() req: ExpressRequest) {
     try {
       const response = await this.authService.login(req.user);
-
       return {
-        message: response.message,
+        message: 'Login successful',
         user: response.user,
-        access_token: response.access_token,
+        access_token: response.access_token, 
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException(
-          'Login failed. Invalid credentials. Please check your credentials and try again.',
-        );
-      }
-      throw new InternalServerErrorException(
-        'Login failed due to an unexpected error.',
+      throw new UnauthorizedException(
+        'Login failed. Please check your credentials and try again.',
       );
     }
   }
+  
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
