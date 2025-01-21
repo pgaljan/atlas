@@ -51,9 +51,9 @@ const ShareModal = ({ isOpen, onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleAddEmail}
-              className="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-grow border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none  focus:border-custom-main"
             />
-            <select className="border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="border-2 border-gray-300 rounded-md px-2 py-2 focus:outline-none  focus:border-custom-main">
               <option value="edit">Can edit</option>
               <option value="view">Can view</option>
             </select>

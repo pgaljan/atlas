@@ -41,7 +41,7 @@ const TextArea = forwardRef(
           cols={cols}
           disabled={disabled}
           maxLength={maxLength}
-          className={`w-full p-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all ease-in-out ${
+          className={`w-full p-2 border-2 rounded-md focus:outline-none  focus:border-custom-main  transition-all ease-in-out ${
             disabled ? "bg-gray-200" : "bg-white"
           } ${
             errorMessage ? "border-red-500" : "border-gray-300"

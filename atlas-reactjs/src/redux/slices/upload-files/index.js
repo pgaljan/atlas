@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for file upload slice
 const initialState = {
   uploadedFile: null,
@@ -7,16 +8,22 @@ const initialState = {
   files: [],
   status: "idle",
   error: null,
+  fileUrl: null,
+  structureId: null,
+  fileType: null,
 };
 
 // Async thunk for uploading and parsing files
 export const uploadFile = createAsyncThunk(
   "file/upload",
-  async ({ file, userId }, { rejectWithValue }) => {
+  async ({ file, userId, structureId }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("userId", userId);
+      if (structureId) {
+        formData.append("structureId", structureId);
+      }
 
       const response = await axiosInstance.post("/file/upload", formData, {
         headers: {
@@ -24,7 +31,7 @@ export const uploadFile = createAsyncThunk(
         },
       });
 
-      return response.data;
+      return response.data; // Will contain structureId or fileUrl
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -65,6 +72,8 @@ const fileSlice = createSlice({
     clearUploadedFile: (state) => {
       state.uploadedFile = null;
       state.parsedData = null;
+      state.structureId = null;
+      state.fileUrl = null;
     },
   },
   extraReducers: (builder) => {
@@ -72,11 +81,16 @@ const fileSlice = createSlice({
       // Upload file
       .addCase(uploadFile.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
       .addCase(uploadFile.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.uploadedFile = action.payload;
-        state.parsedData = action.payload.insertedRecords || null;
+        if (action.payload.structureId) {
+          state.structureId = action.payload.structureId;
+        }
+        if (action.payload.fileUrl) {
+          state.fileUrl = action.payload.fileUrl;
+        }
       })
       .addCase(uploadFile.rejected, (state, action) => {
         state.status = "failed";

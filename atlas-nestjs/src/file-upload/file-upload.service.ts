@@ -3,8 +3,6 @@ import {
   InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
-import { Attachment } from '@prisma/client';
-import fs from 'fs';
 import { PrismaService } from '../prisma/prisma.service';
 
 @Injectable()
@@ -39,69 +37,93 @@ export class FileUploadService {
     }
   }
 
-  async saveParsedContent(parsedContent: any) {
+  async createStructureAndElements(
+    userId: string,
+    parsedData: any[],
+    structureId?: string,
+  ) {
     try {
-      return await this.prisma.parsedContent.create({ data: parsedContent });
-    } catch (error) {
-      console.error('Error saving parsed content:', error.message);
-      throw new InternalServerErrorException('Failed to save parsed content.');
-    }
-  }
+      let structure;
 
-  async findOne(id: string): Promise<Attachment> {
-    try {
-      const attachment = await this.prisma.attachment.findUnique({
-        where: { id },
-      });
+      // Check if structureId is provided, otherwise create a new structure
+      if (structureId) {
+        structure = await this.prisma.structure.findUnique({
+          where: { id: structureId },
+          include: {
+            elements: true,
+          },
+        });
 
-      if (!attachment) {
-        throw new NotFoundException('File not found');
+        if (!structure) {
+          throw new NotFoundException('Structure not found');
+        }
+      } else {
+        // Create new structure if no structureId provided
+        structure = await this.prisma.structure.create({
+          data: {
+            name: `Imported Structure ${new Date().toISOString()}`,
+            ownerId: userId,
+            elements: {
+              create: [],
+            },
+          },
+          include: {
+            elements: true,
+          },
+        });
       }
 
-      return attachment;
-    } catch (error) {
-      console.error('Error finding file:', error.message);
-      throw new InternalServerErrorException('Failed to retrieve file.');
-    }
-  }
+      const elementNames = parsedData.map((row) => row.element);
 
-  async findAll(): Promise<Attachment[]> {
-    try {
-      return await this.prisma.attachment.findMany();
-    } catch (error) {
-      console.error('Error fetching all files:', error.message);
-      throw new InternalServerErrorException('Failed to retrieve files.');
-    }
-  }
+      // Create elements and map parentId by name
+      for (const row of parsedData) {
+        let parentId = null;
+        if (row.parentId) {
+          // Find parent element by name
+          const parentElement = await this.prisma.element.findFirst({
+            where: { name: row.parentId },
+          });
+          if (parentElement) {
+            parentId = parentElement.id;
+          }
+        }
 
-  async remove(id: string): Promise<void> {
-    try {
-      const attachment = await this.prisma.attachment.findUnique({
-        where: { id },
-      });
+        const element = await this.prisma.element.create({
+          data: {
+            name: row.element || '',
+            structureId: structure.id,
+            parentId: parentId || null,
+            // Record: {
+            //   create: {
+            //     metadata: JSON.parse(row.additionalData || '{}'),
+            //   },
+            // },
+          },
+        });
 
-      if (!attachment) {
-        throw new NotFoundException('File not found');
+        await this.prisma.structure.update({
+          where: { id: structure.id },
+          data: {
+            elements: {
+              connect: { id: element.id },
+            },
+          },
+        });
       }
 
-      const filePath = `public/${attachment.fileUrl.split('/').pop()}`;
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
-
-      await this.prisma.attachment.delete({
-        where: { id },
-      });
+      return structure;
     } catch (error) {
-      console.error('Error deleting file:', error.message);
-      throw new InternalServerErrorException('Failed to delete file.');
+      console.error('Error creating structure and elements:', error.message);
+      throw new InternalServerErrorException(
+        'Failed to create structure and elements.',
+      );
     }
   }
 
   async logAudit(
     action: string,
     element: string,
-    elementid: string,
+    elementId: string,
     details: object,
     userId?: string,
   ) {
@@ -110,8 +132,8 @@ export class FileUploadService {
         data: {
           action,
           element,
-          elementId: elementid,
-          details: details,
+          elementId,
+          details,
           userId: userId || null,
         },
       });

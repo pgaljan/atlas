@@ -17,7 +17,12 @@ const StructureCard = () => {
   const fetchStructures = () => {
     if (ownerId) {
       dispatch(getStructuresByUserId(ownerId)).then((data) => {
-        setStructures(Array.isArray(data?.payload) ? data?.payload : []);
+        const sortedStructures = Array.isArray(data?.payload)
+          ? data.payload.sort(
+              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+            )
+          : [];
+        setStructures(sortedStructures);
       });
     }
   };

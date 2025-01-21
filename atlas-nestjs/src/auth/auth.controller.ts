@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -43,7 +44,7 @@ export class AuthController {
       return {
         message: 'Login successful',
         user: response.user,
-        access_token: response.access_token, 
+        access_token: response.access_token,
       };
     } catch (error) {
       throw new UnauthorizedException(
@@ -51,7 +52,6 @@ export class AuthController {
       );
     }
   }
-  
 
   @Post('reset-password')
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
@@ -72,6 +72,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   async logout(@Request() req: ExpressRequest) {
     try {
       await this.authService.logout(req.user);

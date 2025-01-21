@@ -2,11 +2,6 @@ import {
   BadRequestException,
   Body,
   Controller,
-  Delete,
-  Get,
-  InternalServerErrorException,
-  NotFoundException,
-  Param,
   Post,
   Request,
   UploadedFile,
@@ -14,7 +9,6 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { Attachment } from '@prisma/client';
 import * as fs from 'fs';
 import { diskStorage } from 'multer';
 import * as Papa from 'papaparse';
@@ -46,10 +40,15 @@ export class FileUploadController {
     @UploadedFile() file: Express.Multer.File,
     @Body('userId') userId: string,
     @Request() req: Request,
+    @Body('structureId') structureId?: string,
   ) {
-    const userIdInt = parseInt(userId, 10);
-    if (isNaN(userIdInt)) {
-      throw new BadRequestException('Invalid userId. It must be a number.');
+    // Check if file is uploaded
+    if (!file) {
+      throw new BadRequestException('No file uploaded.');
+    }
+
+    if (!userId) {
+      throw new BadRequestException('UserId is required.');
     }
 
     const fileType = file.mimetype;
@@ -58,19 +57,26 @@ export class FileUploadController {
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-excel',
     ];
-
-    const allowedImageTypes = [
-      'image/png',
+    const imageAndVideoTypes = [
       'image/jpeg',
-      'image/jpg',
+      'image/png',
       'image/gif',
-      'image/bmp',
+      'image/webp',
+      'video/mp4',
+      'video/avi',
+      'video/mpeg',
     ];
 
-    const protocol = process.env.PROTOCOL || 'http';
-    const host =
-      this.configService.get('APP_HOST') || (req.headers as any).host;
-    const fileUrl = `${protocol}://${host}/public/${file.filename}`;
+    if (
+      !allowedParseTypes.includes(fileType) &&
+      !imageAndVideoTypes.includes(fileType)
+    ) {
+      throw new BadRequestException('Unsupported file type.');
+    }
+
+    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
+      (req.headers as any).host
+    }/public/${file.filename}`;
     const filePath = join('public', file.filename);
 
     try {
@@ -83,162 +89,65 @@ export class FileUploadController {
           parsedData = this.parseExcel(filePath);
         }
 
-        const insertedRecords = await this.saveParsedDataToDB(parsedData);
+        const structure =
+          await this.fileUploadService.createStructureAndElements(
+            userId,
+            parsedData,
+            structureId,
+          );
 
-        // Log audit for file upload
+        // Log audit
         await this.fileUploadService.logAudit(
           'CREATE',
-          'File',
-          file.filename,
-          { type: fileType, recordsCount: insertedRecords.length },
-          userIdInt.toString(),
+          'Structure',
+          structure.id,
+          { fileType, recordCount: structure.elements.length },
+          userId,
         );
 
         return {
-          message:
-            'File uploaded, parsed, and data saved to ParsedContent successfully',
-          parsedFileUrl: fileUrl,
-          insertedRecordsCount: insertedRecords.length,
+          message: 'File parsed and structure created/updated successfully.',
+          structureId: structure.id,
         };
-      } else if (allowedImageTypes.includes(fileType)) {
-        await this.fileUploadService.createAttachment(
-          userIdInt.toString(),
-          file,
-          fileUrl,
-        );
-
-        // Log audit for image upload
-        await this.fileUploadService.logAudit(
-          'CREATE',
-          'Attachment',
-          file.filename,
-          { type: fileType },
-          userIdInt.toString(),
-        );
-
+      } else if (imageAndVideoTypes.includes(fileType)) {
+        // If it's an image or video, directly upload without parsing
+        await this.fileUploadService.createAttachment(userId, file, fileUrl);
         return {
-          message: 'Image uploaded successfully',
-          fileUrl: fileUrl,
+          message: 'File uploaded successfully as an attachment.',
+          fileUrl,
         };
       } else {
-        throw new BadRequestException(
-          'Unsupported file type. Only CSV, Excel, or image files (PNG, JPEG, etc.) are allowed.',
-        );
+        await this.fileUploadService.createAttachment(userId, file, fileUrl);
+        return {
+          message: 'File uploaded successfully as an attachment.',
+          fileUrl,
+        };
       }
     } catch (error) {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
 
-      if (
-        error instanceof BadRequestException ||
-        error instanceof NotFoundException
-      ) {
-        throw error;
-      }
-
-      throw new InternalServerErrorException('File processing failed.');
+      throw error;
     }
   }
 
   private async parseCSV(filePath: string): Promise<any[]> {
-    try {
-      return new Promise((resolve, reject) => {
-        const fileContent = fs.readFileSync(filePath, 'utf8');
-        Papa.parse(fileContent, {
-          header: true,
-          skipEmptyLines: true,
-          complete: (result) => resolve(result.data),
-          error: (error: any) => reject(error),
-        });
+    return new Promise((resolve, reject) => {
+      const fileContent = fs.readFileSync(filePath, 'utf8');
+      Papa.parse(fileContent, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result) => resolve(result.data),
+        error: (error) => reject(error),
       });
-    } catch (error) {
-      throw new BadRequestException('Failed to parse CSV file.');
-    }
+    });
   }
 
   private parseExcel(filePath: string): any[] {
-    try {
-      const workbook = XLSX.readFile(filePath);
-      const sheetName = workbook.SheetNames[0];
-      const sheet = workbook.Sheets[sheetName];
-      return XLSX.utils.sheet_to_json(sheet);
-    } catch (error) {
-      throw new BadRequestException('Failed to parse Excel file.');
-    }
-  }
-
-  private async saveParsedDataToDB(parsedData: any[]): Promise<any[]> {
-    try {
-      const createdRecords = [];
-
-      for (const row of parsedData) {
-        const {
-          type,
-          wbs,
-          level,
-          element,
-          uniqWBS,
-          markmapMM,
-          additionalData,
-        } = row;
-
-        const record = await this.fileUploadService.saveParsedContent({
-          type: type || 'unknown',
-          wbs: wbs || '',
-          level: level ? parseInt(level) : 0,
-          element: element || '',
-          uniqWBS: uniqWBS || '',
-          markmapMM: markmapMM || '',
-          additionalData: additionalData ? JSON.parse(additionalData) : {},
-        });
-
-        createdRecords.push(record);
-      }
-
-      return createdRecords;
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to save parsed data.');
-    }
-  }
-
-  @Get(':id')
-  async getFile(@Param('id') id: string): Promise<Attachment> {
-    try {
-      return await this.fileUploadService.findOne(id);
-    } catch (error) {
-      console.error('Error fetching file:', error.message);
-      throw error;
-    }
-  }
-
-  @Get()
-  async getAllFiles(): Promise<Attachment[]> {
-    try {
-      return await this.fileUploadService.findAll();
-    } catch (error) {
-      throw new InternalServerErrorException('Failed to retrieve files.');
-    }
-  }
-
-  @Delete(':id')
-  async deleteFile(@Param('id') id: string): Promise<void> {
-    try {
-      const file = await this.fileUploadService.findOne(id);
-
-      // Log audit for file deletion
-      await this.fileUploadService.logAudit(
-        'DELETE',
-        'Attachment',
-        id.toString(),
-        {
-          fileName: file.fileUrl,
-        },
-      );
-
-      await this.fileUploadService.remove(id);
-    } catch (error) {
-      throw error;
-    }
+    const workbook = XLSX.readFile(filePath);
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    return XLSX.utils.sheet_to_json(sheet);
   }
 }

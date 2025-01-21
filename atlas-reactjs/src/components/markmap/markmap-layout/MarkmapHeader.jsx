@@ -8,6 +8,7 @@ import { TbWorldUpload } from "react-icons/tb";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import { restoreBackup } from "../../../redux/slices/restore-backups";
 import Icons from "../../../constants/icons";
 import { createBackup } from "../../../redux/slices/backups";
 import {
@@ -33,6 +34,8 @@ const MarkmapHeader = ({
   const dispatch = useDispatch();
   const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false);
   const [title, setTitle] = useState("Untitled");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -130,6 +133,32 @@ const MarkmapHeader = ({
     } catch (error) {
       setIsLoading(false);
       cogoToast.error(`Failed to create backup: ${error}`);
+    }
+  };
+
+  const handleFileSelection = (file) => {
+    if (!file) {
+      cogoToast.error("Please select a valid structure!");
+      return;
+    }
+
+    setSelectedFile(file);
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
+
+  const handleFileUpload = async (file) => {
+    try {
+      setIsLoading(true);
+      const response = await dispatch(restoreBackup(file)).unwrap();
+      cogoToast.success("Backup restored successfully!");
+
+      onSuccess();
+      setSelectedFile(null);
+    } catch (err) {
+      cogoToast.error("Failed to upload structure.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -235,7 +264,7 @@ const MarkmapHeader = ({
               type="text"
               value={searchValue}
               onChange={handleSearchChange}
-              className="bg-white border border-gray-300 rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10"
+              className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10"
             />
             <BiSearch size={24} className="absolute left-2 text-gray-500" />
           </div>
@@ -303,6 +332,9 @@ const MarkmapHeader = ({
         onClose={toggleImportModal}
         title={"Import Backups"}
         onSuccess={onSuccess}
+        isLoading={isLoading}
+        handleFileSelection={handleFileSelection}
+        buttonText={"Restore"}
         format={".zip"}
       />
     </div>

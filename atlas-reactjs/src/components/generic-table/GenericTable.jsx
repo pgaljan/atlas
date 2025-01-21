@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
-
+import Tooltip from "../../components/tooltip/Tooltip";
 const GenericTable = ({
   title,
   tabs = null,
@@ -11,7 +11,6 @@ const GenericTable = ({
   buttons,
 }) => {
   const [activeTab, setActiveTab] = useState(tabs ? tabs[0]?.key : null);
-
   return (
     <div className="p-8 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
       <h1 className="text-3xl font-semibold text-custom-text-heading mb-4">
@@ -41,7 +40,6 @@ const GenericTable = ({
           ))}
         </div>
       )}
-
       {enableSearch && (
         <div className="flex items-center justify-between mb-4">
           <div className="relative w-full max-w-md">
@@ -49,7 +47,7 @@ const GenericTable = ({
             <input
               type="text"
               placeholder="Search"
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-main focus:outline-none"
+              className="w-full pl-10 pr-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-custom-main focus:outline-none"
             />
           </div>
           <div className="flex space-x-2">
@@ -66,7 +64,6 @@ const GenericTable = ({
           </div>
         </div>
       )}
-
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
@@ -74,7 +71,7 @@ const GenericTable = ({
               <th className="px-4 py-2">#ID</th>
               {columns?.map((col) => (
                 <th key={col?.key} className="px-4 py-2">
-                  <div className="flex  items-center">
+                  <div className="flex items-center">
                     {col?.label}
                     {Array?.isArray(col?.icon)
                       ? col?.icon?.map((icon, index) => (
@@ -118,14 +115,16 @@ const GenericTable = ({
                   </td>
                 ))}
                 {actions && (
-                  <td className="px-4 py-2 items-center flex  space-x-4">
+                  <td className="px-4 py-2 items-center flex space-x-4">
                     {actions?.map((action, actionIndex) => (
-                      <button
+                      <Tooltip
                         key={actionIndex}
-                        className=" hover:text-custom-dark"
+                        label={action?.tooltip || "Action"}
                       >
-                        {action?.icon}
-                      </button>
+                        <button className="hover:text-custom-dark">
+                          {action?.icon}
+                        </button>
+                      </Tooltip>
                     ))}
                   </td>
                 )}
@@ -137,5 +136,4 @@ const GenericTable = ({
     </div>
   );
 };
-
 export default GenericTable;

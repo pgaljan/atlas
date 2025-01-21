@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Route, Routes } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
+import Profile from "./containers/user/profile/Profile";
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
 const MarkmapCanvas = lazy(() =>
@@ -79,12 +80,20 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/app/team-members"
             element={
               <PrivateRoute>
                 <TeamMembers />
               </PrivateRoute>
+            }
+          />
+          <Route
+            path="/app/profile"
+            element={
+              <PublicRoute>
+                <Profile />
+              </PublicRoute>
             }
           />
           <Route
@@ -110,16 +119,16 @@ const App = () => {
                 <Trash />
               </PrivateRoute>
             }
-          /> */}
+          />
 
-          {/* <Route
+          <Route
             path="/app/upgrade-plans"
             element={
               <PrivateRoute>
                 <UpgradePlans />
               </PrivateRoute>
             }
-          /> */}
+          />
 
           <Route
             path="*"

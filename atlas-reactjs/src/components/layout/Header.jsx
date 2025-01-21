@@ -7,13 +7,37 @@ import {
   HiMail,
   HiNewspaper,
 } from "react-icons/hi";
+import { useDispatch } from "react-redux";
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
+import { logoutUser } from "../../redux/slices/auth";
 const Header = () => {
   const [activeTab, setActiveTab] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
     // Simulate URL change or content load logic
     window.location.href = `/${tab.toLowerCase()}`;
+  };
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      Cookies.remove("atlas_access_token");
+      Cookies.remove("atlas_userId");
+      Cookies.remove("atlas_username");
+      Cookies.remove("atlas_email");
+
+      cogoToast.success("Logged out successfully!");
+      navigate("/");
+    } catch (error) {
+      cogoToast.error(
+        error?.message ||
+          "An unexpected error occurred during logout. Please try again."
+      );
+    }
   };
 
   return (
@@ -31,7 +55,7 @@ const Header = () => {
             <input
               type="text"
               placeholder="Search for structure..."
-              className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none pl-10"
+              className="border-2 border-gray-300 rounded-md px-4 py-2 w-full focus:border-custom-main  focus:outline-none pl-10"
             />
           </div>
         </div>
@@ -87,17 +111,17 @@ const Header = () => {
             }
           >
             <Dropdown.Header>
-              <span className="block text-sm">Bonnie Green</span>
+              <span className="block text-sm">
+                {Cookies.get("atlas_username")}
+              </span>
               <span className="block truncate text-sm font-medium">
-                name@flowbite.com
+                {Cookies.get("atlas_email")}
               </span>
             </Dropdown.Header>
             <Dropdown.Item>Profile</Dropdown.Item>
-            <Dropdown.Item>Settings</Dropdown.Item>
-            <Dropdown.Item>Notification preference</Dropdown.Item>
-            <Dropdown.Item>More account options</Dropdown.Item>
+            <Dropdown.Item>Notification preferences</Dropdown.Item>
             <Dropdown.Divider />
-            <Dropdown.Item>Sign out</Dropdown.Item>
+            <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
           </Dropdown>
         </div>
       </Navbar>

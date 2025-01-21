@@ -6,12 +6,14 @@ import { FaCirclePlus } from "react-icons/fa6";
 import { GiBrassEye } from "react-icons/gi";
 import { IoIosRemoveCircle } from "react-icons/io";
 import { IoTrash } from "react-icons/io5";
+import Cookies from "js-cookie";
 import { MdRebaseEdit } from "react-icons/md";
 import { PiTreeStructureFill } from "react-icons/pi";
 import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
 import { useDispatch } from "react-redux";
 import useOutsideClick from "../../hooks/useOutsideClick";
 import { updateStructure } from "../../redux/slices/structures";
+import { uploadFile } from "../../redux/slices/upload-files";
 
 import {
   createElement,
@@ -39,6 +41,9 @@ const NodeModal = ({
   structureName: initialStructureName,
 }) => {
   const dispatch = useDispatch();
+  const userId = Cookies.get("atlas_userId");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState(null);
   const [recordExists, setRecordExists] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
@@ -201,6 +206,36 @@ const NodeModal = ({
   const handleKeyPressEditStructure = (e) => {
     if (e?.key === "Enter") {
       handleEditStructureSubmit();
+    }
+  };
+
+  const handleFileSelection = (file) => {
+    if (!file) {
+      cogoToast.error("Please select a valid structure!");
+      return;
+    }
+
+    setSelectedFile(file);
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
+
+  const handleFileUpload = async (file) => {
+    try {
+      setIsLoading(true);
+
+      const response = await dispatch(
+        uploadFile({ file, userId, structureId })
+      ).unwrap();
+
+      cogoToast.success("Structure uploaded successfully!");
+
+      onSuccess();
+      setSelectedFile(null);
+    } catch (err) {
+      cogoToast.error("Failed to upload structure.");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -403,8 +438,12 @@ const NodeModal = ({
         <ImportModal
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
-          title={"Import Json"}
-          format={".json"}
+          title={"Import Structure"}
+          format={".json, .csv, xls"}
+          buttonText={"Import"}
+          isLoading={isLoading}
+          handleFileSelection={(file) => handleFileSelection(file)}
+          onSuccess={onSuccess}
         />
       )}
     </>

@@ -40,9 +40,11 @@ export const teamMembersConfig = {
   actions: [
     {
       icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
+      tooltip: "Edit",
     },
     {
       icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      tooltip: "Delete",
     },
   ],
   buttons: [
@@ -78,9 +80,11 @@ export const trashConfig = {
   actions: [
     {
       icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
+      tooltip: "Edit",
     },
     {
       icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      tooltip: "Delete",
     },
   ],
 };
@@ -104,12 +108,15 @@ export const mediaConfig = {
   actions: [
     {
       icon: <Icons.ViewFileIcon className="w-5 h-5" color="#000000" />,
+      tooltip: "View",
     },
     {
       icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
+      tooltip: "Edit",
     },
     {
       icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      tooltip: "Delete",
     },
   ],
 };
@@ -184,7 +191,6 @@ export const plans = [
   },
 ];
 
-
 export const backupConfig = {
   title: "My Backups",
   tabs: [],
@@ -203,9 +209,80 @@ export const backupConfig = {
     },
   ],
   actions: [
-    
     {
       icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      tooltip: "Delete",
     },
   ],
+};
+
+export const services = [
+  {
+    name: "Google",
+    description:
+      "Connect your Google account to log in via Google, use your avatar, and easily access Google services.",
+    action: "Configure",
+    icon: <Icons.GoogleServiceIcon className="w-8 h-8 " />,
+  },
+  {
+    name: "Microsoft",
+    description:
+      "This app allows you to log in to your MeisterLabs products with your Microsoft account.",
+    action: "Connect",
+    icon: <Icons.MicrosoftIcon className="w-8 h-18" />,
+  },
+  {
+    name: "Apple",
+    description:
+      "This app allows you to log in to your MeisterLabs products with your Apple account.",
+    action: "Connect",
+    icon: <Icons.AppleIcon className="w-8  h-8 " />,
+  },
+  {
+    name: "Biggerplate",
+    description:
+      "This app allows you to log in to your Meister products with your Biggerplate account.",
+    action: "Connect",
+    icon: <Icons.BiggerPlateIcon className="w-8 h-8 " />,
+  },
+];
+export const personalDetailConfig = {
+  tabs: [
+    { label: "General" },
+    { label: "Email" },
+    { label: "Services & Sessions" },
+    { label: "Terms & Policies" },
+  ],
+  fields: [
+    {
+      label: "Name",
+      name: "name",
+      placeholder: "Enter your name",
+      value: "Engr Kashan",
+    },
+    {
+      label: "Username",
+      name: "username",
+      placeholder: "Enter your username",
+      value: "",
+    },
+    {
+      label: "Website",
+      name: "website",
+      placeholder: "Enter your website",
+      value: "",
+    },
+    {
+      label: "Description",
+      name: "description",
+      placeholder: "Enter a description",
+      value: "",
+    },
+  ],
+  avatar: {
+    image: "/path-to-avatar.jpg",
+    label: "My Avatar",
+    description: "Your photo should be cool and may use transparency.",
+  },
+  buttons: [{ label: "Save changes", className: "bg-custom-main text-white" }],
 };

@@ -2,7 +2,16 @@ import React from "react";
 
 const InputField = React.forwardRef(
   (
-    { type = "text", label, name, value, onChange, placeholder, onKeyDown },
+    {
+      type = "text",
+      label,
+      name,
+      value,
+      onChange,
+      placeholder,
+      onKeyDown,
+      className,
+    },
     ref
   ) => {
     return (
@@ -20,7 +29,7 @@ const InputField = React.forwardRef(
           onKeyDown={onKeyDown}
           value={value}
           onChange={onChange}
-          className="py-3 px-4 block w-full border-2 border-gray-300 rounded-lg text-sm focus:border-custom-main focus:ring-0 dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400"
+          className={`py-3 px-4 block w-full border-2 border-gray-300 rounded-lg text-sm focus:border-custom-main focus:outline-none dark:bg-neutral-900 dark:border-neutral-700 dark:placeholder-neutral-500 dark:text-neutral-400 ${className}`}
           placeholder={placeholder}
         />
       </div>

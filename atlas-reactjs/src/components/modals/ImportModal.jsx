@@ -1,13 +1,17 @@
 import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { restoreBackup } from "../../redux/slices/restore-backups";
 
-const ImportModal = ({ isOpen, onClose, title, format, onSuccess }) => {
+const ImportModal = ({
+  isOpen,
+  onClose,
+  title,
+  format,
+  handleFileSelection,
+  buttonText,
+  isLoading,
+}) => {
   const [dragging, setDragging] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const dispatch = useDispatch();
 
   const handleDragOver = (e) => {
     e.preventDefault();
@@ -33,31 +37,34 @@ const ImportModal = ({ isOpen, onClose, title, format, onSuccess }) => {
   };
 
   const validateFile = (file) => {
-    if (file && file.type === "application/zip") {
+    const allowedTypes = [
+      "application/zip",
+      "text/csv",
+      "application/vnd.ms-excel",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ];
+
+    if (file && allowedTypes.includes(file.type)) {
       setSelectedFile(file);
       setErrorMessage("");
     } else {
-      setErrorMessage("Only .zip files are allowed.");
+      setErrorMessage(
+        "Only .zip, .csv, .xls, or .xlsx files are allowed. Please upload a valid file."
+      );
       setSelectedFile(null);
     }
   };
 
-  const handleFileUpload = async () => {
+  const handleConfirmUpload = () => {
     if (selectedFile) {
-      try {
-        setIsLoading(true);
-        await dispatch(restoreBackup(selectedFile)).unwrap();
-        onClose();
-        setIsLoading(false);
-        setSelectedFile(null);
-        cogoToast.success("Backup restored successfully!");
-        onSuccess();
-      } catch (error) {
-        setErrorMessage(error || "Failed to restore backup.");
-        setIsLoading(false);
-      }
+      handleFileSelection(selectedFile); 
+      setSelectedFile(null); 
+      onClose();
+    } else {
+      setErrorMessage("No file selected!");
     }
   };
+  
 
   if (!isOpen) return null;
 
@@ -70,7 +77,7 @@ const ImportModal = ({ isOpen, onClose, title, format, onSuccess }) => {
               Confirm Upload
             </h2>
             <p className="text-center text-gray-600 font-medium mb-4">
-              {selectedFile.name}
+              {selectedFile?.name}
             </p>
             <div className="flex justify-center space-x-4">
               <button
@@ -81,10 +88,9 @@ const ImportModal = ({ isOpen, onClose, title, format, onSuccess }) => {
               </button>
               <button
                 className="bg-custom-main text-white px-4 py-2 rounded"
-                onClick={handleFileUpload}
-                disabled={isLoading}
+                onClick={handleConfirmUpload}
               >
-                {isLoading ? "Restoring..." : "Restore"}
+                {isLoading ? "Loading..." : buttonText}
               </button>
             </div>
           </div>
@@ -141,7 +147,7 @@ const ImportModal = ({ isOpen, onClose, title, format, onSuccess }) => {
               <input
                 id="file-input"
                 type="file"
-                accept=".zip"
+                accept=".zip,.csv,.xls,.xlsx"
                 onChange={handleFileSelect}
                 className="hidden"
               />
