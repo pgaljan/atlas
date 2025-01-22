@@ -80,7 +80,7 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          <Route
+          {/* <Route
             path="/app/team-members"
             element={
               <PrivateRoute>
@@ -119,16 +119,16 @@ const App = () => {
                 <Trash />
               </PrivateRoute>
             }
-          />
+          /> */}
 
-          <Route
+          {/* <Route
             path="/app/upgrade-plans"
             element={
               <PrivateRoute>
                 <UpgradePlans />
               </PrivateRoute>
             }
-          />
+          /> */}
 
           <Route
             path="*"
