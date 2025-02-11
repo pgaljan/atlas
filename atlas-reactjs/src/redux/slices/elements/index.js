@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for the element slice
 const initialState = {
   elements: [],
@@ -89,6 +90,7 @@ export const reparentElements = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
+      console.log(error);
       return rejectWithValue(error.response?.data || error.message);
     }
   }

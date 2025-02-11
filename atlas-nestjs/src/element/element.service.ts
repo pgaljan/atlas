@@ -55,6 +55,11 @@ export class ElementService {
         },
       });
 
+      await this.prisma.structure.update({
+        where: { id: structureId },
+        data: { updatedAt: new Date() },
+      });
+
       await this.logAudit(
         'CREATE',
         'Element',
@@ -92,6 +97,11 @@ export class ElementService {
             createdAt: new Date(),
             updatedAt: new Date(),
           },
+        });
+
+        await this.prisma.structure.update({
+          where: { id: structureId },
+          data: { updatedAt: new Date() },
         });
 
         if (
@@ -142,6 +152,11 @@ export class ElementService {
       },
     });
 
+    await this.prisma.structure.update({
+      where: { id: updatedElement.structureId },
+      data: { updatedAt: new Date() },
+    });
+
     await this.logAudit(
       'UPDATE',
       'Element',
@@ -169,7 +184,7 @@ export class ElementService {
       throw new BadRequestException('Invalid reparenting requests');
     }
 
-    const updatedElements = [];
+    const updatedElements = new Set<string>(); // Track affected structures
 
     for (const request of reparentingRequests) {
       const { sourceElementId, targetElementId, attributes } = request;
@@ -196,6 +211,8 @@ export class ElementService {
         },
       });
 
+      updatedElements.add(sourceElement.structureId);
+
       await this.logAudit(
         'REPARENT',
         'Element',
@@ -203,13 +220,18 @@ export class ElementService {
         { sourceElementId, targetElementId, attributes },
         userId,
       );
+    }
 
-      updatedElements.push(updatedElement);
+    // Update updatedAt for affected structures
+    for (const structureId of updatedElements) {
+      await this.prisma.structure.update({
+        where: { id: structureId },
+        data: { updatedAt: new Date() },
+      });
     }
 
     return {
-      message: `${updatedElements.length} elements reparented successfully`,
-      updatedElements,
+      message: `${reparentingRequests.length} elements reparented successfully`,
     };
   }
 
@@ -225,12 +247,17 @@ export class ElementService {
         where: { id },
       });
 
+      await this.prisma.structure.update({
+        where: { id: deletedElement.structureId },
+        data: { updatedAt: new Date() },
+      });
+
       await this.logAudit(
         'DELETE',
         'Element',
         deletedElement.id.toString(),
         {
-          deletedAt: deletedElement.deletedAt,
+          deletedAt: new Date(),
           reason: 'Deletion initiated by user',
         },
         userId?.toString(),

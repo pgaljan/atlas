@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState } from "react"
 
 const ImportModal = ({
   isOpen,
@@ -9,64 +9,79 @@ const ImportModal = ({
   buttonText,
   isLoading,
 }) => {
-  const [dragging, setDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const [dragging, setDragging] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [errorMessage, setErrorMessage] = useState("")
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
+  const allowedExtensions = format
+    .split(",")
+    .map(ext => ext?.trim()?.replace(".", "")) // Extract extensions without dots
+  const handleDragOver = e => {
+    e.preventDefault()
+    setDragging(true)
+  }
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setDragging(false);
-  };
+  const handleDragLeave = e => {
+    e.preventDefault()
+    setDragging(false)
+  }
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
+  const handleDrop = e => {
+    e.preventDefault()
+    setDragging(false)
 
-    const file = e.dataTransfer?.files[0];
-    validateFile(file);
-  };
+    const file = e.dataTransfer?.files[0]
+    validateFile(file)
+  }
 
-  const handleFileSelect = (e) => {
-    const file = e.target?.files[0];
-    validateFile(file);
-  };
+  const handleFileSelect = e => {
+    const file = e.target?.files[0]
+    validateFile(file)
+  }
 
-  const validateFile = (file) => {
-    const allowedTypes = [
-      "application/zip",
-      "text/csv",
-      "application/vnd.ms-excel",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ];
+  // const validateFile = file => {
 
-    if (file && allowedTypes.includes(file.type)) {
-      setSelectedFile(file);
-      setErrorMessage("");
+  //   const allowedTypes = [
+  //     "application/zip",
+  //     "text/csv",
+  //     "application/vnd.ms-excel",
+  //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  //   ]
+
+  //   if (file && allowedTypes.includes(file.type)) {
+  //     setSelectedFile(file)
+  //     setErrorMessage("")
+  //   } else {
+  //     setErrorMessage(
+  //       "Only .zip, .csv, .xls, or .xlsx files are allowed. Please upload a valid file."
+  //     )
+  //     setSelectedFile(null)
+  //   }
+  // }
+
+  const validateFile = file => {
+    const fileExtension = file?.name?.split(".")?.pop()?.toLowerCase()
+    if (file && allowedExtensions?.includes(fileExtension)) {
+      setSelectedFile(file)
+      setErrorMessage("")
     } else {
       setErrorMessage(
-        "Only .zip, .csv, .xls, or .xlsx files are allowed. Please upload a valid file."
-      );
-      setSelectedFile(null);
+        `Only ${format} files are allowed. Please upload a valid file.`
+      )
+      setSelectedFile(null)
     }
-  };
-
+  }
   const handleConfirmUpload = () => {
     if (selectedFile) {
-      handleFileSelection(selectedFile); 
-      setSelectedFile(null); 
-      onClose();
+      handleFileSelection(selectedFile)
+      setSelectedFile(null)
+      onClose()
     } else {
-      setErrorMessage("No file selected!");
+      setErrorMessage("No file selected!")
     }
-  };
-  
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -147,7 +162,7 @@ const ImportModal = ({
               <input
                 id="file-input"
                 type="file"
-                accept=".zip,.csv,.xls,.xlsx"
+                accept={format}
                 onChange={handleFileSelect}
                 className="hidden"
               />
@@ -161,7 +176,7 @@ const ImportModal = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ImportModal;
+export default ImportModal

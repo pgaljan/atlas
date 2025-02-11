@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for structure slice
 const initialState = {
   structures: [],
@@ -54,7 +55,6 @@ export const updateStructure = createAsyncThunk(
   "structures/updateStructure",
   async ({ id, updateData }, { rejectWithValue }) => {
     try {
-      console.log(updateData)
       const response = await axiosInstance.patch(
         `/structure/update/${id}`,
         updateData
@@ -151,7 +151,7 @@ const structureSlice = createSlice({
       })
       .addCase(getStructuresByUserId.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.structures = action.payload; 
+        state.structures = action.payload;
       })
       .addCase(getStructuresByUserId.rejected, (state, action) => {
         state.status = "failed";

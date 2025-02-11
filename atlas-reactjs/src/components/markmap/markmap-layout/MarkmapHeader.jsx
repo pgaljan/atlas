@@ -1,5 +1,6 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
+import { useNavigate } from "react-router-dom";
 import React, { useCallback, useEffect, useState } from "react";
 import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi";
 import { FaUserPlus } from "react-icons/fa";
@@ -18,6 +19,7 @@ import {
 import ImportModal from "../../modals/ImportModal";
 import ShareModal from "../../modals/ShareModal";
 import UserPopover from "../../modals/UserPopover";
+import useFeatureFlag from "../../../hooks/useFeatureFlag";
 import Tooltip from "../../tooltip/Tooltip";
 
 const MarkmapHeader = ({
@@ -32,15 +34,26 @@ const MarkmapHeader = ({
   onSuccess,
 }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false);
   const [title, setTitle] = useState("Untitled");
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("Level: ");
+
+  // Feature flags
+  const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
+  const canDynamicWbs = useFeatureFlag("Dynamic WBS");
+
+  const handleFeatureClick = (canAccess, action) => {
+    if (canAccess) {
+      action();
+    } else {
+      navigate(`?plan=upgrade-to-premium`);
+    }
+  };
 
   useEffect(() => {
     if (structureId) {
@@ -132,7 +145,11 @@ const MarkmapHeader = ({
       link.click();
     } catch (error) {
       setIsLoading(false);
-      cogoToast.error(`Failed to create backup: ${error}`);
+      if (error?.statusCode === 401) {
+        navigate("?plan=upgrade-to-premium");
+      } else {
+        cogoToast.error(`Failed to create backup: ${error}`);
+      }
     }
   };
 
@@ -142,7 +159,6 @@ const MarkmapHeader = ({
       return;
     }
 
-    setSelectedFile(file);
     setIsImportModalOpen(false);
     handleFileUpload(file);
   };
@@ -154,7 +170,6 @@ const MarkmapHeader = ({
       cogoToast.success("Backup restored successfully!");
 
       onSuccess();
-      setSelectedFile(null);
     } catch (err) {
       cogoToast.error("Failed to upload structure.");
     } finally {
@@ -211,7 +226,9 @@ const MarkmapHeader = ({
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Import Backups"
-              onClick={toggleImportModal}
+              onClick={() =>
+                handleFeatureClick(canRestoreBackup, toggleImportModal)
+              }
             >
               <VscGitPullRequestCreate size={24} className="text-custom-main" />
             </button>
@@ -229,7 +246,9 @@ const MarkmapHeader = ({
             ) : (
               <button
                 disabled={isLoading}
-                onClick={handleCreateBackup}
+                onClick={() =>
+                  handleFeatureClick(canRestoreBackup, handleCreateBackup)
+                }
                 className="p-2 hover:bg-gray-100 rounded-full"
                 aria-label="Create Backup"
               >
@@ -288,7 +307,11 @@ const MarkmapHeader = ({
                 id="show-wbs-toggle"
                 type="checkbox"
                 checked={showWbs}
-                onChange={(e) => setShowWbs(e.target.checked)}
+                onChange={(e) =>
+                  handleFeatureClick(canDynamicWbs, () =>
+                    setShowWbs(e.target.checked)
+                  )
+                }
                 className="sr-only peer"
               />
               <div
@@ -300,8 +323,8 @@ const MarkmapHeader = ({
               ></div>
               <div
                 className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform
-                ${showWbs ? "" : "!bg-custom-main"}
-                `}
+      ${showWbs ? "" : "!bg-custom-main"}
+    `}
               ></div>
             </label>
           </div>

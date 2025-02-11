@@ -27,6 +27,18 @@ export const createBackup = createAsyncThunk(
   }
 );
 
+export const fetchBackupsByUserId = createAsyncThunk(
+  "backup/user",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/backup/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Async thunk to fetch a single backup
 export const getBackup = createAsyncThunk(
   "backup/get",

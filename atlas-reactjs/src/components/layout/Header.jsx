@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import { FiSearch } from "react-icons/fi";
 import {
@@ -12,6 +13,7 @@ import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../redux/slices/auth";
+
 const Header = () => {
   const [activeTab, setActiveTab] = useState("");
   const dispatch = useDispatch();
@@ -19,9 +21,9 @@ const Header = () => {
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-    // Simulate URL change or content load logic
     window.location.href = `/${tab.toLowerCase()}`;
   };
+  
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
@@ -111,14 +113,13 @@ const Header = () => {
             }
           >
             <Dropdown.Header>
-              <span className="block text-sm">
-                {Cookies.get("atlas_username")}
-              </span>
               <span className="block truncate text-sm font-medium">
                 {Cookies.get("atlas_email")}
               </span>
             </Dropdown.Header>
-            <Dropdown.Item>Profile</Dropdown.Item>
+            <Link to="/app/me">
+              <Dropdown.Item>Profile</Dropdown.Item>
+            </Link>
             <Dropdown.Item>Notification preferences</Dropdown.Item>
             <Dropdown.Divider />
             <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>

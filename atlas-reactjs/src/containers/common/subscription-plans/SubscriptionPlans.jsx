@@ -6,11 +6,13 @@ import { fetchPlans } from "../../../redux/slices/plans";
 
 // Helper to render checkmark and cross
 const renderCheckmark = (value) => {
-  return value ? (
-    <span className="text-green-500">&#10003;</span>
-  ) : (
-    <span className="text-red-500">&#10005;</span>
-  );
+  if (value === true) {
+    return <span className="text-green-500">✅</span>;
+  } else if (value === false) {
+    return <span className="text-red-500">❌</span>;
+  } else {
+    return <span>{value}</span>;
+  }
 };
 
 const SubscriptionPlans = () => {
@@ -64,7 +66,7 @@ const SubscriptionPlans = () => {
               <PricingCard
                 key={plan.id}
                 type={plan.name}
-                price={`$0.0`}
+                price={`$${plan.price}`}
                 subscription="year"
                 description={plan.description}
                 buttonText={`Choose ${plan.name}`}
@@ -94,7 +96,7 @@ const FeatureList = ({ features }) => {
         {firstFiveFeatures.map((featureKey) => (
           <List key={featureKey}>
             <div className="flex items-center justify-between">
-              <span>{featureKey}:</span>
+              <span>{featureKey}</span>
               <span>{renderCheckmark(features[featureKey])}</span>
             </div>
           </List>

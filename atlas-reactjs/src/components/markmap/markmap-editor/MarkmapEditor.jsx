@@ -1,9 +1,10 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useEffect, useState } from "react";
-import useUndo from "use-undo";
 import { useDispatch } from "react-redux";
-import { getStructure } from "../../../redux/slices/structures";
+import useUndo from "use-undo";
 import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
+import { reparentElements } from "../../../redux/slices/elements";
+import { getStructure } from "../../../redux/slices/structures";
 import {
   addNodeToTarget,
   assignWbsNumbers,
@@ -12,6 +13,7 @@ import {
   updateNodeLevels,
 } from "../../../utils/markmapHelpers";
 import NodeModal from "../../modals/NodeModal";
+import RightClickMenu from "../../modals/RightClickMenu";
 import { useMarkmap } from "../markmap-context/MarkmapContext";
 import MarkmapHeader from "../markmap-layout/MarkmapHeader";
 
@@ -27,6 +29,10 @@ const MarkmapEditor = ({ structureId }) => {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [shouldFitView, setShouldFitView] = useState(true);
   const [filteredTree, setFilteredTree] = useState(null);
+  const [rightClickModal, setRightClickModal] = useState({
+    visible: false,
+    position: { x: 0, y: 0 },
+  });
 
   const localStorageKey = "markmapTreeData";
   const localStorageWbsKey = "markmapShowWbs";
@@ -38,6 +44,28 @@ const MarkmapEditor = ({ structureId }) => {
   const setShowWbs = (value) => {
     setShowWbsState(value);
     localStorage.setItem(localStorageWbsKey, JSON.stringify(value));
+  };
+
+  const handleRightClick = (event) => {
+    event.preventDefault();
+
+    if (event.target.closest(".markmap-node, .markmap-header")) {
+      return;
+    }
+
+    setRightClickModal({
+      visible: true,
+      position: { x: event.clientX, y: event.clientY },
+    });
+  };
+
+  const handleLeftClick = (event) => {
+    if (
+      rightClickModal.visible &&
+      !event.target.closest(".right-click-modal")
+    ) {
+      setRightClickModal({ visible: false, position: { x: 0, y: 0 } });
+    }
   };
 
   const handleJsonChange = (e) => {
@@ -72,7 +100,7 @@ const MarkmapEditor = ({ structureId }) => {
   /**
    * Moves draggedNodeData into targetNodeData's children
    */
-  const updateTreeData = (draggedNodeData, targetNodeData) => {
+  const updateTreeData = async (draggedNodeData, targetNodeData) => {
     if (!targetNodeData) {
       cogoToast.error("No valid target for the operation.");
       return;
@@ -83,22 +111,50 @@ const MarkmapEditor = ({ structureId }) => {
       return;
     }
 
-    // Remove the dragged node from its original location
-    const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
+    const reparentingRequest = {
+      sourceElementId: targetNodeData.elementId,
+      targetElementId: draggedNodeData.elementId,
+      attributes: {
+        structureId: structureId,
+      },
+    };
 
-    // Add the dragged node as a child of the drop target
-    const newTree = addNodeToTarget(
-      updatedTree,
-      targetNodeData.originalContent,
-      {
-        ...draggedNodeData,
-        children: draggedNodeData.children || [],
-      }
-    );
+    try {
+      await dispatch(
+        reparentElements({ reparentingRequests: [reparentingRequest] })
+      ).unwrap();
 
-    const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
-    setTreeData(treeWithWbsAndLevels);
-    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
+      fetchStructure(
+        structureId,
+        dispatch,
+        setTreeData,
+        setIsLoading,
+        localStorageKey
+      );
+
+      cogoToast.success("Node reparented successfully.");
+
+      // Update the tree data locally to reflect the reparenting
+      const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
+      const newTree = addNodeToTarget(
+        updatedTree,
+        targetNodeData.originalContent,
+        {
+          ...draggedNodeData,
+          children: draggedNodeData.children || [],
+        }
+      );
+
+      const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
+      setTreeData(treeWithWbsAndLevels);
+      localStorage.setItem(
+        localStorageKey,
+        JSON.stringify(treeWithWbsAndLevels)
+      );
+    } catch (error) {
+      console.error("Error during reparenting:", error);
+      cogoToast.error("Failed to reparent node.");
+    }
   };
 
   /**
@@ -292,10 +348,82 @@ const MarkmapEditor = ({ structureId }) => {
     localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
   };
 
+  const sanitizeTreeData = (node) => {
+    const cleanedNode = {
+      content: node.name || node.content,
+      children: node.children ? node.children.map(sanitizeTreeData) : [],
+    };
+
+    return cleanedNode;
+  };
+
+  const exportAsHtml = (treeData) => {
+    const sanitizedData = sanitizeTreeData(treeData);
+
+    const htmlContent = `<!DOCTYPE html>
+    <html>
+      <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+        <title>Markmap Export</title>
+        <style>
+          * {
+            margin: 0;
+            padding: 0;
+          }
+          #mindmap {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+          }
+        </style>
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/style.css"
+        />
+        <link
+          rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/katex@0.16.18/dist/katex.min.css"
+        />
+      </head>
+      <body>
+        <svg id="mindmap"></svg>
+  
+        <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.8/dist/browser/index.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/index.js"></script>
+        <script
+          src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js"
+          defer
+        ></script>
+  
+        <script>
+          window.onload = function () {
+            const data = ${JSON.stringify(sanitizedData, null, 2)};
+            const markmapInstance = window.markmap.Markmap.create(
+              "#mindmap",
+              null,
+              data
+            );
+          };
+        </script>
+      </body>
+    </html>`;
+
+    const blob = new Blob([htmlContent], { type: "text/html" });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = "markmap_export.html";
+    link.click();
+  };
+
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
       style={{ userSelect: "none" }}
+      onContextMenu={handleRightClick}
+      onClick={handleLeftClick}
     >
       <div className="flex-1 border border-gray-300 rounded-md bg-white overflow-hidden">
         <MarkmapHeader
@@ -361,6 +489,25 @@ const MarkmapEditor = ({ structureId }) => {
             )
           }
           nodeData={modalData}
+        />
+      )}
+
+      {/* right click modal */}
+      {rightClickModal.visible && (
+        <RightClickMenu
+          position={rightClickModal.position}
+          structureId={structureId}
+          onClose={() =>
+            setRightClickModal({ visible: false, position: { x: 0, y: 0 } })
+          }
+          onOptionSelect={(option) => {
+            if (option !== "moveToTrash") {
+              setRightClickModal({ visible: false, position: { x: 0, y: 0 } });
+            }
+            if (option === "exportHtml") {
+              exportAsHtml(treeData);
+            }
+          }}
         />
       )}
     </div>

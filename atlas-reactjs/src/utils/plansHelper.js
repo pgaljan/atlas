@@ -1,6 +1,5 @@
-
 import Cookies from "js-cookie";
-import store from "../redux/store"; 
+import store from "../redux/store";
 import { fetchPlans } from "../redux/slices/plans";
 
 /**
@@ -22,11 +21,13 @@ export const managePlansAndFeatures = async () => {
 
   // Fetch plans if not already loaded
   if (!state.plans.plans || state.plans.plans.length === 0) {
-    console.warn("Plans not found in the Redux store. Dispatching fetchPlans...");
+    console.warn(
+      "Plans not found in the Redux store. Dispatching fetchPlans..."
+    );
     await dispatch(fetchPlans());
   }
 
-  const updatedState = store.getState(); // Fetch updated state after dispatch
+  const updatedState = store.getState();
   const plans = updatedState.plans.plans;
 
   if (!plans || plans.length === 0) {
@@ -40,8 +41,6 @@ export const managePlansAndFeatures = async () => {
     console.warn("User plan not found for the given user ID.");
     return {};
   }
-
-  // Determine the plan type (fallback to 'Personal' if missing)
 
   // Define the feature set for different plans
   const featureSet = {

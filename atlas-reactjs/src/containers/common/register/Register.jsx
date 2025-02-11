@@ -1,6 +1,6 @@
-import cogoToast from "@successtar/cogo-toast"
-import React, { useState } from "react"
-import { useDispatch } from "react-redux"
+import cogoToast from "@successtar/cogo-toast";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../../redux/slices/auth";
 import Icons from "../../../constants/icons";
@@ -10,43 +10,43 @@ const GoogleLoginButton = () => (
     <Icons.GoogleIcon />
     <span>Sign up with Google</span>
   </button>
-)
+);
 
 const Register = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [email, setEmail] = useState("")
-  const [fullName, setFullName] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = e => {
-    e.preventDefault()
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (!email || !password || !fullName) {
-      cogoToast.error("All fields are required")
-      return
+      cogoToast.error("All fields are required");
+      return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      cogoToast.error("Please enter a valid email")
-      return
+      cogoToast.error("Please enter a valid email");
+      return;
     }
 
-    setIsSubmitting(true)
+    setIsSubmitting(true);
 
-    dispatch(registerUser({ username: fullName, email, password }))
+    dispatch(registerUser({ fullName, email, password }))
       .unwrap()
       .then(() => {
-        cogoToast.success("Registration successful!")
+        cogoToast.success("Registration successful!");
 
         // Redirect to homepage
-        navigate("/subscription-plans")
+        navigate("/subscription-plans");
 
         // Reset form
-        setEmail("")
-        setPassword("")
-        setFullName("")
+        setEmail("");
+        setPassword("");
+        setFullName("");
       })
-      .catch(err => {
+      .catch((err) => {
         if (
           err &&
           err.message &&
@@ -54,15 +54,15 @@ const Register = () => {
         ) {
           cogoToast.error(
             "This email is already registered. Please try another one."
-          )
+          );
         } else {
-          cogoToast.error(err.message || "Registration failed")
+          cogoToast.error(err.message || "Registration failed");
         }
       })
       .finally(() => {
-        setIsSubmitting(false)
-      })
-  }
+        setIsSubmitting(false);
+      });
+  };
   return (
     <div className="bg-custom-background-white">
       <header className="p-4 bg-custom-navbar flex items-center justify-between">
@@ -99,9 +99,9 @@ const Register = () => {
               <input
                 type="text"
                 value={fullName}
-                onChange={e => setFullName(e.target.value)}
+                onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
             </div>
 
@@ -115,9 +115,9 @@ const Register = () => {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your work email"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
             </div>
 
@@ -131,9 +131,9 @@ const Register = () => {
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
             </div>
 
@@ -168,7 +168,7 @@ const Register = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default Register
+export default Register;

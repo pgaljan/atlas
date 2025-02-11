@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
 import { Link } from "react-router-dom";
+
 const UserPopover = () => {
   const [isOpen, setIsOpen] = useState(true);
   const popoverRef = useRef(null);
@@ -31,7 +32,9 @@ const UserPopover = () => {
         <div className="bg-gray-50 p-4 rounded-t-lg">
           <ul role="menu">
             <li role="none">
-              <h2 className="text-sm font-semibold text-gray-600">Online</h2>
+              <h2 className="text-sm font-semibold text-green-500">
+                Online
+              </h2>
               <ul role="none" className="mt-2 space-y-2">
                 <li
                   role="menuitem"
@@ -57,13 +60,15 @@ const UserPopover = () => {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <Link to="/app/me">
                     <div className="text-sm font-medium text-gray-800">
                       {username || "User"}
-                      <span className="ml-2 text-xs text-gray-400">Online</span>
+                      <span className="ml-2 text-xs text-custom-main">
+                        (admin)
+                      </span>
                     </div>
-                    <div className="text-xs text-gray-500">Atlas owner</div>
-                  </div>
+                    <div className="text-xs text-gray-500">Markmap Owner</div>
+                  </Link>
                 </li>
               </ul>
             </li>

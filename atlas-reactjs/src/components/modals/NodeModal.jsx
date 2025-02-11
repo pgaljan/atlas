@@ -1,12 +1,13 @@
 import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import React, { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { BiLink } from "react-icons/bi";
 import { FaEdit } from "react-icons/fa";
 import { FaCirclePlus } from "react-icons/fa6";
 import { GiBrassEye } from "react-icons/gi";
 import { IoIosRemoveCircle } from "react-icons/io";
 import { IoTrash } from "react-icons/io5";
-import Cookies from "js-cookie";
 import { MdRebaseEdit } from "react-icons/md";
 import { PiTreeStructureFill } from "react-icons/pi";
 import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
@@ -28,6 +29,7 @@ import AddQuillModal from "./AddQuillModal";
 import DeleteModal from "./DeleteModal";
 import ImportModal from "./ImportModal";
 import ModalComponent from "./Modal";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
 
 const NodeModal = ({
   position,
@@ -41,8 +43,8 @@ const NodeModal = ({
   structureName: initialStructureName,
 }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const userId = Cookies.get("atlas_userId");
-  const [selectedFile, setSelectedFile] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [deleteRecordId, setDeleteRecordId] = useState(null);
   const [recordExists, setRecordExists] = useState(false);
@@ -56,6 +58,18 @@ const NodeModal = ({
   const [editStructureModalVisible, setEditStructureModalVisible] =
     useState(false);
   const [structureName, setStructureName] = useState(initialStructureName);
+
+  // Feature flags
+  const canImportStructure = useFeatureFlag("Import from Excel");
+  const canTagRecord = useFeatureFlag("Rich Text Records");
+
+  const handleFeatureClick = (canAccess, message, action) => {
+    if (canAccess) {
+      action();
+    } else {
+      navigate(`?plan=upgrade-to-premium`);
+    }
+  };
 
   const modalRef = useOutsideClick(() => {
     if (
@@ -215,7 +229,6 @@ const NodeModal = ({
       return;
     }
 
-    setSelectedFile(file);
     setIsImportModalOpen(false);
     handleFileUpload(file);
   };
@@ -224,14 +237,11 @@ const NodeModal = ({
     try {
       setIsLoading(true);
 
-      const response = await dispatch(
-        uploadFile({ file, userId, structureId })
-      ).unwrap();
+      await dispatch(uploadFile({ file, userId, structureId })).unwrap();
 
       cogoToast.success("Structure uploaded successfully!");
 
       onSuccess();
-      setSelectedFile(null);
     } catch (err) {
       cogoToast.error("Failed to upload structure.");
     } finally {
@@ -255,7 +265,11 @@ const NodeModal = ({
             <>
               <Tooltip label="Import Structure">
                 <button
-                  onClick={() => setIsImportModalOpen(true)}
+                  onClick={() =>
+                    handleFeatureClick(canImportStructure, () =>
+                      setIsImportModalOpen(true)
+                    )
+                  }
                   aria-label="Import Structure"
                   className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 >
@@ -276,7 +290,9 @@ const NodeModal = ({
           {wbs !== "1" && !recordExists && (
             <Tooltip label="Add Record">
               <button
-                onClick={() => handleViewEditRecord("add")}
+                onClick={() =>
+                  handleFeatureClick(canTagRecord, () => setModalVisible(true))
+                }
                 aria-label="Add Record"
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
@@ -390,6 +406,7 @@ const NodeModal = ({
           title={isEdit ? "Edit Element" : "Add Element"}
           onImportAsJSON={() => setIsImportModalOpen(true)}
           showBottomButton={true}
+          disabled={!elementValue.trim()}
           onSubmit={handleModalSubmit}
           submitText={isEdit ? "Edit" : "Save"}
           cancelText="Cancel"
@@ -398,6 +415,7 @@ const NodeModal = ({
             label="Element Name"
             name="elementName"
             value={elementValue}
+            disabled={!elementValue.trim()}
             focusRef={focusRef}
             onKeyDown={handleKeyPress}
             onChange={(e) => setElementValue(e.target.value)}
@@ -411,6 +429,7 @@ const NodeModal = ({
           isOpen={editStructureModalVisible}
           onClose={() => setEditStructureModalVisible(false)}
           title="Edit Structure Name"
+          disabled={!structureName.trim()}
           onSubmit={handleEditStructureSubmit}
           submitText="Update"
           cancelText="Cancel"
@@ -419,6 +438,7 @@ const NodeModal = ({
             label="Edit Structure Name"
             name="structureName"
             focusRef={focusRef}
+            disabled={!structureName.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
             onChange={(e) => setStructureName(e.target.value)}
@@ -439,7 +459,7 @@ const NodeModal = ({
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           title={"Import Structure"}
-          format={".json, .csv, xls"}
+          format={".json, .csv, .xls, .xlsx"}
           buttonText={"Import"}
           isLoading={isLoading}
           handleFileSelection={(file) => handleFileSelection(file)}

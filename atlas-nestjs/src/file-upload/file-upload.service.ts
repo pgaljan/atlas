@@ -134,12 +134,68 @@ export class FileUploadService {
           element,
           elementId,
           details,
-          userId: userId || null,
+          userId: userId || null, 
         },
       });
     } catch (error) {
       console.error('Error logging audit:', error.message);
       throw new InternalServerErrorException('Failed to log audit.');
+    }
+  }
+
+  async getMediaByUserId(userId: string) {
+    try {
+      return await this.prisma.attachment.findMany({
+        where: { userId },
+      });
+    } catch (error) {
+      console.error('Error fetching media by user ID:', error.message);
+      throw new InternalServerErrorException(
+        'Failed to fetch media by user ID.',
+      );
+    }
+  }
+
+  async updateMedia(id: string, newFileUrl: string) {
+    try {
+      const media = await this.prisma.attachment.findUnique({
+        where: { id },
+      });
+
+      if (!media) {
+        throw new NotFoundException('Media not found.');
+      }
+
+      return await this.prisma.attachment.update({
+        where: { id },
+        data: {
+          fileUrl: newFileUrl,
+        },
+      });
+    } catch (error) {
+      console.error('Error updating media:', error.message);
+      throw new InternalServerErrorException('Failed to update media.');
+    }
+  }
+
+  async deleteMedia(id: string) {
+    try {
+      const media = await this.prisma.attachment.findUnique({
+        where: { id },
+      });
+
+      if (!media) {
+        throw new NotFoundException('Media not found.');
+      }
+
+      await this.prisma.attachment.delete({
+        where: { id },
+      });
+
+      return { message: 'Media deleted successfully.' };
+    } catch (error) {
+      console.error('Error deleting media:', error.message);
+      throw new InternalServerErrorException('Failed to delete media.');
     }
   }
 }

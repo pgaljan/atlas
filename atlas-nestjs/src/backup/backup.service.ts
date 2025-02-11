@@ -161,13 +161,22 @@ export class BackupService {
 
       fs.unlinkSync(encryptedFilePath);
 
-      const protocol = process.env.PROTOCOL || 'http';
-      const baseUrl = process.env.BASE_URL || 'localhost:4001';
+      // const protocol = process.env.PROTOCOL || 'http';
+      // const baseUrl = process.env.BASE_URL || 'localhost:4001';
+
+      const protocol = (process.env.PROTOCOL || 'http')?.replace(/:\/*$/, ''); // Remove extra slashes
+      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
+        .replace(/^https?:\/+/, '')
+        .replace(/^\/|\/$/, ''); // Remove protocol and slashes
+
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
+      const randomNumber = Math.floor(Math.random() * 99) + 1;
+      const title = `Backup-${randomNumber}`;
 
       const backup = await this.prisma.backup.create({
         data: {
           userId,
+          title,
           backupData: { filePath: zipFilePath },
           fileUrl,
         },
@@ -193,6 +202,10 @@ export class BackupService {
       console.error('Unexpected error during backup creation:', error);
       throw new InternalServerErrorException('Failed to create backup');
     }
+  }
+
+  async getBackupByUserId(userId: string) {
+    return await this.prisma.backup.findMany({ where: { userId } });
   }
 
   async getBackup(backupId: string) {

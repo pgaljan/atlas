@@ -20,7 +20,7 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUser(@Param('id') id: string) {
     try {
@@ -36,7 +36,7 @@ export class UserController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard)
   @Patch('update/:id')
   async updateUser(
     @Param('id') id: string,

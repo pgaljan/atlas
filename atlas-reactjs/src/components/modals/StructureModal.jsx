@@ -1,45 +1,47 @@
-import cogoToast from "@successtar/cogo-toast"
-import Cookies from "js-cookie"
-import React, { useState } from "react"
-import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import { createStructure } from "../../redux/slices/structures"
-import InputField from "../input-field/InputField"
-import Textarea from "../text-area/Textarea"
-import ModalComponent from "./Modal"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import { createStructure } from "../../redux/slices/structures";
+import InputField from "../input-field/InputField";
+import Textarea from "../text-area/Textarea";
+import ModalComponent from "./Modal";
 
 const Visibility = {
   PUBLIC: "public",
   PRIVATE: "private",
-}
+};
 
 const StructureModal = ({ isOpen, onClose }) => {
-  const navigate = useNavigate()
-  const [inputValue, setInputValue] = useState("")
-  const [description, setDescription] = useState("")
-  const [loading, setLoading] = useState(false)
-  const [visibility, setVisibility] = useState(Visibility.PUBLIC)
-  const dispatch = useDispatch()
+  const navigate = useNavigate();
+  const [inputValue, setInputValue] = useState("");
+  const [description, setDescription] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [visibility, setVisibility] = useState(Visibility.PUBLIC);
+  const dispatch = useDispatch();
 
-  const handleInputChange = e => {
-    setInputValue(e.target.value)
-  }
+  const handleInputChange = (e) => {
+    setInputValue(e.target.value);
+  };
 
-  const handleDescriptionChange = e => {
-    setDescription(e.target.value)
-  }
+  const handleDescriptionChange = (e) => {
+    setDescription(e.target.value);
+  };
 
-  const handleVisibilityChange = e => {
-    setVisibility(e.target.value)
-  }
+  const handleVisibilityChange = (e) => {
+    setVisibility(e.target.value);
+  };
 
   const handleSubmit = async () => {
-    const ownerId = Cookies.get("atlas_userId")
-    const username = Cookies.get("atlas_username")
+    if (!inputValue.trim()) return;
+
+    const ownerId = Cookies.get("atlas_userId");
+    const username = Cookies.get("atlas_username");
 
     if (!ownerId) {
-      cogoToast.error("User not authenticated")
-      return
+      cogoToast.error("User not authenticated");
+      return;
     }
 
     const structureData = {
@@ -47,36 +49,35 @@ const StructureModal = ({ isOpen, onClose }) => {
       description,
       visibility,
       ownerId: ownerId,
-    }
+    };
 
     try {
-      setLoading(true)
+      setLoading(true);
       const createdStructure = await dispatch(
         createStructure(structureData)
-      ).unwrap()
-      const structureId = createdStructure?.structure?.id
+      ).unwrap();
+      const structureId = createdStructure?.structure?.id;
       if (structureId) {
-        cogoToast.success("Structure created successfully!")
-        setInputValue("")
-        setDescription("")
-        onClose()
-        navigate(`/app/s/${username}/${structureId}`)
+        cogoToast.success("Structure created successfully!");
+        setInputValue("");
+        setDescription("");
+        onClose();
+        navigate(`/app/s/${username}/${structureId}`);
       } else {
-        throw new Error("Structure ID is missing in the response")
+        throw new Error("Structure ID is missing in the response");
       }
     } catch (error) {
-      cogoToast.error(error.message || "Failed to create structure")
+      cogoToast.error(error.message || "Failed to create structure");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
-  const handleKeyDown = e => {
-    const allowedKeys = ["Enter", "NumpadEnter"]
-    if (allowedKeys.includes(e.key)) {
-      handleSubmit()
+  const handleKeyDown = (e) => {
+    if (["Enter", "NumpadEnter"].includes(e.key) && inputValue.trim()) {
+      handleSubmit();
     }
-  }
+  };
 
   return (
     <ModalComponent
@@ -89,6 +90,7 @@ const StructureModal = ({ isOpen, onClose }) => {
       cancelText="Cancel"
       modalHeight="auto"
       modalWidth=""
+      disabled={!inputValue.trim()}
     >
       <InputField
         label="Structure Name"
@@ -133,7 +135,7 @@ const StructureModal = ({ isOpen, onClose }) => {
         </label>
       </div>
     </ModalComponent>
-  )
-}
+  );
+};
 
-export default StructureModal
+export default StructureModal;

@@ -9,6 +9,22 @@ import { PrismaService } from '../prisma/prisma.service';
 export class SubscriptionsService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Get a subscription by user ID
+  async getSubscriptionByUserId(userId: string) {
+    const subscription = await this.prisma.subscription.findUnique({
+      where: { userId },
+      include: { plan: true }, 
+    });
+
+    if (!subscription) {
+      throw new NotFoundException(
+        `Subscription for user ID ${userId} not found`,
+      );
+    }
+
+    return subscription;
+  }
+
   // Update planId of a subscription
   async updatePlan(userId: string, planId: string) {
     const subscription = await this.prisma.subscription.findUnique({

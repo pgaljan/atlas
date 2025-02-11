@@ -7,6 +7,7 @@ CREATE TYPE "Visibility" AS ENUM ('public', 'private', 'archived', 'restricted')
 -- CreateTable
 CREATE TABLE "User" (
     "id" TEXT NOT NULL,
+    "fullName" TEXT,
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "roleId" TEXT NOT NULL,
@@ -24,6 +25,17 @@ CREATE TABLE "Role" (
     "description" TEXT,
 
     CONSTRAINT "Role_pkey" PRIMARY KEY ("id")
+);
+
+-- CreateTable
+CREATE TABLE "TeamMember" (
+    "id" TEXT NOT NULL,
+    "structureId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "role" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT "TeamMember_pkey" PRIMARY KEY ("id")
 );
 
 -- CreateTable
@@ -66,7 +78,7 @@ CREATE TABLE "Plan" (
 -- CreateTable
 CREATE TABLE "Structure" (
     "id" TEXT NOT NULL,
-    "title" TEXT NOT NULL,
+    "title" TEXT,
     "name" TEXT NOT NULL,
     "description" TEXT,
     "ownerId" TEXT NOT NULL,
@@ -148,6 +160,7 @@ CREATE TABLE "StructureMap" (
 -- CreateTable
 CREATE TABLE "Backup" (
     "id" TEXT NOT NULL,
+    "title" TEXT,
     "userId" TEXT NOT NULL,
     "backupData" JSONB NOT NULL,
     "fileUrl" TEXT,
@@ -268,6 +281,9 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Role_name_key" ON "Role"("name");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "TeamMember_structureId_userId_key" ON "TeamMember"("structureId", "userId");
+
+-- CreateIndex
 CREATE UNIQUE INDEX "Token_userId_key_key" ON "Token"("userId", "key");
 
 -- CreateIndex
@@ -290,6 +306,12 @@ CREATE INDEX "_MapElements_B_index" ON "_MapElements"("B");
 
 -- AddForeignKey
 ALTER TABLE "User" ADD CONSTRAINT "User_roleId_fkey" FOREIGN KEY ("roleId") REFERENCES "Role"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_structureId_fkey" FOREIGN KEY ("structureId") REFERENCES "Structure"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
+-- AddForeignKey
+ALTER TABLE "TeamMember" ADD CONSTRAINT "TeamMember_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Token" ADD CONSTRAINT "Token_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

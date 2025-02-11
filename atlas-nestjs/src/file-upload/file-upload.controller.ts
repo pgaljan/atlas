@@ -2,6 +2,10 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Delete,
+  Get,
+  Param,
+  Patch,
   Post,
   Request,
   UploadedFile,
@@ -149,5 +153,27 @@ export class FileUploadController {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(sheet);
+  }
+
+  @Get('user/:userId')
+  async getMediaByUserId(@Param('userId') userId: string) {
+    return await this.fileUploadService.getMediaByUserId(userId);
+  }
+
+  @Patch(':id')
+  async updateMedia(
+    @Param('id') id: string,
+    @Body('newFileUrl') newFileUrl: string,
+  ) {
+    if (!newFileUrl) {
+      throw new BadRequestException('New file URL is required.');
+    }
+
+    return await this.fileUploadService.updateMedia(id, newFileUrl);
+  }
+
+  @Delete(':id')
+  async deleteMedia(@Param('id') id: string) {
+    return await this.fileUploadService.deleteMedia(id);
   }
 }

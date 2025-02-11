@@ -10,6 +10,9 @@ export class BackupResponseDto {
   message: string;
 
   @IsString()
+  title: string;
+
+  @IsString()
   backupFilePath: string;
 
   @IsString()

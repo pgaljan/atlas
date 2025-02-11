@@ -78,7 +78,7 @@ const Login = () => {
         </div>
         <Link
           to="/register"
-          className="border border-white  transition duration-200 ease-in-out text-white px-4 py-1.5 rounded-lg text-sm"
+          className="border border-white transition duration-200 ease-in-out text-white px-4 py-1.5 rounded-lg text-sm"
         >
           Sign up for free
         </Link>
@@ -103,7 +103,7 @@ const Login = () => {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your work email"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
               {emailError && (
                 <p className="text-red-500 text-xs mt-1">{emailError}</p>
@@ -122,7 +122,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
               {passwordError && (
                 <p className="text-red-500 text-xs mt-1">{passwordError}</p>

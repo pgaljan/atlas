@@ -1,13 +1,15 @@
-import React, { Suspense, lazy } from "react";
-import { Route, Routes } from "react-router-dom";
+import React, { Suspense, lazy, useState, useEffect } from "react";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import PremiumModal from "./components/modals/PremiumModal";
+import Support from "./containers/user/support/Support";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
-import Profile from "./containers/user/profile/Profile";
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
 const MarkmapCanvas = lazy(() =>
   import("./components/markmap/markmap-canvas/MarkmapCanvas")
 );
+const Profile = lazy(() => import("./containers/user/profile/Profile"));
 const Login = lazy(() => import("./containers/common/login/Login"));
 const Register = lazy(() => import("./containers/common/register/Register"));
 const ResetPassword = lazy(() =>
@@ -18,22 +20,54 @@ const SubscriptionPlans = lazy(() =>
 );
 const Backups = lazy(() => import("./containers/user/backups/Backups"));
 const Dashboard = lazy(() => import("./containers/user/dashboard/Dashboard"));
-const Media = lazy(() => import("./containers/user/media/Media"));
+const UploadedFiles = lazy(() =>
+  import("./containers/user/uploaded-files/UploadedFiles")
+);
 const UpgradePlans = lazy(() =>
   import("./containers/user/upgrade-plans/UpgradePlans")
 );
 const TeamMembers = lazy(() =>
   import("./containers/user/team-members/TeamMembers")
 );
-const Trash = lazy(() => import("./containers/user/trash/Trash"));
+const DeletedMindmaps = lazy(() =>
+  import("./containers/user/deleted-markmaps/DeletedMarkmaps")
+);
 
 const App = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const [isModalVisible, setIsModalVisible] = useState(false);
+
+  useEffect(() => {
+    const showPremiumModal =
+      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium";
+    setIsModalVisible(showPremiumModal);
+  }, [location.search]);
+
+  // Handle modal visibility
+  const closeModal = () => {
+    setIsModalVisible(false);
+
+    // Remove 'plan' from URL
+    const params = new URLSearchParams(location.search);
+    params.delete("plan");
+    navigate({ search: params.toString() }, { replace: true });
+  };
+
   return (
     <div className="min-h-screen bg-gray-100">
       <Suspense fallback={<div>Loading...</div>}>
         <Routes>
           <Route
             path="/"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/login"
             element={
               <PublicRoute>
                 <Login />
@@ -80,7 +114,7 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/app/team-members"
             element={
               <PrivateRoute>
@@ -89,11 +123,19 @@ const App = () => {
             }
           />
           <Route
-            path="/app/profile"
+            path="/app/support"
             element={
-              <PublicRoute>
+              <PrivateRoute>
+                <Support />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/app/me"
+            element={
+              <PrivateRoute>
                 <Profile />
-              </PublicRoute>
+              </PrivateRoute>
             }
           />
           <Route
@@ -105,30 +147,30 @@ const App = () => {
             }
           />
           <Route
-            path="/app/media"
+            path="/app/uploaded-files"
             element={
               <PrivateRoute>
-                <Media />
+                <UploadedFiles />
               </PrivateRoute>
             }
           />
           <Route
-            path="/app/trash"
+            path="/app/deleted-markmaps"
             element={
               <PrivateRoute>
-                <Trash />
+                <DeletedMindmaps />
               </PrivateRoute>
             }
-          /> */}
+          />
 
-          {/* <Route
+          <Route
             path="/app/upgrade-plans"
             element={
               <PrivateRoute>
                 <UpgradePlans />
               </PrivateRoute>
             }
-          /> */}
+          />
 
           <Route
             path="*"
@@ -139,6 +181,9 @@ const App = () => {
             }
           />
         </Routes>
+
+        {/* Show the PremiumModal if visible */}
+        {isModalVisible && <PremiumModal closeModal={closeModal} />}
       </Suspense>
     </div>
   );

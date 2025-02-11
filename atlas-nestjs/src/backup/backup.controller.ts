@@ -53,16 +53,15 @@ export class BackupController {
     return uuidRegex.test(uuid);
   }
 
+  @Get('user/:userId')
+  async getBackupByUserId(@Param('userId') userId: string) {
+    return await this.backupService.getBackupByUserId(userId);
+  }
+
   @Get(':id')
   async getBackup(@Param('id') backupId: string) {
     try {
-      const parsedBackupId = parseInt(backupId, 10);
-      if (isNaN(parsedBackupId)) {
-        throw new HttpException(
-          'Invalid backupId provided',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
+      const parsedBackupId = parseInt(backupId, 10);  
 
       return await this.backupService.getBackup(parsedBackupId.toString());
     } catch (error) {

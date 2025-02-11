@@ -1,5 +1,3 @@
-import cogoToast from "@successtar/cogo-toast";
-import { Dropdown } from "flowbite-react";
 import React, { useState } from "react";
 import { HiInformationCircle, HiMail, HiSupport } from "react-icons/hi";
 import { IoTrash } from "react-icons/io5";
@@ -7,6 +5,7 @@ import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { deleteStructure } from "../../redux/slices/structures";
 import DeleteModal from "../modals/DeleteModal";
+import useOutsideClick from "../../hooks/useOutsideClick"; 
 
 const Card = ({
   title,
@@ -20,27 +19,31 @@ const Card = ({
   onSuccess,
 }) => {
   const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
   const dispatch = useDispatch();
 
   const handleDeleteStructure = () => {
     setDeleteModalVisible(true);
+    setDropdownVisible(false); 
   };
 
   const handleConfirmDelete = () => {
     dispatch(deleteStructure(structureId))
       .then(() => {
         setDeleteModalVisible(false);
-        cogoToast.success("Structure deleted successfully!");
         onSuccess();
       })
-      .catch((error) => {
-        cogoToast.error("Failed to delete the structure. Please try again.");
+      .catch(() => {
+        console.error("Failed to delete the structure.");
       });
   };
 
+  // Use your hook to handle outside clicks
+  const dropdownRef = useOutsideClick(() => setDropdownVisible(false));
+
   return (
     <>
-      <div className="relative bg-white rounded-lg shadow-md hover:shadow-lg overflow-hidden border border-gray-200 cursor-pointer">
+      <div className="relative bg-white rounded-lg shadow-md hover:shadow-lg border border-gray-200 cursor-pointer">
         <div className="flex flex-col">
           {/* Thumbnail */}
           <Link to={`/app/s/${username}/${structureId}`}>
@@ -86,53 +89,60 @@ const Card = ({
               </Link>
 
               {/* Actions */}
-              <div className="relative z-10">
-                <Dropdown
-                  arrowIcon={false}
-                  inline
-                  label={
-                    <div className="w-8 h-8 rounded-full bg-custom-main text-white flex items-center justify-center cursor-pointer">
-                      {/* Three Dots */}
-                      <svg
-                        className="w-5 h-5"
-                        fill="currentColor"
-                        viewBox="0 0 20 20"
-                      >
-                        <circle cx="10" cy="4" r="2" />
-                        <circle cx="10" cy="10" r="2" />
-                        <circle cx="10" cy="16" r="2" />
-                      </svg>
-                    </div>
-                  }
-                  className="absolute top-full mt-1 left-0"
+              <div className="relative z-20" ref={dropdownRef}>
+                <div
+                  onClick={() => setDropdownVisible((prev) => !prev)}
+                  className="w-8 h-8 rounded-full bg-custom-main text-white flex items-center justify-center cursor-pointer"
                 >
-                  <Dropdown.Item icon={HiInformationCircle}>
-                    <div className="flex items-center space-x-2">
-                      <span className="whitespace-nowrap">Intro to Atlas</span>
-                    </div>
-                  </Dropdown.Item>
-                  <Dropdown.Item icon={HiSupport}>
-                    <div className="flex items-center space-x-2">
-                      <span className="whitespace-nowrap">Help Center</span>
-                    </div>
-                  </Dropdown.Item>
-                  <Dropdown.Item icon={HiMail}>
-                    <div className="flex items-center space-x-2">
-                      <span className="whitespace-nowrap">Email Support</span>
-                    </div>
-                  </Dropdown.Item>
-                  <Dropdown.Item
-                    icon={IoTrash}
-                    className="text-red-700 font-semibold"
-                    onClick={handleDeleteStructure}
+                  {/* Three Dots */}
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    <div className="flex items-center space-x-2">
-                      <span className="whitespace-nowrap">
-                        Delete Structure
+                    <circle cx="10" cy="4" r="2" />
+                    <circle cx="10" cy="10" r="2" />
+                    <circle cx="10" cy="16" r="2" />
+                  </svg>
+                </div>
+
+                {/* Dropdown Menu */}
+                {dropdownVisible && (
+                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white border border-gray-200 rounded-md shadow-md w-48 z-50">
+                    <div
+                      className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
+                      onClick={() => setDropdownVisible(false)}
+                    >
+                      <HiInformationCircle className="w-4 h-4 mr-2 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        Intro to Atlas
                       </span>
                     </div>
-                  </Dropdown.Item>
-                </Dropdown>
+                    <div
+                      className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
+                      onClick={() => setDropdownVisible(false)}
+                    >
+                      <HiSupport className="w-4 h-4 mr-2 text-gray-600" />
+                      <span className="text-sm text-gray-600">Help Center</span>
+                    </div>
+                    <div
+                      className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
+                      onClick={() => setDropdownVisible(false)}
+                    >
+                      <HiMail className="w-4 h-4 mr-2 text-gray-600" />
+                      <span className="text-sm text-gray-600">
+                        Email Support
+                      </span>
+                    </div>
+                    <div
+                      className="px-4 py-2 text-sm hover:bg-gray-100 font-semibold flex items-center cursor-pointer text-red-700"
+                      onClick={handleDeleteStructure}
+                    >
+                      <IoTrash className="w-4 h-4 mr-2" />
+                      <span>Delete Structure</span>
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>

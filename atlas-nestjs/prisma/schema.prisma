@@ -23,6 +23,7 @@ enum Visibility {
 
 model User {
   id           String        @id @default(uuid())
+  fullName     String?
   username     String
   email        String        @unique
   roleId       String
@@ -39,6 +40,8 @@ model User {
   tokens       Token[]
   role         Role          @relation("UserRole", fields: [roleId], references: [id])
   roles        Role[]        @relation("UserRoles")
+  teamMembers  TeamMember[]
+  Team         Team[]
 }
 
 model Role {
@@ -47,6 +50,32 @@ model Role {
   description String?
   User        User[]  @relation("UserRole")
   users       User[]  @relation("UserRoles")
+}
+
+model Team {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String
+  createdAt DateTime @default(now())
+
+  owner      User         @relation(fields: [ownerId], references: [id])
+  members    TeamMember[]
+  structures Structure[]  @relation("TeamStructures")
+}
+
+model TeamMember {
+  id        String   @id @default(uuid())
+  teamId    String
+  userId    String
+  role      String
+  createdAt DateTime @default(now())
+
+  team        Team       @relation(fields: [teamId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+  Structure   Structure? @relation(fields: [structureId], references: [id])
+  structureId String?
+
+  @@unique([teamId, userId])
 }
 
 model Token {
@@ -85,7 +114,7 @@ model Plan {
 
 model Structure {
   id           String          @id @default(uuid())
-  title        String? 
+  title        String?
   name         String
   description  String?
   ownerId      String
@@ -99,6 +128,9 @@ model Structure {
   owner        User            @relation(fields: [ownerId], references: [id])
   StructureMap StructureMap[]
   Webhook      Webhook[]
+  teamMembers  TeamMember[]
+  teams        Team[]          @relation("TeamStructures")
+  teamId       String?
 }
 
 model Element {
@@ -170,6 +202,7 @@ model StructureMap {
 
 model Backup {
   id         String   @id @default(uuid())
+  title      String?
   userId     String
   backupData Json
   fileUrl    String?

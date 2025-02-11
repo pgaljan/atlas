@@ -177,7 +177,7 @@ const AddQuillModal = ({
                         onChange={(e) =>
                           handleTagChange(tag.id, "key", e?.target?.value)
                         }
-                        className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-custom-main"
+                        className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
                       />
                     </div>
 
@@ -197,7 +197,7 @@ const AddQuillModal = ({
                         onChange={(e) =>
                           handleTagChange(tag.id, "value", e?.target?.value)
                         }
-                        className="border border-gray-300 rounded-md p-2 focus:ring-2 focus:ring-custom-main"
+                        className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
                       />
                     </div>
 

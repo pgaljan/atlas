@@ -1,4 +1,9 @@
 import React from "react";
+import { BsDatabaseFillCheck } from "react-icons/bs";
+import { HiUsers } from "react-icons/hi2";
+import { IoTrash } from "react-icons/io5";
+import { MdOutlineRestore, MdPermMedia } from "react-icons/md";
+import { TbEditCircle, TbTrashOff } from "react-icons/tb";
 import Icons from "./icons";
 
 export const teamMembersConfig = {
@@ -8,42 +13,27 @@ export const teamMembersConfig = {
     { key: "pending", label: "Pending Invitations" },
   ],
   enableSearch: true,
+  emptyState: {
+    title: "No team members found.",
+    description: "please invite team members to display here.",
+    icon: <HiUsers className="text-5xl text-custom-main" />,
+  },
   enableCheckbox: false,
   columns: [
-    { key: "name", label: "Name" },
+    { key: "name", label: "Full Name" },
     { key: "email", label: "Email" },
-    { key: "userType", label: "User Type" },
-    {
-      key: "lastAccess",
-      label: "Last Access",
-      icon: [<Icons.IIcon className="w-5 h-5" color="#000000" />],
-    },
+    { key: "userType", label: "Role" },
+    { key: "lastAccess", label: "Last Login" },
     { key: "status", label: "Status" },
-    {
-      key: "joinDate",
-      label: "Join Date",
-      icon: <Icons.IIcon className="w-5 h-5" color="#000000" />,
-    },
-  ],
-  data: [
-    {
-      id: 1,
-      name: "Devis",
-      email: "devis@gmail.com",
-      userType: "Workspace admin",
-      lastAccess: "in a few seconds",
-      status: "Active",
-      joinDate: "12/23/2024",
-      Avatar: "https://via.placeholder.com/40",
-    },
+    { key: "joinDate", label: "Date Joined" },
   ],
   actions: [
     {
-      icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
+      icon: <TbEditCircle className="w-6 h-6" color="#000000" />,
       tooltip: "Edit",
     },
     {
-      icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      icon: <IoTrash className="w-6 h-6" color="red" />,
       tooltip: "Delete",
     },
   ],
@@ -60,63 +50,78 @@ export const teamMembersConfig = {
     },
   ],
 };
+
 export const trashConfig = {
-  title: "Trash",
+  title: "Deleted Markmaps",
   tabs: [],
   enableSearch: false,
+  emptyState: {
+    title: "No deleted markmaps found.",
+    description: "deleted markmaps will appear here.",
+    icon: <TbTrashOff className="text-5xl text-custom-main" />,
+  },
   columns: [
     { key: "name", label: "Structure Name" },
-    { key: "deletedBy", label: "Deleted by " },
-    { key: "deletedAt", label: "Deleted at " },
-  ],
-  data: [
-    {
-      id: 1,
-      name: "Structure",
-      deletedBy: "Devis",
-      deletedAt: "15:00",
-    },
+    { key: "deletedBy", label: "Deleted By" },
+    { key: "deletedAt", label: "Deleted At" },
   ],
   actions: [
     {
-      icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
-      tooltip: "Edit",
+      icon: <MdOutlineRestore className="w-6 h-6" color="#000000" />,
+      tooltip: "Restore",
     },
     {
-      icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      icon: <IoTrash className="w-6 h-6" color="red" />,
       tooltip: "Delete",
     },
   ],
 };
+
 export const mediaConfig = {
-  title: "Media",
+  title: "Uploaded Files",
   tabs: [],
   enableSearch: false,
+  emptyState: {
+    title: "No uploaded files found.",
+    description: "all your uploaded files will appear here.",
+    icon: <MdPermMedia className="text-5xl text-custom-main" />,
+  },
   columns: [
-    { key: "mediaFile", label: "Media file" },
-    { key: "uploadedBy", label: "Uploaded by " },
-    { key: "uploadedAt", label: "Uploaded at " },
-  ],
-  data: [
-    {
-      id: 1,
-      mediaFile: "File",
-      uploadedBy: "Devis",
-      uploadedAt: "15:00",
-    },
+    { key: "fileUrl", label: "Media File" },
+    { key: "fileType", label: "File Type" },
+    { key: "updatedAt", label: "Upload Date" },
   ],
   actions: [
     {
-      icon: <Icons.ViewFileIcon className="w-5 h-5" color="#000000" />,
-      tooltip: "View",
-    },
-    {
-      icon: <Icons.EditIcon className="w-5 h-5" color="#000000" />,
+      icon: <TbEditCircle className="w-6 h-6" color="#000000" />,
       tooltip: "Edit",
     },
     {
-      icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
+      icon: <IoTrash className="w-6 h-6" color="red" />,
       tooltip: "Delete",
+    },
+  ],
+};
+
+export const backupConfig = {
+  title: "My Backups",
+  tabs: [],
+  enableSearch: false,
+  emptyState: {
+    title: "No backups found.",
+    description: "all your backups will appear here.",
+    icon: <BsDatabaseFillCheck className="text-5xl text-custom-main" />,
+  },
+  columns: [
+    { key: "title", label: "Title" },
+    { key: "fileUrl", label: "Download Link" },
+    { key: "updatedAt", label: "Created At" },
+  ],
+  actions: [
+    {
+      icon: <IoTrash className="w-6 h-6" color="red" />,
+      tooltip: "Delete",
+      onClick: (item) => console.log("Delete clicked for:", item),
     },
   ],
 };
@@ -191,31 +196,6 @@ export const plans = [
   },
 ];
 
-export const backupConfig = {
-  title: "My Backups",
-  tabs: [],
-  enableSearch: false,
-  columns: [
-    { key: "backupFile", label: "Backup file" },
-    { key: "downloadLink", label: "Download link " },
-    { key: "createDate", label: "Create date" },
-  ],
-  data: [
-    {
-      id: 1,
-      backupFile: "File",
-      downloadLink: "www.atlas.com",
-      createDate: "12/23/2024",
-    },
-  ],
-  actions: [
-    {
-      icon: <Icons.TrashIcon className="w-5 h-5" color="#660000" />,
-      tooltip: "Delete",
-    },
-  ],
-};
-
 export const services = [
   {
     name: "Google",
@@ -246,6 +226,7 @@ export const services = [
     icon: <Icons.BiggerPlateIcon className="w-8 h-8 " />,
   },
 ];
+
 export const personalDetailConfig = {
   tabs: [
     { label: "General" },
@@ -286,3 +267,65 @@ export const personalDetailConfig = {
   },
   buttons: [{ label: "Save changes", className: "bg-custom-main text-white" }],
 };
+
+export const dummyFaqs = [
+  {
+    question: "What should I do when my board isn't loading?",
+    answer: "Try refreshing the page or checking your internet connection.",
+  },
+  {
+    question:
+      "Where can I find my invoices and how can I change some information on them?",
+    answer:
+      "Invoices are available in your billing section under account settings.",
+  },
+  {
+    question: "Why can't I log in to my account?",
+    answer:
+      "Ensure your credentials are correct and reset your password if needed.",
+  },
+  {
+    question: "Why do I have unexpected charges?",
+    answer: "Review your billing details in the account settings.",
+  },
+  {
+    question:
+      "Where can I find my invoices and how can I change some information on them?",
+    answer:
+      "Invoices are available in your billing section under account settings.",
+  },
+
+  {
+    question: "What should I do when my board isn't loading?",
+    answer: "Try refreshing the page or checking your internet connection.",
+  },
+  {
+    question: "How do I convert members to guests?",
+    answer: "Go to team settings and update the member roles.",
+  },
+
+  {
+    question: "How do I add content to my board?",
+    answer:
+      "Use the toolbar to add text, images, or sticky notes to your board.",
+  },
+
+  {
+    question: "Why can’t I log in to my account?",
+    answer:
+      "Ensure your credentials are correct and reset your password if needed.",
+  },
+  {
+    question: "Why do I have unexpected charges?",
+    answer: "Review your billing details in the account settings.",
+  },
+  {
+    question: "How do I add content to my board?",
+    answer:
+      "Use the toolbar to add text, images, or sticky notes to your board.",
+  },
+  {
+    question: "How do I convert members to guests?",
+    answer: "Go to team settings and update the member roles.",
+  },
+];

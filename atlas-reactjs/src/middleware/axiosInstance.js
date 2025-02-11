@@ -1,23 +1,26 @@
 import axios from "axios";
 import Cookies from "js-cookie";
-import store from "../redux/store";
-import { logout } from "../redux/slices/auth";
 
+// Create Axios instance
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {},
 });
 
+// Add interceptor for requests
 axiosInstance.interceptors.request.use(async (config) => {
   const token = Cookies.get("atlas_access_token");
-  const projectId = Cookies.get("atlas_projectId");
 
   if (token) {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
 
-  if (projectId) {
-    config.headers["Project-ID"] = projectId;
+  if (config.url.includes("/structure/")) {
+    config.headers["x-feature"] = "Structures";
+  }
+
+  if (config.url.includes("/backup/create")) {
+    config.headers["x-feature"] = "Structure Backup & Restore";
   }
 
   if (config.data instanceof FormData) {
@@ -29,6 +32,7 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
+// Logout helper function
 export const handleLogout = async () => {
   const keysToRemove = [
     "atlas_access_token",
@@ -41,19 +45,19 @@ export const handleLogout = async () => {
   window.location.href = "/";
 };
 
-const isTokenValid = async () => {
+// Token validation helper
+export const isTokenValid = async () => {
   const token = Cookies.get("atlas_access_token");
   if (!token) {
     return false;
   }
 
   try {
-    const token = Cookies.get("atlas_access_token");
+    // Token validation logic if required
     return true;
   } catch (error) {
     return false;
   }
 };
 
-export { isTokenValid };
 export default axiosInstance;

@@ -1,12 +1,17 @@
 import React from "react";
 import InputField from "../../../../components/input-field/InputField";
 
-const Email = () => {
+const Password = () => {
   return (
     <div>
       <div className="flex gap-8">
         <div className="flex-1 space-y-6">
           <h2 className="text-lg font-bold mb-4">Password</h2>
+          <InputField
+            name="oldPassword"
+            placeholder="Old Password"
+            className=" w-1/3"
+          />
           <InputField
             name="newPassword"
             placeholder="New Password"
@@ -53,4 +58,4 @@ const Email = () => {
   );
 };
 
-export default Email;
+export default Password;

@@ -3,7 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Card from "../../components/cards/Card";
-import Icons from "../../constants/icons";
+import { PiTreeStructureBold } from "react-icons/pi";
 import { getStructuresByUserId } from "../../redux/slices/structures";
 import { formatRelativeTime } from "../../utils/timeUtils";
 
@@ -19,7 +19,7 @@ const StructureCard = () => {
       dispatch(getStructuresByUserId(ownerId)).then((data) => {
         const sortedStructures = Array.isArray(data?.payload)
           ? data.payload.sort(
-              (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+              (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
             )
           : [];
         setStructures(sortedStructures);
@@ -38,13 +38,16 @@ const StructureCard = () => {
   return (
     <>
       {structures.length === 0 ? (
-        <div className="flex flex-col h-auto text-center p-6">
+        <div className="flex h-screen flex-col text-center p-6">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
-              <Icons.IIcon className="text-5xl text-custom-main" />
+              <PiTreeStructureBold className="text-5xl text-custom-main" />
             </div>
-            <p className="text-2xl font-bold text-custom-text-grey mb-4">
-              No structures found. <br /> Start creating your first structure!
+            <h2 className="text-2xl font-bold text-custom-text-grey mb-4">
+              No structures found.
+            </h2>
+            <p className="text-lg text-custom-text-grey">
+              Start creating your first structure!
             </p>
           </div>
         </div>
@@ -60,7 +63,7 @@ const StructureCard = () => {
                 title={structure.title || "Untitled"}
                 imageUrl={structure.imageUrl || "/assets/markmap-image.png"}
                 footerTitle={`Modified ${formatRelativeTime(
-                  structure.createdAt
+                  structure.updatedAt
                 )}`}
                 username={username}
                 structureId={structure.id}

@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Plan } from '@prisma/client';
@@ -40,7 +39,7 @@ export class AuthService {
 
   // Register method
   async register(registerDto: RegisterDto) {
-    const { username, email, password, roleName } = registerDto;
+    const { fullName, email, password, roleName } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
@@ -50,6 +49,19 @@ export class AuthService {
 
         if (existingUser) {
           throw new ConflictException('User with this email already exists');
+        }
+
+        // Modify username if it contains multiple words
+        let modifiedUsername = fullName;
+        if (fullName.includes(' ')) {
+          const parts = fullName.split(' ');
+          const baseUsername = parts
+            .map((word, index) =>
+              index === parts.length - 1 ? word : word.toLowerCase(),
+            )
+            .join('_');
+          const suffix = new Date().getFullYear() - 2000;
+          modifiedUsername = `${baseUsername}${suffix}`;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -69,7 +81,8 @@ export class AuthService {
 
         const newUser = await prisma.user.create({
           data: {
-            username,
+            username: modifiedUsername,
+            fullName,
             email,
             password: hashedPassword,
             roleId: role.id,
@@ -102,7 +115,7 @@ export class AuthService {
 
         // Log the audit action for registration
         await this.logAudit('User Registration', 'User', newUser.id, {
-          username,
+          username: modifiedUsername,
           email,
         });
 

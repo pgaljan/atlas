@@ -1,11 +1,15 @@
 import { Sidebar } from "flowbite-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BsDatabaseFillCheck, BsFillTrashFill } from "react-icons/bs";
 import { FaPlusCircle, FaRocket } from "react-icons/fa";
 import { FaImages, FaUsersGear } from "react-icons/fa6";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
-import { Link, useLocation } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
 import StructureModal from "../modals/StructureModal";
+import Cookies from "js-cookie";
+import { getStructuresByUserId } from "../../redux/slices/structures";
 
 // Define custom theme for the Sidebar
 const ownTheme = {
@@ -31,19 +35,48 @@ const ownTheme = {
 
 export function SidebarPage({ onSubmit }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
   const location = useLocation();
 
   const handleModalToggle = () => {
     setIsModalOpen((prev) => !prev);
   };
+  const userId = Cookies.get("atlas_userId");
 
+  const [currentStructureCount, setCurrentStructureCount] = useState(0);
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(getStructuresByUserId(userId)).then((res) => {
+        if (res.payload) {
+          setCurrentStructureCount(res.payload.length);
+        }
+      });
+    }
+  }, [dispatch, userId]);
+
+  // Check if the user can create a new structure
+  const canCreateStructure = useFeatureFlag(
+    "Structures",
+    currentStructureCount
+  );
+
+  // Reusable function to handle feature restrictions
+  const handleFeatureClick = (canAccess, action) => {
+    if (canAccess) {
+      action();
+    } else {
+      navigate("?plan=upgrade-to-premium");
+    }
+  };
   const menuItems = [
     {
       name: "Dashboard",
       icon: TbLayoutDashboardFilled,
       link: "/app/dashboard",
     },
-    { name: "Media", icon: FaImages, link: "/app/media" },
+    { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
     {
       name: "Team Members",
       icon: FaUsersGear,
@@ -54,7 +87,11 @@ export function SidebarPage({ onSubmit }) {
       icon: BsDatabaseFillCheck,
       link: "/app/backups",
     },
-    { name: "Trash", icon: BsFillTrashFill, link: "/app/trash" },
+    {
+      name: "Deleted Markmaps",
+      icon: BsFillTrashFill,
+      link: "/app/deleted-markmaps",
+    },
   ];
 
   return (
@@ -67,7 +104,9 @@ export function SidebarPage({ onSubmit }) {
           <Sidebar.Items>
             <div className="flex justify-center mb-4 mt-3">
               <button
-                onClick={handleModalToggle}
+                onClick={() =>
+                  handleFeatureClick(canCreateStructure, handleModalToggle)
+                }
                 className="bg-custom-main text-white py-2 px-6 font-semibold flex items-center space-x-3 rounded-md"
               >
                 <FaPlusCircle />

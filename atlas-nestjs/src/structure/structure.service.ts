@@ -7,9 +7,19 @@ import { Visibility } from '@prisma/client';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStructureDto } from './dto';
 
-@Injectable() 
+@Injectable()
 export class StructureService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private formatElements(elements: any[]): any[] {
+    return elements.map((element) => ({
+      type: element.type,
+      wbsLevel: element.wbsLevel,
+      children: element.children
+        ? { create: this.formatElements(element.children) }
+        : undefined,
+    }));
+  }
 
   async createStructure(createStructureDto: CreateStructureDto) {
     const { name, description, visibility, ownerId, elements } =
@@ -25,24 +35,41 @@ export class StructureService {
         throw new InternalServerErrorException(`"${name}" already exists.`);
       }
 
-      const owner = await this.prisma.user.findUnique({
-        where: { id: ownerId },
+      // Fetch user subscription
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { userId: ownerId },
       });
-      if (!owner) {
-        throw new NotFoundException(`User with id ${ownerId} not found`);
+
+      if (!subscription) {
+        throw new NotFoundException(
+          `Subscription for user ${ownerId} not found`,
+        );
       }
 
-      const elementsToProcess = elements || [];
+      let features = subscription.features as Record<string, any>;
 
-      const formatElements = (elements: any[]) =>
-        elements.map((element) => ({
-          type: element.type,
-          wbsLevel: element.wbsLevel,
-          children: element.children
-            ? { create: formatElements(element.children) }
-            : undefined,
-        }));
+      // Check and update the "Structures" feature count
+      if (features['Structures'] !== 'unlimited') {
+        let structureLimit = parseInt(features['Structures'], 10);
 
+        if (!isNaN(structureLimit) && structureLimit > 0) {
+          features['Structures'] = (structureLimit - 1).toString();
+        } else {
+          throw new InternalServerErrorException(
+            `Structure limit exceeded for user ${ownerId}`,
+          );
+        }
+
+        // Update the subscription with the new feature count
+        await this.prisma.subscription.update({
+          where: { userId: ownerId },
+          data: {
+            features: features, 
+          },
+        });
+      }
+
+      // Create the structure
       const structure = await this.prisma.structure.create({
         data: {
           name,
@@ -50,7 +77,7 @@ export class StructureService {
           visibility: visibility || Visibility.private,
           ownerId,
           elements: {
-            create: elements ? formatElements(elements) : [],
+            create: elements ? this.formatElements(elements) : [],
           },
         },
       });
@@ -65,7 +92,7 @@ export class StructureService {
             name,
             description,
             visibility,
-            elements: elementsToProcess.map((element) => ({
+            elements: elements?.map((element) => ({
               type: element.name,
             })),
           },
@@ -75,7 +102,9 @@ export class StructureService {
 
       return structure;
     } catch (error) {
-      throw new InternalServerErrorException(`${error.message}`);
+      throw new InternalServerErrorException(
+        `Failed to create structure: ${error.message}`,
+      );
     }
   }
 

@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   NotFoundException,
   Param,
   Patch,
@@ -11,6 +12,19 @@ import { SubscriptionsService } from './subscriptions.service';
 @Controller('subscriptions')
 export class SubscriptionsController {
   constructor(private readonly subscriptionsService: SubscriptionsService) {}
+
+  // Get subscription by user ID
+  @Get(':userId')
+  async getSubscriptionByUserId(@Param('userId') userId: string) {
+    try {
+      return await this.subscriptionsService.getSubscriptionByUserId(userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw error;
+      }
+      throw new BadRequestException('Error fetching subscription');
+    }
+  }
 
   // Update subscription planId
   @Patch(':userId/plan')

@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import Layout from "../../../components/layout";
 import HeaderTab from "../../../components/header-tab/HeaderTab";
 import General from "./pages/General";
-import Email from "./pages/Email";
+import Password from "./pages/Password";
 import Services from "./pages/Services&Sessions";
 import TermsAndPolicies from "./pages/Terms&Policy";
 
 const Profile = () => {
   const tabs = [
     { label: "General" },
-    { label: "Email" },
+    { label: "Password" },
     { label: "Services & Sessions" },
     { label: "Terms & Policies" },
   ];
@@ -20,8 +20,8 @@ const Profile = () => {
     switch (activeTab) {
       case "General":
         return <General />;
-      case "Email":
-        return <Email />;
+      case "Password":
+        return <Password />;
       case "Services & Sessions":
         return <Services />;
       case "Terms & Policies":
