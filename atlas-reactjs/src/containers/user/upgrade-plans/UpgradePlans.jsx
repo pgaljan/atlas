@@ -1,16 +1,58 @@
-import React from "react";
-import { plans } from "../../../constants/index";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import Layout from "../../../components/layout";
 import Icons from "../../../constants/icons";
+import { fetchPlans } from "../../../redux/slices/plans";
+import Cookies from "js-cookie";
+import {
+  fetchSubscription,
+  updateSubscriptionPlan,
+} from "../../../redux/slices/subscriptions";
+import cogoToast from "@successtar/cogo-toast";
 
 const UpgradePlans = () => {
+  const dispatch = useDispatch();
+  const { plans } = useSelector((state) => state.plans);
+  const [currentPlan, setCurrentPlan] = useState(null);
+
+  useEffect(() => {
+    dispatch(fetchPlans());
+
+    const userId = Cookies.get("atlas_userId");
+    if (userId) {
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res.payload);
+      });
+    }
+  }, [dispatch]);
+
+  const handlePlanSelection = (planId) => {
+    const userId = Cookies.get("atlas_userId");
+    if (!userId) {
+      cogoToast.error("User ID is missing!");
+      return;
+    }
+
+    dispatch(updateSubscriptionPlan({ userId, planId })).then(() => {
+      cogoToast.success("Subscription updated successfully!");
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res.payload);
+      });
+    });
+  };
+
+  const planOrder = ["Personal", "Educator", "Analyst", "Business"];
+  const sortedPlans = [...plans].sort(
+    (a, b) => planOrder.indexOf(a.name) - planOrder.indexOf(b.name)
+  );
+
   return (
     <Layout>
       <div className="flex justify-center items-center min-h-screen scale-90">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {plans.map((plan, index) => (
+          {sortedPlans.map((plan, index) => (
             <div
-              key={index}
+              key={plan.id}
               className={`relative w-[295px] min-h-[560px] h-auto p-6 bg-white border transition-all duration-300 flex flex-col justify-between ${
                 index === 2
                   ? "border-[1px] rounded-2xl transform scale-y-110 shadow-md"
@@ -40,23 +82,11 @@ const UpgradePlans = () => {
                 </p>
               </div>
 
-              <div
-                className={`mt-2 text-2xl sm:text-3xl md:text-4xl font-bold text-custom-main ${
-                  index === 0
-                    ? "pt-12 pb-10"
-                    : index === 1
-                    ? "pt-12 pb-2"
-                    : index === 2
-                    ? "pt-2"
-                    : index === 3
-                    ? "pt-6 pb-2"
-                    : "p-6"
-                }`}
-              >
+              <div className="mt-2 text-2xl sm:text-3xl md:text-4xl font-bold text-custom-main">
                 {plan.price && (
                   <>
                     <span className="text-3xl font-bold">
-                      {plan.price.split(".")[0]}
+                      ${plan.price.split(".")[0]}.0
                     </span>
                     {plan.price.split(".")[1] && (
                       <sup className="text-xl font-bold">
@@ -65,7 +95,6 @@ const UpgradePlans = () => {
                     )}
                   </>
                 )}
-
                 {plan.price !== "Free" && (
                   <div className="mt-2 text-base font-normal text-custom-main">
                     Per Month
@@ -75,13 +104,19 @@ const UpgradePlans = () => {
 
               <div className="mt-2 flex justify-center">
                 <button
-                  className={`h-[48px] w-[229px] rounded-lg text-sm font-semibold ${
-                    plan.highlight
-                      ? "bg-custom-main text-white hover:bg-custom-text-white hover:text-custom-main border-[2px] hover:border-custom-main   "
+                  className={`h-[48px] w-[229px] rounded-lg text-[16px] font-bold ${
+                    currentPlan && currentPlan.plan.name === plan.name
+                      ? "bg-custom-main cursor-not-allowed text-white"
+                      : plan.highlight
+                      ? "bg-custom-main text-white hover:bg-custom-text-white hover:text-custom-main border-[2px] hover:border-custom-main"
                       : "bg-white text-custom-main border-[2px] font-extrabold border-custom-main hover:bg-custom-main hover:text-white"
                   }`}
+                  disabled={currentPlan && currentPlan.plan.name === plan.name}
+                  onClick={() => handlePlanSelection(plan.id)}
                 >
-                  {plan.buttonText}
+                  {currentPlan && currentPlan.plan.name === plan.name
+                    ? "Subscribed"
+                    : `Choose ${plan.name}`}
                 </button>
               </div>
 
@@ -101,10 +136,14 @@ const UpgradePlans = () => {
                   {plan.featureHeading}
                 </h4>
                 <ul className="mt-4 space-y-2 text-sm text-custom-main">
-                  {plan.features.map((feature, i) => (
-                    <li key={i} className="flex items-start">
-                      <Icons.PriceCardTickIcons className="h-4 w-4 font-extrabold  text-custom-main mr-2" />
-                      {feature}
+                  {Object.entries(plan.features).map(([key, value], i) => (
+                    <li key={i} className="flex justify-between items-center">
+                      <span>{key}</span>
+                      {value ? (
+                        <Icons.PriceCardTickIcons className="h-4 w-4 text-green-500" />
+                      ) : (
+                        <Icons.PriceCardCrossIcons className="h-4 w-4 text-red-500" />
+                      )}
                     </li>
                   ))}
                 </ul>

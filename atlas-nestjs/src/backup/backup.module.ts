@@ -9,8 +9,5 @@ import { FeatureFlagMiddleware } from 'src/auth/middleware/feature.flag.middlewa
   providers: [BackupService],
   controllers: [BackupController],
 })
-export class BackupModule implements NestModule {
-  configure(consumer: MiddlewareConsumer) {
-    consumer.apply(FeatureFlagMiddleware).forRoutes('backup/create');
-  }
-}
+export class BackupModule {}
+

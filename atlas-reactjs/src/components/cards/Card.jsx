@@ -5,7 +5,8 @@ import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
 import { deleteStructure } from "../../redux/slices/structures";
 import DeleteModal from "../modals/DeleteModal";
-import useOutsideClick from "../../hooks/useOutsideClick"; 
+import cogoToast from "@successtar/cogo-toast";
+import useOutsideClick from "../../hooks/useOutsideClick";
 
 const Card = ({
   title,
@@ -24,17 +25,18 @@ const Card = ({
 
   const handleDeleteStructure = () => {
     setDeleteModalVisible(true);
-    setDropdownVisible(false); 
+    setDropdownVisible(false);
   };
 
   const handleConfirmDelete = () => {
     dispatch(deleteStructure(structureId))
       .then(() => {
         setDeleteModalVisible(false);
+        cogoToast.success("Structure deleted successfully!");
         onSuccess();
       })
       .catch(() => {
-        console.error("Failed to delete the structure.");
+        cogoToast.error("Failed to delete the structure.");
       });
   };
 

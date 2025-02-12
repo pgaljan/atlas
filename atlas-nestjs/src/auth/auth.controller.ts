@@ -22,10 +22,8 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     try {
-      await this.authService.register(registerDto);
-      return {
-        message: 'User registered successfully',
-      };
+      const result = await this.authService.register(registerDto);
+      return result;
     } catch (error) {
       if (error.name === 'ConflictException') {
         throw new BadRequestException(error.message);
@@ -35,6 +33,7 @@ export class AuthController {
       );
     }
   }
+  
 
   @Post('login')
   @UseGuards(LocalAuthGuard)

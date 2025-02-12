@@ -15,14 +15,6 @@ axiosInstance.interceptors.request.use(async (config) => {
     config.headers["Authorization"] = `Bearer ${token}`;
   }
 
-  if (config.url.includes("/structure/")) {
-    config.headers["x-feature"] = "Structures";
-  }
-
-  if (config.url.includes("/backup/create")) {
-    config.headers["x-feature"] = "Structure Backup & Restore";
-  }
-
   if (config.data instanceof FormData) {
     config.headers["Content-Type"] = "multipart/form-data";
   } else {

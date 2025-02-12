@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
 import { fetchPlans } from "../../../redux/slices/plans";
+import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
 
 // Helper to render checkmark and cross
 const renderCheckmark = (value) => {
@@ -17,20 +18,26 @@ const renderCheckmark = (value) => {
 
 const SubscriptionPlans = () => {
   const dispatch = useDispatch();
-  const { plans, status, error } = useSelector((state) => state.plans);
+  const { plans } = useSelector((state) => state.plans);
+
+  // Get userId from URL query params
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const userId = searchParams.get("userId");
 
   // Fetch plans on component mount
   useEffect(() => {
     dispatch(fetchPlans());
   }, [dispatch]);
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
-
-  if (status === "failed") {
-    return <div>Error: {error}</div>;
-  }
+  // Handle plan selection
+  const handlePlanSelection = (planId) => {
+    if (!userId) {
+      alert("User ID is missing!");
+      return;
+    }
+    dispatch(updateSubscriptionPlan({ userId, planId }));
+  };
 
   return (
     <div className="bg-custom-background-white">
@@ -64,12 +71,14 @@ const SubscriptionPlans = () => {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {plans.map((plan) => (
               <PricingCard
+                id={plan.id}
                 key={plan.id}
                 type={plan.name}
                 price={`$${plan.price}`}
                 subscription="year"
                 description={plan.description}
                 buttonText={`Choose ${plan.name}`}
+                onSelectPlan={() => handlePlanSelection(plan.id)}
                 className="h-full"
               >
                 <FeatureList features={plan.features} />

@@ -1051,6 +1051,22 @@ const PriceCardTickIcons = ({ className = "", color = "" }) => (
     />
   </svg>
 );
+
+const PriceCardCrossIcons = ({ className = "", color = "" }) => (
+  <svg
+    className={className}
+    xmlns="http://www.w3.org/2000/svg"
+    viewBox="0 0 20 20"
+    fill="currentColor"
+  >
+    <path
+      fillRule="evenodd"
+      d="M5.293 5.293a1 1 0 011.414 0L10 8.586l3.293-3.293a1 1 0 111.414 1.414L11.414 10l3.293 3.293a1 1 0 01-1.414 1.414L10 11.414l-3.293 3.293a1 1 0 01-1.414-1.414L8.586 10 5.293 6.707a1 1 0 010-1.414z"
+      clipRule="evenodd"
+    />
+  </svg>
+);
+
 const ClickMoreIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -1167,6 +1183,7 @@ const GoogleIcon = () => (
     ></path>
   </svg>
 );
+
 const GoogleServiceIcon = (className = "") => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -1194,6 +1211,7 @@ const GoogleServiceIcon = (className = "") => (
     ></path>
   </svg>
 );
+
 const MicrosoftIcon = ({ className = "" }) => (
   <svg
     version="1.1"
@@ -1216,6 +1234,7 @@ const MicrosoftIcon = ({ className = "" }) => (
     <path className="st3" d="M67.7,67.7H129V129H67.7V67.7z" />
   </svg>
 );
+
 const AppleIcon = ({ className = "" }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -1310,6 +1329,7 @@ const Icons = {
   BiggerPlateIcon,
   AppleIcon,
   PremiumIcon,
+  PriceCardCrossIcons,
 };
 
 export default Icons;

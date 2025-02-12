@@ -1,7 +1,6 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { BiLink } from "react-icons/bi";
 import { FaEdit } from "react-icons/fa";
 import { FaCirclePlus } from "react-icons/fa6";
@@ -12,10 +11,12 @@ import { MdRebaseEdit } from "react-icons/md";
 import { PiTreeStructureFill } from "react-icons/pi";
 import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import useOutsideClick from "../../hooks/useOutsideClick";
 import { updateStructure } from "../../redux/slices/structures";
 import { uploadFile } from "../../redux/slices/upload-files";
 
+import useFeatureFlag from "../../hooks/useFeatureFlag";
 import {
   createElement,
   deleteElement,
@@ -29,7 +30,6 @@ import AddQuillModal from "./AddQuillModal";
 import DeleteModal from "./DeleteModal";
 import ImportModal from "./ImportModal";
 import ModalComponent from "./Modal";
-import useFeatureFlag from "../../hooks/useFeatureFlag";
 
 const NodeModal = ({
   position,
@@ -63,7 +63,7 @@ const NodeModal = ({
   const canImportStructure = useFeatureFlag("Import from Excel");
   const canTagRecord = useFeatureFlag("Rich Text Records");
 
-  const handleFeatureClick = (canAccess, message, action) => {
+  const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action();
     } else {
@@ -291,7 +291,9 @@ const NodeModal = ({
             <Tooltip label="Add Record">
               <button
                 onClick={() =>
-                  handleFeatureClick(canTagRecord, () => setModalVisible(true))
+                  handleFeatureClick(canTagRecord, () =>
+                    handleViewEditRecord("add")
+                  )
                 }
                 aria-label="Add Record"
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"

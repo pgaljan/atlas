@@ -37,7 +37,7 @@ export class AuthService {
     });
   }
 
-  // Register method
+  // Register method in AuthService
   async register(registerDto: RegisterDto) {
     const { fullName, email, password, roleName } = registerDto;
 
@@ -51,7 +51,6 @@ export class AuthService {
           throw new ConflictException('User with this email already exists');
         }
 
-        // Modify username if it contains multiple words
         let modifiedUsername = fullName;
         if (fullName.includes(' ')) {
           const parts = fullName.split(' ');
@@ -111,15 +110,16 @@ export class AuthService {
           },
         });
 
-        const payload = { email: newUser.email, sub: newUser.id };
-
-        // Log the audit action for registration
         await this.logAudit('User Registration', 'User', newUser.id, {
           username: modifiedUsername,
           email,
         });
 
-        return { user: payload };
+        // Return user ID along with a success message
+        return {
+          id: newUser.id,
+          message: 'User registered successfully',
+        };
       });
     } catch (error) {
       if (error instanceof ConflictException) {

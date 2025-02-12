@@ -26,9 +26,12 @@ export const updateSubscriptionPlan = createAsyncThunk(
   "subscription/updateSubscriptionPlan",
   async ({ userId, planId }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/subscriptions/${userId}/plan`, {
-        planId,
-      });
+      const response = await axiosInstance.patch(
+        `/subscriptions/${userId}/plan`,
+        {
+          planId,
+        }
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

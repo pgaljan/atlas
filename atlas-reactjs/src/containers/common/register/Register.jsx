@@ -30,17 +30,21 @@ const Register = () => {
       cogoToast.error("Please enter a valid email");
       return;
     }
-
+  
     setIsSubmitting(true);
-
+  
     dispatch(registerUser({ fullName, email, password }))
       .unwrap()
-      .then(() => {
+      .then((response) => {
         cogoToast.success("Registration successful!");
-
-        // Redirect to homepage
-        navigate("/subscription-plans");
-
+  
+        // Extract user ID from response
+        const userId = response?.id;
+        console.log("Registered User ID:", userId);
+  
+        // Redirect to subscription plans with user ID (if needed)
+        navigate(`/subscription-plans?userId=${userId}`);
+  
         // Reset form
         setEmail("");
         setPassword("");
@@ -63,6 +67,7 @@ const Register = () => {
         setIsSubmitting(false);
       });
   };
+  
   return (
     <div className="bg-custom-background-white">
       <header className="p-4 bg-custom-navbar flex items-center justify-between">

@@ -49,7 +49,7 @@ export class StructureService {
       let features = subscription.features as Record<string, any>;
 
       // Check and update the "Structures" feature count
-      if (features['Structures'] !== 'unlimited') {
+      if (features['Structures'] !== 'Unlimited') {
         let structureLimit = parseInt(features['Structures'], 10);
 
         if (!isNaN(structureLimit) && structureLimit > 0) {
@@ -64,7 +64,7 @@ export class StructureService {
         await this.prisma.subscription.update({
           where: { userId: ownerId },
           data: {
-            features: features, 
+            features: features,
           },
         });
       }
@@ -246,6 +246,36 @@ export class StructureService {
       });
       await this.prisma.element.deleteMany({ where: { structureId: id } });
 
+      // Fetch user subscription
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { userId: structure.ownerId },
+      });
+
+      if (!subscription) {
+        throw new NotFoundException(
+          `Subscription for user ${structure.ownerId} not found`,
+        );
+      }
+
+      let features = subscription.features as Record<string, any>;
+
+      // Restore the "Structures" feature count
+      if (features['Structures'] !== 'Unlimited') {
+        let structureLimit = parseInt(features['Structures'], 10);
+
+        if (!isNaN(structureLimit)) {
+          features['Structures'] = (structureLimit + 1).toString();
+
+          // Update the subscription with the restored feature count
+          await this.prisma.subscription.update({
+            where: { userId: structure.ownerId },
+            data: {
+              features: features,
+            },
+          });
+        }
+      }
+
       // Log the deletion in the AuditLog
       await this.prisma.auditLog.create({
         data: {
@@ -264,7 +294,6 @@ export class StructureService {
       );
     }
   }
-
   // Batch operations
   async createBatchStructures(structures: CreateStructureDto[]) {
     try {

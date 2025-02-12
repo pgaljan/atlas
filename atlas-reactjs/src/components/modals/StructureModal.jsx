@@ -56,9 +56,9 @@ const StructureModal = ({ isOpen, onClose }) => {
       const createdStructure = await dispatch(
         createStructure(structureData)
       ).unwrap();
+      cogoToast.success("Structure created successfully!");
       const structureId = createdStructure?.structure?.id;
       if (structureId) {
-        cogoToast.success("Structure created successfully!");
         setInputValue("");
         setDescription("");
         onClose();
