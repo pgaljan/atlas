@@ -62,7 +62,6 @@ export class FileUploadService {
         data: { name, title: name },
       });
     } catch (error) {
-      console.error('Error updating structure title:', error.message);
       throw new InternalServerErrorException(
         'Failed to update structure title.',
       );
@@ -128,6 +127,28 @@ export class FileUploadService {
             parentId,
           },
         });
+
+        if (row['Record Data']) {
+          const metadata = {
+            content: `<p>${row['Record Data']}</p>`,
+          };
+
+          const tags = row['Tags']
+            ? row['Tags'].split(',').map((tag: any, index) => ({
+                id: Date.now() + index,
+                key: tag.trim().toLowerCase().replace(/\s+/g, '_'),
+                value: tag.trim(),
+              }))
+            : [];
+
+          await this.prisma.record.create({
+            data: {
+              metadata,
+              tags, 
+              Element: { connect: { id: element.id } },
+            },
+          });
+        }
 
         levelStack.push({ level, id: element.id });
       }
