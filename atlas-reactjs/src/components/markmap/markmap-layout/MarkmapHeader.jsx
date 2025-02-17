@@ -79,15 +79,8 @@ const MarkmapHeader = ({
               id: structureId,
               updateData: { title: newTitle },
             })
-          )
-            .unwrap()
-            .then(() => {
-              cogoToast.success("Structure title updated successfully!");
-            })
-            .catch((error) => {
-              cogoToast.error(`Failed to update structure title: ${error}`);
-            });
-        }, 2500);
+          ).unwrap();
+        }, 1000);
       };
     })(),
     [dispatch, structureId]
@@ -98,6 +91,43 @@ const MarkmapHeader = ({
     setTitle(newTitle);
     debounceUpdateTitle(newTitle);
   };
+
+  const saveTitle = async (newTitle) => {
+    try {
+      await dispatch(
+        updateStructure({
+          id: structureId,
+          updateData: { title: newTitle },
+        })
+      ).unwrap();
+      cogoToast.success("Structure title updated successfully!");
+      setIsSaveDisabled(true);
+    } catch (error) {
+      cogoToast.error(`Failed to update structure title: ${error}`);
+    }
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle(title);
+    }
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!isSaveDisabled) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isSaveDisabled]);
 
   const handleSearchChange = (e) => {
     const value = e.target.value;
@@ -190,6 +220,7 @@ const MarkmapHeader = ({
             type="text"
             value={title}
             onChange={handleTitleChange}
+            onKeyDown={handleTitleKeyDown}
             className="structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all"
           />
 
