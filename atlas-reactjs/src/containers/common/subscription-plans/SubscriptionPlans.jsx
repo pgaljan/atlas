@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
 import { fetchPlans } from "../../../redux/slices/plans";
 import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
@@ -18,12 +18,20 @@ const renderCheckmark = (value) => {
 
 const SubscriptionPlans = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { plans } = useSelector((state) => state.plans);
 
   // Get userId from URL query params
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
   const userId = searchParams.get("userId");
+
+  // Redirect if userId is missing
+  useEffect(() => {
+    if (!userId) {
+      navigate("/register");
+    }
+  }, [userId, navigate]);
 
   // Fetch plans on component mount
   useEffect(() => {
@@ -38,6 +46,12 @@ const SubscriptionPlans = () => {
     }
     dispatch(updateSubscriptionPlan({ userId, planId }));
   };
+
+  const planOrder = ["Personal", "Educator", "Business", "Analyst"];
+
+  const sortedPlans = [...plans].sort(
+    (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
+  );
 
   return (
     <div className="bg-custom-background-white">
@@ -69,7 +83,7 @@ const SubscriptionPlans = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {plans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <PricingCard
                 id={plan.id}
                 key={plan.id}

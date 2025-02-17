@@ -114,7 +114,6 @@ export class FileUploadController {
           structureId: structure.id,
         };
       } else if (imageAndVideoTypes.includes(fileType)) {
-        // If it's an image or video, directly upload without parsing
         await this.fileUploadService.createAttachment(userId, file, fileUrl);
         return {
           message: 'File uploaded successfully as an attachment.',

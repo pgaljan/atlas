@@ -387,6 +387,7 @@ const NodeModal = ({
 
       {modalVisible && (
         <AddQuillModal
+          structureId={structureId}
           position={{ x: window.innerWidth / 2, y: window.innerHeight / 2 }}
           onClose={() => setModalVisible(false)}
           onSuccess={onClose}

@@ -113,24 +113,25 @@ model Plan {
 }
 
 model Structure {
-  id           String          @id @default(uuid())
-  title        String?
-  name         String
-  description  String?
-  ownerId      String
-  createdAt    DateTime        @default(now())
-  updatedAt    DateTime        @updatedAt
-  deletedAt    DateTime?
-  visibility   Visibility      @default(private)
-  elements     Element[]
-  parsedData   ParsedContent[]
-  renderers    Renderer[]
-  owner        User            @relation(fields: [ownerId], references: [id])
-  StructureMap StructureMap[]
-  Webhook      Webhook[]
-  teamMembers  TeamMember[]
-  teams        Team[]          @relation("TeamStructures")
-  teamId       String?
+  id             String          @id @default(uuid())
+  title          String?
+  name           String
+  description    String?
+  ownerId        String
+  markmapShowWbs Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  deletedAt      DateTime?
+  visibility     Visibility      @default(private)
+  elements       Element[]
+  parsedData     ParsedContent[]
+  renderers      Renderer[]
+  owner          User            @relation(fields: [ownerId], references: [id])
+  StructureMap   StructureMap[]
+  Webhook        Webhook[]
+  teamMembers    TeamMember[]
+  teams          Team[]          @relation("TeamStructures")
+  teamId         String?
 }
 
 model Element {

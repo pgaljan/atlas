@@ -11,6 +11,7 @@ import {
 import QuillEditor from "../editors/quillEditor";
 
 const AddQuillModal = ({
+  structureId,
   position,
   onClose,
   elementId,
@@ -42,7 +43,10 @@ const AddQuillModal = ({
         .unwrap()
         .then((record) => {
           if (record) {
-            setFormData({ metadata: record.metadata.content });
+            setFormData({
+              metadata: record.metadata.content,
+            });
+            setTags(record.tags);
           }
         })
         .catch((error) => {
@@ -64,6 +68,7 @@ const AddQuillModal = ({
 
     const createRecordDto = {
       metadata: parsedMetadata,
+      tags,
     };
 
     try {
@@ -121,12 +126,12 @@ const AddQuillModal = ({
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-t-lg border-b border-gray-300">
-          <h2 className="text-lg font-semibold text-gray-800">{text} Record</h2>
+          <h2 className="text-xl font-semibold text-gray-800">{text} Record</h2>
           <button
+            className="text-gray-500 hover:text-gray-700"
             onClick={onClose}
-            className="text-gray-500 hover:text-gray-700 focus:outline-none"
           >
-            ✕
+            ✖
           </button>
         </div>
 
@@ -137,6 +142,7 @@ const AddQuillModal = ({
           </label>
           <div>
             <QuillEditor
+              structureId={structureId}
               content={formData.metadata}
               onEditorChange={handleEditorChange}
             />
@@ -145,7 +151,7 @@ const AddQuillModal = ({
           <div className="mt-4 flex items-center justify-start">
             <button
               onClick={addTag}
-              className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-custom-main-dark focus:outline-none flex items-center"
+              className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-red-800 focus:outline-none flex items-center"
             >
               <BsTags className="h-5 w-5 mr-2" /> Add Tags
             </button>
@@ -219,14 +225,14 @@ const AddQuillModal = ({
         <div className="flex items-center justify-end bg-gray-100 px-4 py-2 rounded-b-lg border-t border-gray-300 space-x-3">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-sm text-gray-600 bg-gray-200 rounded-md hover:bg-gray-300 focus:outline-none"
+            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
           >
             {cancelText}
           </button>
           {actionType != "view" && (
             <button
               onClick={handleSave}
-              className="px-4 py-2 text-sm text-white bg-custom-main rounded-md focus:outline-none"
+              className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-red-800 "
             >
               {isLoading ? "Loading..." : submitText}
             </button>

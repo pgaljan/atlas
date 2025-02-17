@@ -1,10 +1,14 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState } from "react";
+import debounce from "lodash.debounce";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import useUndo from "use-undo";
 import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
 import { reparentElements } from "../../../redux/slices/elements";
-import { getStructure } from "../../../redux/slices/structures";
+import {
+  getStructure,
+  updateStructure,
+} from "../../../redux/slices/structures";
 import {
   addNodeToTarget,
   assignWbsNumbers,
@@ -23,6 +27,7 @@ const MarkmapEditor = ({ structureId }) => {
   const [treeDataState, { set: setTreeData, undo, redo, canUndo, canRedo }] =
     useUndo(null);
   const treeData = treeDataState.present;
+  const [showWbs, setShowWbsState] = useState();
   const [isLoading, setIsLoading] = useState(true);
   const [draggedNode, setDraggedNode] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -34,16 +39,19 @@ const MarkmapEditor = ({ structureId }) => {
     position: { x: 0, y: 0 },
   });
 
-  const localStorageKey = "markmapTreeData";
-  const localStorageWbsKey = "markmapShowWbs";
-
-  const [showWbs, setShowWbsState] = useState(
-    () => JSON.parse(localStorage.getItem(localStorageWbsKey)) ?? false
-  );
-
-  const setShowWbs = (value) => {
+  const setShowWbs = async (value) => {
     setShowWbsState(value);
-    localStorage.setItem(localStorageWbsKey, JSON.stringify(value));
+
+    try {
+      await dispatch(
+        updateStructure({
+          id: structureId,
+          updateData: { markmapShowWbs: value },
+        })
+      ).unwrap();
+    } catch (error) {
+      cogoToast.error("Failed to toggle WBS visibility.");
+    }
   };
 
   const handleRightClick = (event) => {
@@ -68,21 +76,8 @@ const MarkmapEditor = ({ structureId }) => {
     }
   };
 
-  const handleJsonChange = (e) => {
-    try {
-      const updatedTreeData = JSON.parse(e.target.value);
-      const treeWithWbs = assignWbsNumbers(updatedTreeData);
-      const treeWithLevels = updateNodeLevels(treeWithWbs);
-      setTreeData(treeWithLevels);
-      localStorage.setItem(localStorageKey, JSON.stringify(treeWithLevels));
-    } catch (error) {
-      console.error("Invalid JSON:", error);
-    }
-  };
-
   const loadInitialTreeData = () => {
-    const savedTreeData = localStorage.getItem(localStorageKey);
-    if (savedTreeData) {
+    if (treeData) {
       try {
         const parsedTreeData = JSON.parse(savedTreeData);
         const treeWithWbs = assignWbsNumbers(parsedTreeData);
@@ -124,13 +119,7 @@ const MarkmapEditor = ({ structureId }) => {
         reparentElements({ reparentingRequests: [reparentingRequest] })
       ).unwrap();
 
-      fetchStructure(
-        structureId,
-        dispatch,
-        setTreeData,
-        setIsLoading,
-        localStorageKey
-      );
+      fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
 
       cogoToast.success("Node reparented successfully.");
 
@@ -147,12 +136,7 @@ const MarkmapEditor = ({ structureId }) => {
 
       const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
       setTreeData(treeWithWbsAndLevels);
-      localStorage.setItem(
-        localStorageKey,
-        JSON.stringify(treeWithWbsAndLevels)
-      );
     } catch (error) {
-      console.error("Error during reparenting:", error);
       cogoToast.error("Failed to reparent node.");
     }
   };
@@ -178,26 +162,36 @@ const MarkmapEditor = ({ structureId }) => {
     return null;
   };
 
-  const handleSearch = (level) => {
-    if (!level.trim()) {
-      setFilteredTree(null);
-      return;
-    }
+  // Debounced search handler
+  const handleSearch = useCallback(
+    debounce((level) => {
+      if (!level.trim()) {
+        setFilteredTree(null);
+        return;
+      }
 
-    const parsedLevel = parseInt(level, 10);
+      const parsedLevel = parseInt(level, 10);
+      if (isNaN(parsedLevel)) {
+        cogoToast.error("Please enter a valid number");
+        return;
+      }
 
-    if (isNaN(parsedLevel)) {
-      cogoToast.error("Please enter a valid number");
-      return;
-    }
+      const result = filterTreeByLevel(treeData, parsedLevel);
+      setFilteredTree(result || "no-results");
+    }, 300),
+    [treeData]
+  );
 
-    const result = filterTreeByLevel(treeData, parsedLevel);
-    if (result) {
-      setFilteredTree(result);
-    } else {
-      setFilteredTree("no-results");
-    }
-  };
+  // Flatten tree for faster lookups
+  const flattenTree = useCallback((node, map = {}) => {
+    if (!node) return map;
+    map[node.originalContent] = node;
+    node.children?.forEach((child) => flattenTree(child, map));
+    return map;
+  }, []);
+
+  const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree]);
+  console.log(treeMap);
 
   // close the modal if user scrolls or zooms away so it doesn't float incorrectly
   useEffect(() => {
@@ -242,8 +236,7 @@ const MarkmapEditor = ({ structureId }) => {
     structureId,
     dispatch,
     setTreeData,
-    setIsLoading,
-    localStorageKey
+    setIsLoading
   ) => {
     if (!structureId) return;
 
@@ -254,12 +247,11 @@ const MarkmapEditor = ({ structureId }) => {
         children: data.elements,
         structureId: data.id,
       });
+      setShowWbsState(data.markmapShowWbs);
       const treeWithLevels = updateNodeLevels(treeWithWbs);
 
       setTreeData(treeWithLevels);
-      localStorage.setItem(localStorageKey, JSON.stringify(treeWithLevels));
     } catch (error) {
-      console.error("Error fetching structure:", error);
       cogoToast.error("Failed to fetch structure data");
     } finally {
       setIsLoading(false);
@@ -267,24 +259,22 @@ const MarkmapEditor = ({ structureId }) => {
   };
 
   useEffect(() => {
-    fetchStructure(
-      structureId,
-      dispatch,
-      setTreeData,
-      setIsLoading,
-      localStorageKey
-    );
-  }, [structureId, dispatch, setTreeData, localStorageKey]);
+    fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
+  }, [structureId, dispatch, setTreeData]);
 
   // Load initial tree data on mount
+
+  const initialTreeData = useMemo(() => {
+    return loadInitialTreeData();
+  }, [structureId]);
+
   useEffect(() => {
-    const initialTreeData = loadInitialTreeData();
     setTreeData(initialTreeData);
     setShouldFitView(true);
     setTimeout(() => {
       setIsLoading(false);
     }, 1000);
-  }, []);
+  }, [initialTreeData]);
 
   useMarkmapInteractions({
     treeData,
@@ -327,7 +317,6 @@ const MarkmapEditor = ({ structureId }) => {
       assignWbsNumbers(updatedTree)
     );
     setTreeData(treeWithWbsAndLevels);
-    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
   };
 
   const deleteNode = (targetContent) => {
@@ -345,7 +334,6 @@ const MarkmapEditor = ({ structureId }) => {
       assignWbsNumbers(updatedTree)
     );
     setTreeData(treeWithWbsAndLevels);
-    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
   };
 
   const sanitizeTreeData = (node) => {
@@ -428,13 +416,7 @@ const MarkmapEditor = ({ structureId }) => {
       <div className="flex-1 border border-gray-300 rounded-md bg-white overflow-hidden">
         <MarkmapHeader
           onSuccess={() =>
-            fetchStructure(
-              structureId,
-              dispatch,
-              setTreeData,
-              setIsLoading,
-              localStorageKey
-            )
+            fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
           }
           showWbs={showWbs}
           structureId={structureId}
@@ -446,6 +428,7 @@ const MarkmapEditor = ({ structureId }) => {
           canRedo={canRedo}
         />
         <svg ref={svgRef} className="w-full h-full dotted-bg" />
+
         {isLoading && (
           <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
@@ -457,13 +440,6 @@ const MarkmapEditor = ({ structureId }) => {
           </div>
         )}
       </div>
-
-      <textarea
-        className="w-full h-40 hidden mt-4 border border-gray-300 rounded-md p-2 resize-none focus:outline-none focus:ring focus:border-blue-300"
-        value={JSON.stringify(treeData, null, 2)}
-        onChange={handleJsonChange}
-        placeholder="Edit JSON data here..."
-      />
 
       {modalData && (
         <NodeModal
@@ -480,13 +456,7 @@ const MarkmapEditor = ({ structureId }) => {
           }
           onDelete={() => deleteNode(modalData)}
           onSuccess={() =>
-            fetchStructure(
-              structureId,
-              dispatch,
-              setTreeData,
-              setIsLoading,
-              localStorageKey
-            )
+            fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
           }
           nodeData={modalData}
         />
@@ -514,4 +484,4 @@ const MarkmapEditor = ({ structureId }) => {
   );
 };
 
-export default MarkmapEditor;
+export default MarkmapEditor

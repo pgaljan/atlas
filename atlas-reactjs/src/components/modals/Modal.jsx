@@ -34,29 +34,14 @@ const ModalComponent = ({
         <div className="w-full flex flex-col bg-white border shadow-lg rounded-xl">
           {/* Modal Header */}
           <div className="flex justify-between items-center py-3 px-4 border-b">
-            <h3 className="font-bold text-gray-800">{title}</h3>
+            <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
+
+
             <button
-              type="button"
-              className="inline-flex justify-center items-center gap-x-2 rounded-full border border-transparent bg-gray-100 text-gray-800 hover:bg-gray-200 focus:outline-none focus:bg-gray-200"
+              className="text-gray-500 hover:text-gray-700"
               onClick={onClose}
-              aria-label="Close"
             >
-              <span className="sr-only">Close</span>
-              <svg
-                className="shrink-0 w-6 h-6"
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M18 6 6 18"></path>
-                <path d="m6 6 12 12"></path>
-              </svg>
+              ✖
             </button>
           </div>
 
@@ -108,7 +93,7 @@ const ModalComponent = ({
             ${
               disabled
                 ? "bg-custom-main cursor-not-allowed opacity-50"
-                : "bg-custom-main hover:bg-custom-main"
+                : "bg-custom-main hover:bg-red-800"
             }
           `}
                   >

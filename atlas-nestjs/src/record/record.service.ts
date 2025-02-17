@@ -34,6 +34,7 @@ export class RecordService {
     const element = await this.prisma.element.findUnique({
       where: { id: elementid },
     });
+
     if (!element) throw new NotFoundException('Element not found');
 
     try {

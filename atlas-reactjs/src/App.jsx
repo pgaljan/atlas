@@ -1,58 +1,58 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import PremiumModal from "./components/modals/PremiumModal";
-import Support from "./containers/user/support/Support";
-import PrivateRoute from "./routes/PrivateRoute";
-import PublicRoute from "./routes/PublicRoute";
+import React, { Suspense, lazy, useState, useEffect } from "react"
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom"
+import PremiumModal from "./components/modals/PremiumModal"
+import Support from "./containers/user/support/Support"
+import PrivateRoute from "./routes/PrivateRoute"
+import PublicRoute from "./routes/PublicRoute"
 
-const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
+const NotFound = lazy(() => import("./components/404-notfound/NotFound"))
 const MarkmapCanvas = lazy(() =>
   import("./components/markmap/markmap-canvas/MarkmapCanvas")
-);
-const Profile = lazy(() => import("./containers/user/profile/Profile"));
-const Login = lazy(() => import("./containers/common/login/Login"));
-const Register = lazy(() => import("./containers/common/register/Register"));
+)
+const Profile = lazy(() => import("./containers/user/profile/Profile"))
+const Login = lazy(() => import("./containers/common/login/Login"))
+const Register = lazy(() => import("./containers/common/register/Register"))
 const ResetPassword = lazy(() =>
   import("./containers/common/reset-password/ResetPassword")
-);
+)
 const SubscriptionPlans = lazy(() =>
   import("./containers/common/subscription-plans/SubscriptionPlans")
-);
-const Backups = lazy(() => import("./containers/user/backups/Backups"));
-const Dashboard = lazy(() => import("./containers/user/dashboard/Dashboard"));
+)
+const Backups = lazy(() => import("./containers/user/backups/Backups"))
+const Dashboard = lazy(() => import("./containers/user/dashboard/Dashboard"))
 const UploadedFiles = lazy(() =>
   import("./containers/user/uploaded-files/UploadedFiles")
-);
+)
 const UpgradePlans = lazy(() =>
   import("./containers/user/upgrade-plans/UpgradePlans")
-);
+)
 const TeamMembers = lazy(() =>
   import("./containers/user/team-members/TeamMembers")
-);
+)
 const DeletedMindmaps = lazy(() =>
   import("./containers/user/deleted-markmaps/DeletedMarkmaps")
-);
+)
 
 const App = () => {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const location = useLocation()
+  const navigate = useNavigate()
+  const [isModalVisible, setIsModalVisible] = useState(false)
 
   useEffect(() => {
     const showPremiumModal =
-      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium";
-    setIsModalVisible(showPremiumModal);
-  }, [location.search]);
+      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium"
+    setIsModalVisible(showPremiumModal)
+  }, [location.search])
 
   // Handle modal visibility
   const closeModal = () => {
-    setIsModalVisible(false);
+    setIsModalVisible(false)
 
     // Remove 'plan' from URL
-    const params = new URLSearchParams(location.search);
-    params.delete("plan");
-    navigate({ search: params.toString() }, { replace: true });
-  };
+    const params = new URLSearchParams(location.search)
+    params.delete("plan")
+    navigate({ search: params.toString() }, { replace: true })
+  }
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -60,14 +60,6 @@ const App = () => {
         <Routes>
           <Route
             path="/"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/login"
             element={
               <PublicRoute>
                 <Login />
@@ -186,7 +178,7 @@ const App = () => {
         {isModalVisible && <PremiumModal closeModal={closeModal} />}
       </Suspense>
     </div>
-  );
-};
+  )
+}
 
-export default App;
+export default App

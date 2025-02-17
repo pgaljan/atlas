@@ -1,6 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
 import React, { useCallback, useEffect, useState } from "react";
 import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi";
 import { FaUserPlus } from "react-icons/fa";
@@ -8,10 +7,11 @@ import { RiDownloadCloud2Line } from "react-icons/ri";
 import { TbWorldUpload } from "react-icons/tb";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
-import { restoreBackup } from "../../../redux/slices/restore-backups";
+import { Link, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
+import useFeatureFlag from "../../../hooks/useFeatureFlag";
 import { createBackup } from "../../../redux/slices/backups";
+import { restoreBackup } from "../../../redux/slices/restore-backups";
 import {
   getStructure,
   updateStructure,
@@ -19,7 +19,6 @@ import {
 import ImportModal from "../../modals/ImportModal";
 import ShareModal from "../../modals/ShareModal";
 import UserPopover from "../../modals/UserPopover";
-import useFeatureFlag from "../../../hooks/useFeatureFlag";
 import Tooltip from "../../tooltip/Tooltip";
 
 const MarkmapHeader = ({
@@ -36,7 +35,7 @@ const MarkmapHeader = ({
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false);
-  const [title, setTitle] = useState("Untitled");
+  const [title, setTitle] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
@@ -60,7 +59,7 @@ const MarkmapHeader = ({
       dispatch(getStructure(structureId))
         .unwrap()
         .then((data) => {
-          setTitle(data?.title || "Untitled");
+          setTitle(data?.title || "");
         })
         .catch((error) => {
           cogoToast.error(`Failed to load structure: ${error}`);

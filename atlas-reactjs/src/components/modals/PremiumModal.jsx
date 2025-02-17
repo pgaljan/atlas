@@ -1,6 +1,6 @@
 import React from "react";
 import Icons from "../../constants/icons";
-import { FaTimes } from "react-icons/fa";
+// import { FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom";
 
 const PremiumModal = ({ closeModal }) => {
@@ -9,10 +9,10 @@ const PremiumModal = ({ closeModal }) => {
       <div className="bg-white rounded-lg shadow-lg p-6 w-full max-w-lg text-center">
         <div className="flex -mt-2 justify-end">
           <button
-            className="text-gray-500 hover:text-gray-700 text-xl"
-            onClick={closeModal} 
+            className="text-gray-500 hover:text-gray-700"
+            onClick={closeModal}
           >
-            <FaTimes />
+            ✖
           </button>
         </div>
 

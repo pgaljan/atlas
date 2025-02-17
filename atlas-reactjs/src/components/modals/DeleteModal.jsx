@@ -13,13 +13,14 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title }) => {
         </p>
         <div className="mt-4 flex justify-end gap-4">
           <button
-            className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+            // className="px-4 py-2 bg-gray-200 text-gray-800 rounded-lg hover:bg-gray-300"
+            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
             onClick={onClose}
           >
             Cancel
           </button>
           <button
-            className="px-4 py-2 bg-custom-main text-white rounded-lg hover:bg-red-900"
+           className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-red-800 "
             onClick={onConfirm}
           >
             Yes, Delete

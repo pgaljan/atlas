@@ -14,7 +14,6 @@ export const createRecord = createAsyncThunk(
   "records/create",
   async ({ elementId, createRecordDto }, { rejectWithValue }) => {
     try {
-      console.log(createRecordDto);
       const response = await axiosInstance.post(
         `/records/create?elementId=${elementId}`,
         createRecordDto

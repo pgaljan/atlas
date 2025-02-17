@@ -15,7 +15,7 @@ const ImportModal = ({
 
   const allowedExtensions = format
     .split(",")
-    .map(ext => ext?.trim()?.replace(".", "")) // Extract extensions without dots
+    .map(ext => ext?.trim()?.replace(".", "")) 
   const handleDragOver = e => {
     e.preventDefault()
     setDragging(true)
@@ -38,26 +38,6 @@ const ImportModal = ({
     const file = e.target?.files[0]
     validateFile(file)
   }
-
-  // const validateFile = file => {
-
-  //   const allowedTypes = [
-  //     "application/zip",
-  //     "text/csv",
-  //     "application/vnd.ms-excel",
-  //     "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-  //   ]
-
-  //   if (file && allowedTypes.includes(file.type)) {
-  //     setSelectedFile(file)
-  //     setErrorMessage("")
-  //   } else {
-  //     setErrorMessage(
-  //       "Only .zip, .csv, .xls, or .xlsx files are allowed. Please upload a valid file."
-  //     )
-  //     setSelectedFile(null)
-  //   }
-  // }
 
   const validateFile = file => {
     const fileExtension = file?.name?.split(".")?.pop()?.toLowerCase()
@@ -110,8 +90,8 @@ const ImportModal = ({
             </div>
           </div>
         ) : (
-          <div>
-            <div className="flex justify-between items-center pb-4 border-b">
+          <div >
+            <div className="flex justify-between items-center pb-4 ">
               <h2 className="text-xl font-semibold text-gray-800">{title}</h2>
               <button
                 className="text-gray-500 hover:text-gray-700"

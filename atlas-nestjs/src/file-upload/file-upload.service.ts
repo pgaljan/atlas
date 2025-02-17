@@ -37,79 +37,103 @@ export class FileUploadService {
     }
   }
 
+  async updateStructureTitle(structureId: string, parsedData: any[]) {
+    try {
+      // Find the first element where level is 1 (#)
+      const titleRow = parsedData.find((row) => /^#\s*(.+)$/.test(row.element));
+
+      if (!titleRow) {
+        throw new NotFoundException(
+          'No level 1 title found in the uploaded data.',
+        );
+      }
+
+      // Extract the title text
+      const titleMatch = titleRow.element.match(/^#\s*(.+)$/);
+      const name = titleMatch ? titleMatch[1].trim() : null;
+
+      if (!name) {
+        throw new NotFoundException('Invalid title format in uploaded data.');
+      }
+
+      // Update the Structure title
+      return await this.prisma.structure.update({
+        where: { id: structureId },
+        data: { name, title: name },
+      });
+    } catch (error) {
+      console.error('Error updating structure title:', error.message);
+      throw new InternalServerErrorException(
+        'Failed to update structure title.',
+      );
+    }
+  }
+
   async createStructureAndElements(
     userId: string,
     parsedData: any[],
     structureId?: string,
   ) {
     try {
-      let structure;
+      let structure: any;
 
-      // Check if structureId is provided, otherwise create a new structure
+      // If a structure ID is provided, fetch it, else create a new one
       if (structureId) {
         structure = await this.prisma.structure.findUnique({
           where: { id: structureId },
-          include: {
-            elements: true,
-          },
+          include: { elements: true },
         });
 
         if (!structure) {
           throw new NotFoundException('Structure not found');
         }
       } else {
-        // Create new structure if no structureId provided
         structure = await this.prisma.structure.create({
           data: {
             name: `Imported Structure ${new Date().toISOString()}`,
             ownerId: userId,
-            elements: {
-              create: [],
-            },
-          },
-          include: {
-            elements: true,
           },
         });
       }
 
-      const elementNames = parsedData.map((row) => row.element);
+      const levelStack: { level: number; id: string }[] = [];
 
-      // Create elements and map parentId by name
+      // Update elements to set their correct parentId
       for (const row of parsedData) {
-        let parentId = null;
-        if (row.parentId) {
-          // Find parent element by name
-          const parentElement = await this.prisma.element.findFirst({
-            where: { name: row.parentId },
-          });
-          if (parentElement) {
-            parentId = parentElement.id;
-          }
+        const match = row.element.match(/^(#+)\s*(.*)$/);
+        if (!match) continue;
+
+        const level = match[1].length;
+        const name = match[2].trim();
+
+        // **Skip elements where there is only a single `#`**
+        if (level === 1) continue;
+
+        // Find the correct parent
+        while (
+          levelStack.length &&
+          levelStack[levelStack.length - 1].level >= level
+        ) {
+          levelStack.pop();
         }
+
+        const parentId = levelStack.length
+          ? levelStack[levelStack.length - 1].id
+          : null;
 
         const element = await this.prisma.element.create({
           data: {
-            name: row.element || '',
+            name,
             structureId: structure.id,
-            parentId: parentId || null,
-            // Record: {
-            //   create: {
-            //     metadata: JSON.parse(row.additionalData || '{}'),
-            //   },
-            // },
+            parentId,
           },
         });
 
-        await this.prisma.structure.update({
-          where: { id: structure.id },
-          data: {
-            elements: {
-              connect: { id: element.id },
-            },
-          },
-        });
+        levelStack.push({ level, id: element.id });
       }
+
+      // **Update the structure title based on level 1 element**
+      await this.updateStructureTitle(structure.id, parsedData);
 
       return structure;
     } catch (error) {
@@ -134,7 +158,7 @@ export class FileUploadService {
           element,
           elementId,
           details,
-          userId: userId || null, 
+          userId: userId || null,
         },
       });
     } catch (error) {

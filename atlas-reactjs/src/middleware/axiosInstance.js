@@ -45,7 +45,6 @@ export const isTokenValid = async () => {
   }
 
   try {
-    // Token validation logic if required
     return true;
   } catch (error) {
     return false;

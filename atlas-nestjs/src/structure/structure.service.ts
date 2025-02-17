@@ -28,8 +28,17 @@ export class StructureService {
     try {
       // Check if a structure with the same name already exists
       const existingStructure = await this.prisma.structure.findFirst({
-        where: { name },
+        where: {
+          name,
+          ownerId,
+        },
       });
+
+      if (existingStructure) {
+        throw new InternalServerErrorException(
+          `"${name}" already exists for this user.`,
+        );
+      }
 
       if (existingStructure) {
         throw new InternalServerErrorException(`"${name}" already exists.`);
@@ -73,6 +82,7 @@ export class StructureService {
       const structure = await this.prisma.structure.create({
         data: {
           name,
+          title: name,
           description,
           visibility: visibility || Visibility.private,
           ownerId,
@@ -166,8 +176,15 @@ export class StructureService {
 
   async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
     try {
-      const { name, title, description, visibility, elements, maps } =
-        updateData;
+      const {
+        name,
+        title,
+        description,
+        visibility,
+        elements,
+        maps,
+        markmapShowWbs,
+      } = updateData;
 
       const structure = await this.prisma.structure.findUnique({
         where: { id },
@@ -183,6 +200,7 @@ export class StructureService {
         where: { id },
         data: {
           name: name || undefined,
+          markmapShowWbs,
           title: title || undefined,
           description: description || undefined,
           visibility: visibility || undefined,

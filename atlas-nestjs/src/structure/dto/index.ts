@@ -7,6 +7,7 @@ export class CreateStructureDto {
   visibility?: Visibility;
   title: string;
   ownerId: string;
+  markmapShowWbs: boolean;
   elements?: CreateElementDto[];
   maps?: CreateStructureMapDto[];
   userId: any;

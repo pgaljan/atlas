@@ -15,7 +15,7 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN,
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
     allowedHeaders: 'Content-Type, Authorization, x-feature',
-  });  
+  });
 
   await app.listen(process.env.PORT ?? 4001);
 }

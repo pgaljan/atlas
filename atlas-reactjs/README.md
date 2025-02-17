@@ -12,7 +12,7 @@ Currently, two official plugins are available:
   {
     "name": "Personal",
     "price": 0.00,
-        "description": "Basic plan for individuals",
+    "description": "Basic plan for individuals",
     "features": {
       "Structures": "5",
       "Interactive structure map": true,
@@ -27,7 +27,7 @@ Currently, two official plugins are available:
   {
     "name": "Educator",
     "price": 1.00,
-        "description": "Plan for educators",
+    "description": "Plan for educators",
     "features": {
       "Structures": "50",
       "Interactive structure map": true,
@@ -42,7 +42,7 @@ Currently, two official plugins are available:
   {
     "name": "Analyst",
     "price": 2.00,
-        "description": "Advanced plan for analysts",
+    "description": "Advanced plan for analysts",
     "features": {
       "Structures": "Unlimited",
       "Interactive structure map": true,
@@ -57,7 +57,7 @@ Currently, two official plugins are available:
   {
     "name": "Business",
     "price": 5.00,
-        "description": "Premium plan for businesses",
+    "description": "Premium plan for businesses",
     "features": {
       "Structures": "Unlimited",
       "Interactive structure map": true,

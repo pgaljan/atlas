@@ -19,6 +19,7 @@
     "flowbite-react": "^0.10.2",
     "js-cookie": "^3.0.5",
     "js-cookies": "^1.0.4",
+    "lodash.debounce": "^4.0.8",
     "markmap": "^0.6.1",
     "markmap-lib": "^0.18.3",
     "markmap-toolbar": "^0.18.4",
@@ -29,6 +30,7 @@
     "react-quill": "^2.0.0",
     "react-redux": "^9.2.0",
     "react-router-dom": "^7.1.0",
+    "react-window": "^1.8.11",
     "use-undo": "^1.1.1"
   },
   "devDependencies": {

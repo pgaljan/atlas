@@ -1,50 +1,51 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import Layout from "../../../components/layout";
-import Icons from "../../../constants/icons";
-import { fetchPlans } from "../../../redux/slices/plans";
-import Cookies from "js-cookie";
+import React, { useEffect, useState } from "react"
+import { useDispatch, useSelector } from "react-redux"
+import Layout from "../../../components/layout"
+import Icons from "../../../constants/icons"
+import { fetchPlans } from "../../../redux/slices/plans"
+import Cookies from "js-cookie"
 import {
   fetchSubscription,
   updateSubscriptionPlan,
-} from "../../../redux/slices/subscriptions";
-import cogoToast from "@successtar/cogo-toast";
+} from "../../../redux/slices/subscriptions"
+import cogoToast from "@successtar/cogo-toast"
 
 const UpgradePlans = () => {
-  const dispatch = useDispatch();
-  const { plans } = useSelector((state) => state.plans);
-  const [currentPlan, setCurrentPlan] = useState(null);
+  const dispatch = useDispatch()
+  const { plans } = useSelector(state => state.plans)
+  const [currentPlan, setCurrentPlan] = useState(null)
 
   useEffect(() => {
-    dispatch(fetchPlans());
+    dispatch(fetchPlans())
 
-    const userId = Cookies.get("atlas_userId");
+    const userId = Cookies.get("atlas_userId")
     if (userId) {
-      dispatch(fetchSubscription(userId)).then((res) => {
-        setCurrentPlan(res.payload);
-      });
+      dispatch(fetchSubscription(userId)).then(res => {
+        setCurrentPlan(res?.payload)
+      })
     }
-  }, [dispatch]);
+  }, [dispatch])
 
-  const handlePlanSelection = (planId) => {
-    const userId = Cookies.get("atlas_userId");
+  const handlePlanSelection = planId => {
+    const userId = Cookies.get("atlas_userId")
     if (!userId) {
-      cogoToast.error("User ID is missing!");
-      return;
+      cogoToast.error("User ID is missing!")
+      return
     }
 
     dispatch(updateSubscriptionPlan({ userId, planId })).then(() => {
-      cogoToast.success("Subscription updated successfully!");
-      dispatch(fetchSubscription(userId)).then((res) => {
-        setCurrentPlan(res.payload);
-      });
-    });
-  };
+      cogoToast.success("Subscription updated successfully!")
+      dispatch(fetchSubscription(userId)).then(res => {
+        setCurrentPlan(res?.payload)
+      })
+    })
+  }
 
-  const planOrder = ["Personal", "Educator", "Analyst", "Business"];
+  const planOrder = ["Personal", "Educator", "Business", "Analyst"];
+
   const sortedPlans = [...plans].sort(
-    (a, b) => planOrder.indexOf(a.name) - planOrder.indexOf(b.name)
-  );
+    (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
+  )
 
   return (
     <Layout>
@@ -63,9 +64,12 @@ const UpgradePlans = () => {
                   : "border-custom-text-borderGrey shadow-md"
               }`}
             >
-              {plan.icon && (
+              {(plan?.name == "business" || plan?.name == "Business") && (
                 <div className="absolute top-0 right-0 transform rotate-360 opacity-100">
-                  <div className="w-full h-full">{plan.icon}</div>
+                  <div className="w-full h-full">
+                    <Icons.ProCardIcon className="w-[128px] h-[128px]" />
+                  </div>
+
                 </div>
               )}
 
@@ -75,22 +79,22 @@ const UpgradePlans = () => {
                     index === 2 ? "text-custom-main pt-8" : "text-custom-main"
                   }`}
                 >
-                  {plan.name}
+                  {plan?.name}
                 </h3>
                 <p className="mt-1 text-sm sm:text-base text-custom-main">
-                  {plan.description}
+                  {plan?.description}
                 </p>
               </div>
 
               <div className="mt-2 text-2xl sm:text-3xl md:text-4xl font-bold text-custom-main">
-                {plan.price && (
+                {plan?.price && (
                   <>
                     <span className="text-3xl font-bold">
-                      ${plan.price.split(".")[0]}.0
+                      ${plan?.price?.split(".")[0]}.0
                     </span>
-                    {plan.price.split(".")[1] && (
+                    {plan?.price?.split(".")[1] && (
                       <sup className="text-xl font-bold">
-                        {plan.price.split(".")[1]}
+                        {plan?.price?.split(".")[1]}
                       </sup>
                     )}
                   </>
@@ -105,38 +109,40 @@ const UpgradePlans = () => {
               <div className="mt-2 flex justify-center">
                 <button
                   className={`h-[48px] w-[229px] rounded-lg text-[16px] font-bold ${
-                    currentPlan && currentPlan.plan.name === plan.name
+                    currentPlan && currentPlan?.plan?.name === plan?.name
                       ? "bg-custom-main cursor-not-allowed text-white"
                       : plan.highlight
                       ? "bg-custom-main text-white hover:bg-custom-text-white hover:text-custom-main border-[2px] hover:border-custom-main"
                       : "bg-white text-custom-main border-[2px] font-extrabold border-custom-main hover:bg-custom-main hover:text-white"
                   }`}
-                  disabled={currentPlan && currentPlan.plan.name === plan.name}
-                  onClick={() => handlePlanSelection(plan.id)}
+                  disabled={
+                    currentPlan && currentPlan?.plan?.name === plan?.name
+                  }
+                  onClick={() => handlePlanSelection(plan?.id)}
                 >
-                  {currentPlan && currentPlan.plan.name === plan.name
+                  {currentPlan && currentPlan?.plan?.name === plan?.name
                     ? "Subscribed"
-                    : `Choose ${plan.name}`}
+                    : `Choose ${plan?.name}`}
                 </button>
               </div>
 
-              {plan.link && (
+              {plan?.link && (
                 <div className="mt-2 text-center">
                   <a
                     href="#"
                     className="text-custom-main text-sm font-bold border-b-2 border-custom-main"
                   >
-                    {plan.link}
+                    {plan?.link}
                   </a>
                 </div>
               )}
 
               <div className="mt-6 flex-grow">
                 <h4 className="text-base font-semibold text-custom-main">
-                  {plan.featureHeading}
+                  {plan?.featureHeading}
                 </h4>
                 <ul className="mt-4 space-y-2 text-sm text-custom-main">
-                  {Object.entries(plan.features).map(([key, value], i) => (
+                  {Object.entries(plan?.features).map(([key, value], i) => (
                     <li key={i} className="flex justify-between items-center">
                       <span>{key}</span>
                       {value ? (
@@ -153,7 +159,7 @@ const UpgradePlans = () => {
         </div>
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default UpgradePlans;
+export default UpgradePlans

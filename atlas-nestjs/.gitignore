@@ -6,6 +6,10 @@
 /backups
 
 
+# Lock files
+bun.lockb
+package-lock.json
+
 # Logs
 logs
 *.log
@@ -24,6 +28,7 @@ lerna-debug.log*
 
 # IDEs and editors
 /.idea
+.vscode
 .project
 .classpath
 .c9/
