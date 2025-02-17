@@ -49,7 +49,7 @@ const Card = ({
         <div className="flex flex-col">
           {/* Thumbnail */}
           <Link to={`/app/s/${username}/${structureId}`}>
-            <div className="w-full h-48 bg-gray-200">
+            <div className="w-full h-48 ">
               <img
                 src={imageUrl}
                 alt={title}

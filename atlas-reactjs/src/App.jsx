@@ -106,14 +106,14 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/app/team-members"
             element={
               <PrivateRoute>
                 <TeamMembers />
               </PrivateRoute>
             }
-          /> */}
+          />
           <Route
             path="/app/support"
             element={
@@ -122,14 +122,14 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/app/me"
             element={
               <PrivateRoute>
                 <Profile />
               </PrivateRoute>
             }
-          /> */}
+          />
           <Route
             path="/app/backups"
             element={
@@ -138,22 +138,22 @@ const App = () => {
               </PrivateRoute>
             }
           />
-          {/* <Route
+          <Route
             path="/app/uploaded-files"
             element={
               <PrivateRoute>
                 <UploadedFiles />
               </PrivateRoute>
             }
-          /> */}
-          {/* <Route
+          />
+          <Route
             path="/app/deleted-markmaps"
             element={
               <PrivateRoute>
                 <DeletedMindmaps />
               </PrivateRoute>
             }
-          /> */}
+          />
 
           <Route
             path="/app/upgrade-plans"

@@ -1,14 +1,16 @@
-import cogoToast from "@successtar/cogo-toast";
-import { useEffect, useState } from "react";
-import { BsTags } from "react-icons/bs";
-import { IoTrash } from "react-icons/io5";
-import { useDispatch } from "react-redux";
+import cogoToast from "@successtar/cogo-toast"
+import { useEffect, useState } from "react"
+import { BsTags } from "react-icons/bs"
+import { IoTrash } from "react-icons/io5"
+import { useDispatch } from "react-redux"
 import {
   createRecord,
   getRecordById,
   updateRecord,
-} from "../../redux/slices/records";
-import QuillEditor from "../editors/quillEditor";
+} from "../../redux/slices/records"
+import QuillEditor from "../editors/quillEditor"
+import useFeatureFlag from "../../hooks/useFeatureFlag"
+import { Navigate, useNavigate } from "react-router-dom"
 
 const AddQuillModal = ({
   structureId,
@@ -23,91 +25,100 @@ const AddQuillModal = ({
   recordId,
   fetchData,
 }) => {
-  const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
+  const dispatch = useDispatch()
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
   const [formData, setFormData] = useState({
     metadata: "",
-  });
-  const [tags, setTags] = useState([]);
+  })
+  const [tags, setTags] = useState([])
+  const canTags = useFeatureFlag("Record Tagging")
+  const handleFeatureClick = (canAccess, action) => {
+    if (canAccess) {
+      action()
+    } else {
+      navigate(`?plan=upgrade-to-premium`)
+    }
+  }
 
-  const handleEditorChange = (value) => {
-    setFormData((prev) => ({
+  const handleEditorChange = value => {
+    setFormData(prev => ({
       ...prev,
       metadata: value,
-    }));
-  };
+    }))
+  }
 
   useEffect(() => {
     if (actionType === "view" || (actionType === "edit" && recordId)) {
       dispatch(getRecordById(recordId))
         .unwrap()
-        .then((record) => {
+        .then(record => {
           if (record) {
             setFormData({
               metadata: record.metadata.content,
-            });
-            setTags(record.tags);
+            })
+            setTags(record.tags)
           }
         })
-        .catch((error) => {
-          cogoToast.error(`Failed to fetch record: ${error.message}`);
-        });
+        .catch(error => {
+          cogoToast.error(`Failed to fetch record: ${error.message}`)
+        })
     }
-  }, [actionType, recordId, dispatch]);
+  }, [actionType, recordId, dispatch])
 
   const handleSave = async () => {
     if (!formData.metadata.trim()) {
-      cogoToast.error("Metadata is required!");
-      return;
+      cogoToast.error("Metadata is required!")
+      return
     }
 
     // Convert the metadata content to JSON
     const parsedMetadata = {
       content: formData.metadata,
-    };
+    }
 
     const createRecordDto = {
       metadata: parsedMetadata,
       tags,
-    };
+    }
 
     try {
       if (actionType === "edit") {
         const updateRecordDto = {
           metadata: parsedMetadata,
-        };
-        setIsLoading(true);
-        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
-        fetchData();
-        cogoToast.success("Record updated successfully!");
+        }
+        setIsLoading(true)
+        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap()
+        fetchData()
+        cogoToast.success("Record updated successfully!")
       } else if (actionType === "add") {
-        setIsLoading(true);
-        await dispatch(createRecord({ elementId, createRecordDto })).unwrap();
-        fetchData();
-        cogoToast.success("Record created successfully!");
+        setIsLoading(true)
+        await dispatch(createRecord({ elementId, createRecordDto })).unwrap()
+        fetchData()
+        cogoToast.success("Record created successfully!")
       }
-      onSuccess();
-      onClose();
-      setIsLoading(false);
+      onSuccess()
+      onClose()
+      setIsLoading(false)
     } catch (error) {
-      cogoToast.error(`Error creating record: ${error.message}`);
-      setIsLoading(false);
+      cogoToast.error(`Error creating record: ${error.message}`)
+      setIsLoading(false)
     }
-  };
+  }
 
   const addTag = () => {
-    setTags((prev) => [...prev, { key: "", value: "", id: Date.now() }]);
-  };
+    setTags(prev => [...prev, { key: "", value: "", id: Date.now() }])
+  }
 
   const handleTagChange = (id, field, value) => {
-    setTags((prev) =>
-      prev.map((tag) => (tag.id === id ? { ...tag, [field]: value } : tag))
-    );
-  };
+    setTags(prev =>
+      prev.map(tag => (tag.id === id ? { ...tag, [field]: value } : tag))
+    )
+  }
 
-  const deleteTag = (id) => {
-    setTags((prev) => prev.filter((tag) => tag.id !== id));
-  };
+  const deleteTag = id => {
+    setTags(prev => prev.filter(tag => tag.id !== id))
+  }
 
   return (
     <>
@@ -150,7 +161,7 @@ const AddQuillModal = ({
           {/* Add Tags Button with Icon */}
           <div className="mt-4 flex items-center justify-start">
             <button
-              onClick={addTag}
+              onClick={() => handleFeatureClick(canTags, addTag)}
               className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-red-800 focus:outline-none flex items-center"
             >
               <BsTags className="h-5 w-5 mr-2" /> Add Tags
@@ -162,7 +173,7 @@ const AddQuillModal = ({
             <div className="mt-4">
               <div className="max-h-40 overflow-y-auto pr-3">
                 {/* Adding padding-right to prevent overlap */}
-                {tags?.map((tag) => (
+                {tags?.map(tag => (
                   <div
                     key={tag.id}
                     className="flex items-center justify-between mt-2"
@@ -180,7 +191,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Key"
                         value={tag.key}
-                        onChange={(e) =>
+                        onChange={e =>
                           handleTagChange(tag.id, "key", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -200,7 +211,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Value"
                         value={tag.value}
-                        onChange={(e) =>
+                        onChange={e =>
                           handleTagChange(tag.id, "value", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -240,7 +251,7 @@ const AddQuillModal = ({
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AddQuillModal;
+export default AddQuillModal
