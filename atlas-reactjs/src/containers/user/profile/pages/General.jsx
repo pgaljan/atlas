@@ -15,7 +15,6 @@ const General = () => {
     setIsImportModalOpen(prev => !prev)
   }
   const handleFileSelection = file => {
-    console.log("Selected file:", file)
     cogoToast.success("Avatar uploaded successfully!")
   }
 

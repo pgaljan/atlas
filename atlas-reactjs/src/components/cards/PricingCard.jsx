@@ -29,7 +29,7 @@ const PricingCard = ({
           </p>
           <div className="mb-9 flex flex-col gap-[14px]">{children}</div>
           <a
-            href="/#"
+            href="#"
             onClick={onSelectPlan}
             className={`${
               active

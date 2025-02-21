@@ -11,19 +11,25 @@ const StructureCard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [structures, setStructures] = useState([]);
+  const [loading, setLoading] = useState(true);
   const ownerId = Cookies.get("atlas_userId");
   const username = Cookies.get("atlas_username");
 
   const fetchStructures = () => {
     if (ownerId) {
-      dispatch(getStructuresByUserId(ownerId)).then((data) => {
-        const sortedStructures = Array.isArray(data?.payload)
-          ? data.payload.sort(
-              (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
-            )
-          : [];
-        setStructures(sortedStructures);
-      });
+      setLoading(true);
+      dispatch(getStructuresByUserId(ownerId))
+        .then((data) => {
+          const sortedStructures = Array.isArray(data?.payload)
+            ? data.payload.sort(
+                (a, b) => new Date(b.updatedAt) - new Date(a.updatedAt)
+              )
+            : [];
+          setStructures(sortedStructures);
+        })
+        .finally(() => {
+          setLoading(false);
+        });
     }
   };
 
@@ -37,7 +43,13 @@ const StructureCard = () => {
 
   return (
     <>
-      {structures.length === 0 ? (
+      {loading ? (
+        <div className="flex h-screen flex-col text-center p-6">
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+          </div>
+        </div>
+      ) : structures.length === 0 ? (
         <div className="flex h-screen flex-col text-center p-6">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">

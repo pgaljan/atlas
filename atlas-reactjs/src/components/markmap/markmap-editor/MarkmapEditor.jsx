@@ -31,6 +31,7 @@ const MarkmapEditor = ({ structureId }) => {
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 })
   const [shouldFitView, setShouldFitView] = useState(true)
   const [filteredTree, setFilteredTree] = useState(null)
+   const [loaderSearch, setLoaderSearch]=useState(false);
   const [rightClickModal, setRightClickModal] = useState({
     visible: false,
     position: { x: 0, y: 0 },
@@ -154,26 +155,17 @@ const MarkmapEditor = ({ structureId }) => {
       : null
   }
 
-  const handleSearch = useCallback(
-    debounce((level, searchTerm) => {
-      setFilteredTree(
-        level === null && !searchTerm?.trim()
-          ? null
-          : filterTreeByCriteria(treeData, level, searchTerm) || "no-results"
-      )
-      setIsLoading(false)
-    }, 2000),
-    [treeData]
-  )
 
-  const startSearch = (level, searchTerm) => {
-    setIsLoading(false)
-    setTimeout(() => {
-      setIsLoading(true)
-    }, 800)
+  const handleSearch = (level, searchTerm) => {
+    const result =
+    level === null && !searchTerm?.trim()
+    ? null
+    : filterTreeByCriteria(treeData, level, searchTerm) || "no-results";
+    setLoaderSearch(false);
+    setFilteredTree(result);
+    };
+    
 
-    handleSearch(level, searchTerm)
-  }
 
   // Flatten tree for faster lookups
   const flattenTree = useCallback((node, map = {}) => {
@@ -184,7 +176,6 @@ const MarkmapEditor = ({ structureId }) => {
   }, [])
 
   const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree])
-  console.log(treeMap)
 
   // close the modal if user scrolls or zooms away so it doesn't float incorrectly
   useEffect(() => {
@@ -412,17 +403,19 @@ const MarkmapEditor = ({ structureId }) => {
           setShowWbs={setShowWbs}
           undo={undo}
           redo={redo}
-          onSearch={(level, searchTerm) => startSearch(level, searchTerm)}
+          onSearch={handleSearch}
           canUndo={canUndo}
           canRedo={canRedo}
         />
         <svg ref={svgRef} className="w-full h-full dotted-bg" />
 
-        {isLoading && (
+        {(isLoading || loaderSearch) && (
           <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
           </div>
         )}
+        
+
         {filteredTree === "no-results" && (
           <div className="absolute inset-0 dotted-bg flex items-center justify-center text-gray-500">
             No elements found.

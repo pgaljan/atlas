@@ -140,15 +140,15 @@ const Login = () => {
 
           <div className="my-4 text-center">
             <p className="text-sm text-custom-text-grey">Or</p>
-          </div>
+          </div> 
 
-          <GoogleLoginButton />
+           <GoogleLoginButton />
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, try entering your work email
             above to be redirected to your organization's SSO (single sign-on)
             login page.
-          </p>
+          </p> 
 
           <div className="text-center mt-4">
             <Link

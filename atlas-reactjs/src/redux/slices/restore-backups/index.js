@@ -12,7 +12,6 @@ export const restoreBackup = createAsyncThunk(
   "restore/restoreBackup",
   async (fileData, { rejectWithValue }) => {
     try {
-      console.log(fileData);
       const formData = new FormData();
       formData.append("file", fileData);
       const response = await axiosInstance.post("/restore", formData, {

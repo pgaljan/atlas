@@ -7,4 +7,13 @@ export default defineConfig({
   define: {
     "process.env": {},
   },
+  esbuild: {
+    drop: ["console", "debugger"],
+  },
+  logLevel: "silent",
+  server: {
+    watch: {
+      usePolling: true,
+    },
+  },
 });

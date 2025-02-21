@@ -40,8 +40,6 @@ const Register = () => {
   
         // Extract user ID from response
         const userId = response?.id;
-        console.log("Registered User ID:", userId);
-  
         // Redirect to subscription plans with user ID (if needed)
         navigate(`/subscription-plans?userId=${userId}`);
   
@@ -151,16 +149,16 @@ const Register = () => {
             </button>
           </form>
 
-          <div className="my-4 text-center">
+           <div className="my-4 text-center">
             <p className="text-sm text-custom-text-grey">Or</p>
-          </div>
+          </div> 
 
-          <GoogleLoginButton />
+         <GoogleLoginButton />
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, you can fill in the form above to
             register your account.
-          </p>
+          </p> 
 
           <div className="text-center mt-4">
             <Link

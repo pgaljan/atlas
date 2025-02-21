@@ -44,10 +44,17 @@ const SubscriptionPlans = () => {
       alert("User ID is missing!");
       return;
     }
-    dispatch(updateSubscriptionPlan({ userId, planId }));
+
+    dispatch(updateSubscriptionPlan({ userId, planId }))
+      .then(() => {
+        window.location.href = "/";
+      })
+      .catch((error) => {
+        console.error("Error updating subscription plan:", error);
+      });
   };
 
-  const planOrder = ["Personal", "Educator", "Business", "Analyst"];
+  const planOrder = ["Personal", "Educator", "Analyst", "Business"];
 
   const sortedPlans = [...plans].sort(
     (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
