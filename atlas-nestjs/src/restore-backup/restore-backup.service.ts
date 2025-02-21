@@ -84,7 +84,7 @@ export class RestoreService {
         try {
           // Handle undefined or null metadata/tags
           const metadata = recordData.metadata ? recordData.metadata : '{}';
-          const tags = recordData.tags ? recordData.tags : '[]'; 
+          const tags = recordData.tags ? recordData.tags : '[]';
 
           // Parse metadata and tags only if they are valid
           const parsedMetadata = this.safeParseJSON(metadata, 'metadata');
@@ -123,6 +123,7 @@ export class RestoreService {
               name: structureData.name,
               description: structureData.description,
               ownerId: structureData.ownerId,
+              title: structureData.title,
               visibility: structureData.visibility,
               createdAt: new Date(structureData.createdAt),
               updatedAt: new Date(structureData.updatedAt),
@@ -130,6 +131,7 @@ export class RestoreService {
             create: {
               id: structureData.id,
               name: structureData.name,
+              title: structureData.title,
               description: structureData.description,
               ownerId: structureData.ownerId,
               visibility: structureData.visibility,
@@ -152,19 +154,17 @@ export class RestoreService {
             update: {
               structureId: elementData.structureId,
               recordId: elementData.recordId,
-              type: elementData.type,
-              Guid: elementData.Guid,
-              wbsLevel: elementData.wbsLevel,
+              name: elementData.name,
+              parentId: elementData.parentId,
               createdAt: new Date(elementData.createdAt),
               updatedAt: new Date(elementData.updatedAt),
             },
             create: {
               id: elementData.id,
+              name: elementData.name,
               structureId: elementData.structureId,
               recordId: elementData.recordId,
-              type: elementData.type,
-              Guid: elementData.Guid,
-              wbsLevel: elementData.wbsLevel,
+              parentId: elementData.parentId,
               createdAt: new Date(elementData.createdAt),
               updatedAt: new Date(elementData.updatedAt),
             },

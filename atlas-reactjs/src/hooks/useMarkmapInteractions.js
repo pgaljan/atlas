@@ -31,7 +31,6 @@ export default function useMarkmapInteractions({
       filteredTree === "no-results" ? null : filteredTree || treeData;
 
     if (!dataToRender) {
-      // If filteredTree is "no-results", just clear the Markmap
       markmapInstance.setData({ name: "No results" });
       markmapInstance.fit();
       return;
@@ -77,7 +76,16 @@ export default function useMarkmapInteractions({
         x: nodePosition.x + nodePosition.width / 2,
         y: nodePosition.y,
       });
-      setModalData(d.content);
+
+      setModalData({
+        content: d.content,
+        structureId: d.structureId,
+        structureName: d.originalContent,
+        elementId: d.elementId,
+        parentId: d.parentId,
+        recordId: d.recordId,
+        wbs: d.wbs,
+      });
 
       nodes.classed("active", false);
       d3.select(this).classed("active", true);

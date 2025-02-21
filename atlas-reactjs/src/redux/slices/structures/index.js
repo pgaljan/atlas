@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for structure slice
 const initialState = {
   structures: [],
@@ -17,6 +18,19 @@ export const createStructure = createAsyncThunk(
         structureData
       );
       return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for getting structures by userId
+export const getStructuresByUserId = createAsyncThunk(
+  "structures/getStructuresByUserId",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/structure/user/${userId}`);
+      return response.data.structures;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -128,6 +142,18 @@ const structureSlice = createSlice({
         state.structures.push(action.payload);
       })
       .addCase(createStructure.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Get structures by userId
+      .addCase(getStructuresByUserId.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(getStructuresByUserId.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.structures = action.payload;
+      })
+      .addCase(getStructuresByUserId.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

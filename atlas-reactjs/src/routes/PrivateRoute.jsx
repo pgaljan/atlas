@@ -22,7 +22,7 @@ const PrivateRoute = ({ children }) => {
 
   if (isAuthenticated) {
     if (location.pathname === "/") {
-      return <Navigate to="/home" />;
+      return <Navigate to="/app/dashboard" />;
     }
     return children;
   } else {

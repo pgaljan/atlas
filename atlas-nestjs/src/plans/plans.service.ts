@@ -21,7 +21,7 @@ export class PlanService {
   }
 
   // Fetch plan by ID
-  async getPlanById(id: number) {
+  async getPlanById(id: string) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });
@@ -45,7 +45,7 @@ export class PlanService {
   }
 
   // Update plan details
-  async updatePlan(id: number, updatePlanDto: UpdatePlanDto) {
+  async updatePlan(id: string, updatePlanDto: UpdatePlanDto) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });
@@ -65,7 +65,7 @@ export class PlanService {
   }
 
   // Delete plan
-  async deletePlan(id: number) {
+  async deletePlan(id: string) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });

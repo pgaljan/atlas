@@ -12,11 +12,11 @@ import { Type } from 'class-transformer';
 export class ReparentingRequestDto {
   @IsInt()
   @IsNotEmpty()
-  sourceElementId: number;
+  sourceElementId: string;
 
   @IsInt()
   @IsNotEmpty()
-  targetElementId: number;
+  targetElementId: string;
 
   @IsObject()
   @IsOptional()

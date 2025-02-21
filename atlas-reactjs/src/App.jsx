@@ -1,42 +1,188 @@
-import React from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import NotFound from "./components/404-notfound/NotFound";
-import MarkmapCanvas from "./components/markmap/markmap-canvas/MarkmapCanvas";
-import Login from "./containers/common/login/Login";
-import Register from "./containers/common/register/Register";
-import ResetPassword from "./containers/common/reset-password/ResetPassword";
-import SubscriptionPlans from "./containers/common/subscription-plans/SubscriptionPlans";
-import Backups from "./containers/user/backups/Backups";
-import Home from "./containers/user/home/Home";
-import Media from "./containers/user/media/Media";
-import TeamMembers from "./containers/user/team-members/TeamMembers";
-import Trash from "./containers/user/trash/Trash";
+import React, { Suspense, lazy, useState, useEffect } from "react";
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import PremiumModal from "./components/modals/PremiumModal";
+import Support from "./containers/user/support/Support";
+import PrivateRoute from "./routes/PrivateRoute";
+import PublicRoute from "./routes/PublicRoute";
+
+const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
+const MarkmapCanvas = lazy(() =>
+  import("./components/markmap/markmap-canvas/MarkmapCanvas")
+);
+const Profile = lazy(() => import("./containers/user/profile/Profile"));
+const Login = lazy(() => import("./containers/common/login/Login"));
+const Register = lazy(() => import("./containers/common/register/Register"));
+const ResetPassword = lazy(() =>
+  import("./containers/common/reset-password/ResetPassword")
+);
+const SubscriptionPlans = lazy(() =>
+  import("./containers/common/subscription-plans/SubscriptionPlans")
+);
+const Backups = lazy(() => import("./containers/user/backups/Backups"));
+const Dashboard = lazy(() => import("./containers/user/dashboard/Dashboard"));
+const UploadedFiles = lazy(() =>
+  import("./containers/user/uploaded-files/UploadedFiles")
+);
+const UpgradePlans = lazy(() =>
+  import("./containers/user/upgrade-plans/UpgradePlans")
+);
+const TeamMembers = lazy(() =>
+  import("./containers/user/team-members/TeamMembers")
+);
+const DeletedMindmaps = lazy(() =>
+  import("./containers/user/deleted-markmaps/DeletedMarkmaps")
+);
 
 const App = () => {
+  const location = useLocation();
   const navigate = useNavigate();
+  const [isModalVisible, setIsModalVisible] = useState(false);
 
-  const handleSubmitStructure = (name) => {
-    navigate(`/s/markmap/4cd2791c9e3b9dd729e854db9046240404180a15`);
+  useEffect(() => {
+    const showPremiumModal =
+      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium";
+    setIsModalVisible(showPremiumModal);
+  }, [location.search]);
+
+  // Handle modal visibility
+  const closeModal = () => {
+    setIsModalVisible(false);
+
+    // Remove 'plan' from URL
+    const params = new URLSearchParams(location.search);
+    params.delete("plan");
+    navigate({ search: params.toString() }, { replace: true });
   };
 
   return (
     <div className="min-h-screen bg-gray-100">
-      <Routes>
-        <Route path="/" element={<Login />} />
-        <Route
-          path="/home"
-          element={<Home onSubmit={handleSubmitStructure} />}
-        />
-        <Route path="/register" element={<Register />} />
-        <Route path="/reset-password" element={<ResetPassword />} />
-        <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-        <Route path="/s/:username/:id" element={<MarkmapCanvas />} />
-        <Route path="/team-members" element={<TeamMembers />} />
-        <Route path="/backups" element={<Backups />} />
-        <Route path="/media" element={<Media />} />
-        <Route path="/trash" element={<Trash />} />
-        <Route path="*" element={<NotFound />} />
-      </Routes>
+      <Suspense
+        fallback={
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+          </div>
+        }
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <PublicRoute>
+                <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/app/dashboard"
+            element={
+              <PrivateRoute>
+                <Dashboard />
+              </PrivateRoute>
+            }
+          />
+          <Route
+            path="/register"
+            element={
+              <PublicRoute>
+                <Register />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/reset-password"
+            element={
+              <PublicRoute>
+                <ResetPassword />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/subscription-plans"
+            element={
+              <PublicRoute>
+                <SubscriptionPlans />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/app/s/:username/:structureId"
+            element={
+              <PrivateRoute>
+                <MarkmapCanvas />
+              </PrivateRoute>
+            }
+          />
+          {/* <Route
+            path="/app/team-members"
+            element={
+              <PrivateRoute>
+                <TeamMembers />
+              </PrivateRoute>
+            }
+          /> */}
+          {/* <Route
+            path="/app/support"
+            element={
+              <PrivateRoute>
+                <Support />
+              </PrivateRoute>
+            }
+          /> */}
+          {/* <Route
+            path="/app/me"
+            element={
+              <PrivateRoute>
+                <Profile />
+              </PrivateRoute>
+            }
+          /> */}
+          <Route
+            path="/app/backups"
+            element={
+              <PrivateRoute>
+                <Backups />
+              </PrivateRoute>
+            }
+          />
+          {/* <Route
+            path="/app/uploaded-files"
+            element={
+              <PrivateRoute>
+                <UploadedFiles />
+              </PrivateRoute>
+            }
+          /> */}
+          {/* <Route
+            path="/app/deleted-markmaps"
+            element={
+              <PrivateRoute>
+                <DeletedMindmaps />
+              </PrivateRoute>
+            }
+          /> */}
+
+          <Route
+            path="/app/upgrade-plans"
+            element={
+              <PrivateRoute>
+                <UpgradePlans />
+              </PrivateRoute>
+            }
+          />
+
+          <Route
+            path="*"
+            element={
+              <PublicRoute>
+                <NotFound />
+              </PublicRoute>
+            }
+          />
+        </Routes>
+
+        {/* Show the PremiumModal if visible */}
+        {isModalVisible && <PremiumModal closeModal={closeModal} />}
+      </Suspense>
     </div>
   );
 };

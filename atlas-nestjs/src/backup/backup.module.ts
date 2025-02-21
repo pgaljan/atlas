@@ -1,7 +1,8 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { PrismaModule } from '../prisma/prisma.module';
 import { BackupController } from './backup.controller';
 import { BackupService } from './backup.service';
+import { FeatureFlagMiddleware } from 'src/auth/middleware/feature.flag.middleware';
 
 @Module({
   imports: [PrismaModule],
@@ -9,3 +10,4 @@ import { BackupService } from './backup.service';
   controllers: [BackupController],
 })
 export class BackupModule {}
+

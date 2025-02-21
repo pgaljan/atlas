@@ -8,6 +8,7 @@ import {
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { Request as ExpressRequest } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
@@ -21,10 +22,8 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     try {
-      const response = await this.authService.register(registerDto);
-      return {
-        message: 'User registered successfully',
-      };
+      const result = await this.authService.register(registerDto);
+      return result;
     } catch (error) {
       if (error.name === 'ConflictException') {
         throw new BadRequestException(error.message);
@@ -34,26 +33,21 @@ export class AuthController {
       );
     }
   }
+  
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
   async login(@Request() req: ExpressRequest) {
     try {
       const response = await this.authService.login(req.user);
-
       return {
-        message: response.message,
+        message: 'Login successful',
         user: response.user,
         access_token: response.access_token,
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException(
-          'Login failed. Invalid credentials. Please check your credentials and try again.',
-        );
-      }
-      throw new InternalServerErrorException(
-        'Login failed due to an unexpected error.',
+      throw new UnauthorizedException(
+        'Login failed. Please check your credentials and try again.',
       );
     }
   }
@@ -77,6 +71,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   async logout(@Request() req: ExpressRequest) {
     try {
       await this.authService.logout(req.user);

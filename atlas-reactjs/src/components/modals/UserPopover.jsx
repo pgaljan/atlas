@@ -1,8 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
+import Cookies from "js-cookie";
+import { Link } from "react-router-dom";
 
 const UserPopover = () => {
   const [isOpen, setIsOpen] = useState(true);
   const popoverRef = useRef(null);
+  const username = Cookies.get("atlas_username");
 
   const handleClickOutside = (event) => {
     if (popoverRef.current && !popoverRef.current.contains(event.target)) {
@@ -29,7 +32,9 @@ const UserPopover = () => {
         <div className="bg-gray-50 p-4 rounded-t-lg">
           <ul role="menu">
             <li role="none">
-              <h2 className="text-sm font-semibold text-gray-600">Online</h2>
+              <h2 className="text-sm font-semibold text-green-500">
+                Online
+              </h2>
               <ul role="none" className="mt-2 space-y-2">
                 <li
                   role="menuitem"
@@ -55,13 +60,15 @@ const UserPopover = () => {
                       </svg>
                     </div>
                   </div>
-                  <div>
+                  <Link to="/app/me">
                     <div className="text-sm font-medium text-gray-800">
-                      John Doe
-                      <span className="ml-2 text-xs text-gray-400">Online</span>
+                      {username || "User"}
+                      <span className="ml-2 text-xs text-custom-main">
+                        (admin)
+                      </span>
                     </div>
-                    <div className="text-xs text-gray-500">Atlas owner</div>
-                  </div>
+                    <div className="text-xs text-gray-500">Markmap Owner</div>
+                  </Link>
                 </li>
               </ul>
             </li>
@@ -72,10 +79,8 @@ const UserPopover = () => {
         <div className="p-4 bg-gray-100 rounded-b-lg">
           <ul role="menu">
             <li role="menuitem">
-              <a
-                href="#"
-                target="_self"
-                rel="noopener noreferrer"
+              <Link
+                to="/app/team-members"
                 className="flex items-center space-x-2 p-2 text-gray-800 hover:bg-gray-200 rounded-lg"
               >
                 <div className="w-5 h-5 text-gray-600">
@@ -89,7 +94,7 @@ const UserPopover = () => {
                   </svg>
                 </div>
                 <span className="text-sm">Manage Team Members</span>
-              </a>
+              </Link>
             </li>
           </ul>
         </div>

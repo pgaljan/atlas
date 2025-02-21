@@ -1,6 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 
 const Tooltip = ({ children, label, position = "top", className = "" }) => {
+  const [isHovered, setIsHovered] = useState(false);
+
   const positionClasses = {
     top: "bottom-12",
     bottom: "top-12",
@@ -9,13 +11,19 @@ const Tooltip = ({ children, label, position = "top", className = "" }) => {
   };
 
   return (
-    <div className="group relative">
+    <div
+      className="group relative"
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
       {children}
-      <span
-        className={`absolute text-nowrap left-1/2 transform -translate-x-1/2 px-2 py-1 bg-custom-main text-white text-xs rounded opacity-0 group-hover:opacity-100 transition-opacity ${positionClasses[position]} ${className}`}
-      >
-        {label}
-      </span>
+      {isHovered && (
+        <span
+          className={`absolute text-nowrap left-1/2 transform -translate-x-1/2 px-2 py-1 bg-custom-main text-white text-xs rounded transition-opacity ${positionClasses[position]} ${className}`}
+        >
+          {label}
+        </span>
+      )}
     </div>
   );
 };

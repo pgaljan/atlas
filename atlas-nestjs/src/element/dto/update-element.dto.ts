@@ -2,23 +2,19 @@ import { IsInt, IsOptional, IsString } from 'class-validator';
 
 export class UpdateElementDto {
   @IsInt()
-  id: number;
+  id: string;
 
   @IsOptional()
   @IsString()
-  type?: string;
+  name?: string;
 
   @IsOptional()
   @IsInt()
-  recordId?: number;
+  recordId?: string;
 
   @IsOptional()
   @IsInt()
   wbsLevel?: number;
-
-  @IsOptional()
-  @IsString()
-  wbsNumber?: string;
 
   @IsOptional()
   @IsString()

@@ -5,7 +5,7 @@ import plansReducer from "./slices/plans";
 import recordsReducer from "./slices/records";
 import restoreBackupsReducer from "./slices/restore-backups";
 import rolesReducer from "./slices/roles";
-import structuresReducer from "./slices/structures";
+import structureSlice from "./slices/structures";
 import uploadFilesReducer from "./slices/upload-files";
 import userReducer from "./slices/users";
 
@@ -18,7 +18,7 @@ const store = configureStore({
     records: recordsReducer,
     restoreBackups: restoreBackupsReducer,
     roles: rolesReducer,
-    structures: structuresReducer,
+    // structures: structureSlice,
     uploadFiles: uploadFilesReducer,
   },
 });

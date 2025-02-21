@@ -3,7 +3,6 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
-  UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Plan } from '@prisma/client';
@@ -23,24 +22,24 @@ export class AuthService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prismaService.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId: elementid,
         details: details,
         userId: userId || null,
       },
     });
   }
 
-  // Register method
+  // Register method in AuthService
   async register(registerDto: RegisterDto) {
-    const { username, email, password, roleName } = registerDto;
+    const { fullName, email, password, roleName } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
@@ -50,6 +49,18 @@ export class AuthService {
 
         if (existingUser) {
           throw new ConflictException('User with this email already exists');
+        }
+
+        let modifiedUsername = fullName;
+        if (fullName.includes(' ')) {
+          const parts = fullName.split(' ');
+          const baseUsername = parts
+            .map((word, index) =>
+              index === parts.length - 1 ? word : word.toLowerCase(),
+            )
+            .join('_');
+          const suffix = new Date().getFullYear() - 2000;
+          modifiedUsername = `${baseUsername}${suffix}`;
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -69,7 +80,8 @@ export class AuthService {
 
         const newUser = await prisma.user.create({
           data: {
-            username,
+            username: modifiedUsername,
+            fullName,
             email,
             password: hashedPassword,
             roleId: role.id,
@@ -98,15 +110,16 @@ export class AuthService {
           },
         });
 
-        const payload = { email: newUser.email, sub: newUser.id };
-
-        // Log the audit action for registration
         await this.logAudit('User Registration', 'User', newUser.id, {
-          username,
+          username: modifiedUsername,
           email,
         });
 
-        return { user: payload };
+        // Return user ID along with a success message
+        return {
+          id: newUser.id,
+          message: 'User registered successfully',
+        };
       });
     } catch (error) {
       if (error instanceof ConflictException) {
@@ -152,24 +165,10 @@ export class AuthService {
   // Login method
   async login(user: any) {
     try {
-      // Validate password
-      const isPasswordValid = await bcrypt.compare(
-        user.password,
-        user.storedPassword,
-      );
-
-      if (!isPasswordValid) {
-        throw new UnauthorizedException(
-          'Invalid credentials. Please check your password.',
-        );
-      }
-
-      // Generate JWT token if password is valid
       const payload = { email: user.email, sub: user.id };
       const accessToken = this.jwtService.sign(payload);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
-
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
@@ -178,7 +177,6 @@ export class AuthService {
           },
         },
       });
-
       if (existingToken) {
         await this.prismaService.token.update({
           where: { id: existingToken.id },
@@ -194,10 +192,8 @@ export class AuthService {
           },
         });
       }
-
       // Log the audit action for login
       await this.logAudit('User Login', 'User', user.id, { email: user.email });
-
       // Return user data and the access token
       return {
         message: 'Login successful',

@@ -6,8 +6,6 @@ Atlas is a modular and interactive platform designed to visualize and annotate c
 
 This document covers the essential components of the backend, including setup, deployment instructions, API endpoints, and features.
 
----
-
 ## Project Setup
 
 ### Install Dependencies

@@ -33,7 +33,7 @@ const AddRecordModal = ({ position, onClose, onSave }) => {
           top: position.y,
           transform: "translate(-50%, -50%)",
         }}
-        className="bg-white border border-gray-300 rounded-lg shadow-lg w-[600px] z-50"
+        className="bg-white border border-gray-300 rounded-lg shadow-lg w-[850px] z-50"
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-t-lg border-b border-gray-300">

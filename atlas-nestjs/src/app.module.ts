@@ -14,6 +14,8 @@ import { RestoreBackupModule } from './restore-backup/restore-backup.module';
 import { RoleModule } from './role/role.module';
 import { StructureModule } from './structure/structure.module';
 import { UserModule } from './user/user.module';
+import { SubscriptionsModule } from './subscriptions/subscriptions.module';
+import { TeamMemberModule } from './team-member/team-member.module';
 
 @Module({
   imports: [
@@ -32,6 +34,8 @@ import { UserModule } from './user/user.module';
     RecordModule,
     BackupModule,
     RestoreBackupModule,
+    SubscriptionsModule,
+    TeamMemberModule,
   ],
   controllers: [AppController],
   providers: [AppService],

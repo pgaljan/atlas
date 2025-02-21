@@ -38,12 +38,12 @@ export class RoleController {
     try {
       return await this.roleService.findAll();
     } catch (error) {
-      throw error; // Propagate the error
+      throw error;
     }
   }
 
   @Get(':id')
-  async findOne(@Param('id', ParseIntPipe) id: number) {
+  async findOne(@Param('id', ParseIntPipe) id: string) {
     try {
       return await this.roleService.findOne(id);
     } catch (error) {
@@ -56,7 +56,7 @@ export class RoleController {
 
   @Patch('update/:id')
   async updateSubRoute(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id', ParseIntPipe) id: string,
     @Body() updateRoleDto: UpdateRoleDto,
   ) {
     try {
@@ -75,11 +75,11 @@ export class RoleController {
   }
 
   @Delete('delete/:id')
-  async deleteSubRoute(@Param('id', ParseIntPipe) id: number) {
+  async deleteSubRoute(@Param('id', ParseIntPipe) id: string) {
     try {
       const response = await this.roleService.remove(id);
       return response;
-    } catch (error) {
+    } catch (error) { 
       if (error instanceof NotFoundException) {
         throw new NotFoundException(`Role with ID ${id} not found.`);
       }

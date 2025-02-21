@@ -11,31 +11,19 @@ import { Type } from 'class-transformer';
 export class CreateElementDto {
   @IsInt()
   @IsNotEmpty()
-  structureId: number;
+  structureId: string;
 
   @IsInt()
   @IsOptional()
-  parentId?: number;
+  parentId?: string;
 
   @IsString()
   @IsNotEmpty()
-  type: string;
+  name: string;
 
   @IsOptional()
   @IsInt()
-  recordId?: number;
-
-  @IsInt()
-  @IsNotEmpty()
-  wbsLevel: number;
-
-  @IsString()
-  @IsNotEmpty()
-  wbsNumber: string;
-
-  @IsOptional()
-  @IsString()
-  markmapMM?: string;
+  recordId?: string;
 
   @IsOptional()
   @IsArray()

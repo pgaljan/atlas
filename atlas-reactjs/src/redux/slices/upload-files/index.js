@@ -1,10 +1,14 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
-// Initial state for file upload slice
+
+// Initial state
 const initialState = {
+  files: [],
   uploadedFile: null,
   parsedData: null,
-  files: [],
+  fileUrl: null,
+  structureId: null,
+  fileType: null,
   status: "idle",
   error: null,
 };
@@ -12,11 +16,14 @@ const initialState = {
 // Async thunk for uploading and parsing files
 export const uploadFile = createAsyncThunk(
   "file/upload",
-  async ({ file, userId }, { rejectWithValue }) => {
+  async ({ file, userId, structureId }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("file", file);
       formData.append("userId", userId);
+      if (structureId) {
+        formData.append("structureId", structureId);
+      }
 
       const response = await axiosInstance.post("/file/upload", formData, {
         headers: {
@@ -31,12 +38,25 @@ export const uploadFile = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching all files
-export const fetchAllFiles = createAsyncThunk(
-  "file/fetchAll",
-  async (_, { rejectWithValue }) => {
+// Async thunk for fetching media by userId
+export const fetchMediaByUserId = createAsyncThunk(
+  "file/fetchByUserId",
+  async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get("/file");
+      const response = await axiosInstance.get(`/file/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for updating media
+export const updateMedia = createAsyncThunk(
+  "file/update",
+  async ({ id, newFileUrl }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(`/file/${id}`, { newFileUrl });
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -65,6 +85,8 @@ const fileSlice = createSlice({
     clearUploadedFile: (state) => {
       state.uploadedFile = null;
       state.parsedData = null;
+      state.structureId = null;
+      state.fileUrl = null;
     },
   },
   extraReducers: (builder) => {
@@ -72,25 +94,45 @@ const fileSlice = createSlice({
       // Upload file
       .addCase(uploadFile.pending, (state) => {
         state.status = "loading";
+        state.error = null;
       })
       .addCase(uploadFile.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.uploadedFile = action.payload;
-        state.parsedData = action.payload.insertedRecords || null;
+        if (action.payload.structureId) {
+          state.structureId = action.payload.structureId;
+        }
+        if (action.payload.fileUrl) {
+          state.fileUrl = action.payload.fileUrl;
+        }
       })
       .addCase(uploadFile.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
-      // Fetch all files
-      .addCase(fetchAllFiles.pending, (state) => {
+      // Fetch media by userId
+      .addCase(fetchMediaByUserId.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(fetchAllFiles.fulfilled, (state, action) => {
+      .addCase(fetchMediaByUserId.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.files = action.payload;
       })
-      .addCase(fetchAllFiles.rejected, (state, action) => {
+      .addCase(fetchMediaByUserId.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Update media
+      .addCase(updateMedia.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateMedia.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const updatedFile = action.payload;
+        state.files = state.files.map((file) =>
+          file.id === updatedFile.id ? updatedFile : file
+        );
+      })
+      .addCase(updateMedia.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
