@@ -14,6 +14,17 @@ import { BackupService } from './backup.service';
 export class BackupController {
   constructor(private readonly backupService: BackupService) {}
 
+  private handleException(error: any, defaultMessage: string) {
+    if (error instanceof HttpException) {
+      throw error;
+    }
+    console.error('Unexpected error:', error);
+    throw new HttpException(
+      error.message || defaultMessage,
+      HttpStatus.INTERNAL_SERVER_ERROR,
+    );
+  }
+
   @Post('create')
   async createBackup(
     @Query('userId') userId: string,
@@ -61,7 +72,7 @@ export class BackupController {
   @Get(':id')
   async getBackup(@Param('id') backupId: string) {
     try {
-      const parsedBackupId = parseInt(backupId, 10);  
+      const parsedBackupId = parseInt(backupId, 10);
 
       return await this.backupService.getBackup(parsedBackupId.toString());
     } catch (error) {
@@ -97,6 +108,21 @@ export class BackupController {
         error.message || 'Failed to delete the backup',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Get('user/:userId/full-backup')
+  async createFullUserBackup(@Param('userId') userId: string) {
+    try {
+      if (!this.isValidUUID(userId)) {
+        throw new HttpException(
+          'Invalid userId provided',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return await this.backupService.createFullUserBackup(userId);
+    } catch (error) {
+      this.handleException(error, 'Failed to create full user backup');
     }
   }
 

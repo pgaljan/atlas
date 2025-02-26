@@ -129,31 +129,35 @@ const MarkmapHeader = ({
     };
   }, [isSaveDisabled]);
 
-
   const handleSearchChange = (e) => {
     let value = e?.target?.value
-    ?.replace(/^[\s]+/, "")
-    ?.replace(/[^a-zA-Z0-9 ]/g, "");
+      ?.replace(/^[\s]+/, "")
+      ?.replace(/[^a-zA-Z0-9 ]/g, "");
     if (value === "0") {
-    cogoToast?.error("Level 0 is not searchable.");
-    return;
+      cogoToast?.error("Level 0 is not searchable.");
+      return;
     }
     setSearchValue(value);
     if (!value) {
-      onSearch(null, ""); 
+      onSearch(null, "");
     }
-    };
-    const handleKeyPress = (e) => {
+  };
+  const handleKeyPress = (e) => {
     if (e?.key === "Enter") {
-    const level = /^\d+$/.test(searchValue?.trim()) ? +searchValue?.trim() : null;
-    onSearch(level, level !== null ? "" : searchValue);
+      const level = /^\d+$/.test(searchValue?.trim())
+        ? +searchValue?.trim()
+        : null;
+      onSearch(level, level !== null ? "" : searchValue);
     }
-    };
+  };
+
   const handleCreateBackup = async () => {
     setIsLoading(true);
     const userId = Cookies.get("atlas_userId");
+
     if (!userId) {
       cogoToast.error("User ID not found in cookies.");
+      setIsLoading(false);
       return;
     }
 
@@ -162,17 +166,18 @@ const MarkmapHeader = ({
       const response = await dispatch(
         createBackup({ userId, structureId })
       ).unwrap();
+
       setIsLoading(false);
       cogoToast.success("Backup created successfully!");
-      const fileUrl = response?.fileUrl;
 
-      // Create an anchor element to trigger the download
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      link.download = fileUrl;
-      link.click();
+      const fileUrl = response?.fileUrl;
+      if (fileUrl) {
+        // Open the file URL in a new tab to trigger the download
+        window.open(fileUrl, "_blank");
+      }
     } catch (error) {
       setIsLoading(false);
+
       if (error?.statusCode === 401) {
         navigate("?plan=upgrade-to-premium");
       } else {
@@ -316,7 +321,7 @@ const MarkmapHeader = ({
               placeholder="Search: By level or text"
               className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10 "
             />
-             
+
             <BiSearch size={24} className="absolute left-2 text-gray-500" />
           </div>
         </div>

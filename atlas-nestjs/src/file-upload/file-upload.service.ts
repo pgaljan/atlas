@@ -62,6 +62,7 @@ export class FileUploadService {
         data: { name, title: name },
       });
     } catch (error) {
+      console.error('Error updating structure title:', error.message);
       throw new InternalServerErrorException(
         'Failed to update structure title.',
       );

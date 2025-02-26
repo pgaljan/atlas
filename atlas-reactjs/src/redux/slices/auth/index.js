@@ -1,5 +1,6 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+import axios from "axios";
 
 // Initial state for auth slice
 const initialState = {
@@ -28,6 +29,36 @@ export const loginUser = createAsyncThunk(
   async (credentials, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.post("/auth/login", credentials);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for Google login
+export const googleLoginUser = createAsyncThunk(
+  "auth/googleLogin",
+  async (authCode, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/auth/google/callback?code=${authCode}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for GitHub login
+export const githubLoginUser = createAsyncThunk(
+  "auth/githubLogin",
+  async (authCode, { rejectWithValue }) => {
+    try {
+      const response = await axios.get(
+        `${import.meta.env.VITE_API_URL}/auth/github/callback?code=${authCode}`
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -96,9 +127,35 @@ const authSlice = createSlice({
       .addCase(loginUser.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.user = action.payload.user;
-        state.token = action.payload.atlas_access_token;
+        state.token = action.payload.access_token;
       })
       .addCase(loginUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Google Login
+      .addCase(googleLoginUser.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(googleLoginUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload.user;
+        state.token = action.payload.access_token;
+      })
+      .addCase(googleLoginUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // GitHub Login
+      .addCase(githubLoginUser.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(githubLoginUser.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.user = action.payload.user;
+        state.token = action.payload.access_token;
+      })
+      .addCase(githubLoginUser.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
@@ -106,7 +163,7 @@ const authSlice = createSlice({
       .addCase(resetPassword.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(resetPassword.fulfilled, (state, action) => {
+      .addCase(resetPassword.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(resetPassword.rejected, (state, action) => {

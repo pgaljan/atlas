@@ -2,18 +2,24 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  HttpStatus,
   InternalServerErrorException,
   Post,
+  Req,
   Request,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { JwtAuthGuard } from './guards/jwt-auth.guard';
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { GoogleOauthGuard } from './guards/google-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GitHubOauthGuard } from './guards/github-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -33,7 +39,6 @@ export class AuthController {
       );
     }
   }
-  
 
   @Post('login')
   @UseGuards(LocalAuthGuard)
@@ -82,6 +87,41 @@ export class AuthController {
       throw new InternalServerErrorException(
         'An unexpected error occurred while logging out',
       );
+    }
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOauthGuard)
+  async auth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthCallback(@Req() req: ExpressRequest, @Res() res: Response) {
+    try {
+      await this.authService.googleLogin(req.user, res);
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Google authentication failed',
+        error: error.message,
+      });
+    }
+  }
+
+  @Get('github')
+  @UseGuards(GitHubOauthGuard)
+  async authGitHub() {}
+
+  @Get('github/callback')
+  @UseGuards(GitHubOauthGuard)
+  async githubAuthCallback(@Req() req: ExpressRequest, @Res() res: Response) {
+    try {
+      await this.authService.githubLogin(req.user, res);
+    } catch (error) {
+      console.log(error)
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'GitHub authentication failed',
+        error: error.message,
+      });
     }
   }
 }

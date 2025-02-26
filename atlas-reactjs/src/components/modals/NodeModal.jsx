@@ -7,7 +7,6 @@ import { FaCirclePlus } from "react-icons/fa6";
 import { GiBrassEye } from "react-icons/gi";
 import { IoIosRemoveCircle } from "react-icons/io";
 import { IoTrash } from "react-icons/io5";
-import { MdRebaseEdit } from "react-icons/md";
 import { PiTreeStructureFill } from "react-icons/pi";
 import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
 import { useDispatch } from "react-redux";
@@ -307,20 +306,11 @@ const NodeModal = ({
             <>
               <Tooltip label="View Record">
                 <button
-                  onClick={() => handleViewEditRecord("view")}
+                  onClick={() => handleViewEditRecord("edit")}
                   aria-label="View Record"
                   className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 >
                   <GiBrassEye size={24} className="text-custom-main" />
-                </button>
-              </Tooltip>
-              <Tooltip label="Edit Record">
-                <button
-                  onClick={() => handleViewEditRecord("edit")}
-                  aria-label="Edit Record"
-                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                >
-                  <MdRebaseEdit size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
               <Tooltip label="Delete Record">
@@ -395,7 +385,7 @@ const NodeModal = ({
           elementId={elementId}
           isEdit={isEdit}
           actionType={actionType}
-          text={actionType === "view" ? "View" : isEdit ? "Edit" : "Add"}
+          text={actionType === "view" ? "View" : isEdit ? "View / Edit" : "Add"}
           submitText={actionType === "view" ? "Edit" : "Save"}
           cancelText="Cancel"
           recordId={recordId}

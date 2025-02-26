@@ -1,17 +1,16 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import cogoToast from "@successtar/cogo-toast";
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
+import Cookies from "js-cookie";
+import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import {
   HiInformationCircle,
-  HiSupport,
   HiMail,
   HiNewspaper,
+  HiSupport,
 } from "react-icons/hi";
 import { useDispatch } from "react-redux";
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { logoutUser } from "../../redux/slices/auth";
 
 const Header = () => {
@@ -23,7 +22,7 @@ const Header = () => {
     setActiveTab(tab);
     window.location.href = `/${tab.toLowerCase()}`;
   };
-  
+
   const handleLogout = async () => {
     try {
       await dispatch(logoutUser()).unwrap();
@@ -114,7 +113,7 @@ const Header = () => {
           >
             <Dropdown.Header>
               <span className="block truncate text-sm font-medium">
-                {Cookies.get("atlas_email")}
+                {Cookies.get("atlas_username")}
               </span>
             </Dropdown.Header>
             <Link to="/app/me">

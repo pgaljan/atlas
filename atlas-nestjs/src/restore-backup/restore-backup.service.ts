@@ -45,12 +45,20 @@ export class RestoreService {
     try {
       // Unzip the file
       const zip = new AdmZip(fileBuffer);
-      const zipEntries = zip.getEntries();
+      // const encFile = zip
+      //   .getEntries()
+      //   .find((entry) => entry.entryName.endsWith('.enc'));
 
-      // Find the `.enc` file in the ZIP
-      const encFile = zipEntries.find((entry) =>
-        entry.entryName.endsWith('.enc'),
+      const zipEntries = zip.getEntries();
+      console.log(
+        'Extracted Files:',
+        zipEntries.map((entry) => entry.entryName),
       );
+
+      const encFile = zipEntries.find((entry) =>
+        entry.entryName.includes('.enc'),
+      );
+
       if (!encFile) {
         throw new InternalServerErrorException('No .enc file found in the ZIP');
       }
@@ -58,6 +66,14 @@ export class RestoreService {
       // Decrypt the file
       const decryptedBuffer = this.decrypt(encFile.getData());
       const workbook = xlsx.read(decryptedBuffer, { type: 'buffer' });
+      const sheets = ['Structures', 'Elements', 'StructureMaps', 'Records'];
+      const data = {};
+
+      for (const sheet of sheets) {
+        data[sheet] = workbook.Sheets[sheet]
+          ? xlsx.utils.sheet_to_json<any>(workbook.Sheets[sheet])
+          : [];
+      }
 
       // Extract data from sheets
       const structuresSheet = xlsx.utils.sheet_to_json<any>(

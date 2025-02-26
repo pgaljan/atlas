@@ -8,6 +8,7 @@ import { BackupModule } from './backup/backup.module';
 import { ElementModule } from './element/element.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { PlansModule } from './plans/plans.module';
+import { ConfigModule } from '@nestjs/config';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecordModule } from './record/record.module';
 import { RestoreBackupModule } from './restore-backup/restore-backup.module';
@@ -19,6 +20,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
 
 @Module({
   imports: [
+    ConfigModule.forRoot(),
     UserModule,
     AuthModule,
     PrismaModule,
@@ -27,7 +29,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
     FileUploadModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
-      serveRoot: '/public',
+      serveRoot: '/api/public',
     }),
     StructureModule,
     ElementModule,

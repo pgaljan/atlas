@@ -5,12 +5,25 @@ import { Link, useNavigate } from "react-router-dom";
 import { registerUser } from "../../../redux/slices/auth";
 import Icons from "../../../constants/icons";
 
-const GoogleLoginButton = () => (
-  <button className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out">
-    <Icons.GoogleIcon />
-    <span>Sign up with Google</span>
-  </button>
-);
+const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
+  const handleOAuthLogin = async () => {
+    try {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+    } catch (error) {
+      cogoToast.error(error.message || `${label} login failed!`);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleOAuthLogin}
+      className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out"
+    >
+      <Icon />
+      <span>Sign Up with {label}</span>
+    </button>
+  );
+};
 
 const Register = () => {
   const dispatch = useDispatch();
@@ -30,19 +43,19 @@ const Register = () => {
       cogoToast.error("Please enter a valid email");
       return;
     }
-  
+
     setIsSubmitting(true);
-  
+
     dispatch(registerUser({ fullName, email, password }))
       .unwrap()
       .then((response) => {
         cogoToast.success("Registration successful!");
-  
+
         // Extract user ID from response
         const userId = response?.id;
         // Redirect to subscription plans with user ID (if needed)
         navigate(`/subscription-plans?userId=${userId}`);
-  
+
         // Reset form
         setEmail("");
         setPassword("");
@@ -65,7 +78,7 @@ const Register = () => {
         setIsSubmitting(false);
       });
   };
-  
+
   return (
     <div className="bg-custom-background-white">
       <header className="p-4 bg-custom-navbar flex items-center justify-between">
@@ -149,16 +162,27 @@ const Register = () => {
             </button>
           </form>
 
-           <div className="my-4 text-center">
+          <div className="my-4 text-center">
             <p className="text-sm text-custom-text-grey">Or</p>
-          </div> 
+          </div>
 
-         <GoogleLoginButton />
+          <div className="flex flex-col gap-2">
+            <OAuthLoginButton
+              provider="google"
+              icon={Icons.GoogleIcon}
+              label="Google"
+            />
+            <OAuthLoginButton
+              provider="github"
+              icon={Icons.GithubIcon}
+              label="GitHub"
+            />
+          </div>
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, you can fill in the form above to
             register your account.
-          </p> 
+          </p>
 
           <div className="text-center mt-4">
             <Link

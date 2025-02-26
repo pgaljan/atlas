@@ -147,7 +147,18 @@ export class BackupService {
       const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
       const encryptedBuffer = this.encrypt(buffer);
 
-      const filename = `backup-${uuidv4()}.zip`;
+      const structure = user.structures[0];
+
+      // Generate file name using structure name and timestamp
+      const timestamp = new Date()
+        .toISOString()
+        .replace('T', '_')
+        .replace(/\..+/, '')
+        .replace(/:/g, '-');
+
+      const filename = `${structure.title || structure.name}.${timestamp}.zip`;
+
+      // const filename = `backup-${uuidv4()}.zip`;
       const encryptedFilePath = path.resolve(
         backupDir,
         `backup-${uuidv4()}.enc`,
@@ -161,13 +172,10 @@ export class BackupService {
 
       fs.unlinkSync(encryptedFilePath);
 
-      // const protocol = process.env.PROTOCOL || 'http';
-      // const baseUrl = process.env.BASE_URL || 'localhost:4001';
-
-      const protocol = (process.env.PROTOCOL || 'http')?.replace(/:\/*$/, ''); // Remove extra slashes
+      const protocol = (process.env.PROTOCOL || 'http')?.replace(/:\/*$/, '');
       const baseUrl = (process.env.BASE_URL || 'localhost:4001')
         .replace(/^https?:\/+/, '')
-        .replace(/^\/|\/$/, ''); // Remove protocol and slashes
+        .replace(/^\/|\/$/, '');
 
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
       const randomNumber = Math.floor(Math.random() * 99) + 1;
@@ -201,6 +209,90 @@ export class BackupService {
       }
       console.error('Unexpected error during backup creation:', error);
       throw new InternalServerErrorException('Failed to create backup');
+    }
+  }
+
+  async createFullUserBackup(userId: string) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          structures: {
+            include: {
+              elements: {
+                include: { Record: true },
+              },
+              StructureMap: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      const backupData = {
+        structures: user.structures,
+      };
+
+      // Convert backup data to JSON
+      const jsonData = JSON.stringify(backupData, null, 2);
+      const jsonBuffer = Buffer.from(jsonData);
+
+      // Encrypt the backup data
+      const encryptedBuffer = this.encrypt(jsonBuffer);
+
+      // Prepare backup directory
+      const backupDir = path.resolve(__dirname, '../../public/backups');
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      // Generate filenames
+      const timestamp = new Date()
+        .toISOString()
+        .replace('T', '_')
+        .replace(/\..+/, '')
+        .replace(/:/g, '-');
+      const encryptedFilePath = path.resolve(
+        backupDir,
+        `backup-${uuidv4()}.enc`,
+      );
+      const zipFilePath = path.resolve(
+        backupDir,
+        `${user?.username || user?.email}-${timestamp}.zip`,
+      );
+
+      // Write encrypted data to file
+      fs.writeFileSync(encryptedFilePath, encryptedBuffer);
+
+      // Compress the encrypted backup into a ZIP file
+      const zip = new AdmZip();
+      zip.addLocalFile(encryptedFilePath);
+      zip.writeZip(zipFilePath);
+
+      // Remove the temporary encrypted file
+      fs.unlinkSync(encryptedFilePath);
+
+      // Construct public URL
+      const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
+      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
+        .replace(/^https?:\/+/, '')
+        .replace(/^\/|\/$/, '');
+      const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(
+        zipFilePath,
+      )}`;
+
+      return {
+        message: 'Full user backup created successfully',
+        fileUrl,
+      };
+    } catch (error) {
+      console.error('Error creating full user backup:', error);
+      throw new InternalServerErrorException(
+        'Failed to create full user backup',
+      );
     }
   }
 

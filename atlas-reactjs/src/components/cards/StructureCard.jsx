@@ -1,19 +1,32 @@
 import Cookies from "js-cookie";
 import React, { useEffect, useState } from "react";
+import { LuDatabaseBackup } from "react-icons/lu";
+import { PiTreeStructureBold } from "react-icons/pi";
+import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import Card from "../../components/cards/Card";
-import { PiTreeStructureBold } from "react-icons/pi";
 import { getStructuresByUserId } from "../../redux/slices/structures";
+import { createFullUserBackup } from "../../redux/slices/backups";
 import { formatRelativeTime } from "../../utils/timeUtils";
+import ImportModal from "../modals/ImportModal";
 
 const StructureCard = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [structures, setStructures] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [isExporting, setIsExporting] = useState(false);
   const ownerId = Cookies.get("atlas_userId");
   const username = Cookies.get("atlas_username");
+
+  // Modal state
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+
+  // Function to toggle modal
+  const toggleImportModal = () => {
+    setIsImportModalOpen((prev) => !prev);
+  };
 
   const fetchStructures = () => {
     if (ownerId) {
@@ -41,6 +54,26 @@ const StructureCard = () => {
     navigate(`/app/s/${username}/${structureId}`);
   };
 
+  const handleExport = () => {
+    if (!ownerId) return;
+
+    setIsExporting(true);
+
+    dispatch(createFullUserBackup(ownerId))
+      .then((action) => {
+        if (createFullUserBackup.fulfilled.match(action)) {
+          const { fileUrl } = action.payload;
+          if (fileUrl) {
+            window.open(fileUrl, "_blank");
+          }
+        }
+      })
+      .catch((error) => console.error("Backup export failed:", error))
+      .finally(() => {
+        setIsExporting(false);
+      });
+  };
+
   return (
     <>
       {loading ? (
@@ -65,8 +98,29 @@ const StructureCard = () => {
         </div>
       ) : (
         <div className="p-4 rounded-[18px] bg-custom-background-white h-auto shadow-md">
-          <div className="flex flex-col items-start gap-2">
-            <h2 className="text-[24px] font-bold text-black mb-3">Dashboard</h2>
+          <div className="flex justify-between w-full items-center">
+            <div>
+              <h2 className="text-[24px] font-bold text-black mb-3">
+                Dashboard
+              </h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleExport}
+                disabled={isExporting}
+                className="flex items-center gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
+              >
+                <LuDatabaseBackup size={20} />
+                {isExporting ? "Exporting..." : "Export"}
+              </button>
+              <button
+                onClick={toggleImportModal}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
+              >
+                <VscGitPullRequestCreate size={20} />
+                Import
+              </button>
+            </div>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {structures.map((structure) => (
@@ -87,6 +141,20 @@ const StructureCard = () => {
             ))}
           </div>
         </div>
+      )}
+
+      {/* Import Modal */}
+      {isImportModalOpen && (
+        <ImportModal
+          isOpen={isImportModalOpen}
+          onClose={toggleImportModal}
+          title={"Import Backups"}
+          onSuccess={fetchStructures}
+          isLoading={loading}
+          handleFileSelection={(file) => console.log("File Selected:", file)}
+          buttonText={"Restore"}
+          format={".zip"}
+        />
       )}
     </>
   );

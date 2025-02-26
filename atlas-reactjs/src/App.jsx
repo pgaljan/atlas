@@ -1,6 +1,10 @@
-import React, { Suspense, lazy, useState, useEffect } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import PremiumModal from "./components/modals/PremiumModal";
+import {
+  default as GithubCallback,
+  default as GoogleCallback,
+} from "./containers/callbacks/google-callback";
 import Support from "./containers/user/support/Support";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
@@ -69,6 +73,22 @@ const App = () => {
             element={
               <PublicRoute>
                 <Login />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/app/google-callback"
+            element={
+              <PublicRoute>
+                <GoogleCallback />
+              </PublicRoute>
+            }
+          />
+          <Route
+            path="/app/github-callback"
+            element={
+              <PublicRoute>
+                <GithubCallback />
               </PublicRoute>
             }
           />

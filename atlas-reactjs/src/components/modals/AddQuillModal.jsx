@@ -1,16 +1,16 @@
-import cogoToast from "@successtar/cogo-toast"
-import { useEffect, useState } from "react"
-import { BsTags } from "react-icons/bs"
-import { IoTrash } from "react-icons/io5"
-import { useDispatch } from "react-redux"
+import cogoToast from "@successtar/cogo-toast";
+import { useEffect, useState } from "react";
+import { BsTags } from "react-icons/bs";
+import { IoTrash } from "react-icons/io5";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
 import {
   createRecord,
   getRecordById,
   updateRecord,
-} from "../../redux/slices/records"
-import QuillEditor from "../editors/quillEditor"
-import useFeatureFlag from "../../hooks/useFeatureFlag"
-import { Navigate, useNavigate } from "react-router-dom"
+} from "../../redux/slices/records";
+import QuillEditor from "../editors/quillEditor";
 
 const AddQuillModal = ({
   structureId,
@@ -25,100 +25,121 @@ const AddQuillModal = ({
   recordId,
   fetchData,
 }) => {
-  const dispatch = useDispatch()
-  const [isLoading, setIsLoading] = useState(false)
-  const navigate = useNavigate()
+  const dispatch = useDispatch();
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const [initialData, setInitialData] = useState({ metadata: "", tags: [] });
+  const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState({
     metadata: "",
-  })
-  const [tags, setTags] = useState([])
-  const canTags = useFeatureFlag("Record Tagging")
+  });
+  const [tags, setTags] = useState([]);
+  const canTags = useFeatureFlag("Record Tagging");
+  
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action()
+      action();
     } else {
-      navigate(`?plan=upgrade-to-premium`)
+      navigate(`?plan=upgrade-to-premium`);
     }
-  }
-
-  const handleEditorChange = value => {
-    setFormData(prev => ({
-      ...prev,
-      metadata: value,
-    }))
-  }
+  };
 
   useEffect(() => {
     if (actionType === "view" || (actionType === "edit" && recordId)) {
       dispatch(getRecordById(recordId))
         .unwrap()
-        .then(record => {
+        .then((record) => {
           if (record) {
-            setFormData({
+            setFormData({ metadata: record.metadata.content });
+            setTags(record.tags);
+            setInitialData({
               metadata: record.metadata.content,
-            })
-            setTags(record.tags)
+              tags: record.tags,
+            });
           }
         })
-        .catch(error => {
-          cogoToast.error(`Failed to fetch record: ${error.message}`)
-        })
+        .catch((error) => {
+          cogoToast.error(`Failed to fetch record: ${error.message}`);
+        });
     }
-  }, [actionType, recordId, dispatch])
+  }, [actionType, recordId, dispatch]);
 
-  const handleSave = async () => {
-    if (!formData.metadata.trim()) {
-      cogoToast.error("Metadata is required!")
-      return
-    }
+  useEffect(() => {
+    const metadataChanged = formData.metadata !== initialData.metadata;
+    const tagsChanged =
+      JSON.stringify(tags) !== JSON.stringify(initialData.tags);
+    setHasChanges(metadataChanged || tagsChanged);
+  }, [formData, tags, initialData]);
 
-    // Convert the metadata content to JSON
-    const parsedMetadata = {
-      content: formData.metadata,
-    }
+  const handleEditorChange = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      metadata: value,
+    }));
+  };
 
-    const createRecordDto = {
-      metadata: parsedMetadata,
-      tags,
-    }
 
-    try {
-      if (actionType === "edit") {
-        const updateRecordDto = {
-          metadata: parsedMetadata,
-        }
-        setIsLoading(true)
-        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap()
-        fetchData()
-        cogoToast.success("Record updated successfully!")
-      } else if (actionType === "add") {
-        setIsLoading(true)
-        await dispatch(createRecord({ elementId, createRecordDto })).unwrap()
-        fetchData()
-        cogoToast.success("Record created successfully!")
-      }
-      onSuccess()
-      onClose()
-      setIsLoading(false)
-    } catch (error) {
-      cogoToast.error(`Error creating record: ${error.message}`)
-      setIsLoading(false)
-    }
+const handleSave = async () => {
+  if (!formData.metadata?.trim()) {
+    cogoToast.error("Metadata is required!");
+    return;
   }
+
+  // Validate tags only if the user has added any
+  if (tags.length > 0 && tags.some(tag => !tag.key.trim() || !tag.value.trim())) {
+    cogoToast.error("Each tag must have both a key and a value.");
+    return;
+  }
+
+  // Convert metadata to JSON
+  const parsedMetadata = {
+    content: formData.metadata,
+  };
+
+  const createRecordDto = {
+    metadata: parsedMetadata,
+    tags, // Include tags only if they exist
+  };
+
+  try {
+    setIsLoading(true);
+    if (actionType === "edit") {
+      const updateRecordDto = {
+        metadata: parsedMetadata,
+        tags, // Ensure tags are also updated
+      };
+      await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
+      fetchData();
+      cogoToast.success("Record updated successfully!");
+    } else if (actionType === "add") {
+      await dispatch(createRecord({ elementId, createRecordDto })).unwrap();
+      fetchData();
+      cogoToast.success("Record created successfully!");
+    }
+    onSuccess();
+    onClose();
+  } catch (error) {
+    cogoToast.error(`Error saving record: ${error.message}`);
+  } finally {
+    setIsLoading(false);
+  }
+};
+
+  
 
   const addTag = () => {
-    setTags(prev => [...prev, { key: "", value: "", id: Date.now() }])
-  }
+    setTags((prev) => [...prev, { key: "", value: "", id: Date.now() }]);
+  };
 
   const handleTagChange = (id, field, value) => {
-    setTags(prev =>
-      prev.map(tag => (tag.id === id ? { ...tag, [field]: value } : tag))
-    )
-  }
+    setTags((prev) =>
+      prev.map((tag) => (tag.id === id ? { ...tag, [field]: value } : tag))
+    );
+  };
 
-  const deleteTag = id => {
-    setTags(prev => prev.filter(tag => tag.id !== id))
-  }
+  const deleteTag = (id) => {
+    setTags((prev) => prev.filter((tag) => tag.id !== id));
+  };
 
   return (
     <>
@@ -173,7 +194,7 @@ const AddQuillModal = ({
             <div className="mt-4">
               <div className="max-h-40 overflow-y-auto pr-3">
                 {/* Adding padding-right to prevent overlap */}
-                {tags?.map(tag => (
+                {tags?.map((tag) => (
                   <div
                     key={tag.id}
                     className="flex items-center justify-between mt-2"
@@ -191,7 +212,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Key"
                         value={tag.key}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleTagChange(tag.id, "key", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -211,7 +232,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Value"
                         value={tag.value}
-                        onChange={e =>
+                        onChange={(e) =>
                           handleTagChange(tag.id, "value", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -240,18 +261,21 @@ const AddQuillModal = ({
           >
             {cancelText}
           </button>
-          {actionType != "view" && (
-            <button
-              onClick={handleSave}
-              className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-red-800 "
-            >
-              {isLoading ? "Loading..." : submitText}
-            </button>
-          )}
+          <button
+            onClick={handleSave}
+            disabled={!hasChanges || isLoading}
+            className={`py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg ${
+              hasChanges
+                ? "bg-custom-main text-white hover:bg-red-800"
+                : "bg-gray-300 text-gray-500 cursor-not-allowed"
+            }`}
+          >
+            {isLoading ? "Loading..." : submitText}
+          </button>
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default AddQuillModal
+export default AddQuillModal;

@@ -1,17 +1,30 @@
 import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import React, { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
-import Cookies from "js-cookie";
-import { loginUser } from "../../../redux/slices/auth";
 import Icons from "../../../constants/icons";
+import { loginUser } from "../../../redux/slices/auth";
 
-const GoogleLoginButton = () => (
-  <button className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out">
-    <Icons.GoogleIcon />
-    <span>Log in with Google</span>
-  </button>
-);
+const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
+  const handleOAuthLogin = async () => {
+    try {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+    } catch (error) {
+      cogoToast.error(error.message || `${label} login failed!`);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleOAuthLogin}
+      className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out"
+    >
+      <Icon />
+      <span>Log in with {label}</span>
+    </button>
+  );
+};
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -140,15 +153,26 @@ const Login = () => {
 
           <div className="my-4 text-center">
             <p className="text-sm text-custom-text-grey">Or</p>
-          </div> 
+          </div>
 
-           <GoogleLoginButton />
+          <div className="flex flex-col gap-2">
+            <OAuthLoginButton
+              provider="google"
+              icon={Icons.GoogleIcon}
+              label="Google"
+            />
+            <OAuthLoginButton
+              provider="github"
+              icon={Icons.GithubIcon}
+              label="GitHub"
+            />
+          </div>
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, try entering your work email
             above to be redirected to your organization's SSO (single sign-on)
             login page.
-          </p> 
+          </p>
 
           <div className="text-center mt-4">
             <Link
