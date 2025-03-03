@@ -45,7 +45,7 @@ export class StructureController {
     } catch (error) {
       throw new HttpException(
         `Failed to retrieve structures: ${error.message}`,
-        HttpStatus.INTERNAL_SERVER_ERROR,
+        HttpStatus.NOT_FOUND,
       );
     }
   }

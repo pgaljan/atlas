@@ -1,51 +1,53 @@
-import React, { useEffect, useState } from "react"
-import { useDispatch, useSelector } from "react-redux"
-import Layout from "../../../components/layout"
-import Icons from "../../../constants/icons"
-import { fetchPlans } from "../../../redux/slices/plans"
-import Cookies from "js-cookie"
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import Layout from "../../../components/layout";
+import Icons from "../../../constants/icons";
+import { fetchPlans } from "../../../redux/slices/plans";
+import Cookies from "js-cookie";
 import {
   fetchSubscription,
   updateSubscriptionPlan,
-} from "../../../redux/slices/subscriptions"
-import cogoToast from "@successtar/cogo-toast"
+} from "../../../redux/slices/subscriptions";
+import cogoToast from "@successtar/cogo-toast";
 
 const UpgradePlans = () => {
-  const dispatch = useDispatch()
-  const { plans } = useSelector(state => state.plans)
-  const [currentPlan, setCurrentPlan] = useState(null)
+  const dispatch = useDispatch();
+  const { plans } = useSelector((state) => state.plans);
+  const [currentPlan, setCurrentPlan] = useState(null);
+
+  console.log(plans);
 
   useEffect(() => {
-    dispatch(fetchPlans())
+    dispatch(fetchPlans());
 
-    const userId = Cookies.get("atlas_userId")
+    const userId = Cookies.get("atlas_userId");
     if (userId) {
-      dispatch(fetchSubscription(userId)).then(res => {
-        setCurrentPlan(res?.payload)
-      })
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res?.payload);
+      });
     }
-  }, [dispatch])
+  }, [dispatch]);
 
-  const handlePlanSelection = planId => {
-    const userId = Cookies.get("atlas_userId")
+  const handlePlanSelection = (planId) => {
+    const userId = Cookies.get("atlas_userId");
     if (!userId) {
-      cogoToast.error("User ID is missing!")
-      return
+      cogoToast.error("User ID is missing!");
+      return;
     }
 
     dispatch(updateSubscriptionPlan({ userId, planId })).then(() => {
-      cogoToast.success("Subscription updated successfully!")
-      dispatch(fetchSubscription(userId)).then(res => {
-        setCurrentPlan(res?.payload)
-      })
-    })
-  }
+      cogoToast.success("Subscription updated successfully!");
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res?.payload);
+      });
+    });
+  };
 
   const planOrder = ["Personal", "Educator", "Business", "Analyst"];
 
   const sortedPlans = [...plans].sort(
     (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
-  )
+  );
 
   return (
     <Layout>
@@ -64,12 +66,11 @@ const UpgradePlans = () => {
                   : "border-custom-text-borderGrey shadow-md"
               }`}
             >
-              {(plan?.name == "business" || plan?.name == "Business") && (
+              {plan?.name.toLowerCase() === "business" && (
                 <div className="absolute top-0 right-0 transform rotate-360 opacity-100">
                   <div className="w-full h-full">
                     <Icons.ProCardIcon className="w-[128px] h-[128px]" />
                   </div>
-
                 </div>
               )}
 
@@ -145,10 +146,14 @@ const UpgradePlans = () => {
                   {Object.entries(plan?.features).map(([key, value], i) => (
                     <li key={i} className="flex justify-between items-center">
                       <span>{key}</span>
-                      {value ? (
-                        <Icons.PriceCardTickIcons className="h-4 w-4 text-green-500" />
+                      {typeof value === "boolean" ? (
+                        value ? (
+                          <Icons.PriceCardTickIcons className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <Icons.PriceCardCrossIcons className="h-4 w-4 text-red-500" />
+                        )
                       ) : (
-                        <Icons.PriceCardCrossIcons className="h-4 w-4 text-red-500" />
+                        <span>{value}</span>
                       )}
                     </li>
                   ))}
@@ -159,7 +164,7 @@ const UpgradePlans = () => {
         </div>
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default UpgradePlans
+export default UpgradePlans;

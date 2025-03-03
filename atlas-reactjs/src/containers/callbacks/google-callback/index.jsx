@@ -6,7 +6,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchSubscription } from "../../../redux/slices/subscriptions";
 
-const GithubCallback = () => {
+const GoogleCallback = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -53,7 +53,8 @@ const GithubCallback = () => {
         Cookies.set("atlas_email", parsedUserData.email, { expires: 1 });
         Cookies.set("atlas_username", parsedUserData.username, { expires: 1 });
 
-        setUserData(parsedUserData);
+        setUserData(parsedUserData); // Store user data in state
+
         cogoToast.success("Login successful!");
       } else {
         cogoToast.error("Invalid decrypted data");
@@ -93,4 +94,4 @@ const GithubCallback = () => {
   );
 };
 
-export default GithubCallback;
+export default GoogleCallback;

@@ -1,16 +1,18 @@
 import React, { useEffect, useState } from "react";
+import cogoToast from "@successtar/cogo-toast";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
 import { fetchPlans } from "../../../redux/slices/plans";
+import Icons from "../../../constants/icons";
 import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
 
 // Helper to render checkmark and cross
 const renderCheckmark = (value) => {
   if (value === true) {
-    return <span className="text-green-500">✅</span>;
+    return <Icons.PriceCardTickIcons className="h-4 w-4 text-green-500" />;
   } else if (value === false) {
-    return <span className="text-red-500">❌</span>;
+    return <Icons.PriceCardCrossIcons className="h-4 w-4 text-red-500" />;
   } else {
     return <span>{value}</span>;
   }
@@ -41,7 +43,7 @@ const SubscriptionPlans = () => {
   // Handle plan selection
   const handlePlanSelection = (planId) => {
     if (!userId) {
-      alert("User ID is missing!");
+      cogoToast.warn("User ID is missing!");
       return;
     }
 
@@ -138,7 +140,7 @@ const FeatureList = ({ features }) => {
           {remainingFeatures.map((featureKey) => (
             <List key={featureKey}>
               <div className="flex items-center justify-between">
-                <span>{featureKey}:</span>
+                <span>{featureKey}</span>
                 <span>{renderCheckmark(features[featureKey])}</span>
               </div>
             </List>

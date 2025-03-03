@@ -1,3 +1,4 @@
+import cogoToast from "@successtar/cogo-toast";
 import React, { useState } from "react";
 
 const ShareModal = ({ isOpen, onClose }) => {
@@ -125,7 +126,7 @@ const ShareModal = ({ isOpen, onClose }) => {
             }`}
             onClick={() => {
               if (selectedEmails.length > 0) {
-                alert(
+                cogoToast.success(
                   `Invites sent to: ${selectedEmails.join(
                     ", "
                   )}\nMessage: ${customMessage}`
@@ -134,7 +135,7 @@ const ShareModal = ({ isOpen, onClose }) => {
                 setCustomMessage("");
               } else {
                 navigator.clipboard.writeText("Copied link!");
-                alert("Link copied to clipboard!");
+                cogoToast.success("Link copied to clipboard!");
               }
             }}
           >

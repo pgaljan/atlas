@@ -33,7 +33,7 @@ export const createFullUserBackup = createAsyncThunk(
   "backup/createFull",
   async (userId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(
+      const response = await axiosInstance.post(
         `/backup/user/${userId}/full-backup`
       );
       return response.data;

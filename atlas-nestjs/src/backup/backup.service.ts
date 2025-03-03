@@ -113,6 +113,9 @@ export class BackupService {
                 {
                   id: element.Record.id,
                   metadata: JSON.stringify(element.Record.metadata),
+                  tags: element.Record.tags
+                    ? JSON.stringify(element.Record.tags)
+                    : null,
                   createdAt: element.Record.createdAt,
                   updatedAt: element.Record.updatedAt,
                 },
@@ -158,7 +161,6 @@ export class BackupService {
 
       const filename = `${structure.title || structure.name}.${timestamp}.zip`;
 
-      // const filename = `backup-${uuidv4()}.zip`;
       const encryptedFilePath = path.resolve(
         backupDir,
         `backup-${uuidv4()}.enc`,
@@ -214,6 +216,7 @@ export class BackupService {
 
   async createFullUserBackup(userId: string) {
     try {
+      // Fetch user along with all structures, elements, and related records
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
@@ -232,15 +235,14 @@ export class BackupService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
+      // Prepare the backup data (all structures for the user)
       const backupData = {
         structures: user.structures,
       };
 
-      // Convert backup data to JSON
+      // Convert backup data to JSON and encrypt it
       const jsonData = JSON.stringify(backupData, null, 2);
       const jsonBuffer = Buffer.from(jsonData);
-
-      // Encrypt the backup data
       const encryptedBuffer = this.encrypt(jsonBuffer);
 
       // Prepare backup directory
@@ -259,12 +261,13 @@ export class BackupService {
         backupDir,
         `backup-${uuidv4()}.enc`,
       );
+      const filePrefix = user.username || user.email || 'user';
       const zipFilePath = path.resolve(
         backupDir,
-        `${user?.username || user?.email}-${timestamp}.zip`,
+        `${filePrefix}-full-backup-${timestamp}.zip`,
       );
 
-      // Write encrypted data to file
+      // Write encrypted data to a temporary file
       fs.writeFileSync(encryptedFilePath, encryptedBuffer);
 
       // Compress the encrypted backup into a ZIP file
@@ -275,14 +278,30 @@ export class BackupService {
       // Remove the temporary encrypted file
       fs.unlinkSync(encryptedFilePath);
 
-      // Construct public URL
+      // Construct public URL for the backup file
       const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
       const baseUrl = (process.env.BASE_URL || 'localhost:4001')
         .replace(/^https?:\/+/, '')
         .replace(/^\/|\/$/, '');
-      const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(
-        zipFilePath,
-      )}`;
+      const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
+
+      // Create a backup record in the database
+      const randomNumber = Math.floor(Math.random() * 99) + 1;
+      const title = `FullBackup-${randomNumber}`;
+      const backup = await this.prisma.backup.create({
+        data: {
+          userId,
+          title,
+          backupData: { filePath: zipFilePath },
+          fileUrl,
+        },
+      });
+
+      // Log the audit for full backup creation
+      await this.logAudit('create', 'full-user-backup', backup.id, {
+        fileUrl,
+        userId,
+      });
 
       return {
         message: 'Full user backup created successfully',

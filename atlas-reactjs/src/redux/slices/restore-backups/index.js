@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+
 // Initial state for restore slice
 const initialState = {
   status: "idle",
@@ -26,6 +27,25 @@ export const restoreBackup = createAsyncThunk(
   }
 );
 
+// NEW: Async thunk for restoring a full backup
+export const restoreFullBackup = createAsyncThunk(
+  "restore/restoreFullBackup",
+  async (fileData, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", fileData);
+      const response = await axiosInstance.post("/restore/full", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Restore slice
 const restoreSlice = createSlice({
   name: "restore",
@@ -33,7 +53,7 @@ const restoreSlice = createSlice({
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Restore backup
+      // restoreBackup cases
       .addCase(restoreBackup.pending, (state) => {
         state.status = "loading";
       })
@@ -42,6 +62,18 @@ const restoreSlice = createSlice({
         state.message = action.payload.message;
       })
       .addCase(restoreBackup.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // restoreFullBackup cases
+      .addCase(restoreFullBackup.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(restoreFullBackup.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.message = action.payload.message;
+      })
+      .addCase(restoreFullBackup.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

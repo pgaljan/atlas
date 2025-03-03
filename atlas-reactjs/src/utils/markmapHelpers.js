@@ -24,8 +24,7 @@ export const assignWbsNumbers = (
 export const treeToMarkmapData = (node, showWbs) => {
   if (!node) return null;
 
-  const actualContent =
-    node.originalContent || node.content || node.name || "Untitled";
+  const actualContent = node.originalContent || node.content || node.name;
 
   const updatedContent =
     showWbs && node.wbs && node.wbs !== "1"
@@ -97,7 +96,7 @@ export const resetDraggedElement = (element) => {
 export const updateNodeLevels = (node, currentLevel = 0) => {
   node.level = currentLevel;
 
-  if (node.children && node.children.length > 0) {
+  if (node.children && node.children?.length > 0) {
     node.children.forEach((child) => updateNodeLevels(child, currentLevel + 1));
   }
 

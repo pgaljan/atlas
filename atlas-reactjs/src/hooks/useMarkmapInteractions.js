@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import * as d3 from "d3";
+import { useEffect } from "react";
 import {
   isDescendant,
   resetDraggedElement,
@@ -38,7 +38,7 @@ export default function useMarkmapInteractions({
 
     // Render Markmap data
     const markmapData = treeToMarkmapData(dataToRender, showWbs);
-    markmapInstance.setData(markmapData);
+    markmapInstance?.setData(markmapData);
 
     // Fit view if requested
     if (shouldFitView) {

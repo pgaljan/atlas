@@ -1,3 +1,4 @@
+import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
 import React, { useEffect, useState } from "react";
 import { LuDatabaseBackup } from "react-icons/lu";
@@ -5,11 +6,12 @@ import { PiTreeStructureBold } from "react-icons/pi";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
-import Card from "../../components/cards/Card";
-import { getStructuresByUserId } from "../../redux/slices/structures";
 import { createFullUserBackup } from "../../redux/slices/backups";
+import { restoreFullBackup } from "../../redux/slices/restore-backups";
+import { getStructuresByUserId } from "../../redux/slices/structures";
 import { formatRelativeTime } from "../../utils/timeUtils";
 import ImportModal from "../modals/ImportModal";
+import Card from "../../components/cards/Card";
 
 const StructureCard = () => {
   const dispatch = useDispatch();
@@ -17,10 +19,9 @@ const StructureCard = () => {
   const [structures, setStructures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
   const ownerId = Cookies.get("atlas_userId");
   const username = Cookies.get("atlas_username");
-
-  // Modal state
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
   // Function to toggle modal
@@ -64,14 +65,45 @@ const StructureCard = () => {
         if (createFullUserBackup.fulfilled.match(action)) {
           const { fileUrl } = action.payload;
           if (fileUrl) {
-            window.open(fileUrl, "_blank");
+            setTimeout(() => {
+              setIsExporting(false);
+              window.open(fileUrl, "_blank");
+            }, 2000);
+          } else {
+            setIsExporting(false);
           }
+        } else {
+          setIsExporting(false);
         }
       })
-      .catch((error) => console.error("Backup export failed:", error))
-      .finally(() => {
+      .catch((error) => {
+        cogoToast.error("Failed to export backup! Please try again.");
         setIsExporting(false);
       });
+  };
+
+  const handleFileSelection = (file) => {
+    if (!file) {
+      cogoToast.error("Please select a valid structure!");
+      return;
+    }
+
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
+
+  const handleFileUpload = async (file) => {
+    try {
+      setIsImporting(true);
+      await dispatch(restoreFullBackup(file)).unwrap();
+      cogoToast.success("Backup restored successfully!");
+      fetchStructures();
+      setIsImportModalOpen(false);
+    } catch (err) {
+      cogoToast.error("Failed to upload structure.");
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   return (
@@ -94,6 +126,14 @@ const StructureCard = () => {
             <p className="text-lg text-custom-text-grey">
               Start creating your first structure!
             </p>
+            <button
+              onClick={toggleImportModal}
+              disabled={isImporting}
+              className="flex items-center mt-4 gap-2 px-4 py-2 border-2 bg-transparent hover:bg-custom-main hover:text-white border-custom-main text-custom-main rounded-lg hover:bg-custom-dark transition"
+            >
+              <VscGitPullRequestCreate size={20} />
+              {isImporting ? "Importing..." : "Import backups"}
+            </button>
           </div>
         </div>
       ) : (
@@ -115,10 +155,11 @@ const StructureCard = () => {
               </button>
               <button
                 onClick={toggleImportModal}
+                disabled={isImporting}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
               >
                 <VscGitPullRequestCreate size={20} />
-                Import
+                {isImporting ? "Importing..." : "Import"}
               </button>
             </div>
           </div>
@@ -127,7 +168,7 @@ const StructureCard = () => {
               <Card
                 key={structure.id}
                 title={structure.title || "Untitled"}
-                imageUrl={structure.imageUrl || "/assets/markmap-image.png"}
+                imageUrl={structure.imageUrl || "/assets/markmap-2.png"}
                 footerTitle={`Modified ${formatRelativeTime(
                   structure.updatedAt
                 )}`}
@@ -151,7 +192,7 @@ const StructureCard = () => {
           title={"Import Backups"}
           onSuccess={fetchStructures}
           isLoading={loading}
-          handleFileSelection={(file) => console.log("File Selected:", file)}
+          handleFileSelection={handleFileSelection}
           buttonText={"Restore"}
           format={".zip"}
         />

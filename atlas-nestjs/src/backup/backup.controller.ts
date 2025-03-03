@@ -64,6 +64,21 @@ export class BackupController {
     return uuidRegex.test(uuid);
   }
 
+  @Post('user/:userId/full-backup')
+  async createFullUserBackup(@Param('userId') userId: string) {
+    try {
+      if (!this.isValidUUID(userId)) {
+        throw new HttpException(
+          'Invalid userId provided',
+          HttpStatus.BAD_REQUEST,
+        );
+      }
+      return await this.backupService.createFullUserBackup(userId);
+    } catch (error) {
+      this.handleException(error, 'Failed to create full user backup');
+    }
+  }
+
   @Get('user/:userId')
   async getBackupByUserId(@Param('userId') userId: string) {
     return await this.backupService.getBackupByUserId(userId);
@@ -108,21 +123,6 @@ export class BackupController {
         error.message || 'Failed to delete the backup',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
-    }
-  }
-
-  @Get('user/:userId/full-backup')
-  async createFullUserBackup(@Param('userId') userId: string) {
-    try {
-      if (!this.isValidUUID(userId)) {
-        throw new HttpException(
-          'Invalid userId provided',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-      return await this.backupService.createFullUserBackup(userId);
-    } catch (error) {
-      this.handleException(error, 'Failed to create full user backup');
     }
   }
 

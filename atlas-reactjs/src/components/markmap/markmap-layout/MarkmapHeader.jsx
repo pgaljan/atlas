@@ -142,6 +142,7 @@ const MarkmapHeader = ({
       onSearch(null, "");
     }
   };
+
   const handleKeyPress = (e) => {
     if (e?.key === "Enter") {
       const level = /^\d+$/.test(searchValue?.trim())
@@ -172,7 +173,6 @@ const MarkmapHeader = ({
 
       const fileUrl = response?.fileUrl;
       if (fileUrl) {
-        // Open the file URL in a new tab to trigger the download
         window.open(fileUrl, "_blank");
       }
     } catch (error) {

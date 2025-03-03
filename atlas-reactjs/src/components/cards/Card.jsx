@@ -53,7 +53,7 @@ const Card = ({
               <img
                 src={imageUrl}
                 alt={title}
-                className="w-full h-full object-cover rounded-t-lg"
+                className="w-full h-full object-contain rounded-t-lg"
                 loading="lazy"
               />
             </div>

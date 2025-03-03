@@ -1,15 +1,17 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import PremiumModal from "./components/modals/PremiumModal";
-import {
-  default as GithubCallback,
-  default as GoogleCallback,
-} from "./containers/callbacks/google-callback";
-import Support from "./containers/user/support/Support";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
+const GoogleCallback = lazy(() =>
+  import("./containers/callbacks/google-callback")
+);
+const GithubCallback = lazy(() =>
+  import("./containers/callbacks/github-callback")
+);
+const Support = lazy(() => import("./containers/user/support/Support"));
 const MarkmapCanvas = lazy(() =>
   import("./components/markmap/markmap-canvas/MarkmapCanvas")
 );
@@ -37,22 +39,41 @@ const DeletedMindmaps = lazy(() =>
   import("./containers/user/deleted-markmaps/DeletedMarkmaps")
 );
 
+const publicRoutes = [
+  { path: "/", element: <Login /> },
+  { path: "/app/google-callback", element: <GoogleCallback /> },
+  { path: "/app/github-callback", element: <GithubCallback /> },
+  { path: "/register", element: <Register /> },
+  { path: "/reset-password", element: <ResetPassword /> },
+  { path: "/subscription-plans", element: <SubscriptionPlans /> },
+  { path: "*", element: <NotFound /> },
+];
+
+const privateRoutes = [
+  { path: "/app/dashboard", element: <Dashboard /> },
+  { path: "/app/s/:username/:structureId", element: <MarkmapCanvas /> },
+  // { path: "/app/team-members", element: <TeamMembers /> },
+  // { path: "/app/support", element: <Support /> },
+  // { path: "/app/me", element: <Profile /> },
+  { path: "/app/backups", element: <Backups /> },
+  // { path: "/app/uploaded-files", element: <UploadedFiles /> },
+  // { path: "/app/deleted-markmaps", element: <DeletedMindmaps /> },
+  { path: "/app/upgrade-plans", element: <UpgradePlans /> },
+];
+
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
-    const showPremiumModal =
-      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium";
-    setIsModalVisible(showPremiumModal);
+    setIsModalVisible(
+      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium"
+    );
   }, [location.search]);
 
-  // Handle modal visibility
   const closeModal = () => {
     setIsModalVisible(false);
-
-    // Remove 'plan' from URL
     const params = new URLSearchParams(location.search);
     params.delete("plan");
     navigate({ search: params.toString() }, { replace: true });
@@ -68,139 +89,21 @@ const App = () => {
         }
       >
         <Routes>
-          <Route
-            path="/"
-            element={
-              <PublicRoute>
-                <Login />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/app/google-callback"
-            element={
-              <PublicRoute>
-                <GoogleCallback />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/app/github-callback"
-            element={
-              <PublicRoute>
-                <GithubCallback />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/app/dashboard"
-            element={
-              <PrivateRoute>
-                <Dashboard />
-              </PrivateRoute>
-            }
-          />
-          <Route
-            path="/register"
-            element={
-              <PublicRoute>
-                <Register />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/reset-password"
-            element={
-              <PublicRoute>
-                <ResetPassword />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/subscription-plans"
-            element={
-              <PublicRoute>
-                <SubscriptionPlans />
-              </PublicRoute>
-            }
-          />
-          <Route
-            path="/app/s/:username/:structureId"
-            element={
-              <PrivateRoute>
-                <MarkmapCanvas />
-              </PrivateRoute>
-            }
-          />
-          {/* <Route
-            path="/app/team-members"
-            element={
-              <PrivateRoute>
-                <TeamMembers />
-              </PrivateRoute>
-            }
-          /> */}
-          {/* <Route
-            path="/app/support"
-            element={
-              <PrivateRoute>
-                <Support />
-              </PrivateRoute>
-            }
-          /> */}
-          {/* <Route
-            path="/app/me"
-            element={
-              <PrivateRoute>
-                <Profile />
-              </PrivateRoute>
-            }
-          /> */}
-          <Route
-            path="/app/backups"
-            element={
-              <PrivateRoute>
-                <Backups />
-              </PrivateRoute>
-            }
-          />
-          {/* <Route
-            path="/app/uploaded-files"
-            element={
-              <PrivateRoute>
-                <UploadedFiles />
-              </PrivateRoute>
-            }
-          /> */}
-          {/* <Route
-            path="/app/deleted-markmaps"
-            element={
-              <PrivateRoute>
-                <DeletedMindmaps />
-              </PrivateRoute>
-            }
-          /> */}
-
-          <Route
-            path="/app/upgrade-plans"
-            element={
-              <PrivateRoute>
-                <UpgradePlans />
-              </PrivateRoute>
-            }
-          />
-
-          <Route
-            path="*"
-            element={
-              <PublicRoute>
-                <NotFound />
-              </PublicRoute>
-            }
-          />
+          {publicRoutes.map(({ path, element }) => (
+            <Route
+              key={path}
+              path={path}
+              element={<PublicRoute>{element}</PublicRoute>}
+            />
+          ))}
+          {privateRoutes.map(({ path, element }) => (
+            <Route
+              key={path}
+              path={path}
+              element={<PrivateRoute>{element}</PrivateRoute>}
+            />
+          ))}
         </Routes>
-
-        {/* Show the PremiumModal if visible */}
         {isModalVisible && <PremiumModal closeModal={closeModal} />}
       </Suspense>
     </div>

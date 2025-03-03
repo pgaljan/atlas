@@ -1307,7 +1307,7 @@ const PremiumIcon = ({ className }) => (
   </svg>
 );
 
-const GithubIcon = ({ size = 32, className = "" }) => (
+const GithubIcon = ({ size = 24, className = "" }) => (
   <svg
     height={size}
     width={size}

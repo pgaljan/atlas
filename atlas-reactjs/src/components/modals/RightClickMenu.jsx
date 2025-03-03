@@ -1,9 +1,7 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useState } from "react";
-import { FaTrash } from "react-icons/fa";
+import { FaTrash, FaFileWord, FaFilePdf } from "react-icons/fa";
 import { PiFileHtmlBold } from "react-icons/pi";
-import { TbFileTypeCsv } from "react-icons/tb";
-import { MdOutlinePictureAsPdf } from "react-icons/md";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { deleteStructure } from "../../redux/slices/structures";
@@ -17,6 +15,8 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
 
   // Feature flag checks
   const canExportHtml = useFeatureFlag("Export to HTML/Markdown");
+  const canExportDOC = useFeatureFlag("Export to DOC");
+  const canExportPDF = useFeatureFlag("Export to DOC");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
@@ -64,6 +64,30 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
           }
         >
           <PiFileHtmlBold /> Export as HTML
+        </button>
+
+        <button
+          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
+          onClick={() =>
+            handleFeatureClick(canExportDOC, () => {
+              onOptionSelect("exportDoc");
+              onClose();
+            })
+          }
+        >
+          <FaFileWord /> Export as DOC
+        </button>
+
+        <button
+          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
+          onClick={() =>
+            handleFeatureClick(canExportPDF, () => {
+              onOptionSelect("exportPdf");
+              onClose();
+            })
+          }
+        >
+          <FaFilePdf /> Export as PDF
         </button>
 
         <hr className="border-t border-gray-200 my-2" />

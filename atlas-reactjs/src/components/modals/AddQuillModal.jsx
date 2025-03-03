@@ -98,7 +98,7 @@ const handleSave = async () => {
 
   const createRecordDto = {
     metadata: parsedMetadata,
-    tags, // Include tags only if they exist
+    tags, 
   };
 
   try {
@@ -106,7 +106,7 @@ const handleSave = async () => {
     if (actionType === "edit") {
       const updateRecordDto = {
         metadata: parsedMetadata,
-        tags, // Ensure tags are also updated
+        tags, 
       };
       await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
       fetchData();

@@ -60,6 +60,7 @@ export class FileUploadController {
       'text/csv',
       'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
       'application/vnd.ms-excel',
+      'application/json',
     ];
     const imageAndVideoTypes = [
       'image/jpeg',
@@ -89,6 +90,8 @@ export class FileUploadController {
 
         if (fileType === 'text/csv') {
           parsedData = await this.parseCSV(filePath);
+        } else if (fileType === 'application/json') {
+          parsedData = this.parseJSON(filePath);
         } else {
           parsedData = this.parseExcel(filePath);
         }
@@ -152,6 +155,10 @@ export class FileUploadController {
     const sheetName = workbook.SheetNames[0];
     const sheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(sheet);
+  }
+  private parseJSON(filePath: string): any[] {
+    const fileContent = fs.readFileSync(filePath, 'utf8');
+    return JSON.parse(fileContent);
   }
 
   @Get('user/:userId')

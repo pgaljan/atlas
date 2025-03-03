@@ -45,16 +45,7 @@ export class RestoreService {
     try {
       // Unzip the file
       const zip = new AdmZip(fileBuffer);
-      // const encFile = zip
-      //   .getEntries()
-      //   .find((entry) => entry.entryName.endsWith('.enc'));
-
       const zipEntries = zip.getEntries();
-      console.log(
-        'Extracted Files:',
-        zipEntries.map((entry) => entry.entryName),
-      );
-
       const encFile = zipEntries.find((entry) =>
         entry.entryName.includes('.enc'),
       );
@@ -111,15 +102,11 @@ export class RestoreService {
             update: {
               metadata: parsedMetadata,
               tags: parsedTags,
-              createdAt: new Date(recordData.createdAt),
-              updatedAt: new Date(recordData.updatedAt),
             },
             create: {
               id: recordData.id,
               metadata: parsedMetadata,
               tags: parsedTags,
-              createdAt: new Date(recordData.createdAt),
-              updatedAt: new Date(recordData.updatedAt),
             },
           });
         } catch (error) {
@@ -141,8 +128,6 @@ export class RestoreService {
               ownerId: structureData.ownerId,
               title: structureData.title,
               visibility: structureData.visibility,
-              createdAt: new Date(structureData.createdAt),
-              updatedAt: new Date(structureData.updatedAt),
             },
             create: {
               id: structureData.id,
@@ -151,8 +136,6 @@ export class RestoreService {
               description: structureData.description,
               ownerId: structureData.ownerId,
               visibility: structureData.visibility,
-              createdAt: new Date(structureData.createdAt),
-              updatedAt: new Date(structureData.updatedAt),
             },
           });
         } catch (error) {
@@ -172,8 +155,6 @@ export class RestoreService {
               recordId: elementData.recordId,
               name: elementData.name,
               parentId: elementData.parentId,
-              createdAt: new Date(elementData.createdAt),
-              updatedAt: new Date(elementData.updatedAt),
             },
             create: {
               id: elementData.id,
@@ -181,8 +162,6 @@ export class RestoreService {
               structureId: elementData.structureId,
               recordId: elementData.recordId,
               parentId: elementData.parentId,
-              createdAt: new Date(elementData.createdAt),
-              updatedAt: new Date(elementData.updatedAt),
             },
           });
         } catch (error) {
@@ -201,22 +180,180 @@ export class RestoreService {
               structureId: mapData.structureId,
               name: mapData.name,
               description: mapData.description,
-              createdAt: new Date(mapData.createdAt),
-              updatedAt: new Date(mapData.updatedAt),
             },
             create: {
               id: mapData.id,
               structureId: mapData.structureId,
               name: mapData.name,
               description: mapData.description,
-              createdAt: new Date(mapData.createdAt),
-              updatedAt: new Date(mapData.updatedAt),
             },
           });
         } catch (error) {
           throw new InternalServerErrorException(
             `Failed to restore structure map with ID ${mapData.id}: ${error.message}`,
           );
+        }
+      }
+
+      return { message: 'Backup restored successfully' };
+    } catch (error) {
+      console.error('Error during restore operation:', error);
+      throw new InternalServerErrorException(
+        'Failed to restore backup: ' + error.message,
+      );
+    }
+  }
+
+  // Restores a full backup from a ZIP file buffer
+  async restoreFullBackup(fileBuffer: Buffer) {
+    try {
+      // Unzip the file buffer
+      const zip = new AdmZip(fileBuffer);
+      const zipEntries = zip.getEntries();
+
+      // Find the encrypted file (should have a .enc extension)
+      const encFile = zipEntries.find((entry) =>
+        entry.entryName.endsWith('.enc'),
+      );
+      if (!encFile) {
+        throw new InternalServerErrorException(
+          'No encrypted backup file found in the ZIP.',
+        );
+      }
+
+      // Decrypt the encrypted file
+      const decryptedBuffer = this.decrypt(encFile.getData());
+
+      // Parse the decrypted buffer as JSON backup data
+      let backupData: any;
+      try {
+        backupData = JSON.parse(decryptedBuffer.toString());
+      } catch (parseError) {
+        throw new InternalServerErrorException(
+          'Failed to parse decrypted backup data as JSON.',
+        );
+      }
+
+      if (!backupData || !backupData.structures) {
+        throw new InternalServerErrorException(
+          'Invalid backup data: missing structures.',
+        );
+      }
+
+      // Restore each structure and its nested data
+      for (const structureData of backupData.structures) {
+        // Upsert the structure
+        await this.prisma.structure.upsert({
+          where: { id: structureData.id },
+          update: {
+            name: structureData.name,
+            title: structureData.title,
+            description: structureData.description,
+            ownerId: structureData.ownerId,
+            visibility: structureData.visibility,
+            createdAt: new Date(structureData.createdAt),
+            updatedAt: new Date(structureData.updatedAt),
+          },
+          create: {
+            id: structureData.id,
+            name: structureData.name,
+            title: structureData.title,
+            description: structureData.description,
+            ownerId: structureData.ownerId,
+            visibility: structureData.visibility,
+            createdAt: new Date(structureData.createdAt),
+            updatedAt: new Date(structureData.updatedAt),
+          },
+        });
+
+        // Restore structure map(s) if present
+        if (structureData.StructureMap) {
+          if (Array.isArray(structureData.StructureMap)) {
+            for (const mapData of structureData.StructureMap) {
+              await this.prisma.structureMap.upsert({
+                where: { id: mapData.id },
+                update: {
+                  structureId: mapData.structureId,
+                  name: mapData.name,
+                  description: mapData.description,
+                  createdAt: new Date(mapData.createdAt),
+                  updatedAt: new Date(mapData.updatedAt),
+                },
+                create: {
+                  id: mapData.id,
+                  structureId: mapData.structureId,
+                  name: mapData.name,
+                  description: mapData.description,
+                  createdAt: new Date(mapData.createdAt),
+                  updatedAt: new Date(mapData.updatedAt),
+                },
+              });
+            }
+          } else {
+            await this.prisma.structureMap.upsert({
+              where: { id: structureData.StructureMap.id },
+              update: {
+                structureId: structureData.StructureMap.structureId,
+                name: structureData.StructureMap.name,
+                description: structureData.StructureMap.description,
+                createdAt: new Date(structureData.StructureMap.createdAt),
+                updatedAt: new Date(structureData.StructureMap.updatedAt),
+              },
+              create: {
+                id: structureData.StructureMap.id,
+                structureId: structureData.StructureMap.structureId,
+                name: structureData.StructureMap.name,
+                description: structureData.StructureMap.description,
+                createdAt: new Date(structureData.StructureMap.createdAt),
+                updatedAt: new Date(structureData.StructureMap.updatedAt),
+              },
+            });
+          }
+        }
+
+        // Restore nested elements and their associated records
+        if (structureData.elements && Array.isArray(structureData.elements)) {
+          for (const elementData of structureData.elements) {
+            // Restore record data (if any) first
+            if (elementData.Record) {
+              await this.prisma.record.upsert({
+                where: { id: elementData.Record.id },
+                update: {
+                  metadata: elementData.Record.metadata,
+                  createdAt: new Date(elementData.Record.createdAt),
+                  updatedAt: new Date(elementData.Record.updatedAt),
+                },
+                create: {
+                  id: elementData.Record.id,
+                  metadata: elementData.Record.metadata,
+                  createdAt: new Date(elementData.Record.createdAt),
+                  updatedAt: new Date(elementData.Record.updatedAt),
+                },
+              });
+            }
+
+            // Restore the element itself
+            await this.prisma.element.upsert({
+              where: { id: elementData.id },
+              update: {
+                name: elementData.name,
+                structureId: elementData.structureId,
+                recordId: elementData.recordId,
+                parentId: elementData.parentId,
+                createdAt: new Date(elementData.createdAt),
+                updatedAt: new Date(elementData.updatedAt),
+              },
+              create: {
+                id: elementData.id,
+                name: elementData.name,
+                structureId: elementData.structureId,
+                recordId: elementData.recordId,
+                parentId: elementData.parentId,
+                createdAt: new Date(elementData.createdAt),
+                updatedAt: new Date(elementData.updatedAt),
+              },
+            });
+          }
         }
       }
 
