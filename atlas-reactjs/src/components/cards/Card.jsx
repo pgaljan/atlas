@@ -49,11 +49,11 @@ const Card = ({
         <div className="flex flex-col">
           {/* Thumbnail */}
           <Link to={`/app/s/${username}/${structureId}`}>
-            <div className="w-full h-48 ">
+            <div className="w-full h-48 bg-[radial-gradient(circle,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:14px_14px]">
               <img
                 src={imageUrl}
                 alt={title}
-                className="w-full h-full object-contain rounded-t-lg"
+                className="w-full h-full object-cover rounded-t-lg"
                 loading="lazy"
               />
             </div>
@@ -111,7 +111,7 @@ const Card = ({
                 {/* Dropdown Menu */}
                 {dropdownVisible && (
                   <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-1 bg-white border border-gray-200 rounded-md shadow-md w-48 z-50">
-                    <div
+                    {/* <div
                       className="px-4 py-2 hover:bg-gray-100 flex items-center cursor-pointer"
                       onClick={() => setDropdownVisible(false)}
                     >
@@ -135,7 +135,7 @@ const Card = ({
                       <span className="text-sm text-gray-600">
                         Email Support
                       </span>
-                    </div>
+                    </div> */}
                     <div
                       className="px-4 py-2 text-sm hover:bg-gray-100 font-semibold flex items-center cursor-pointer text-red-700"
                       onClick={handleDeleteStructure}

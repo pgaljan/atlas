@@ -105,20 +105,11 @@ export class BackupController {
   @Delete('delete/:id')
   async deleteBackup(@Param('id') backupId: string) {
     try {
-      const parsedBackupId = parseInt(backupId, 10);
-      if (isNaN(parsedBackupId)) {
-        throw new HttpException(
-          'Invalid backupId provided',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
-      return await this.backupService.deleteBackup(parsedBackupId.toString());
+      return await this.backupService.deleteBackup(backupId.toString());
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
       }
-      console.error('Unexpected error during backup deletion:', error);
       throw new HttpException(
         error.message || 'Failed to delete the backup',
         HttpStatus.INTERNAL_SERVER_ERROR,

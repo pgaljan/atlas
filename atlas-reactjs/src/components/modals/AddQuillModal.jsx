@@ -114,12 +114,12 @@ const handleSave = async () => {
     } else if (actionType === "add") {
       await dispatch(createRecord({ elementId, createRecordDto })).unwrap();
       fetchData();
-      cogoToast.success("Record created successfully!");
+      cogoToast.success("Record added successfully!");
     }
     onSuccess();
     onClose();
   } catch (error) {
-    cogoToast.error(`Error saving record: ${error.message}`);
+    cogoToast.error(`Error adding record: ${error.message}`);
   } finally {
     setIsLoading(false);
   }

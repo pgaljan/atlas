@@ -52,7 +52,6 @@ export class BackupService {
 
   async createBackup(userId: string, structureId?: string) {
     try {
-      // Fetch user data with a condition for the specific structureId
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
@@ -153,12 +152,7 @@ export class BackupService {
       const structure = user.structures[0];
 
       // Generate file name using structure name and timestamp
-      const timestamp = new Date()
-        .toISOString()
-        .replace('T', '_')
-        .replace(/\..+/, '')
-        .replace(/:/g, '-');
-
+      const timestamp = new Date();
       const filename = `${structure.title || structure.name}.${timestamp}.zip`;
 
       const encryptedFilePath = path.resolve(
@@ -180,8 +174,7 @@ export class BackupService {
         .replace(/^\/|\/$/, '');
 
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
-      const randomNumber = Math.floor(Math.random() * 99) + 1;
-      const title = `Backup-${randomNumber}`;
+      const title = `${structure.title || structure.name}-${timestamp}`;
 
       const backup = await this.prisma.backup.create({
         data: {
@@ -264,7 +257,7 @@ export class BackupService {
       const filePrefix = user.username || user.email || 'user';
       const zipFilePath = path.resolve(
         backupDir,
-        `${filePrefix}-full-backup-${timestamp}.zip`,
+        `${filePrefix}-${timestamp}.zip`,
       );
 
       // Write encrypted data to a temporary file
@@ -286,8 +279,7 @@ export class BackupService {
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
 
       // Create a backup record in the database
-      const randomNumber = Math.floor(Math.random() * 99) + 1;
-      const title = `FullBackup-${randomNumber}`;
+      const title = `${filePrefix}-${timestamp}`;
       const backup = await this.prisma.backup.create({
         data: {
           userId,
@@ -363,7 +355,6 @@ export class BackupService {
 
       return { message: `Backup with ID ${backupId} deleted successfully` };
     } catch (error) {
-      console.error('Error deleting backup:', error);
       throw new InternalServerErrorException('Failed to delete the backup');
     }
   }

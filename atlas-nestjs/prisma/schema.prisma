@@ -118,6 +118,7 @@ model Structure {
   name           String
   description    String?
   ownerId        String
+  imageUrl       String?
   markmapShowWbs Boolean         @default(false)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
@@ -206,6 +207,7 @@ model Backup {
   title      String?
   userId     String
   backupData Json
+  isPublic   Boolean  @default(false)
   fileUrl    String?
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt

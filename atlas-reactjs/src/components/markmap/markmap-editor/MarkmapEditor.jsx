@@ -6,6 +6,7 @@ import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
 import { reparentElements } from "../../../redux/slices/elements";
 import {
   getStructure,
+  getStructuresByUserId,
   updateStructure,
 } from "../../../redux/slices/structures";
 import {
@@ -24,6 +25,8 @@ import NodeModal from "../../modals/NodeModal";
 import RightClickMenu from "../../modals/RightClickMenu";
 import { useMarkmap } from "../markmap-context/MarkmapContext";
 import MarkmapHeader from "../markmap-layout/MarkmapHeader";
+import useCaptureAndUploadSnapshot from "../../../hooks/useCaptureAndUploadSnapshot";
+import Cookies from "js-cookie";
 
 const MarkmapEditor = ({ structureId }) => {
   const dispatch = useDispatch();
@@ -44,6 +47,29 @@ const MarkmapEditor = ({ structureId }) => {
     visible: false,
     position: { x: 0, y: 0 },
   });
+  const fetchStructures = () => {
+    const userId = Cookies.get("atlas_userId");
+    if (!userId) return;
+
+    dispatch(getStructuresByUserId(userId));
+  };
+
+  useEffect(() => {
+    const handleAutoSave = async () => {
+      if (svgRef.current) {
+        await useCaptureAndUploadSnapshot(
+          svgRef.current,
+          structureId,
+          dispatch,
+          fetchStructures
+        );
+      }
+    };
+
+    const debounceTimer = setTimeout(handleAutoSave, 1000);
+
+    return () => clearTimeout(debounceTimer);
+  }, [structureId, fetchStructures]);
 
   const setShowWbs = async (value) => {
     setShowWbsState(value);

@@ -57,22 +57,22 @@ export function SidebarPage({ onSubmit }) {
       icon: TbLayoutDashboardFilled,
       link: "/app/dashboard",
     },
-    { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
-    {
-      name: "Team Members",
-      icon: FaUsersGear,
-      link: "/app/team-members",
-    },
+    // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
+    // {
+    //   name: "Team Members",
+    //   icon: FaUsersGear,
+    //   link: "/app/team-members",
+    // },
     {
       name: "My Backups",
       icon: BsDatabaseFillCheck,
       link: "/app/backups",
     },
-    {
-      name: "Deleted Markmaps",
-      icon: BsFillTrashFill,
-      link: "/app/deleted-markmaps",
-    },
+    // {
+    //   name: "Deleted Markmaps",
+    //   icon: BsFillTrashFill,
+    //   link: "/app/deleted-markmaps",
+    // },
   ];
 
   return (

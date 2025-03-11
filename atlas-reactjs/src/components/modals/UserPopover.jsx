@@ -32,9 +32,7 @@ const UserPopover = () => {
         <div className="bg-gray-50 p-4 rounded-t-lg">
           <ul role="menu">
             <li role="none">
-              <h2 className="text-sm font-semibold text-green-500">
-                Online
-              </h2>
+              <h2 className="text-sm font-semibold text-green-500">Online</h2>
               <ul role="none" className="mt-2 space-y-2">
                 <li
                   role="menuitem"
@@ -76,7 +74,7 @@ const UserPopover = () => {
         </div>
 
         {/* Settings Section */}
-        <div className="p-4 bg-gray-100 rounded-b-lg">
+        {/* <div className="p-4 bg-gray-100 rounded-b-lg">
           <ul role="menu">
             <li role="menuitem">
               <Link
@@ -97,7 +95,7 @@ const UserPopover = () => {
               </Link>
             </li>
           </ul>
-        </div>
+        </div> */}
       </div>
     </div>
   );

@@ -1,3 +1,4 @@
+import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
 import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
@@ -5,14 +6,16 @@ import GenericTable from "../../../components/generic-table/GenericTable";
 import Layout from "../../../components/layout";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import { backupConfig } from "../../../constants";
-import { fetchBackupsByUserId } from "../../../redux/slices/backups";
+import {
+  deleteBackup,
+  fetchBackupsByUserId,
+} from "../../../redux/slices/backups";
 
 const Backups = ({ onSubmit }) => {
   const dispatch = useDispatch();
   const userId = Cookies.get("atlas_userId");
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   useEffect(() => {
@@ -30,13 +33,7 @@ const Backups = ({ onSubmit }) => {
     };
 
     fetchData();
-  }, [dispatch]);
-
-  // Edit Modal Handler
-  const handleEdit = (item) => {
-    setSelectedBackup(item);
-    setIsEditModalOpen(true);
-  };
+  }, [dispatch, userId]);
 
   // Delete Modal Handler
   const handleDelete = (item) => {
@@ -44,26 +41,26 @@ const Backups = ({ onSubmit }) => {
     setIsDeleteModalOpen(true);
   };
 
-  // Confirm Delete
-  const confirmDelete = () => {
+  const confirmDelete = async () => {
     if (!selectedBackup) return;
 
-    // Remove backup from state
-    setBackups((prevBackups) =>
-      prevBackups.filter((backup) => backup.id !== selectedBackup.id)
-    );
-
-    // Close modal
-    setIsDeleteModalOpen(false);
+    try {
+      await dispatch(deleteBackup(selectedBackup.id)).unwrap();
+      cogoToast.success("Backup deleted successfully!");
+      setBackups((prevBackups) =>
+        prevBackups.filter((backup) => backup.id !== selectedBackup.id)
+      );
+    } catch (error) {
+      cogoToast.error("Error deleting backup.");
+    } finally {
+      setIsDeleteModalOpen(false);
+    }
   };
 
-  // Attach Handlers to Actions
   const updatedBackupConfig = {
     ...backupConfig,
     actions: backupConfig.actions.map((action) => {
-      if (action.tooltip === "Edit") {
-        return { ...action, onClick: handleEdit };
-      } else if (action.tooltip === "Delete") {
+      if (action.tooltip === "Delete") {
         return { ...action, onClick: handleDelete };
       }
       return action;
@@ -76,19 +73,10 @@ const Backups = ({ onSubmit }) => {
         <GenericTable {...updatedBackupConfig} data={backups} />
       </div>
 
-      {/* Edit Modal (Placeholder) */}
-      {isEditModalOpen && (
-        <div className="modal">
-          <h2>Edit Backup</h2>
-          <p>{selectedBackup?.title}</p>
-          <button onClick={() => setIsEditModalOpen(false)}>Close</button>
-        </div>
-      )}
-
       {/* Delete Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        title={selectedBackup?.title || "this item"}
+        title={"this item"}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
       />

@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
+import Cookies from "js-cookie";
 
 // Initial state for restore slice
 const initialState = {
@@ -8,13 +9,21 @@ const initialState = {
   message: null,
 };
 
-// Async thunk for restoring a backup
 export const restoreBackup = createAsyncThunk(
   "restore/restoreBackup",
-  async (fileData, { rejectWithValue }) => {
+  async ({ fileData, structureId }, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("file", fileData);
+      formData.append("structureId", structureId);
+
+      const userId = Cookies.get("atlas_userId");
+      if (userId) {
+        formData.append("userId", userId);
+      } else {
+        throw new Error("User not authenticated. No userId found in cookies.");
+      }
+
       const response = await axiosInstance.post("/restore", formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -27,13 +36,21 @@ export const restoreBackup = createAsyncThunk(
   }
 );
 
-// NEW: Async thunk for restoring a full backup
 export const restoreFullBackup = createAsyncThunk(
   "restore/restoreFullBackup",
   async (fileData, { rejectWithValue }) => {
     try {
       const formData = new FormData();
       formData.append("file", fileData);
+
+      // Pass userId for full backup restore as well.
+      const userId = Cookies.get("atlas_userId");
+      if (userId) {
+        formData.append("userId", userId);
+      } else {
+        throw new Error("User not authenticated. No userId found in cookies.");
+      }
+
       const response = await axiosInstance.post("/restore/full", formData, {
         headers: {
           "Content-Type": "multipart/form-data",

@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   HttpException,
   HttpStatus,
@@ -20,13 +21,27 @@ export class RestoreController {
       storage: multer.memoryStorage(),
     }),
   )
-  async restoreBackup(@UploadedFile() file: Express.Multer.File) {
+  async restoreBackup(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('structureId') structureId: string,
+    @Body('userId') userId: string,
+  ) {
     if (!file) {
       throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
     }
+    if (
+      !structureId ||
+      typeof structureId !== 'string' ||
+      structureId.trim() === ''
+    ) {
+      throw new HttpException('Invalid structureId', HttpStatus.BAD_REQUEST);
+    }
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      throw new HttpException('Invalid userId', HttpStatus.BAD_REQUEST);
+    }
 
     try {
-      // Check if the file has the `.zip` extension
+      // Check file extension
       if (!file.originalname.endsWith('.zip')) {
         throw new HttpException(
           'Invalid file type. Expected .zip file.',
@@ -34,8 +49,11 @@ export class RestoreController {
         );
       }
 
-      // Restore the backup using the RestoreService
-      return await this.restoreService.restoreBackup(file.buffer);
+      return await this.restoreService.restoreBackup(
+        file.buffer,
+        structureId,
+        userId,
+      );
     } catch (error) {
       throw new HttpException(
         `Failed to restore backup: ${error.message}`,
@@ -44,19 +62,25 @@ export class RestoreController {
     }
   }
 
+  // Updated full backup endpoint to accept userId as well.
   @Post('full')
   @UseInterceptors(
     FileInterceptor('file', {
       storage: multer.memoryStorage(),
     }),
   )
-  async restoreFullBackup(@UploadedFile() file: Express.Multer.File) {
+  async restoreFullBackup(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('userId') userId: string,
+  ) {
     if (!file) {
       throw new HttpException('No file uploaded', HttpStatus.BAD_REQUEST);
     }
+    if (!userId || typeof userId !== 'string' || userId.trim() === '') {
+      throw new HttpException('Invalid userId', HttpStatus.BAD_REQUEST);
+    }
 
     try {
-      // Check if the file has the .zip extension
       if (!file.originalname.endsWith('.zip')) {
         throw new HttpException(
           'Invalid file type. Expected .zip file.',
@@ -64,7 +88,7 @@ export class RestoreController {
         );
       }
 
-      return await this.restoreService.restoreFullBackup(file.buffer);
+      return await this.restoreService.restoreFullBackup(file.buffer, userId);
     } catch (error) {
       throw new HttpException(
         `Failed to restore backup: ${error.message}`,

@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import cogoToast from "@successtar/cogo-toast";
 import { GoCheck, GoCopy } from "react-icons/go";
 import Tooltip from "../tooltip/Tooltip";
+import { sampleData } from "../../constants";
 const ImportModal = ({
   isOpen,
   onClose,
@@ -17,188 +18,6 @@ const ImportModal = ({
   const [errorMessage, setErrorMessage] = useState("");
   const [selectedFormat, setSelectedFormat] = useState("");
   const [copied, setCopied] = useState(false);
-
-  const sampleData = {
-    csv: `element,Record Data,Tags
-    # Human Language Taxonomy,,
-    ## 1. Phylum: Indo-European,,
-    ### Family: Indo-European,,
-    #### Branch: Germanic,,
-    ##### English,hello there,Important,
-    ##### German,,
-    ##### Dutch,,
-    ##### Swedish,,
-    #### Branch: Romance,,
-    ##### Spanish,,
-    ##### French,,
-    ##### Italian,,
-    ##### Portuguese,,
-    #### Branch: Slavic,,
-    ##### Russian,,
-    ##### Polish,,
-    ##### Czech,,
-    ##### Bulgarian,,
-    #### Branch: Indo-Aryan,,
-    ##### Hindi,,
-    ##### Bengali,,
-    ##### Punjabi,,
-    ##### Urdu,,
-    ## 2. Phylum: Sino-Tibetan,,
-    ### Family: Sino-Tibetan,,
-    #### Branch: Sinitic,,
-    ##### Mandarin Chinese,,
-    ##### Cantonese (Yue),,
-    ##### Hakka,,
-    ##### Min Nan,,
-    #### Branch: Tibeto-Burman,,
-    ##### Burmese,,
-    ##### Tibetan,,
-    ##### Karen,,
-    ##### Manipuri (Meitei),,
-    ## 3. Phylum: Afro-Asiatic,,
-    ### Family: Afro-Asiatic,,
-    #### Branch: Semitic,,
-    ##### Arabic,,
-    ##### Hebrew,,
-    ##### Amharic,,
-    ##### Tigrinya,,
-    #### Branch: Berber,,
-    ##### Tamazight,,
-    ##### Kabyle,,
-    ##### Tachelhit,,
-    #### Branch: Cushitic,,
-    ##### Somali,,
-    ##### Oromo,,
-    ##### Afar,,
-    #### Branch: Chadic,,
-    ##### Hausa,,
-    ##### Margi,,
-    ##### Bura,,`,
-
-    json: `[
-  {
-    "element": "# Human Language Taxonomy",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "## 1. Phylum: Indo-European",
-    "Record Data": "hello world",
-    "Tags": "Important, Urgent, Review"
-  },
-  {
-    "element": "### Family: Indo-European",
-    "Record Data": "nice short",
-    "Tags": "Important, Urgent, Review"
-  },
-  {
-    "element": "#### Branch: Germanic",
-    "Record Data": "wow",
-    "Tags": "Important, Urgent, Review"
-  },
-  {
-    "element": "##### English",
-    "Record Data": "hello there",
-    "Tags": "Important, Urgent, Review"
-  },
-  {
-    "element": "##### German",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### Dutch",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### Swedish",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "#### Branch: Romance",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### Spanish",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### French",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### Italian",
-    "Record Data": "",
-    "Tags": ""
-  },
-  {
-    "element": "##### Portuguese",
-    "Record Data": "",
-    "Tags": ""
-  }
-]`,
-
-    xlsx: `element\tRecord Data\tTags
-# Human Language Taxonomy\t\t
-## 1. Phylum: Indo-European\t\t
-### Family: Indo-European\t\t
-#### Branch: Germanic\t\t
-##### English\thello there\tImportant, Urgent, Review
-##### German\t\t
-##### Dutch\t\t
-##### Swedish\t\t
-#### Branch: Romance\t\t
-##### Spanish\t\t
-##### French\t\t
-##### Italian\t\t
-##### Portuguese\t\t
-#### Branch: Slavic\t\t
-##### Russian\t\t
-##### Polish\t\t
-##### Czech\t\t
-##### Bulgarian\t\t
-#### Branch: Indo-Aryan\t\t
-##### Hindi\t\t
-##### Bengali\t\t
-##### Punjabi\t\t
-##### Urdu\t\t
-## 2. Phylum: Sino-Tibetan\t\t
-### Family: Sino-Tibetan\t\t
-#### Branch: Sinitic\t\t
-##### Mandarin Chinese\t\t
-##### Cantonese (Yue)\t\t
-##### Hakka\t\t
-##### Min Nan\t\t
-#### Branch: Tibeto-Burman\t\t
-##### Burmese\t\t
-##### Tibetan\t\t
-##### Karen\t\t
-##### Manipuri (Meitei)\t\t
-## 3. Phylum: Afro-Asiatic\t\t
-### Family: Afro-Asiatic\t\t
-#### Branch: Semitic\t\t
-##### Arabic\t\t
-##### Hebrew\t\t
-##### Amharic\t\t
-##### Tigrinya\t\t
-#### Branch: Berber\t\t
-##### Tamazight\t\t
-##### Kabyle\t\t
-##### Tachelhit\t\t
-#### Branch: Cushitic\t\t
-##### Somali\t\t
-##### Oromo\t\t
-##### Afar\t\t
-#### Branch: Chadic\t\t
-##### Hausa\t\t
-##### Margi\t\t
-##### Bura\t\t`,
-  };
 
   const handleFormatChange = (e) => {
     setSelectedFormat(e.target.value);
@@ -252,9 +71,21 @@ const ImportModal = ({
     }
   };
 
-  const copyToClipboard = (data, format) => {
-    let formattedData = data;
+  const fallbackCopy = (text) => {
+    const textarea = document.createElement("textarea");
+    textarea.value = text;
+    document.body.appendChild(textarea);
+    textarea.select();
+    const success = document.execCommand("copy");
+    document.body.removeChild(textarea);
 
+    success
+      ? cogoToast.success("Data copied to clipboard!")
+      : cogoToast.error("Failed to copy data");
+  };
+
+  const copyToClipboard = async (data, format) => {
+    let formattedData = data;
     if (format === "xlsx") {
       formattedData = data.replace(/,/g, "\t");
     } else if (format === "csv") {
@@ -271,13 +102,20 @@ const ImportModal = ({
       formattedData = JSON.stringify(JSON.parse(data), null, 2);
     }
 
-    navigator.clipboard
-      .writeText(formattedData)
-      .then(() =>
-        cogoToast.success(`${format.toUpperCase()} data copied to clipboard!`)
-      )
-      .catch((err) => cogoToast.error("Failed to copy data"));
+    if (navigator?.clipboard?.writeText) {
+      try {
+        await navigator.clipboard.writeText(formattedData);
+        return cogoToast.success(
+          `${format.toUpperCase()} data copied to clipboard!`
+        );
+      } catch {
+        fallbackCopy(formattedData);
+      }
+    } else {
+      fallbackCopy(formattedData);
+    }
   };
+
   const handleCopy = () => {
     if (selectedFormat) {
       copyToClipboard(sampleData[selectedFormat], selectedFormat);
@@ -410,7 +248,6 @@ const ImportModal = ({
                         </Tooltip>
                       </div>
 
-                   
                       <pre className="text-xs text-gray-700 mt-2 whitespace-pre-wrap break-words overflow-x-auto max-w-full cursor-text select-text">
                         {sampleData[selectedFormat]}
                       </pre>

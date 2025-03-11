@@ -15,8 +15,6 @@ const UpgradePlans = () => {
   const { plans } = useSelector((state) => state.plans);
   const [currentPlan, setCurrentPlan] = useState(null);
 
-  console.log(plans);
-
   useEffect(() => {
     dispatch(fetchPlans());
 

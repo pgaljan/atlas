@@ -199,12 +199,13 @@ const MarkmapHeader = ({
   const handleFileUpload = async (file) => {
     try {
       setIsLoading(true);
-      const response = await dispatch(restoreBackup(file)).unwrap();
+      const response = await dispatch(
+        restoreBackup({ fileData: file, structureId })
+      ).unwrap();
       cogoToast.success("Backup restored successfully!");
-
       onSuccess();
     } catch (err) {
-      cogoToast.error("Failed to upload structure.");
+      cogoToast.error("Failed to restore backups.");
     } finally {
       setIsLoading(false);
     }
@@ -370,19 +371,17 @@ const MarkmapHeader = ({
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Profile"
-              onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
+              // onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
             >
               <BiUser size={24} className="text-custom-main" />
             </button>
           </Tooltip>
-
-          <button
-            // onClick={toggleShareModal}
-            className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
-          >
-            <FaUserPlus size={20} className="mr-2" />
-            Share
-          </button>
+          <Link to="/app/coming-soon">
+            <button className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg">
+              <FaUserPlus size={20} className="mr-2" />
+              Share
+            </button>
+          </Link>
         </div>
       </div>
       {isUserPopoverVisible && <UserPopover />}

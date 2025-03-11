@@ -1,65 +1,96 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import PremiumModal from "./components/modals/PremiumModal";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 
+// Error and Fallback Pages
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
+
+// OAuth Callback Handlers
 const GoogleCallback = lazy(() =>
   import("./containers/callbacks/google-callback")
 );
 const GithubCallback = lazy(() =>
   import("./containers/callbacks/github-callback")
 );
-const Support = lazy(() => import("./containers/user/support/Support"));
-const MarkmapCanvas = lazy(() =>
-  import("./components/markmap/markmap-canvas/MarkmapCanvas")
-);
-const Profile = lazy(() => import("./containers/user/profile/Profile"));
+
+// Common Authentication Pages
 const Login = lazy(() => import("./containers/common/login/Login"));
 const Register = lazy(() => import("./containers/common/register/Register"));
 const ResetPassword = lazy(() =>
   import("./containers/common/reset-password/ResetPassword")
 );
+
+// Subscription and Plan Management
 const SubscriptionPlans = lazy(() =>
   import("./containers/common/subscription-plans/SubscriptionPlans")
 );
-const Backups = lazy(() => import("./containers/user/backups/Backups"));
-const Dashboard = lazy(() => import("./containers/user/dashboard/Dashboard"));
-const UploadedFiles = lazy(() =>
-  import("./containers/user/uploaded-files/UploadedFiles")
-);
 const UpgradePlans = lazy(() =>
-  import("./containers/user/upgrade-plans/UpgradePlans")
-);
-const TeamMembers = lazy(() =>
-  import("./containers/user/team-members/TeamMembers")
-);
-const DeletedMindmaps = lazy(() =>
-  import("./containers/user/deleted-markmaps/DeletedMarkmaps")
+  import("./containers/user-portal/upgrade-plans/UpgradePlans")
 );
 
-const publicRoutes = [
+// User Portal Pages
+const Dashboard = lazy(() =>
+  import("./containers/user-portal/dashboard/Dashboard")
+);
+const Profile = lazy(() => import("./containers/user-portal/profile/Profile"));
+const Support = lazy(() => import("./containers/user-portal/support/Support"));
+const Backups = lazy(() => import("./containers/user-portal/backups/Backups"));
+const UploadedFiles = lazy(() =>
+  import("./containers/user-portal/uploaded-files/UploadedFiles")
+);
+const TeamMembers = lazy(() =>
+  import("./containers/user-portal/team-members/TeamMembers")
+);
+const DeletedMindmaps = lazy(() =>
+  import("./containers/user-portal/deleted-markmaps/DeletedMarkmaps")
+);
+
+// Additional Components
+const PremiumModal = lazy(() => import("./components/modals/PremiumModal"));
+const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
+const MarkmapCanvas = lazy(() =>
+  import("./components/markmap/markmap-canvas/MarkmapCanvas")
+);
+
+// Organize public routes by type
+const authRoutes = [
   { path: "/", element: <Login /> },
-  { path: "/app/google-callback", element: <GoogleCallback /> },
-  { path: "/app/github-callback", element: <GithubCallback /> },
   { path: "/register", element: <Register /> },
   { path: "/reset-password", element: <ResetPassword /> },
+];
+
+const callbackRoutes = [
+  { path: "/app/google-callback", element: <GoogleCallback /> },
+  { path: "/app/github-callback", element: <GithubCallback /> },
+];
+
+const subscriptionRoutes = [
   { path: "/subscription-plans", element: <SubscriptionPlans /> },
+];
+
+const publicRoutes = [
+  ...authRoutes,
+  ...callbackRoutes,
+  ...subscriptionRoutes,
   { path: "*", element: <NotFound /> },
 ];
 
-const privateRoutes = [
+// Group private (user) routes
+const userRoutes = [
   { path: "/app/dashboard", element: <Dashboard /> },
   { path: "/app/s/:username/:structureId", element: <MarkmapCanvas /> },
+  { path: "/app/coming-soon", element: <ComingSoon /> },
+  { path: "/app/backups", element: <Backups /> },
+  { path: "/app/upgrade-plans", element: <UpgradePlans /> },
   // { path: "/app/team-members", element: <TeamMembers /> },
   // { path: "/app/support", element: <Support /> },
   // { path: "/app/me", element: <Profile /> },
-  { path: "/app/backups", element: <Backups /> },
   // { path: "/app/uploaded-files", element: <UploadedFiles /> },
   // { path: "/app/deleted-markmaps", element: <DeletedMindmaps /> },
-  { path: "/app/upgrade-plans", element: <UpgradePlans /> },
 ];
+
+const privateRoutes = userRoutes;
 
 const App = () => {
   const location = useLocation();

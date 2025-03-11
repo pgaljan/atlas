@@ -138,11 +138,9 @@ const StructureCard = () => {
         </div>
       ) : (
         <div className="p-4 rounded-[18px] bg-custom-background-white h-auto shadow-md">
-          <div className="flex justify-between w-full items-center">
+          <div className="flex justify-between w-full items-center mb-3">
             <div>
-              <h2 className="text-[24px] font-bold text-black mb-3">
-                Dashboard
-              </h2>
+              <h2 className="text-[24px] font-bold text-black">Dashboard</h2>
             </div>
             <div className="flex items-center gap-3">
               <button

@@ -15,8 +15,8 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
 
   // Feature flag checks
   const canExportHtml = useFeatureFlag("Export to HTML/Markdown");
-  const canExportDOC = useFeatureFlag("Export to DOC");
-  const canExportPDF = useFeatureFlag("Export to DOC");
+  const canExportDOC = useFeatureFlag("Export to DOC/PDF");
+  const canExportPDF = useFeatureFlag("Export to DOC/PDF");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {

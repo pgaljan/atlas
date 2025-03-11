@@ -81,7 +81,7 @@ export class FileUploadController {
 
     const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
       (req.headers as any).host
-    }/public/${file.filename}`;
+    }/api/public/${file.filename}`;
     const filePath = join('public', file.filename);
 
     try {
@@ -145,7 +145,7 @@ export class FileUploadController {
         header: true,
         skipEmptyLines: true,
         complete: (result) => resolve(result.data),
-        error: (error) => reject(error),
+        error: (error: any) => reject(error),
       });
     });
   }

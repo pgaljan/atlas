@@ -64,7 +64,7 @@ const Header = () => {
         {/* Right Side - Learning, Help, Upgrade, User Image */}
         <div className="flex items-center ml-4 space-x-6">
           {/* Learning Tab */}
-          <div
+          {/* <div
             className={`cursor-pointer ${
               activeTab === "Learning"
                 ? "underline underline-offset-4 text-black"
@@ -73,9 +73,9 @@ const Header = () => {
             onClick={() => handleTabClick("Learning")}
           >
             Support
-          </div>
+          </div> */}
 
-          <Dropdown
+          {/* <Dropdown
             arrowIcon={false}
             inline
             label={
@@ -96,7 +96,7 @@ const Header = () => {
             <Dropdown.Item icon={HiNewspaper}>
               <span className="ml-2">Atlas News and Updates</span>
             </Dropdown.Item>
-          </Dropdown>
+          </Dropdown> */}
 
           {/* User Icon */}
           <Dropdown
@@ -107,21 +107,23 @@ const Header = () => {
                 alt="User settings"
                 img="/assets/userimg.jpeg"
                 rounded
-                className="w-[40px] h-[28px]"
+                className="w-[40px]"
               />
             }
           >
-            <Dropdown.Header>
-              <span className="block truncate text-sm font-medium">
-                {Cookies.get("atlas_username")}
-              </span>
-            </Dropdown.Header>
-            <Link to="/app/me">
-              <Dropdown.Item>Profile</Dropdown.Item>
-            </Link>
-            <Dropdown.Item>Notification preferences</Dropdown.Item>
-            <Dropdown.Divider />
-            <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
+            <div className="w-auto min-w-[150px]">
+              <Dropdown.Header>
+                <span className="block truncate text-sm font-medium">
+                  {Cookies.get("atlas_username")}
+                </span>
+              </Dropdown.Header>
+              {/* <Link to="/app/me">
+                <Dropdown.Item>Profile</Dropdown.Item>
+              </Link> */}
+              {/* <Dropdown.Item>Notification preferences</Dropdown.Item> */}
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
+            </div>
           </Dropdown>
         </div>
       </Navbar>

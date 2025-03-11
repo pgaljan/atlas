@@ -48,17 +48,51 @@ export default function useMarkmapInteractions({
 
     // Reference to track the currently highlighted (hovered) drop target
     let currentlyHighlighted = null;
-
     const nodes = markmapInstance.svg.selectAll("g.markmap-node");
 
-    // Mouse events for hover highlight and node click
+    // Create tooltip element (for full name display)
+    const tooltip = d3
+      .select("body")
+      .append("div")
+      .attr("class", "tooltip")
+      .style("position", "absolute")
+      .style("background", "rgba(0, 0, 0, 0.75)")
+      .style("color", "#fff")
+      .style("padding", "6px 10px")
+      .style("border-radius", "5px")
+      .style("font-size", "14px")
+      .style("white-space", "nowrap")
+      .style("pointer-events", "none")
+      .style("opacity", 0);
+
+    // Attach mouse events for tooltip and hover highlight
     nodes
-      .on("mouseover", function () {
+      .on("mouseover", function (event, d) {
         d3.select(this).classed("hovered", true);
+        const nodeText = d.originalContent || d.content;
+         // Show tooltip ONLY if the node is NOT the root and its rendered content includes an ellipsis.
+         if (d.level !== 0 && d.content && d.content.includes("...")) {
+        tooltip
+          .text(nodeText)
+          .style("opacity", 1)
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY + 10}px`);
+         }
+         else {
+          tooltip.style("opacity", 0);
+         }
+      })
+      .on("mousemove", function (event) {
+        tooltip
+          .style("left", `${event.pageX + 10}px`)
+          .style("top", `${event.pageY + 10}px`);
       })
       .on("mouseout", function () {
         d3.select(this).classed("hovered", false);
+        tooltip.style("opacity", 0);
       });
+
+    // Click event for node selection
     nodes.on("click", function (event, d) {
       event.stopPropagation();
 
@@ -105,7 +139,8 @@ export default function useMarkmapInteractions({
         .attr("x", -8)
         .attr("y", 2)
         .style("cursor", "grab")
-        .on("click", (event) => event.stopPropagation()).html(`
+        .on("click", (event) => event.stopPropagation())
+        .html(`
           <g>
             <!-- Transparent background for interaction -->
             <rect width="25" height="25" fill="transparent" />
@@ -250,6 +285,11 @@ export default function useMarkmapInteractions({
           setDraggedNode(null);
         })
     );
+
+    // Cleanup tooltip on unmount
+    return () => {
+      tooltip.remove();
+    };
   }, [
     treeData,
     markmapInstance,

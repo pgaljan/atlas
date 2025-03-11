@@ -1,34 +1,33 @@
-import cogoToast from "@successtar/cogo-toast"
-import Cookies from "js-cookie"
-import React, { useEffect, useRef, useState } from "react"
-import { BiLink } from "react-icons/bi"
-import { FaEdit } from "react-icons/fa"
-import { FaCirclePlus } from "react-icons/fa6"
-import { GiBrassEye } from "react-icons/gi"
-import { IoIosRemoveCircle } from "react-icons/io"
-import { IoTrash } from "react-icons/io5"
-import { PiTreeStructureFill } from "react-icons/pi"
-import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri"
-import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import useOutsideClick from "../../hooks/useOutsideClick"
-import { updateStructure } from "../../redux/slices/structures"
-import { uploadFile } from "../../redux/slices/upload-files"
-
-import useFeatureFlag from "../../hooks/useFeatureFlag"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import React, { useEffect, useRef, useState } from "react";
+// import { BiLink } from "react-icons/bi";
+import { FaEdit } from "react-icons/fa";
+import { FaCirclePlus } from "react-icons/fa6";
+import { GiBrassEye } from "react-icons/gi";
+import { IoIosRemoveCircle } from "react-icons/io";
+import { IoTrash } from "react-icons/io5";
+import { PiTreeStructureFill } from "react-icons/pi";
+import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
+import useOutsideClick from "../../hooks/useOutsideClick";
 import {
   createElement,
   deleteElement,
   fetchElementById,
   updateElement,
-} from "../../redux/slices/elements"
-import { deleteRecord, getRecordsByElement } from "../../redux/slices/records"
-import InputField from "../input-field/InputField"
-import Tooltip from "../tooltip/Tooltip"
-import AddQuillModal from "./AddQuillModal"
-import DeleteModal from "./DeleteModal"
-import ImportModal from "./ImportModal"
-import ModalComponent from "./Modal"
+} from "../../redux/slices/elements";
+import { deleteRecord, getRecordsByElement } from "../../redux/slices/records";
+import { updateStructure } from "../../redux/slices/structures";
+import { uploadFile } from "../../redux/slices/upload-files";
+import InputField from "../input-field/InputField";
+import Tooltip from "../tooltip/Tooltip";
+import AddQuillModal from "./AddQuillModal";
+import DeleteModal from "./DeleteModal";
+import ImportModal from "./ImportModal";
+import ModalComponent from "./Modal";
 
 const NodeModal = ({
   position,
@@ -41,34 +40,34 @@ const NodeModal = ({
   elementId,
   structureName: initialStructureName,
 }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const userId = Cookies.get("atlas_userId")
-  const [isLoading, setIsLoading] = useState(false)
-  const [deleteRecordId, setDeleteRecordId] = useState(null)
-  const [recordExists, setRecordExists] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [childModalVisible, setChildModalVisible] = useState(false)
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [elementValue, setElementValue] = useState("")
-  const [actionType, setActionType] = useState(null)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isEdit, setIsEdit] = useState(false)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userId = Cookies.get("atlas_userId");
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteRecordId, setDeleteRecordId] = useState(null);
+  const [recordExists, setRecordExists] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [childModalVisible, setChildModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [elementValue, setElementValue] = useState("");
+  const [actionType, setActionType] = useState(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [editStructureModalVisible, setEditStructureModalVisible] =
-    useState(false)
-  const [structureName, setStructureName] = useState(initialStructureName)
+    useState(false);
+  const [structureName, setStructureName] = useState(initialStructureName);
 
   // Feature flags
-  const canImportStructure = useFeatureFlag("Import from Excel")
-  const canTagRecord = useFeatureFlag("Rich Text Records")
+  const canImportStructure = useFeatureFlag("Import from Excel");
+  const canTagRecord = useFeatureFlag("Rich Text Records");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action()
+      action();
     } else {
-      navigate(`?plan=upgrade-to-premium`)
+      navigate(`?plan=upgrade-to-premium`);
     }
-  }
+  };
 
   const modalRef = useOutsideClick(() => {
     if (
@@ -78,23 +77,23 @@ const NodeModal = ({
       !modalVisible &&
       !deleteModalVisible
     ) {
-      onClose()
+      onClose();
     }
-  })
+  });
 
-  const focusRef = useRef(null)
+  const focusRef = useRef(null);
 
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
-      cogoToast.error("Element title cannot be empty")
-      return
+      cogoToast.error("Element title cannot be empty");
+      return;
     }
 
     const elementData = {
       structureId,
       parentId,
       name: elementValue,
-    }
+    };
 
     try {
       if (isEdit && elementId) {
@@ -103,150 +102,150 @@ const NodeModal = ({
             id: elementId,
             updateElementData: elementValue,
           })
-        ).unwrap()
-        cogoToast.success("Element updated successfully!")
+        ).unwrap();
+        cogoToast.success("Element updated successfully!");
       } else {
-        await dispatch(createElement(elementData)).unwrap()
-        cogoToast.success("Element added successfully!")
+        await dispatch(createElement(elementData)).unwrap();
+        cogoToast.success("Element added successfully!");
       }
-      setChildModalVisible(false)
-      setElementValue("")
-      onClose()
-      onSuccess()
+      setChildModalVisible(false);
+      setElementValue("");
+      onClose();
+      onSuccess();
     } catch (error) {
       cogoToast.error(
         "Error saving element: " + (error.message || "Unknown error")
-      )
+      );
     }
-  }
+  };
 
   const handleEditStructureSubmit = async () => {
     if (!structureName.trim()) {
-      cogoToast.error("Structure name cannot be empty")
-      return
+      cogoToast.error("Structure name cannot be empty");
+      return;
     }
     await dispatch(
       updateStructure({ id: structureId, updateData: { name: structureName } })
-    ).unwrap()
-    cogoToast.success("Structure name updated successfully!")
-    setEditStructureModalVisible(false)
-    onSuccess()
-  }
+    ).unwrap();
+    cogoToast.success("Structure name updated successfully!");
+    setEditStructureModalVisible(false);
+    onSuccess();
+  };
 
   const handleDeleteConfirm = async () => {
     try {
       if (!deleteRecordId) {
-        await dispatch(deleteElement(elementId)).unwrap()
-        cogoToast.success("Element deleted successfully!")
+        await dispatch(deleteElement(elementId)).unwrap();
+        cogoToast.success("Element deleted successfully!");
       } else {
-        await dispatch(deleteRecord(deleteRecordId)).unwrap()
-        cogoToast.success("Record deleted successfully!")
+        await dispatch(deleteRecord(deleteRecordId)).unwrap();
+        cogoToast.success("Record deleted successfully!");
       }
-      setDeleteModalVisible(false)
-      setDeleteRecordId(null)
-      onClose()
-      onSuccess()
+      setDeleteModalVisible(false);
+      setDeleteRecordId(null);
+      onClose();
+      onSuccess();
     } catch (error) {
       cogoToast.error(
         "Error deleting element: " + (error.message || "Unknown error")
-      )
+      );
     }
-  }
+  };
 
-  const handleDeleteButtonClick = recordId => {
+  const handleDeleteButtonClick = (recordId) => {
     if (recordId) {
-      setDeleteRecordId(recordId)
+      setDeleteRecordId(recordId);
     } else {
-      setDeleteRecordId(null)
+      setDeleteRecordId(null);
     }
-    setDeleteModalVisible(true)
-  }
+    setDeleteModalVisible(true);
+  };
 
   // Fetch record to check if it exists
   useEffect(() => {
     if (elementId) {
       dispatch(getRecordsByElement(elementId))
         .unwrap()
-        .then(data => {
+        .then((data) => {
           if (data.length > 0) {
-            setRecordExists(true)
+            setRecordExists(true);
           } else {
-            setRecordExists(false)
+            setRecordExists(false);
           }
         })
-        .catch(() => setRecordExists(false))
+        .catch(() => setRecordExists(false));
     }
-  }, [elementId, dispatch])
+  }, [elementId, dispatch]);
 
   useEffect(() => {
     if (isEdit && elementId) {
-      dispatch(fetchElementById(elementId)).then(action => {
-        const element = action.payload
-        setElementValue(element.name)
-      })
+      dispatch(fetchElementById(elementId)).then((action) => {
+        const element = action.payload;
+        setElementValue(element.name);
+      });
     }
-  }, [isEdit, elementId, dispatch])
+  }, [isEdit, elementId, dispatch]);
 
-  const handleKeyPress = e => {
+  const handleKeyPress = (e) => {
     if (e?.key === "Enter") {
-      handleModalSubmit()
+      handleModalSubmit();
     }
-  }
+  };
 
-  const handleViewEditRecord = actionType => {
+  const handleViewEditRecord = (actionType) => {
     switch (actionType) {
       case "add":
-        setActionType("add")
-        setModalVisible(true)
-        setIsEdit(false)
-        break
+        setActionType("add");
+        setModalVisible(true);
+        setIsEdit(false);
+        break;
       case "view":
-        setActionType("view")
-        setModalVisible(true)
-        setIsEdit(false)
-        break
+        setActionType("view");
+        setModalVisible(true);
+        setIsEdit(false);
+        break;
       case "edit":
-        setActionType("edit")
-        setModalVisible(true)
-        setIsEdit(true)
-        break
+        setActionType("edit");
+        setModalVisible(true);
+        setIsEdit(true);
+        break;
       default:
-        setModalVisible(false)
-        break
+        setModalVisible(false);
+        break;
     }
-  }
+  };
 
-  const handleKeyPressEditStructure = e => {
+  const handleKeyPressEditStructure = (e) => {
     if (e?.key === "Enter") {
-      handleEditStructureSubmit()
+      handleEditStructureSubmit();
     }
-  }
+  };
 
-  const handleFileSelection = file => {
+  const handleFileSelection = (file) => {
     if (!file) {
-      cogoToast.error("Please select a valid structure!")
-      return
+      cogoToast.error("Please select a valid structure!");
+      return;
     }
 
-    setIsImportModalOpen(false)
-    handleFileUpload(file)
-  }
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
 
-  const handleFileUpload = async file => {
+  const handleFileUpload = async (file) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
-      await dispatch(uploadFile({ file, userId, structureId })).unwrap()
+      await dispatch(uploadFile({ file, userId, structureId })).unwrap();
 
-      cogoToast.success("Structure uploaded successfully!")
+      cogoToast.success("Structure uploaded successfully!");
 
-      onSuccess()
+      onSuccess();
     } catch (err) {
-      cogoToast.error("Failed to upload structure.")
+      cogoToast.error("Failed to upload structure.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -324,7 +323,7 @@ const NodeModal = ({
               </Tooltip>
             </>
           )}
-          {wbs !== "1" && (
+          {/* {wbs !== "1" && (
             <Tooltip label="Edit Link">
               <button
                 aria-label="Edit Link"
@@ -333,15 +332,15 @@ const NodeModal = ({
                 <BiLink size={24} className="text-custom-main" />
               </button>
             </Tooltip>
-          )}
+          )} */}
 
           <Tooltip label="Add Element">
             <button
               aria-label="Add Element"
               className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               onClick={() => {
-                setChildModalVisible(true)
-                setIsEdit(false)
+                setChildModalVisible(true);
+                setIsEdit(false);
               }}
             >
               <FaCirclePlus size={24} className="text-custom-main" />
@@ -353,8 +352,8 @@ const NodeModal = ({
                 aria-label="Edit Element"
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 onClick={() => {
-                  setChildModalVisible(true)
-                  setIsEdit(true)
+                  setChildModalVisible(true);
+                  setIsEdit(true);
                 }}
               >
                 <FaEdit size={24} className="text-custom-main" />
@@ -411,7 +410,7 @@ const NodeModal = ({
             disabled={!elementValue.trim()}
             focusRef={focusRef}
             onKeyDown={handleKeyPress}
-            onChange={e => setElementValue(e.target.value)}
+            onChange={(e) => setElementValue(e.target.value)}
             placeholder="Enter element name"
           />
         </ModalComponent>
@@ -434,7 +433,7 @@ const NodeModal = ({
             disabled={!structureName.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
-            onChange={e => setStructureName(e.target.value)}
+            onChange={(e) => setStructureName(e.target.value)}
             placeholder="Enter structure name"
           />
         </ModalComponent>
@@ -452,16 +451,16 @@ const NodeModal = ({
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           title={"Import Structure"}
-          format={".json, .csv, .xls, .xlsx"}
+          format={".json, .csv, .xls, .xlsx, .zip"}
           buttonText={"Import"}
           isLoading={isLoading}
-          handleFileSelection={file => handleFileSelection(file)}
+          handleFileSelection={(file) => handleFileSelection(file)}
           onSuccess={onSuccess}
           showDownloadSample={true}
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default NodeModal
+export default NodeModal;

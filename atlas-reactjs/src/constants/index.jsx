@@ -329,3 +329,184 @@ export const dummyFaqs = [
     answer: "Go to team settings and update the member roles.",
   },
 ];
+export const sampleData = {
+  csv: `element,Record Data,Tags
+  # Human Language Taxonomy,,
+  ## 1. Phylum: Indo-European,,
+  ### Family: Indo-European,,
+  #### Branch: Germanic,,
+  ##### English,hello there,Important,
+  ##### German,,
+  ##### Dutch,,
+  ##### Swedish,,
+  #### Branch: Romance,,
+  ##### Spanish,,
+  ##### French,,
+  ##### Italian,,
+  ##### Portuguese,,
+  #### Branch: Slavic,,
+  ##### Russian,,
+  ##### Polish,,
+  ##### Czech,,
+  ##### Bulgarian,,
+  #### Branch: Indo-Aryan,,
+  ##### Hindi,,
+  ##### Bengali,,
+  ##### Punjabi,,
+  ##### Urdu,,
+  ## 2. Phylum: Sino-Tibetan,,
+  ### Family: Sino-Tibetan,,
+  #### Branch: Sinitic,,
+  ##### Mandarin Chinese,,
+  ##### Cantonese (Yue),,
+  ##### Hakka,,
+  ##### Min Nan,,
+  #### Branch: Tibeto-Burman,,
+  ##### Burmese,,
+  ##### Tibetan,,
+  ##### Karen,,
+  ##### Manipuri (Meitei),,
+  ## 3. Phylum: Afro-Asiatic,,
+  ### Family: Afro-Asiatic,,
+  #### Branch: Semitic,,
+  ##### Arabic,,
+  ##### Hebrew,,
+  ##### Amharic,,
+  ##### Tigrinya,,
+  #### Branch: Berber,,
+  ##### Tamazight,,
+  ##### Kabyle,,
+  ##### Tachelhit,,
+  #### Branch: Cushitic,,
+  ##### Somali,,
+  ##### Oromo,,
+  ##### Afar,,
+  #### Branch: Chadic,,
+  ##### Hausa,,
+  ##### Margi,,
+  ##### Bura,,`,
+
+  json: `[
+{
+  "element": "# Human Language Taxonomy",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "## 1. Phylum: Indo-European",
+  "Record Data": "hello world",
+  "Tags": "Important, Urgent, Review"
+},
+{
+  "element": "### Family: Indo-European",
+  "Record Data": "nice short",
+  "Tags": "Important, Urgent, Review"
+},
+{
+  "element": "#### Branch: Germanic",
+  "Record Data": "wow",
+  "Tags": "Important, Urgent, Review"
+},
+{
+  "element": "##### English",
+  "Record Data": "hello there",
+  "Tags": "Important, Urgent, Review"
+},
+{
+  "element": "##### German",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### Dutch",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### Swedish",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "#### Branch: Romance",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### Spanish",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### French",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### Italian",
+  "Record Data": "",
+  "Tags": ""
+},
+{
+  "element": "##### Portuguese",
+  "Record Data": "",
+  "Tags": ""
+}
+]`,
+
+  xlsx: `element\tRecord Data\tTags
+# Human Language Taxonomy\t\t
+## 1. Phylum: Indo-European\t\t
+### Family: Indo-European\t\t
+#### Branch: Germanic\t\t
+##### English\thello there\tImportant, Urgent, Review
+##### German\t\t
+##### Dutch\t\t
+##### Swedish\t\t
+#### Branch: Romance\t\t
+##### Spanish\t\t
+##### French\t\t
+##### Italian\t\t
+##### Portuguese\t\t
+#### Branch: Slavic\t\t
+##### Russian\t\t
+##### Polish\t\t
+##### Czech\t\t
+##### Bulgarian\t\t
+#### Branch: Indo-Aryan\t\t
+##### Hindi\t\t
+##### Bengali\t\t
+##### Punjabi\t\t
+##### Urdu\t\t
+## 2. Phylum: Sino-Tibetan\t\t
+### Family: Sino-Tibetan\t\t
+#### Branch: Sinitic\t\t
+##### Mandarin Chinese\t\t
+##### Cantonese (Yue)\t\t
+##### Hakka\t\t
+##### Min Nan\t\t
+#### Branch: Tibeto-Burman\t\t
+##### Burmese\t\t
+##### Tibetan\t\t
+##### Karen\t\t
+##### Manipuri (Meitei)\t\t
+## 3. Phylum: Afro-Asiatic\t\t
+### Family: Afro-Asiatic\t\t
+#### Branch: Semitic\t\t
+##### Arabic\t\t
+##### Hebrew\t\t
+##### Amharic\t\t
+##### Tigrinya\t\t
+#### Branch: Berber\t\t
+##### Tamazight\t\t
+##### Kabyle\t\t
+##### Tachelhit\t\t
+#### Branch: Cushitic\t\t
+##### Somali\t\t
+##### Oromo\t\t
+##### Afar\t\t
+#### Branch: Chadic\t\t
+##### Hausa\t\t
+##### Margi\t\t
+##### Bura\t\t`,
+};

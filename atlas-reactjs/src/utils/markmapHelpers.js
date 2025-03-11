@@ -11,7 +11,6 @@ export const assignWbsNumbers = (
     wbs: prefix,
     structureId: node.structureId || parentStructureId,
   };
-
   if (node.children) {
     wbsNode.children = node.children.map((child, index) =>
       assignWbsNumbers(child, `${prefix}.${index + 1}`, wbsNode.structureId)
@@ -21,16 +20,21 @@ export const assignWbsNumbers = (
   return wbsNode;
 };
 
+const truncateText = (text, limit = 10) => {
+  if (!text) return "";
+  return text.length > limit ? text.substring(0, limit) + "..." : text;
+};
+
 export const treeToMarkmapData = (node, showWbs) => {
   if (!node) return null;
 
   const actualContent = node.originalContent || node.content || node.name;
-
+  const isRoot = node.level === 0;
+  const truncatedContent = isRoot ? actualContent : truncateText(actualContent, 10);
   const updatedContent =
     showWbs && node.wbs && node.wbs !== "1"
-      ? `${node.wbs} - ${actualContent}`
-      : actualContent;
-
+      ? `${node.wbs} - ${truncatedContent}`
+      : truncatedContent;
   return {
     content: updatedContent,
     originalContent: actualContent,

@@ -181,6 +181,7 @@ export class StructureService {
         title,
         description,
         visibility,
+        imageUrl,
         elements,
         maps,
         markmapShowWbs,
@@ -195,7 +196,7 @@ export class StructureService {
 
       const elementsToProcess = elements || [];
 
-      // Perform the update
+      // Perform the update, including the imageUrl if provided
       const updatedStructure = await this.prisma.structure.update({
         where: { id },
         data: {
@@ -204,6 +205,7 @@ export class StructureService {
           title: title || undefined,
           description: description || undefined,
           visibility: visibility || undefined,
+          imageUrl: imageUrl || undefined, 
           updatedAt: new Date(),
           elements: elements
             ? {
@@ -220,7 +222,7 @@ export class StructureService {
         },
       });
 
-      // Log the update in the AuditLog
+      // Log the update in the AuditLog including imageUrl snapshot info
       await this.prisma.auditLog.create({
         data: {
           action: 'UPDATE',
@@ -230,6 +232,7 @@ export class StructureService {
             name,
             description,
             visibility,
+            imageUrl, // Include imageUrl snapshot in the log
             elements: elementsToProcess.map((element) => ({
               type: element.name,
             })),
