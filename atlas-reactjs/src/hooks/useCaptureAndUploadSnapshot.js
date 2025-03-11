@@ -3,7 +3,7 @@ import { uploadFile } from "../redux/slices/upload-files";
 import { updateStructure } from "../redux/slices/structures";
 import Cookies from "js-cookie";
 
-const useuseCaptureAndUploadSnapshot = async (
+const useCaptureAndUploadSnapshot = async (
   svgElement,
   structureId,
   dispatch,
@@ -61,4 +61,4 @@ const useuseCaptureAndUploadSnapshot = async (
     throw new Error(`Failed to capture and upload snapshot: ${error.message}`);
   }
 };
-export default useuseCaptureAndUploadSnapshot;
+export default useCaptureAndUploadSnapshot;
