@@ -184,20 +184,30 @@ export class ElementService {
       throw new BadRequestException('Invalid reparenting requests');
     }
 
-    const updatedElements = new Set<string>(); // Track affected structures
+    const updatedElements = new Set<string>();
 
     for (const request of reparentingRequests) {
       const { sourceElementId, targetElementId, attributes } = request;
 
-      const sourceElement = await this.prisma.element.findUnique({
-        where: { id: sourceElementId },
-      });
+      let sourceElement = null;
+      if (sourceElementId) {
+        sourceElement = await this.prisma.element.findUnique({
+          where: { id: sourceElementId },
+        });
+        if (!sourceElement) {
+          throw new NotFoundException(
+            `Source element not found for id ${sourceElementId}`,
+          );
+        }
+      }
+
       const targetElement = await this.prisma.element.findUnique({
         where: { id: targetElementId },
       });
-
-      if (!sourceElement || !targetElement) {
-        throw new NotFoundException(`One or both elements not found`);
+      if (!targetElement) {
+        throw new NotFoundException(
+          `Target element not found for id ${targetElementId}`,
+        );
       }
 
       if (!attributes) {
@@ -207,22 +217,30 @@ export class ElementService {
       const updatedElement = await this.prisma.element.update({
         where: { id: targetElementId },
         data: {
-          parentId: sourceElementId,
+          parentId: sourceElementId || null,
         },
       });
 
-      updatedElements.add(sourceElement.structureId);
+      if (sourceElement) {
+        updatedElements.add(sourceElement.structureId);
+      } else {
+        updatedElements.add(targetElement.structureId);
+      }
 
       await this.logAudit(
         'REPARENT',
         'Element',
         updatedElement.id.toString(),
-        { sourceElementId, targetElementId, attributes },
+        {
+          sourceElementId: sourceElementId || null,
+          targetElementId,
+          attributes,
+        },
         userId,
       );
     }
 
-    // Update updatedAt for affected structures
+    // Update updatedAt for each affected structure.
     for (const structureId of updatedElements) {
       await this.prisma.structure.update({
         where: { id: structureId },

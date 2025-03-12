@@ -1,4 +1,0 @@
-element,parentId,wbs,uniqWBS,additionalData
-Element 1,,WBS-001,WBS-001-001,"{""key1"": ""value1""}"
-Element 2,1.0,WBS-002,WBS-002-001,"{""key2"": ""value2""}"
-Element 3,2.0,WBS-003,WBS-003-001,"{""key3"": ""value3""}"

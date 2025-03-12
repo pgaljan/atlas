@@ -64,7 +64,7 @@ const Card = ({
             {/* Title */}
             <Link to={`/app/s/${username}/${structureId}`}>
               <h3
-                className={`text-lg font-semibold truncate ${customTextColor}`}
+                className={`text-lg capitalize font-semibold truncate ${customTextColor}`}
                 title={title}
               >
                 {title}

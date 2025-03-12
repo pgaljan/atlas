@@ -27,7 +27,6 @@ export const exportAsDoc = (treeData) => {
     if (!node) return;
     const elementName = node.name || "Untitled";
     if (node.Record) {
-      // Since each node has only one record
       const record = node.Record;
       const recordContent =
         (record.metadata && record.metadata.content) || "<p>No content</p>";
@@ -68,8 +67,6 @@ export const exportAsDoc = (treeData) => {
 
   treeData.children.forEach((child) => processNode(child));
 
-  // Add full HTML export of the structure
-  const sanitizedData = sanitizeTreeData(treeData);
   const htmlContent = `<!DOCTYPE html>
 <html>
   <head>
@@ -92,7 +89,7 @@ export const exportAsDoc = (treeData) => {
     <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
     <script>
       window.onload = function () {
-        const data = ${JSON.stringify(sanitizedData, null, 2)};
+        const data = ${JSON.stringify(treeData, null, 2)};
         const markmapInstance = window.markmap.Markmap.create("#mindmap", null, data);
       };
     </script>
@@ -116,7 +113,6 @@ export const exportAsDoc = (treeData) => {
     })
     .catch((error) => {
       cogoToast.error("Failed to generate ZIP file.");
-      console.error("Error generating ZIP:", error);
     });
 };
 
@@ -145,27 +141,49 @@ export const exportAsPdf = async (treeData) => {
     const elementName = node.name || "Untitled";
     if (node.Record) {
       const record = node.Record;
-      const recordContent =
-        (record.metadata && record.metadata.content) || "No content";
-      const recordTags = Array.isArray(record.tags)
-        ? record.tags.map((tag) => `${tag.key}: ${tag.value}`).join(", ")
-        : "";
+      const recordContent = record.metadata?.content || "No content";
+      const recordTags =
+        record.tags?.map((tag) => `${tag.key}: ${tag.value}`).join(", ") || "";
+
       const doc = new jsPDF();
       doc.setFontSize(16);
       doc.text(`${elementName}`, 10, 20);
       doc.setFontSize(12);
       doc.text(`Exported on: ${timestamp}`, 10, 30);
-      const plainContent = stripHtml(recordContent);
-      const textLines = doc.splitTextToSize(plainContent, 180);
-      doc.text(textLines, 10, 40);
-      if (recordTags) {
-        doc.text(`Tags: ${recordTags}`, 10, 40 + textLines.length * 10);
+
+      // Extract images from HTML
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = recordContent;
+      const images = tempDiv.getElementsByTagName("img");
+
+      let yOffset = 40;
+      for (let img of images) {
+        try {
+          const imageData = img.src; 
+          const width = 80; 
+          const height = 80; 
+          doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
+          yOffset += height + 10;
+        } catch (error) {
+          console.error("Error embedding image:", error);
+        }
       }
+
+      // Add text content after images
+      const plainContent = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
+      const textLines = doc.splitTextToSize(plainContent, 180);
+      doc.text(textLines, 10, yOffset);
+
+      if (recordTags) {
+        doc.text(`Tags: ${recordTags}`, 10, yOffset + textLines.length * 10);
+      }
+
       const pdfBlob = doc.output("blob");
       const fileName = `${elementName.replace(/\s+/g, "_")}.pdf`;
       zip.file(fileName, pdfBlob);
     }
-    if (node.children && node.children.length > 0) {
+
+    if (node.children?.length) {
       for (const child of node.children) {
         await processNode(child);
       }
@@ -200,7 +218,7 @@ export const exportAsPdf = async (treeData) => {
     <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
     <script>
       window.onload = function () {
-        const data = ${JSON.stringify(sanitizedData, null, 2)};
+        const data = ${JSON.stringify(treeData, null, 2)};
         const markmapInstance = window.markmap.Markmap.create("#mindmap", null, data);
       };
     </script>
@@ -224,7 +242,6 @@ export const exportAsPdf = async (treeData) => {
     })
     .catch((error) => {
       cogoToast.error("Failed to generate ZIP file.");
-      console.error("Error generating ZIP:", error);
     });
 };
 

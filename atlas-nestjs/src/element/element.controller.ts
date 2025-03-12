@@ -92,6 +92,7 @@ export class ElementController {
       await this.elementService.reparentElements(reparentElementsDto);
       return { message: 'Elements reparented successfully' };
     } catch (error) {
+      console.log(error)
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException

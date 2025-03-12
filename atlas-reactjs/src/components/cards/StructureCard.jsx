@@ -6,12 +6,12 @@ import { PiTreeStructureBold } from "react-icons/pi";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import Card from "../../components/cards/Card";
 import { createFullUserBackup } from "../../redux/slices/backups";
 import { restoreFullBackup } from "../../redux/slices/restore-backups";
 import { getStructuresByUserId } from "../../redux/slices/structures";
 import { formatRelativeTime } from "../../utils/timeUtils";
 import ImportModal from "../modals/ImportModal";
-import Card from "../../components/cards/Card";
 
 const StructureCard = () => {
   const dispatch = useDispatch();
@@ -24,7 +24,6 @@ const StructureCard = () => {
   const username = Cookies.get("atlas_username");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
-  // Function to toggle modal
   const toggleImportModal = () => {
     setIsImportModalOpen((prev) => !prev);
   };

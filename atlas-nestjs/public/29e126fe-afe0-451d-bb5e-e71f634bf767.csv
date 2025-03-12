@@ -1,6 +1,0 @@
-element,parentId,additionalData
-Element 1,,{"info":"Some additional info for Element 1"}
-Element 2,Element 1,{"info":"Some additional info for Element 2"}
-Element 3,Element 1,{"info":"Some additional info for Element 3"}
-Element 4,,{"info":"Some additional info for Element 4"}
-Element 5,Element 4,{"info":"Some additional info for Element 5"}

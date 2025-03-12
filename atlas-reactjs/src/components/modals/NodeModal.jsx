@@ -451,7 +451,7 @@ const NodeModal = ({
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
           title={"Import Structure"}
-          format={".json, .csv, .xls, .xlsx, .zip"}
+          format={".json, .csv, .xls, .xlsx"}
           buttonText={"Import"}
           isLoading={isLoading}
           handleFileSelection={(file) => handleFileSelection(file)}

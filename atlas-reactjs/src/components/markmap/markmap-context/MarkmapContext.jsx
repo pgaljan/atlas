@@ -22,12 +22,11 @@ export const MarkmapProvider = ({ children }) => {
       });
       setMarkmapInstance(instance);
 
-      // Remove autoFit after initial render
-      const removeAutoFit = () => {
-        instance.setOptions({ autoFit: false });
-      };
+      instance.fit();
 
-      setTimeout(removeAutoFit, 0);
+      setTimeout(() => {
+        instance.setOptions({ autoFit: false });
+      }, 0);
     }
   }, [svgRef, markmapInstance]);
 
