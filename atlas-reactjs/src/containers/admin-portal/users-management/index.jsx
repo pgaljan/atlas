@@ -21,6 +21,7 @@ const UserTable = () => {
   const dispatch = useDispatch();
   const [isOpen, setIsOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Local state for add/edit form fields
   const [fullName, setFullName] = useState("");
@@ -32,7 +33,7 @@ const UserTable = () => {
   // State to track if we're editing; if null, we're adding
   const [editingUser, setEditingUser] = useState(null);
 
-  // Delete modal states
+  // Delete modal states (store full user object)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
 
@@ -66,10 +67,10 @@ const UserTable = () => {
     setRole("");
   };
 
-  // Open delete modal and set selected user for deletion
+  // Open delete modal and store the full user object
   const openDeleteModal = (user) => {
-    console.log(user)
-    setUserToDelete(user.id);
+    console.log(user.id);
+    setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
 
@@ -80,11 +81,16 @@ const UserTable = () => {
 
   // Fetch all users on mount and after any changes
   useEffect(() => {
+    setLoading(true);
     dispatch(fetchAllUsers())
       .unwrap()
-      .then((users) => setTableData(users))
+      .then((users) => {
+        setTableData(users);
+        setLoading(false);
+      })
       .catch((error) => {
         console.error("Failed to fetch users:", error);
+        setLoading(false);
       });
   }, [dispatch]);
 
@@ -152,7 +158,7 @@ const UserTable = () => {
       username,
       email: userEmail,
       role,
-      ...(userPassword && { password: userPassword }), 
+      ...(userPassword && { password: userPassword }),
     };
 
     try {
@@ -172,7 +178,7 @@ const UserTable = () => {
   // For deleting a user
   const handleDeleteUser = async () => {
     try {
-      console.log(userToDelete)
+      console.log(userToDelete);
       await dispatch(deleteUser(userToDelete.id)).unwrap();
       cogoToast.success("User deleted successfully!");
       closeDeleteModal();
@@ -180,10 +186,20 @@ const UserTable = () => {
         .unwrap()
         .then((users) => setTableData(users));
     } catch (error) {
-      console.log(error)
+      console.log(error);
       cogoToast.error(error.message || "Failed to delete user");
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen flex-col text-center p-6">
+        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminLayout>

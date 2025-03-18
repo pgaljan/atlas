@@ -18,7 +18,7 @@ import {
 const AdministratorsTable = () => {
   const dispatch = useDispatch();
 
-  // Modal state
+  // Modal states
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const openAddModal = () => setIsAddModalOpen(true);
   const closeAddModal = () => setIsAddModalOpen(false);
@@ -35,18 +35,22 @@ const AdministratorsTable = () => {
     setSelectedAdmin(null);
   };
 
-  // Local state for table data
+  // Local state for table data and loading
   const [tableData, setTableData] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   // Fetch all administrators on mount
   useEffect(() => {
+    setLoading(true);
     dispatch(getAllAdministrators())
       .unwrap()
       .then((admins) => {
         setTableData(admins);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Failed to fetch administrators:", error);
+        setLoading(false);
       });
   }, [dispatch]);
 
@@ -99,6 +103,16 @@ const AdministratorsTable = () => {
       )
     );
   };
+
+  if (loading) {
+    return (
+      <div className="flex h-screen flex-col text-center p-6">
+        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <AdminLayout>

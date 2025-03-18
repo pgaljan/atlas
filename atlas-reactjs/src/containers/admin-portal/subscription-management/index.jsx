@@ -15,15 +15,19 @@ const SubscriptionTable = () => {
   const [tableData, setTableData] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     dispatch(fetchPlans())
       .unwrap()
       .then((data) => {
         setTableData(data);
+        setLoading(false);
       })
       .catch((error) => {
         console.error("Error fetching plans:", error);
+        setLoading(false);
       });
   }, [dispatch]);
 
@@ -76,6 +80,16 @@ const SubscriptionTable = () => {
     }
   };
 
+  if (loading) {
+    return (
+      <div className="flex h-screen flex-col text-center p-6">
+        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+        </div>
+      </div>
+    );
+  }
+
   if (tableData.length === 0) {
     return (
       <AdminLayout>
@@ -87,8 +101,7 @@ const SubscriptionTable = () => {
             No subscription plans found
           </h2>
           <p className="text-lg text-custom-text-grey mb-4">
-            There are no subscription plans to display at the moment. <br />{" "}
-            Please add a new subscription plan.
+            There are no subscription plans to display at the moment. <br /> Please add a new subscription plan.
           </p>
           <button className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition">
             <MdAddTask size={20} />
@@ -104,9 +117,7 @@ const SubscriptionTable = () => {
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex justify-between w-full items-center">
-            <h2 className="text-3xl font-semibold text-gray-800">
-              Subscription Plans
-            </h2>
+            <h2 className="text-3xl font-semibold text-gray-800">Subscription Plans</h2>
             <div className="flex items-center gap-3">
               <button className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition">
                 <MdAddTask size={20} />
@@ -118,10 +129,7 @@ const SubscriptionTable = () => {
             <thead className="border-b border-gray-100">
               <tr>
                 {headers.map((header, index) => (
-                  <th
-                    key={index}
-                    className="px-5 py-3 text-left border-b text-black-100"
-                  >
+                  <th key={index} className="px-5 py-3 text-left border-b text-black-100">
                     {header}
                   </th>
                 ))}
@@ -131,9 +139,7 @@ const SubscriptionTable = () => {
               {tableData.map((plan) => (
                 <tr key={plan.id} className="border-b border-gray-100">
                   <td className="px-5 py-4 text-gray-500">{plan.name}</td>
-                  <td className="px-5 py-4 text-gray-500">
-                    {plan.description}
-                  </td>
+                  <td className="px-5 py-4 text-gray-500">{plan.description}</td>
                   <td className="px-4 py-3 text-gray-500">$ {plan.price}.00</td>
                   <td className="px-4 py-3">
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -145,9 +151,7 @@ const SubscriptionTable = () => {
                       />
                       <div
                         className={`w-12 h-6 rounded-full transition-all ${
-                          plan.status === "active"
-                            ? "bg-custom-main"
-                            : "bg-gray-300"
+                          plan.status === "active" ? "bg-custom-main" : "bg-gray-300"
                         }`}
                       ></div>
                       <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
@@ -172,26 +176,13 @@ const SubscriptionTable = () => {
               ))}
             </tbody>
           </table>
-          {/* Render the Delete Modal */}
-          {/* <DeleteModal
-            isOpen={deleteModalOpen}
-            onClose={closeDeleteModal}
-            onConfirm={confirmDelete}
-            title={selectedPlan ? selectedPlan.name : ""}
-          /> */}
-          <Modal
-            isOpen={deleteModalOpen}
-            onClose={closeDeleteModal}
-            className="max-w-[600px]"
-          >
+          {/* Delete Modal */}
+          <Modal isOpen={deleteModalOpen} onClose={closeDeleteModal} className="max-w-[600px]">
             <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6">
-              <h4 className="text-3xl mb-4 font-bold text-gray-800">
-                Delete Plan
-              </h4>
+              <h4 className="text-3xl mb-4 font-bold text-gray-800">Delete Plan</h4>
               <p className="text-base text-gray-500 mb-2">
                 Are you sure you want to delete{" "}
-                <span className="font-semibold">{selectedPlan?.name}</span>?
-                This action cannot be undone.
+                <span className="font-semibold">{selectedPlan?.name}</span>? This action cannot be undone.
               </p>
               <div className="flex items-center gap-3 justify-end mt-8">
                 <button
