@@ -10,7 +10,7 @@ import {
   getRecordById,
   updateRecord,
 } from "../../redux/slices/records";
-import QuillEditor from "../editors/quillEditor";
+import QuillEditor from "../editors/quill.editor";
 
 const AddQuillModal = ({
   structureId,

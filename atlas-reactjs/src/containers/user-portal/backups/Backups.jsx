@@ -58,7 +58,7 @@ const Backups = ({ onSubmit }) => {
   };
 
   const updatedBackupConfig = {
-    ...backupConfig,
+  ...backupConfig,
     actions: backupConfig.actions.map((action) => {
       if (action.tooltip === "Delete") {
         return { ...action, onClick: handleDelete };

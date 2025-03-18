@@ -58,8 +58,12 @@ const SubscriptionPlans = () => {
 
   const planOrder = ["Personal", "Educator", "Analyst", "Business"];
 
-  const sortedPlans = [...plans].sort(
-    (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
+  // Filter to only active plans
+  const activePlans = plans.filter((plan) => plan.status === "active");
+
+  // Sort the active plans based on the defined order
+  const sortedPlans = [...activePlans].sort(
+    (a, b) => planOrder.indexOf(a?.name) - planOrder.indexOf(b?.name)
   );
 
   return (

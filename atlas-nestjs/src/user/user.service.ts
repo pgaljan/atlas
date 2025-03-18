@@ -5,12 +5,40 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
+import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
+
+  // fetch all users
+  async getAllUsers() {
+    try {
+      const users = await this.prisma.user.findMany({
+        select: {
+          id: true,
+          fullName: true,
+          username: true,
+          email: true,
+          createdAt: true,
+          deletedAt: true,
+          status: true,
+          role: {
+            select: {
+              name: true,
+            },
+          },
+        },
+      });
+      return users;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to fetch users: ${error.message}`,
+      );
+    }
+  }
 
   // Fetch user by ID
   async getUserById(id: string) {
@@ -144,6 +172,44 @@ export class UserService {
     } catch (error) {
       throw new InternalServerErrorException(
         `Failed to change password for user with ID ${id}: ${error.message}`,
+      );
+    }
+  }
+  async exportUsersAsExcel(): Promise<Buffer> {
+    try {
+      // Get users data
+      const users = await this.getAllUsers();
+
+      // Prepare data for export
+      const data = users.map((user) => ({
+        ID: user.id,
+        'Full Name': user.fullName,
+        Username: user.username,
+        Email: user.email,
+        Status: user.status,
+        Role: user.role ? user.role.name : '',
+      }));
+
+      // Create a new workbook and worksheet
+      const workbook = xlsx.utils.book_new();
+      const worksheet = xlsx.utils.json_to_sheet(data);
+      xlsx.utils.book_append_sheet(workbook, worksheet, 'Users');
+
+      // Write workbook to buffer
+      const buffer: Buffer = xlsx.write(workbook, {
+        type: 'buffer',
+        bookType: 'xlsx',
+      });
+      return buffer;
+    } catch (error) {
+      console.error(
+        'Error in exportUsersAsExcel:',
+        error,
+        error?.message,
+        error?.stack,
+      );
+      throw new InternalServerErrorException(
+        `Failed to export users: ${error?.message || error?.toString()}`,
       );
     }
   }

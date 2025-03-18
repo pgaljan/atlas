@@ -43,8 +43,12 @@ const UpgradePlans = () => {
 
   const planOrder = ["Personal", "Educator", "Business", "Analyst"];
 
-  const sortedPlans = [...plans].sort(
-    (a, b) => planOrder?.indexOf(a?.name) - planOrder?.indexOf(b?.name)
+  // Filter out plans where status is not active
+  const activePlans = plans.filter((plan) => plan.status === "active");
+
+  // Sort the active plans based on the defined order
+  const sortedPlans = [...activePlans].sort(
+    (a, b) => planOrder.indexOf(a?.name) - planOrder.indexOf(b?.name)
   );
 
   return (

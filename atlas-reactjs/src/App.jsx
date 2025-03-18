@@ -2,6 +2,12 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
+import UserTable from "./containers/admin-portal/users-management";
+import UserProfiles from "./containers/admin-portal/user-profile";
+import SubscriptionTable from "./containers/admin-portal/subscription-management";
+import AdminDashboard from "./containers/admin-portal/dashboard";
+import AdminLogin from "./containers/admin-portal/login";
+import AdministratorsTable from "./containers/admin-portal/administrator-management";
 
 // Error and Fallback Pages
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
@@ -33,9 +39,9 @@ const UpgradePlans = lazy(() =>
 const Dashboard = lazy(() =>
   import("./containers/user-portal/dashboard/Dashboard")
 );
+const Backups = lazy(() => import("./containers/user-portal/backups/Backups"));
 const Profile = lazy(() => import("./containers/user-portal/profile/Profile"));
 const Support = lazy(() => import("./containers/user-portal/support/Support"));
-const Backups = lazy(() => import("./containers/user-portal/backups/Backups"));
 const UploadedFiles = lazy(() =>
   import("./containers/user-portal/uploaded-files/UploadedFiles")
 );
@@ -83,6 +89,15 @@ const userRoutes = [
   { path: "/app/coming-soon", element: <ComingSoon /> },
   { path: "/app/backups", element: <Backups /> },
   { path: "/app/upgrade-plans", element: <UpgradePlans /> },
+  { path: "/app/admin/user-management", element: <UserTable /> },
+  {
+    path: "/app/admin/administrator-management",
+    element: <AdministratorsTable />,
+  },
+  { path: "/app/admin/user-profile", element: <UserProfiles /> },
+  { path: "/app/admin/subscription-plan", element: <SubscriptionTable /> },
+  { path: "/app/admin", element: <AdminLogin /> },
+  { path: "/app/admin/dashboard", element: <AdminDashboard /> },
   // { path: "/app/team-members", element: <TeamMembers /> },
   // { path: "/app/support", element: <Support /> },
   // { path: "/app/me", element: <Profile /> },

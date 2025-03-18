@@ -10,8 +10,10 @@ import {
   Param,
   Patch,
   Request,
+  Res,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserService } from './user.service';
@@ -19,6 +21,38 @@ import { UserService } from './user.service';
 @Controller('user')
 export class UserController {
   constructor(private readonly userService: UserService) {}
+
+  // @UseGuards(JwtAuthGuard)
+  @Get('all')
+  async getAllUsers() {
+    try {
+      return await this.userService.getAllUsers();
+    } catch (error) {
+      throw new HttpException(
+        'Failed to fetch all users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('export')
+  async exportUsers(@Res() res: Response) {
+    try {
+      const buffer = await this.userService.exportUsersAsExcel();
+      res.set({
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="users.xlsx"',
+      });
+      return res.send(buffer);
+    } catch (error) {
+      console.error('Error in export endpoint:', error);
+      throw new HttpException(
+        'Failed to export users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 
   @UseGuards(JwtAuthGuard)
   @Get(':id')

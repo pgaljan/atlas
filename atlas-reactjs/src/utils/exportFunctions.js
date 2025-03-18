@@ -132,7 +132,7 @@ export const exportAsPdf = async (treeData) => {
   // Helper function to strip HTML tags
   const stripHtml = (html) => {
     const tmp = document.createElement("DIV");
-    tmp.innerHTML = html;
+    tmp.innerHTML = html; 
     return tmp.textContent || tmp.innerText || "";
   };
 

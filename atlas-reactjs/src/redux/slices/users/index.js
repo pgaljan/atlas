@@ -1,9 +1,10 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
 
-// Initial state for user slice
 const initialState = {
   user: null,
+  users: [],
+  exportedFile: null,
   status: "idle",
   error: null,
 };
@@ -14,6 +15,19 @@ export const fetchUser = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.get(`/user/${userId}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for fetching all users
+export const fetchAllUsers = createAsyncThunk(
+  "user/fetchAllUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get("/user/all");
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -71,6 +85,27 @@ export const changePassword = createAsyncThunk(
   }
 );
 
+// Async thunk for exporting users as an Excel sheet
+export const exportUsers = createAsyncThunk(
+  "user/exportUsers",
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get("/user/export", {
+        responseType: "arraybuffer",
+      });
+      return response.data;
+    } catch (error) {
+      let errorPayload;
+      if (error.response?.data instanceof ArrayBuffer) {
+        errorPayload = new TextDecoder("utf-8").decode(error.response.data);
+      } else {
+        errorPayload = error.response?.data || error.message;
+      }
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
 // User slice
 const userSlice = createSlice({
   name: "user",
@@ -82,7 +117,7 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Fetch user
+      // Fetch user by ID
       .addCase(fetchUser.pending, (state) => {
         state.status = "loading";
       })
@@ -91,6 +126,18 @@ const userSlice = createSlice({
         state.user = action.payload;
       })
       .addCase(fetchUser.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Fetch all users
+      .addCase(fetchAllUsers.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(fetchAllUsers.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.users = action.payload;
+      })
+      .addCase(fetchAllUsers.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })
@@ -126,6 +173,18 @@ const userSlice = createSlice({
         state.status = "succeeded";
       })
       .addCase(changePassword.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Export users
+      .addCase(exportUsers.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(exportUsers.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.exportedFile = action.payload;
+      })
+      .addCase(exportUsers.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

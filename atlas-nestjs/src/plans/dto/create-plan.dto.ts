@@ -1,4 +1,4 @@
-import { IsString, IsDecimal } from 'class-validator';
+import { IsString, IsDecimal, IsOptional, IsIn } from 'class-validator';
 
 export class CreatePlanDto {
   @IsString()
@@ -11,4 +11,10 @@ export class CreatePlanDto {
   price: number;
 
   features: Record<string, any>;
+
+  @IsOptional()
+  @IsIn(['active', 'inactive'], {
+    message: 'Status must be either active or inactive',
+  })
+  status?: 'active' | 'inactive';
 }

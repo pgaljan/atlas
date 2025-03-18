@@ -21,6 +21,11 @@ enum Visibility {
   restricted
 }
 
+enum Status {
+  active
+  inactive
+}
+
 model User {
   id           String        @id @default(uuid())
   fullName     String?
@@ -42,6 +47,7 @@ model User {
   roles        Role[]        @relation("UserRoles")
   teamMembers  TeamMember[]
   Team         Team[]
+  status       Status        @default(active)
 }
 
 model Role {
@@ -50,6 +56,19 @@ model Role {
   description String?
   User        User[]  @relation("UserRole")
   users       User[]  @relation("UserRoles")
+}
+
+model SuperAdmin {
+  id        String   @id @default(uuid())
+  firstName String
+  lastName  String
+  email     String   @unique
+  address   String?
+  password  String
+  role      String?  @default("super-admin")
+  status    Status   @default(active)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model Team {
@@ -109,6 +128,7 @@ model Plan {
   description   String
   price         Decimal
   features      Json
+  status        Status         @default(active)
   subscriptions Subscription[]
 }
 
