@@ -1,3 +1,4 @@
+import React from "react";
 import cogoToast from "@successtar/cogo-toast";
 import CryptoJS from "crypto-js";
 import Cookies from "js-cookie";

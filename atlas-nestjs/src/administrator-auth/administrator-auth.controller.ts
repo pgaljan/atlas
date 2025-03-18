@@ -12,7 +12,6 @@ import {
 } from '@nestjs/common';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdministratorAuthService } from './administrator-auth.service';
-import { LocalAuthGuard } from '../auth/guards/local-auth.guard';
 import {
   AdminRegisterDto,
   AdminForgotPasswordDto,
@@ -20,10 +19,13 @@ import {
   AdminChangePasswordDto,
   AdminProfileUpdateDto,
 } from './dto';
+import { LocalAuthGuard } from 'src/auth/guards/local-auth.guard';
 
 @Controller('administrator')
 export class AdministratorAuthController {
-  constructor(private readonly AdministratorAuthService: AdministratorAuthService) {}
+  constructor(
+    private readonly AdministratorAuthService: AdministratorAuthService,
+  ) {}
 
   @Post('register')
   async register(@Body() adminRegisterDto: AdminRegisterDto) {
@@ -38,18 +40,17 @@ export class AdministratorAuthController {
   }
 
   @Post('login')
-  @UseGuards(LocalAuthGuard)
   async login(@Request() req) {
     try {
-      const result = await this.AdministratorAuthService.login(req.user);
+      const result = await this.AdministratorAuthService.login(req.body);
       return {
-        message: 'Administrator login successful',
-        administrator: result.admin,
+        message: 'SuperAdmin login successful',
+        superAdmin: result.superAdmin,
         access_token: result.access_token,
       };
     } catch (error) {
       throw new HttpException(
-        'Administrator login failed',
+        'SuperAdmin login failed',
         HttpStatus.UNAUTHORIZED,
       );
     }
@@ -58,7 +59,9 @@ export class AdministratorAuthController {
   @Post('forgot-password')
   async forgotPassword(@Body() adminForgotPasswordDto: AdminForgotPasswordDto) {
     try {
-      return await this.AdministratorAuthService.forgotPassword(adminForgotPasswordDto);
+      return await this.AdministratorAuthService.forgotPassword(
+        adminForgotPasswordDto,
+      );
     } catch (error) {
       throw new HttpException(
         error.message || 'Forgot password failed',
@@ -70,7 +73,9 @@ export class AdministratorAuthController {
   @Post('reset-password')
   async resetPassword(@Body() adminResetPasswordDto: AdminResetPasswordDto) {
     try {
-      return await this.AdministratorAuthService.resetPassword(adminResetPasswordDto);
+      return await this.AdministratorAuthService.resetPassword(
+        adminResetPasswordDto,
+      );
     } catch (error) {
       throw new HttpException(
         error.message || 'Reset password failed',

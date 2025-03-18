@@ -1,4 +1,5 @@
 import { Sidebar } from "flowbite-react";
+import React from "react";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { Link, useLocation } from "react-router-dom";
 import { IoMdArrowRoundBack } from "react-icons/io";
@@ -31,11 +32,11 @@ const AdminSidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    {
-      name: "Dashboard",
-      icon: TbLayoutDashboardFilled,
-      link: "/app/admin/dashboard",
-    },
+    // {
+    //   name: "Dashboard",
+    //   icon: TbLayoutDashboardFilled,
+    //   link: "/app/admin/dashboard",
+    // },
     {
       name: "Users",
       icon: FaUsersGear,

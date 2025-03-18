@@ -103,7 +103,6 @@ export class UserService {
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-
       // Log the deletion action in the AuditLog
       await this.prisma.auditLog.create({
         data: {

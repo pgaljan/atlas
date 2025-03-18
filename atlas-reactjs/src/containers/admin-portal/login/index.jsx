@@ -1,16 +1,23 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
+import Cookies from "js-cookie";
+import { loginAdministrator } from "../../../redux/slices/administrator-auth";
 
 const AdminLogin = () => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+
+    // Validate inputs
     if (!email) {
       setEmailError("Email is required");
       return;
@@ -27,10 +34,21 @@ const AdminLogin = () => {
     setPasswordError("");
     setIsSubmitting(true);
 
-    setTimeout(() => {
+    try {
+      const response = await dispatch(
+        loginAdministrator({ email, password })
+      ).unwrap();
+
+      // Store the token in a cookie
+      Cookies.set("atlas_admin_token", response.access_token);
+
       cogoToast.success("Admin login successful!");
+      navigate("/app/admin/user-management");
+    } catch (error) {
+      cogoToast.error(error.message || "Admin login failed!");
+    } finally {
       setIsSubmitting(false);
-    }, 1000);
+    }
   };
 
   return (

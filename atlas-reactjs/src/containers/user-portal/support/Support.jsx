@@ -1,3 +1,4 @@
+import React from "react";
 import { useState } from "react";
 import { HiOutlinePlusSm, HiOutlineMinusSm } from "react-icons/hi";
 import Layout from "../../../components/layout";

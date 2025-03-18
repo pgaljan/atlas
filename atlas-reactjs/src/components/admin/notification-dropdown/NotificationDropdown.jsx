@@ -1,8 +1,8 @@
-import { useState } from "react";
-import Dropdown from "../../ui/Dropdown";
-import DropdownItem from "../../ui/DropdownItem";
+import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import Icons from "../../../constants/icons";
+import Dropdown from "../../ui/Dropdown";
+import DropdownItem from "../../ui/DropdownItem";
 
 const notifications = [
   {

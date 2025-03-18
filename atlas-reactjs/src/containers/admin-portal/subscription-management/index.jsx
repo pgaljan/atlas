@@ -1,14 +1,14 @@
-import React, { useEffect, useState } from "react";
 import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
 import { FaRocket } from "react-icons/fa";
 import { IoTrash } from "react-icons/io5";
 import { MdAddTask } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
+import Modal from "../../../components/modals/AdminModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
 import { fetchPlans, updatePlan } from "../../../redux/slices/plans";
-import Modal from "../../../components/modals/AdminModal";
 
 const SubscriptionTable = () => {
   const dispatch = useDispatch();

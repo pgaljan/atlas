@@ -1,20 +1,23 @@
-import useModal from "../../../hooks/useModal";
-import Modal from "../../modals/AdminModal";
-import InputField from "../../input-field/InputField";
+import React from "react";
 import { TbEditCircle } from "react-icons/tb";
-import { IoClose } from "react-icons/io5";
+import useModal from "../../../hooks/useModal";
+import InputField from "../../input-field/InputField";
+import Modal from "../../modals/AdminModal";
+
 const UserAddressCard = () => {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
     console.log("Saving changes...");
     closeModal();
   };
+
   const userData = {
     country: " United States.",
     City: "  Phoenix, Arizona, United States.",
     postalCode: "  ERT 2489",
     taxID: "AS4568384",
   };
+  
   return (
     <>
       <div className="p-5 border-2 border-gray-200 rounded-2xl ">

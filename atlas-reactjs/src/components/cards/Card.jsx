@@ -1,5 +1,4 @@
 import React, { useState } from "react";
-import { HiInformationCircle, HiMail, HiSupport } from "react-icons/hi";
 import { IoTrash } from "react-icons/io5";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";

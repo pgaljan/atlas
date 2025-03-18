@@ -1,6 +1,5 @@
 import React from "react"
 import Icons from "../../constants/icons"
-// import { FaTimes } from "react-icons/fa";
 import { Link } from "react-router-dom"
 
 const PremiumModal = ({ closeModal }) => {

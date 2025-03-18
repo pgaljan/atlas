@@ -1,5 +1,4 @@
 import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import useUndo from "use-undo";

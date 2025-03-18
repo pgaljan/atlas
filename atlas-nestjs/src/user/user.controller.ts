@@ -54,6 +54,26 @@ export class UserController {
     }
   }
 
+  @Delete('delete/:id')
+  async deleteUser(
+    @Param('id') id: string,
+    @Body('reason') reason: string,
+    @Request() req,
+  ) {
+    const userId = req.user.id;
+    try {
+      return await this.userService.deleteUser(id, reason, userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new HttpException(
+        'Failed to delete user',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
   @UseGuards(JwtAuthGuard)
   @Get(':id')
   async getUser(@Param('id') id: string) {
@@ -86,27 +106,6 @@ export class UserController {
       }
       throw new HttpException(
         'Failed to update user details',
-        HttpStatus.INTERNAL_SERVER_ERROR,
-      );
-    }
-  }
-
-  // @UseGuards(JwtAuthGuard)
-  @Delete('delete/:id')
-  async deleteUser(
-    @Param('id') id: string,
-    @Body('reason') reason: string,
-    @Request() req,
-  ) {
-    const userId = req.user.id;
-    try {
-      return await this.userService.deleteUser(id, reason, userId);
-    } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
-      throw new HttpException(
-        'Failed to delete user',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

@@ -3,6 +3,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   ConflictException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { JwtService } from '@nestjs/jwt';
@@ -55,14 +56,32 @@ export class AdministratorAuthService {
     }
   }
 
-  // Login administrator: generate a JWT token and return administrator details
-  async login(admin: any) {
+  // Login: find SuperAdmin by email, validate password, and generate token
+  async login(loginDto: { email: string; password: string }) {
+    const { email, password } = loginDto;
     try {
-      const payload = { email: admin.email, sub: admin.id };
+      // Query the database for the SuperAdmin using the email
+      const superAdmin = await this.prisma.superAdmin.findUnique({
+        where: { email },
+      });
+      if (!superAdmin) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      // Verify the provided password with the stored hashed password
+      const isPasswordValid = await bcrypt.compare(
+        password,
+        superAdmin.password,
+      );
+      if (!isPasswordValid) {
+        throw new UnauthorizedException('Invalid credentials');
+      }
+
+      const payload = { email: superAdmin.email, sub: superAdmin.id };
       const access_token = this.jwtService.sign(payload);
-      return { admin, access_token };
+      return { superAdmin, access_token };
     } catch (error) {
-      throw new InternalServerErrorException('Failed to login administrator');
+      throw new InternalServerErrorException('Failed to login superadmin');
     }
   }
 
