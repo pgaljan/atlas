@@ -1,6 +1,5 @@
 import { Sidebar } from "flowbite-react";
 import React from "react";
-import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { Link, useLocation } from "react-router-dom";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { FaUsersGear } from "react-icons/fa6";
@@ -15,7 +14,7 @@ const ownTheme = {
       off: "w-64",
     },
     inner:
-      "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 py-4 px-3",
+      "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 pt-0 pb-4 px-3 border-t-0",
   },
   item: {
     base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-[#660000] transition duration-75",
@@ -32,11 +31,6 @@ const AdminSidebar = () => {
   const location = useLocation();
 
   const menuItems = [
-    // {
-    //   name: "Dashboard",
-    //   icon: TbLayoutDashboardFilled,
-    //   link: "/app/admin/dashboard",
-    // },
     {
       name: "Users",
       icon: FaUsersGear,
@@ -61,7 +55,7 @@ const AdminSidebar = () => {
     >
       <div className="relative h-full flex flex-col justify-between">
         <Sidebar.Items>
-          <Sidebar.ItemGroup>
+          <Sidebar.ItemGroup className="mt-0 border-none">
             {menuItems.map((item) => (
               <Sidebar.Item
                 key={item.name}
@@ -75,7 +69,7 @@ const AdminSidebar = () => {
                     className={`${
                       location.pathname === item.link
                         ? ownTheme.item.icon.active
-                        : `${ownTheme.item.icon.base}`
+                        : ownTheme.item.icon.base
                     } ${className}`}
                   />
                 )}

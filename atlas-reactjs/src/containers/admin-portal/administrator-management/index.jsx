@@ -1,16 +1,17 @@
-import React from "react";
-import { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
 import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
+import { ImUserPlus } from "react-icons/im";
 import { IoTrash } from "react-icons/io5";
 import { TbEditCircle } from "react-icons/tb";
 import { VscLink } from "react-icons/vsc";
-import { ImUserPlus } from "react-icons/im";
+import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
-import AddModal from "../../../components/admin/modals/AddModal";
+import AddUserModal from "../../../components/admin/modals/AddUserModal";
+import UpdateAdminModal from "../../../components/admin/modals/UpdateAdminModal"; 
 import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
 import {
+  deleteAdministrator,
   getAllAdministrators,
   registerAdministrator,
 } from "../../../redux/slices/administrator-auth";
@@ -18,21 +19,29 @@ import {
 const AdministratorsTable = () => {
   const dispatch = useDispatch();
 
-  // Modal states
+  // Modal states for adding, updating, and deletion
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isUpdateModalOpen, setIsUpdateModalOpen] = useState(false);
+  const [selectedAdminForDelete, setSelectedAdminForDelete] = useState(null);
+  const [adminToUpdate, setAdminToUpdate] = useState(null);
+
   const openAddModal = () => setIsAddModalOpen(true);
   const closeAddModal = () => setIsAddModalOpen(false);
 
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [selectedAdmin, setSelectedAdmin] = useState(null);
-
   const openDeleteModal = (admin) => {
-    setSelectedAdmin(admin);
-    setIsDeleteModalOpen(true);
+    setSelectedAdminForDelete(admin);
   };
   const closeDeleteModal = () => {
-    setIsDeleteModalOpen(false);
-    setSelectedAdmin(null);
+    setSelectedAdminForDelete(null);
+  };
+
+  const openUpdateModal = (admin) => {
+    setAdminToUpdate(admin);
+    setIsUpdateModalOpen(true);
+  };
+  const closeUpdateModal = () => {
+    setIsUpdateModalOpen(false);
+    setAdminToUpdate(null);
   };
 
   // Local state for table data and loading
@@ -57,10 +66,18 @@ const AdministratorsTable = () => {
   const headers = ["Administrator", "Email", "Role", "Status", "Actions"];
 
   const handleDeleteAdmin = () => {
-    if (selectedAdmin) {
-      setTableData((prevData) =>
-        prevData.filter((admin) => admin.id !== selectedAdmin.id)
-      );
+    if (selectedAdminForDelete) {
+      dispatch(deleteAdministrator(selectedAdminForDelete.id))
+        .unwrap()
+        .then(() => {
+          cogoToast.success("Administrator deleted successfully");
+          setTableData((prevData) =>
+            prevData.filter((admin) => admin.id !== selectedAdminForDelete.id)
+          );
+        })
+        .catch((error) => {
+          cogoToast.error(error || "Failed to delete administrator");
+        });
     }
     closeDeleteModal();
   };
@@ -214,7 +231,10 @@ const AdministratorsTable = () => {
                         </button>
                       </Tooltip>
                       <Tooltip label="Edit">
-                        <button className="p-2 text-custom-main rounded transition hover:text-green-600">
+                        <button
+                          onClick={() => openUpdateModal(admin)} // Open update modal instead of add modal
+                          className="p-2 text-custom-main rounded transition hover:text-green-600"
+                        >
                           <TbEditCircle className="w-5 h-5" />
                         </button>
                       </Tooltip>
@@ -233,15 +253,20 @@ const AdministratorsTable = () => {
             </table>
           </div>
         )}
-        {/* Always render modals */}
-        <AddModal
+        {/* Render the modals */}
+        <AddUserModal
           isOpen={isAddModalOpen}
           onClose={closeAddModal}
           onSubmit={handleAddAdmin}
           title="Administrator"
         />
+        <UpdateAdminModal
+          isOpen={isUpdateModalOpen}
+          onClose={closeUpdateModal}
+          adminData={adminToUpdate}
+        />
         <DeleteModal
-          isOpen={isDeleteModalOpen}
+          isOpen={!!selectedAdminForDelete}
           onClose={closeDeleteModal}
           onConfirm={handleDeleteAdmin}
           title="Administrator"

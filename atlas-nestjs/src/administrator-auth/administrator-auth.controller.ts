@@ -5,12 +5,12 @@ import {
   Get,
   Body,
   Request,
-  UseGuards,
   HttpException,
   HttpStatus,
   InternalServerErrorException,
+  Param,
+  Delete,
 } from '@nestjs/common';
-import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdministratorAuthService } from './administrator-auth.service';
 import {
   AdminRegisterDto,
@@ -19,7 +19,6 @@ import {
   AdminChangePasswordDto,
   AdminProfileUpdateDto,
 } from './dto';
-import { LocalAuthGuard } from 'src/auth/guards/local-auth.guard';
 
 @Controller('administrator')
 export class AdministratorAuthController {
@@ -85,7 +84,6 @@ export class AdministratorAuthController {
   }
 
   @Patch('change-password')
-  @UseGuards(JwtAuthGuard)
   async changePassword(
     @Body() adminChangePasswordDto: AdminChangePasswordDto,
     @Request() req,
@@ -103,15 +101,26 @@ export class AdministratorAuthController {
     }
   }
 
-  @Patch('profile')
-  @UseGuards(JwtAuthGuard)
+  @Delete(':id')
+  async deleteAdministrator(@Param('id') id: string) {
+    try {
+      return await this.AdministratorAuthService.deleteAdministrator(id);
+    } catch (error) {
+      throw new HttpException(
+        error.message || 'Failed to delete administrator',
+        error.status || HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Patch('profile/:id')
   async updateProfile(
+    @Param('id') id: string,
     @Body() adminProfileUpdateDto: AdminProfileUpdateDto,
-    @Request() req,
   ) {
     try {
       return await this.AdministratorAuthService.updateProfile(
-        req.user,
+        id,
         adminProfileUpdateDto,
       );
     } catch (error) {
@@ -123,7 +132,6 @@ export class AdministratorAuthController {
   }
 
   @Get('profile')
-  @UseGuards(JwtAuthGuard)
   async getProfile(@Request() req) {
     try {
       return await this.AdministratorAuthService.getProfile(req.user);
@@ -135,7 +143,6 @@ export class AdministratorAuthController {
   }
 
   @Get('all')
-  @UseGuards(JwtAuthGuard)
   async getAllAdministrators() {
     try {
       return await this.AdministratorAuthService.getAllAdmins();

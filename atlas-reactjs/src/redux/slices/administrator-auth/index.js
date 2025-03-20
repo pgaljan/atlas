@@ -93,10 +93,10 @@ export const changePasswordAdministrator = createAsyncThunk(
 // Async thunk for updating administrator profile
 export const updateAdministratorProfile = createAsyncThunk(
   "administrator/updateProfile",
-  async (updateData, { rejectWithValue }) => {
+  async ({ id, updateData }, { rejectWithValue }) => {
     try {
       const response = await axiosInstance.patch(
-        "/administrator/profile",
+        `/administrator/profile/${id}`,
         updateData
       );
       return response.data;
@@ -126,6 +126,18 @@ export const getAllAdministrators = createAsyncThunk(
     try {
       const response = await axiosInstance.get("/administrator/all");
       return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const deleteAdministrator = createAsyncThunk(
+  "administrator/delete",
+  async (adminId, { rejectWithValue }) => {
+    try {
+      await axiosInstance.delete(`/administrator/${adminId}`);
+      return adminId;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -236,6 +248,19 @@ const administratorAuthSlice = createSlice({
         state.allAdministrators = action.payload;
       })
       .addCase(getAllAdministrators.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      }) // Delete Administrator
+      .addCase(deleteAdministrator.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(deleteAdministrator.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.allAdministrators = state.allAdministrators.filter(
+          (admin) => admin.id !== action.payload
+        );
+      })
+      .addCase(deleteAdministrator.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

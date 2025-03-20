@@ -164,12 +164,12 @@ export class AdministratorAuthService {
 
   // Update administrator profile
   async updateProfile(
-    admin: any,
+    id: string,
     adminProfileUpdateDto: AdminProfileUpdateDto,
   ) {
     try {
       const updatedAdmin = await this.prisma.superAdmin.update({
-        where: { id: admin.id },
+        where: { id },
         data: adminProfileUpdateDto,
       });
       return {
@@ -219,6 +219,23 @@ export class AdministratorAuthService {
     } catch (error) {
       throw new InternalServerErrorException(
         `Failed to fetch all administrators: ${error.message}`,
+      );
+    }
+  }
+
+  async deleteAdministrator(id: string) {
+    try {
+      const admin = await this.prisma.superAdmin.findUnique({
+        where: { id },
+      });
+      if (!admin) {
+        throw new NotFoundException('Administrator not found');
+      }
+      await this.prisma.superAdmin.delete({ where: { id } });
+      return { message: 'Administrator deleted successfully' };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to delete administrator: ${error.message}`,
       );
     }
   }

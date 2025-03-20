@@ -27,6 +27,7 @@ export class UserService {
           status: true,
           role: {
             select: {
+              id: true,
               name: true,
             },
           },
@@ -93,32 +94,49 @@ export class UserService {
     }
   }
 
-  // Soft delete user (mark as deleted) and log the deletion
-  async deleteUser(id: string, reason: string, userId: string) {
+  async deleteUser(id: string, reason: string) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id },
+        include: {
+          subscription: true,
+          structures: true,
+          teamMembers: true,
+          tokens: true,
+          backups: true,
+          deletionLogs: true, 
+        },
       });
 
       if (!user) {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
-      // Log the deletion action in the AuditLog
+
+      // Log the deletion action
       await this.prisma.auditLog.create({
         data: {
-          action: 'User soft delete',
+          action: 'User hard delete',
           element: 'User',
           details: JSON.stringify({ reason }),
-          userId: userId,
+          userId: id,
         },
       });
 
-      // Soft delete the user (mark as deleted)
-      return await this.prisma.user.update({
-        where: { id },
-        data: { deletedAt: new Date() },
-      });
+      // Delete all related records before deleting the user
+      await this.prisma.$transaction([
+        this.prisma.subscription.deleteMany({ where: { userId: id } }),
+        this.prisma.structure.deleteMany({ where: { ownerId: id } }),
+        this.prisma.teamMember.deleteMany({ where: { userId: id } }),
+        this.prisma.token.deleteMany({ where: { userId: id } }),
+        this.prisma.backup.deleteMany({ where: { userId: id } }),
+        this.prisma.attachment.deleteMany({ where: { userId: id } }),
+        this.prisma.deletionLog.deleteMany({ where: { userId: id } }), 
+        this.prisma.user.delete({ where: { id } }),
+      ]);
+
+      return { message: `User ${id} and related data successfully deleted.` };
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException(
         `Failed to delete user with ID ${id}: ${error.message}`,
       );

@@ -3,7 +3,13 @@ import react from "@vitejs/plugin-react-swc";
 
 // https://vite.dev/config/
 export default defineConfig(({ mode }) => ({
-  plugins: [react()],
+  plugins: [
+    react({
+      jsx: {
+        runtime: 'automatic',
+      },
+    }),
+  ],
   resolve: {
     alias: {
       "@": "/src",
@@ -13,6 +19,9 @@ export default defineConfig(({ mode }) => ({
     pure: mode === "production" ? ["console.log"] : [],
   },
   define: {
-    "process.env": {}, // This is not needed in most cases
+    "process.env": {},
+  },
+  server: {
+    allowedHosts: ['dev.atlasflow.co'],
   },
 }));

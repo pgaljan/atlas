@@ -1,35 +1,45 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaRocket } from "react-icons/fa";
 import { IoTrash } from "react-icons/io5";
 import { MdAddTask } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
-import Modal from "../../../components/modals/AdminModal";
+import AddSubscriptionModal from "../../../components/admin/modals/AddSubcriptionModal";
+import EditSubscriptionModal from "../../../components/admin/modals/EditSubscriptionModal";
+import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
-import { fetchPlans, updatePlan } from "../../../redux/slices/plans";
+import {
+  deletePlan,
+  fetchPlans,
+  updatePlan,
+} from "../../../redux/slices/plans";
 
 const SubscriptionTable = () => {
   const dispatch = useDispatch();
   const [tableData, setTableData] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
+  const [addModalOpen, setAddModalOpen] = useState(false);
+  const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
+  const fetchPlansData = useCallback(async () => {
     setLoading(true);
-    dispatch(fetchPlans())
-      .unwrap()
-      .then((data) => {
-        setTableData(data);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Error fetching plans:", error);
-        setLoading(false);
-      });
+    try {
+      const data = await dispatch(fetchPlans()).unwrap();
+      setTableData(data);
+    } catch (error) {
+      console.error("Error fetching plans:", error);
+    } finally {
+      setLoading(false);
+    }
   }, [dispatch]);
+
+  useEffect(() => {
+    fetchPlansData();
+  }, [fetchPlansData]);
 
   const headers = ["Plan Name", "Description", "Price", "Status", "Actions"];
 
@@ -55,7 +65,6 @@ const SubscriptionTable = () => {
         cogoToast.success("Plan status updated successfully!");
       })
       .catch((error) => {
-        console.error("Error updating plan status:", error);
         cogoToast.error("Failed to update plan status");
       });
   };
@@ -72,11 +81,37 @@ const SubscriptionTable = () => {
     setSelectedPlan(null);
   };
 
-  // Confirm deletion: delete plan and close modal
+  const handleAddPlan = (newPlan) => {
+    setTableData([...tableData, newPlan]);
+    cogoToast.success("Plan added successfully!");
+    setAddModalOpen(false);
+  };
+
+  const handleEditPlan = (updatedPlan) => {
+    setTableData((prevData) =>
+      prevData.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan))
+    );
+    cogoToast.success("Plan updated successfully!");
+  };
+
   const confirmDelete = () => {
     if (selectedPlan) {
-      handleDelete(selectedPlan.id);
-      closeDeleteModal();
+      dispatch(deletePlan(selectedPlan.id))
+        .unwrap()
+        .then(() => {
+          setTableData((prevData) =>
+            prevData.filter((item) => item.id !== selectedPlan.id)
+          );
+          cogoToast.success("Plan deleted successfully!");
+          closeDeleteModal();
+        })
+        .catch((error) => {
+          if (error?.status === 400) {
+            cogoToast.error("Cannot delete plan: Bad request.");
+          } else {
+            cogoToast.error(error?.message || "Failed to delete plan");
+          }
+        });
     }
   };
 
@@ -101,7 +136,8 @@ const SubscriptionTable = () => {
             No subscription plans found
           </h2>
           <p className="text-lg text-custom-text-grey mb-4">
-            There are no subscription plans to display at the moment. <br /> Please add a new subscription plan.
+            There are no subscription plans to display at the moment. <br />{" "}
+            Please add a new subscription plan.
           </p>
           <button className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition">
             <MdAddTask size={20} />
@@ -117,9 +153,14 @@ const SubscriptionTable = () => {
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex justify-between w-full items-center">
-            <h2 className="text-3xl font-semibold text-gray-800">Subscription Plans</h2>
+            <h2 className="text-3xl font-semibold text-gray-800">
+              Subscription Plans
+            </h2>
             <div className="flex items-center gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition">
+              <button
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
+                onClick={() => setAddModalOpen(true)}
+              >
                 <MdAddTask size={20} />
                 Add Plan
               </button>
@@ -129,7 +170,10 @@ const SubscriptionTable = () => {
             <thead className="border-b border-gray-100">
               <tr>
                 {headers.map((header, index) => (
-                  <th key={index} className="px-5 py-3 text-left border-b text-black-100">
+                  <th
+                    key={index}
+                    className="px-5 py-3 text-left border-b text-black-100"
+                  >
                     {header}
                   </th>
                 ))}
@@ -139,7 +183,9 @@ const SubscriptionTable = () => {
               {tableData.map((plan) => (
                 <tr key={plan.id} className="border-b border-gray-100">
                   <td className="px-5 py-4 text-gray-500">{plan.name}</td>
-                  <td className="px-5 py-4 text-gray-500">{plan.description}</td>
+                  <td className="px-5 py-4 text-gray-500">
+                    {plan.description}
+                  </td>
                   <td className="px-4 py-3 text-gray-500">$ {plan.price}.00</td>
                   <td className="px-4 py-3">
                     <label className="relative inline-flex items-center cursor-pointer">
@@ -151,7 +197,9 @@ const SubscriptionTable = () => {
                       />
                       <div
                         className={`w-12 h-6 rounded-full transition-all ${
-                          plan.status === "active" ? "bg-custom-main" : "bg-gray-300"
+                          plan.status === "active"
+                            ? "bg-custom-main"
+                            : "bg-gray-300"
                         }`}
                       ></div>
                       <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
@@ -159,7 +207,13 @@ const SubscriptionTable = () => {
                   </td>
                   <td className="px-2 py-2 flex">
                     <Tooltip label="Edit">
-                      <button className="p-2 text-black rounded transition">
+                      <button
+                        className="p-2 text-black rounded transition"
+                        onClick={() => {
+                          setSelectedPlan(plan);
+                          setEditModalOpen(true);
+                        }}
+                      >
                         <TbEditCircle className="w-6 h-6" />
                       </button>
                     </Tooltip>
@@ -176,32 +230,28 @@ const SubscriptionTable = () => {
               ))}
             </tbody>
           </table>
-          {/* Delete Modal */}
-          <Modal isOpen={deleteModalOpen} onClose={closeDeleteModal} className="max-w-[600px]">
-            <div className="relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-6">
-              <h4 className="text-3xl mb-4 font-bold text-gray-800">Delete Plan</h4>
-              <p className="text-base text-gray-500 mb-2">
-                Are you sure you want to delete{" "}
-                <span className="font-semibold">{selectedPlan?.name}</span>? This action cannot be undone.
-              </p>
-              <div className="flex items-center gap-3 justify-end mt-8">
-                <button
-                  type="button"
-                  onClick={closeDeleteModal}
-                  className="px-4 py-2 text-base font-medium text-white rounded-md bg-gray-600 hover:bg-gray-500"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={confirmDelete}
-                  className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-red-800"
-                >
-                  Delete Plan
-                </button>
-              </div>
-            </div>
-          </Modal>
+
+          <AddSubscriptionModal
+            isOpen={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            onSubmit={handleAddPlan}
+            onSuccess={fetchPlansData}
+            title="Add Subscription Plan"
+          />
+          <EditSubscriptionModal
+            isOpen={editModalOpen}
+            onClose={() => setEditModalOpen(false)}
+            onSubmit={handleEditPlan}
+            onSuccess={fetchPlansData}
+            plan={selectedPlan}
+            title="Edit Subscription Plan"
+          />
+          <DeleteModal
+            isOpen={deleteModalOpen}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+            title={selectedPlan?.name}
+          />
         </div>
       </div>
     </AdminLayout>

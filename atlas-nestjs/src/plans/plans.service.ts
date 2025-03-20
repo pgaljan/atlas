@@ -68,10 +68,17 @@ export class PlanService {
   async deletePlan(id: string) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
+      include: { subscriptions: true },
     });
 
     if (!plan) {
       throw new NotFoundException(`Plan with ID ${id} not found`);
+    }
+
+    if (plan.subscriptions.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete plan with ID ${id} because it has active subscriptions.`,
+      );
     }
 
     try {

@@ -1,21 +1,23 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
+import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
+import { IoTrash } from "react-icons/io5";
 import { MdGroupAdd, MdOutlineDownloading } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
-import { IoTrash } from "react-icons/io5";
+import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
 import InputField from "../../../components/input-field/InputField";
 import Modal from "../../../components/modals/AdminModal";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
-import cogoToast from "@successtar/cogo-toast";
 import { registerUser } from "../../../redux/slices/auth";
 import {
+  deleteUser,
   exportUsers,
   fetchAllUsers,
   updateUser,
-  deleteUser,
 } from "../../../redux/slices/users";
+import { fetchRoles } from "../../../redux/slices/roles";
+import Select from "react-select";
 
 const UserTable = () => {
   const dispatch = useDispatch();
@@ -27,15 +29,21 @@ const UserTable = () => {
   const [fullName, setFullName] = useState("");
   const [username, setUsername] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [userPassword, setUserPassword] = useState("");
-  const [role, setRole] = useState("");
-
-  // State to track if we're editing; if null, we're adding
   const [editingUser, setEditingUser] = useState(null);
-
-  // Delete modal states (store full user object)
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+  const [userPassword, setUserPassword] = useState("");
+  const [role, setRole] = useState(null);
+  const [roles, setRoles] = useState([]);
+
+  useEffect(() => {
+    dispatch(fetchRoles())
+      .unwrap()
+      .then((data) => {
+        setRoles(data.map((role) => ({ value: role.id, label: role.name })));
+      })
+      .catch((error) => console.error("Failed to fetch roles:", error));
+  }, [dispatch]);
 
   // Open add/edit modal; if a user is passed, prefill for editing
   const openModal = (user = null) => {
@@ -44,8 +52,8 @@ const UserTable = () => {
       setFullName(user.fullName || "");
       setUsername(user.username || "");
       setUserEmail(user.email || "");
-      setUserPassword(""); // leave password empty for security reasons
-      setRole(user.role?.name || "");
+      setUserPassword("");
+      setRole(user.role?.roleId || "");
     } else {
       setEditingUser(null);
       setFullName("");
@@ -178,15 +186,19 @@ const UserTable = () => {
   // For deleting a user
   const handleDeleteUser = async () => {
     try {
-      console.log(userToDelete);
-      await dispatch(deleteUser(userToDelete.id)).unwrap();
+      await dispatch(
+        deleteUser({
+          userId: userToDelete.id,
+          reason: "Deleted by Super Admin",
+        })
+      ).unwrap();
+
       cogoToast.success("User deleted successfully!");
       closeDeleteModal();
       dispatch(fetchAllUsers())
         .unwrap()
         .then((users) => setTableData(users));
     } catch (error) {
-      console.log(error);
       cogoToast.error(error.message || "Failed to delete user");
     }
   };
@@ -206,7 +218,7 @@ const UserTable = () => {
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex justify-between w-full items-center">
-            <h2 className="text-3xl font-semibold text-gray-800">User</h2>
+            <h2 className="text-3xl font-semibold text-gray-800">Users</h2>
             <div className="flex items-center gap-3">
               <button
                 onClick={handleExportUsers}
@@ -263,6 +275,17 @@ const UserTable = () => {
                   onChange={(e) => setUserEmail(e.target.value)}
                   className="w-full"
                 />
+                <div className="mb-4">
+                  <label className="block text-gray-700 font-medium mb-2">
+                    Role
+                  </label>
+                  <Select
+                    options={roles}
+                    value={roles.find((r) => r.value === role) || null}
+                    onChange={(selectedOption) => setRole(selectedOption.value)}
+                    placeholder="Select a role"
+                  />
+                </div>
                 <InputField
                   label="Password"
                   type="password"
@@ -273,14 +296,6 @@ const UserTable = () => {
                   }
                   value={userPassword}
                   onChange={(e) => setUserPassword(e.target.value)}
-                  className="w-full"
-                />
-                <InputField
-                  label="Role"
-                  placeholder="Enter user role"
-                  type="text"
-                  value={role}
-                  onChange={(e) => setRole(e.target.value)}
                   className="w-full"
                 />
               </div>

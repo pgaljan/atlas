@@ -1,23 +1,36 @@
-import React, { useState } from "react";
-import InputField from "../../../components/input-field/InputField";
+import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { updateAdministratorProfile } from "../../../redux/slices/administrator-auth";
+import InputField from "../../input-field/InputField";
+import cogoToast from "@successtar/cogo-toast";
 import Select from "react-select";
 
-const AddModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
+const UpdateAdminModal = ({ isOpen, onClose, adminData }) => {
+  const dispatch = useDispatch();
   const [formData, setFormData] = useState({
     firstName: "",
     lastName: "",
     email: "",
     role: "",
-    password: "",
-    confirmPassword: "",
   });
 
-  // Define role options for the select dropdown
   const roleOptions = [
     { value: "admin", label: "Admin" },
     { value: "super-admin", label: "Super Admin" },
     { value: "user", label: "User" },
   ];
+
+  // Sync formData with adminData when it changes
+  useEffect(() => {
+    if (adminData) {
+      setFormData({
+        firstName: adminData.firstName || "",
+        lastName: adminData.lastName || "",
+        email: adminData.email || "",
+        role: adminData.role || "",
+      });
+    }
+  }, [adminData]);
 
   if (!isOpen) return null;
 
@@ -29,16 +42,29 @@ const AddModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
     setFormData({ ...formData, role: selectedOption.value });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSubmit(formData);
-    onClose();
+    try {
+      // Dispatch the thunk with both the id and updateData
+      await dispatch(
+        updateAdministratorProfile({ id: adminData.id, updateData: formData })
+      ).unwrap();
+      cogoToast.success("Profile updated successfully");
+      onClose();
+    } catch (error) {
+      cogoToast.error(error || "Failed to update profile");
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl shadow-lg p-6 w-96">
-        <h2 className="text-2xl font-bold text-gray-800 mb-4">Add {title}</h2>
+      <div className="bg-white rounded-3xl shadow-lg p-6 w-[600px]">
+        <h4 className="mb-2 text-3xl font-bold text-gray-800">
+          Update Profile
+        </h4>
+        <p className="text-base text-gray-500 mb-6">
+          Modify administrator details below.
+        </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
             label="First Name"
@@ -75,14 +101,6 @@ const AddModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
               placeholder="Select role"
             />
           </div>
-          <InputField
-            label="Password"
-            placeholder="Enter password"
-            type="password"
-            name="password"
-            value={formData.password}
-            onChange={handleChange}
-          />
           <div className="flex justify-end gap-4 mt-4">
             <button
               type="button"
@@ -95,7 +113,7 @@ const AddModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
               type="submit"
               className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-red-800"
             >
-              Save {title}
+              Update Profile
             </button>
           </div>
         </form>
@@ -104,4 +122,4 @@ const AddModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
   );
 };
 
-export default AddModal;
+export default UpdateAdminModal;

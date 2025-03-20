@@ -11,6 +11,7 @@ import {
   Patch,
   Request,
   Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { Response } from 'express';
@@ -60,9 +61,14 @@ export class UserController {
     @Body('reason') reason: string,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.params?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     try {
-      return await this.userService.deleteUser(id, reason, userId);
+      return await this.userService.deleteUser(userId, reason);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
@@ -90,14 +96,14 @@ export class UserController {
     }
   }
 
-  @UseGuards(JwtAuthGuard)
+  // @UseGuards(JwtAuthGuard)
   @Patch('update/:id')
   async updateUser(
     @Param('id') id: string,
     @Body() updateUserDto: UpdateUserDto,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.params.id;
     try {
       return await this.userService.updateUser(id, updateUserDto, userId);
     } catch (error) {
