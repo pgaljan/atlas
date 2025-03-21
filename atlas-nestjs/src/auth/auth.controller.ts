@@ -2,17 +2,24 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
+  HttpStatus,
   InternalServerErrorException,
   Post,
+  Req,
   Request,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
-import { Request as ExpressRequest } from 'express';
+import { Request as ExpressRequest, Response } from 'express';
 import { AuthService } from './auth.service';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { GoogleOauthGuard } from './guards/google-auth.guard';
+import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { GitHubOauthGuard } from './guards/github-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -21,10 +28,8 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     try {
-      const response = await this.authService.register(registerDto);
-      return {
-        message: 'User registered successfully',
-      };
+      const result = await this.authService.register(registerDto);
+      return result;
     } catch (error) {
       if (error.name === 'ConflictException') {
         throw new BadRequestException(error.message);
@@ -40,20 +45,14 @@ export class AuthController {
   async login(@Request() req: ExpressRequest) {
     try {
       const response = await this.authService.login(req.user);
-
       return {
-        message: response.message,
+        message: 'Login successful',
         user: response.user,
         access_token: response.access_token,
       };
     } catch (error) {
-      if (error instanceof UnauthorizedException) {
-        throw new UnauthorizedException(
-          'Login failed. Invalid credentials. Please check your credentials and try again.',
-        );
-      }
-      throw new InternalServerErrorException(
-        'Login failed due to an unexpected error.',
+      throw new UnauthorizedException(
+        'Login failed. Please check your credentials and try again.',
       );
     }
   }
@@ -77,6 +76,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @UseGuards(JwtAuthGuard)
   async logout(@Request() req: ExpressRequest) {
     try {
       await this.authService.logout(req.user);
@@ -87,6 +87,41 @@ export class AuthController {
       throw new InternalServerErrorException(
         'An unexpected error occurred while logging out',
       );
+    }
+  }
+
+  @Get('google')
+  @UseGuards(GoogleOauthGuard)
+  async auth() {}
+
+  @Get('google/callback')
+  @UseGuards(GoogleOauthGuard)
+  async googleAuthCallback(@Req() req: ExpressRequest, @Res() res: Response) {
+    try {
+      await this.authService.googleLogin(req.user, res);
+    } catch (error) {
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'Google authentication failed',
+        error: error.message,
+      });
+    }
+  }
+
+  @Get('github')
+  @UseGuards(GitHubOauthGuard)
+  async authGitHub() {}
+
+  @Get('github/callback')
+  @UseGuards(GitHubOauthGuard)
+  async githubAuthCallback(@Req() req: ExpressRequest, @Res() res: Response) {
+    try {
+      await this.authService.githubLogin(req.user, res);
+    } catch (error) {
+      console.log(error)
+      return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
+        message: 'GitHub authentication failed',
+        error: error.message,
+      });
     }
   }
 }

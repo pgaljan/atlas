@@ -21,7 +21,7 @@ export class PlanService {
   }
 
   // Fetch plan by ID
-  async getPlanById(id: number) {
+  async getPlanById(id: string) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });
@@ -45,7 +45,7 @@ export class PlanService {
   }
 
   // Update plan details
-  async updatePlan(id: number, updatePlanDto: UpdatePlanDto) {
+  async updatePlan(id: string, updatePlanDto: UpdatePlanDto) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
     });
@@ -65,13 +65,20 @@ export class PlanService {
   }
 
   // Delete plan
-  async deletePlan(id: number) {
+  async deletePlan(id: string) {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
+      include: { subscriptions: true },
     });
 
     if (!plan) {
       throw new NotFoundException(`Plan with ID ${id} not found`);
+    }
+
+    if (plan.subscriptions.length > 0) {
+      throw new BadRequestException(
+        `Cannot delete plan with ID ${id} because it has active subscriptions.`,
+      );
     }
 
     try {

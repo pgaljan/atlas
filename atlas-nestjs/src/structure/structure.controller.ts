@@ -19,8 +19,12 @@ export class StructureController {
   @Post('create')
   async createStructure(@Body() createStructureDto: CreateStructureDto) {
     try {
-      await this.structureService.createStructure(createStructureDto);
-      return { message: 'Structure created successfully' };
+      const createdStructure =
+        await this.structureService.createStructure(createStructureDto);
+      return {
+        message: 'Structure created successfully',
+        structure: createdStructure,
+      };
     } catch (error) {
       throw new HttpException(
         `Failed to create structure: ${error.message}`,
@@ -29,10 +33,27 @@ export class StructureController {
     }
   }
 
+  @Get('user/:userId')
+  async getStructuresByUserId(@Param('userId') userId: string) {
+    try {
+      const structures =
+        await this.structureService.getStructuresByUserId(userId);
+      return {
+        message: 'Structures retrieved successfully',
+        structures,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve structures: ${error.message}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
+
   @Get(':id')
   async getStructure(@Param('id') id: string) {
     try {
-      return await this.structureService.getStructure(parseInt(id));
+      return await this.structureService.getStructure(id);
     } catch (error) {
       throw new HttpException(
         `Structure not found: ${error.message}`,
@@ -47,7 +68,7 @@ export class StructureController {
     @Body() updateData: Partial<CreateStructureDto>,
   ) {
     try {
-      await this.structureService.updateStructure(parseInt(id), updateData);
+      await this.structureService.updateStructure(id, updateData);
       return { message: 'Structure updated successfully' };
     } catch (error) {
       throw new HttpException(
@@ -60,7 +81,7 @@ export class StructureController {
   @Delete('delete/:id')
   async deleteStructure(@Param('id') id: string) {
     try {
-      await this.structureService.deleteStructure(parseInt(id));
+      await this.structureService.deleteStructure(id);
       return { message: 'Structure deleted successfully' };
     } catch (error) {
       throw new HttpException(
@@ -100,7 +121,7 @@ export class StructureController {
   }
 
   @Delete('batch-delete')
-  async deleteBatchStructures(@Body() ids: number[]) {
+  async deleteBatchStructures(@Body() ids: string[]) {
     try {
       await this.structureService.deleteBatchStructures(ids);
       return { message: 'Structures deleted successfully' };

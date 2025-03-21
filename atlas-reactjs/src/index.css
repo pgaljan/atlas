@@ -49,3 +49,12 @@
       center / var(--dot-space) var(--dot-space),
     var(--dot-color);
 }
+
+.markmap-foreign > div > div::first-letter {
+  text-transform: capitalize;
+}
+
+.header-container.structure-title::first-letter {
+  text-transform: capitalize !important;
+}
+

@@ -1,18 +1,19 @@
-import { IsString, IsDecimal, IsOptional } from 'class-validator';
+import { IsOptional, IsIn } from 'class-validator';
 
 export class UpdatePlanDto {
-  @IsString()
   @IsOptional()
   name?: string;
 
-  @IsString()
   @IsOptional()
   description?: string;
 
-  @IsDecimal()
   @IsOptional()
   price?: number;
 
   @IsOptional()
   features?: Record<string, any>;
+
+  @IsOptional()
+  @IsIn(['active', 'inactive'], { message: 'Status must be either active or inactive' })
+  status?: 'active' | 'inactive';
 }

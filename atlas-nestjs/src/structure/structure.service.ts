@@ -11,39 +11,83 @@ import { CreateStructureDto } from './dto';
 export class StructureService {
   constructor(private readonly prisma: PrismaService) {}
 
+  private formatElements(elements: any[]): any[] {
+    return elements.map((element) => ({
+      type: element.type,
+      wbsLevel: element.wbsLevel,
+      children: element.children
+        ? { create: this.formatElements(element.children) }
+        : undefined,
+    }));
+  }
+
   async createStructure(createStructureDto: CreateStructureDto) {
     const { name, description, visibility, ownerId, elements } =
       createStructureDto;
 
     try {
-      const owner = await this.prisma.user.findUnique({
-        where: { id: ownerId },
+      // Check if a structure with the same name already exists
+      const existingStructure = await this.prisma.structure.findFirst({
+        where: {
+          name,
+          ownerId,
+        },
       });
-      if (!owner) {
-        throw new NotFoundException(`User with id ${ownerId} not found`);
+
+      if (existingStructure) {
+        throw new InternalServerErrorException(
+          `"${name}" already exists for this user.`,
+        );
       }
 
-      const elementsToProcess = elements || [];
+      if (existingStructure) {
+        throw new InternalServerErrorException(`"${name}" already exists.`);
+      }
 
-      const formatElements = (elements: any[]) =>
-        elements.map((element) => ({
-          type: element.type,
-          wbsLevel: element.wbsLevel,
-          wbsNumber: element.wbsNumber,
-          children: element.children
-            ? { create: formatElements(element.children) }
-            : undefined,
-        }));
+      // Fetch user subscription
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { userId: ownerId },
+      });
 
+      if (!subscription) {
+        throw new NotFoundException(
+          `Subscription for user ${ownerId} not found`,
+        );
+      }
+
+      let features = subscription.features as Record<string, any>;
+
+      // Check and update the "Structures" feature count
+      if (features['Structures'] !== 'Unlimited') {
+        let structureLimit = parseInt(features['Structures'], 10);
+
+        if (!isNaN(structureLimit) && structureLimit > 0) {
+          features['Structures'] = (structureLimit - 1).toString();
+        } else {
+          throw new InternalServerErrorException(
+            `Structure limit exceeded for user ${ownerId}`,
+          );
+        }
+
+        // Update the subscription with the new feature count
+        await this.prisma.subscription.update({
+          where: { userId: ownerId },
+          data: {
+            features: features,
+          },
+        });
+      }
+
+      // Create the structure
       const structure = await this.prisma.structure.create({
         data: {
           name,
+          title: name,
           description,
           visibility: visibility || Visibility.private,
           ownerId,
-          markmapMM: '#',
           elements: {
-            create: elements ? formatElements(elements) : [],
+            create: elements ? this.formatElements(elements) : [],
           },
         },
       });
@@ -58,9 +102,8 @@ export class StructureService {
             name,
             description,
             visibility,
-            elements: elementsToProcess.map((element) => ({
-              wbsNumber: element.wbsNumber,
-              type: element.type,
+            elements: elements?.map((element) => ({
+              type: element.name,
             })),
           },
           userId: ownerId,
@@ -75,12 +118,13 @@ export class StructureService {
     }
   }
 
-  async getStructure(id: number) {
+  async getStructure(id: string) {
     try {
       const structure = await this.prisma.structure.findUnique({
         where: { id },
         include: {
           elements: {
+            where: { deletedAt: null },
             include: {
               sourceLinks: true,
               targetLinks: true,
@@ -110,9 +154,38 @@ export class StructureService {
     }
   }
 
-  async updateStructure(id: number, updateData: Partial<CreateStructureDto>) {
+  async getStructuresByUserId(userId: string) {
     try {
-      const { name, description, visibility, elements, maps } = updateData;
+      const structures = await this.prisma.structure.findMany({
+        where: { ownerId: userId },
+      });
+
+      if (!structures || structures.length === 0) {
+        throw new NotFoundException(
+          `No structures found for user with id ${userId}`,
+        );
+      }
+
+      return structures;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to retrieve structures: ${error.message}`,
+      );
+    }
+  }
+
+  async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
+    try {
+      const {
+        name,
+        title,
+        description,
+        visibility,
+        imageUrl,
+        elements,
+        maps,
+        markmapShowWbs,
+      } = updateData;
 
       const structure = await this.prisma.structure.findUnique({
         where: { id },
@@ -123,13 +196,16 @@ export class StructureService {
 
       const elementsToProcess = elements || [];
 
-      // Perform the update
+      // Perform the update, including the imageUrl if provided
       const updatedStructure = await this.prisma.structure.update({
         where: { id },
         data: {
           name: name || undefined,
+          markmapShowWbs,
+          title: title || undefined,
           description: description || undefined,
           visibility: visibility || undefined,
+          imageUrl: imageUrl || undefined, 
           updatedAt: new Date(),
           elements: elements
             ? {
@@ -146,7 +222,7 @@ export class StructureService {
         },
       });
 
-      // Log the update in the AuditLog
+      // Log the update in the AuditLog including imageUrl snapshot info
       await this.prisma.auditLog.create({
         data: {
           action: 'UPDATE',
@@ -156,9 +232,9 @@ export class StructureService {
             name,
             description,
             visibility,
+            imageUrl, // Include imageUrl snapshot in the log
             elements: elementsToProcess.map((element) => ({
-              wbsNumber: element.wbsNumber,
-              type: element.type,
+              type: element.name,
             })),
           },
           userId: structure.ownerId,
@@ -173,7 +249,7 @@ export class StructureService {
     }
   }
 
-  async deleteStructure(id: number) {
+  async deleteStructure(id: string) {
     try {
       const structure = await this.prisma.structure.findUnique({
         where: { id },
@@ -190,6 +266,36 @@ export class StructureService {
         where: { id: { in: elementIds } },
       });
       await this.prisma.element.deleteMany({ where: { structureId: id } });
+
+      // Fetch user subscription
+      const subscription = await this.prisma.subscription.findUnique({
+        where: { userId: structure.ownerId },
+      });
+
+      if (!subscription) {
+        throw new NotFoundException(
+          `Subscription for user ${structure.ownerId} not found`,
+        );
+      }
+
+      let features = subscription.features as Record<string, any>;
+
+      // Restore the "Structures" feature count
+      if (features['Structures'] !== 'Unlimited') {
+        let structureLimit = parseInt(features['Structures'], 10);
+
+        if (!isNaN(structureLimit)) {
+          features['Structures'] = (structureLimit + 1).toString();
+
+          // Update the subscription with the restored feature count
+          await this.prisma.subscription.update({
+            where: { userId: structure.ownerId },
+            data: {
+              features: features,
+            },
+          });
+        }
+      }
 
       // Log the deletion in the AuditLog
       await this.prisma.auditLog.create({
@@ -209,7 +315,6 @@ export class StructureService {
       );
     }
   }
-
   // Batch operations
   async createBatchStructures(structures: CreateStructureDto[]) {
     try {
@@ -255,7 +360,7 @@ export class StructureService {
     }
   }
 
-  async deleteBatchStructures(ids: number[]) {
+  async deleteBatchStructures(ids: string[]) {
     try {
       return Promise.all(ids.map((id) => this.deleteStructure(id)));
     } catch (error) {

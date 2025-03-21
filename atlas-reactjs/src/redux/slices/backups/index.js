@@ -6,6 +6,7 @@ const initialState = {
   backups: [],
   status: "idle",
   error: null,
+  fullBackupUrl: null,
 };
 
 // Async thunk to create a backup
@@ -13,9 +14,41 @@ export const createBackup = createAsyncThunk(
   "backup/create",
   async ({ userId, structureId }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post("/backup/create", null, {
-        params: { userId, structureId },
-      });
+      const response = await axiosInstance.post(
+        "/backup/create",
+        {},
+        {
+          params: { userId, structureId },
+        }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk to create a full user backup
+export const createFullUserBackup = createAsyncThunk(
+  "backup/createFull",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post(
+        `/backup/user/${userId}/full-backup`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk to fetch backups by userId
+export const fetchBackupsByUserId = createAsyncThunk(
+  "backup/user",
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/backup/user/${userId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -84,6 +117,18 @@ const backupSlice = createSlice({
         state.backups.push(action.payload);
       })
       .addCase(createBackup.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Create full user backup
+      .addCase(createFullUserBackup.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(createFullUserBackup.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.fullBackupUrl = action.payload.fileUrl; // Store the file URL
+      })
+      .addCase(createFullUserBackup.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

@@ -1,10 +1,12 @@
+import React from "react";
 import { Sidebar } from "flowbite-react";
 import { useState } from "react";
 import { BsDatabaseFillCheck, BsFillTrashFill } from "react-icons/bs";
 import { FaPlusCircle, FaRocket } from "react-icons/fa";
 import { FaImages, FaUsersGear } from "react-icons/fa6";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
 import StructureModal from "../modals/StructureModal";
 
 // Define custom theme for the Sidebar
@@ -31,30 +33,47 @@ const ownTheme = {
 
 export function SidebarPage({ onSubmit }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const navigate = useNavigate();
   const location = useLocation();
 
   const handleModalToggle = () => {
     setIsModalOpen((prev) => !prev);
   };
 
+  // Check if the user can create a new structure
+  const canCreateStructure = useFeatureFlag("Structures");
+
+  // Reusable function to handle feature restrictions
+  const handleFeatureClick = (canAccess, action) => {
+    if (canAccess) {
+      action();
+    } else {
+      navigate("?plan=upgrade-to-premium");
+    }
+  };
+
   const menuItems = [
     {
       name: "Dashboard",
       icon: TbLayoutDashboardFilled,
-      link: "/home",
+      link: "/app/dashboard",
     },
-    { name: "Media", icon: FaImages, link: "/media" },
-    {
-      name: "Team Members",
-      icon: FaUsersGear,
-      link: "/team-members",
-    },
+    // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
+    // {
+    //   name: "Team Members",
+    //   icon: FaUsersGear,
+    //   link: "/app/team-members",
+    // },
     {
       name: "My Backups",
       icon: BsDatabaseFillCheck,
-      link: "/backups",
+      link: "/app/backups",
     },
-    { name: "Trash", icon: BsFillTrashFill, link: "/trash" },
+    // {
+    //   name: "Deleted Markmaps",
+    //   icon: BsFillTrashFill,
+    //   link: "/app/deleted-markmaps",
+    // },
   ];
 
   return (
@@ -67,7 +86,9 @@ export function SidebarPage({ onSubmit }) {
           <Sidebar.Items>
             <div className="flex justify-center mb-4 mt-3">
               <button
-                onClick={handleModalToggle}
+                onClick={() =>
+                  handleFeatureClick(canCreateStructure, handleModalToggle)
+                }
                 className="bg-custom-main text-white py-2 px-6 font-semibold flex items-center space-x-3 rounded-md"
               >
                 <FaPlusCircle />
@@ -99,29 +120,17 @@ export function SidebarPage({ onSubmit }) {
                   {item.name}
                 </Sidebar.Item>
               ))}
-
-              {/* <Sidebar.Collapse icon={HiShoppingBag} label="E-commerce">
-                {["Products", "Sales", "Refunds", "Shipping"].map(subItem => (
-                  <Sidebar.Item
-                    key={subItem}
-                    href="#"
-                    onClick={() => handleItemClick(subItem)}
-                    className={`${
-                      activeItem === subItem && `${ownTheme.item.active}`
-                    }`}
-                  >
-                    {subItem}
-                  </Sidebar.Item>
-                ))}
-              </Sidebar.Collapse> */}
             </Sidebar.ItemGroup>
           </Sidebar.Items>
 
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 mb-4">
-            <button className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white">
+            <Link
+              to="/app/upgrade-plans"
+              className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white"
+            >
               <FaRocket />
               <span>Upgrade</span>
-            </button>
+            </Link>
           </div>
         </div>
       </Sidebar>

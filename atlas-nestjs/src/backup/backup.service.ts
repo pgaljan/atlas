@@ -35,24 +35,23 @@ export class BackupService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementid: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prisma.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId: elementid,
         details: details,
         userId: userId || null,
       },
     });
   }
 
-  async createBackup(userId: number, structureId?: number) {
+  async createBackup(userId: string, structureId?: string) {
     try {
-      // Fetch user data with a condition for the specific structureId
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
@@ -84,6 +83,8 @@ export class BackupService {
       const structuresSheet = user.structures.map((structure: any) => ({
         id: structure.id,
         name: structure.name,
+        title: structure.title,
+        description: structure.description,
         ownerId: structure.ownerId,
         createdAt: structure.createdAt,
         updatedAt: structure.updatedAt,
@@ -93,8 +94,10 @@ export class BackupService {
       const elementsSheet = user.structures.flatMap((structure: any) =>
         structure.elements.map((element: any) => ({
           id: element.id,
+          name: element.name,
           structureId: element.structureId,
           recordId: element.recordId,
+          parentId: element.parentId,
           type: element.type,
           createdAt: element.createdAt,
           updatedAt: element.updatedAt,
@@ -109,6 +112,9 @@ export class BackupService {
                 {
                   id: element.Record.id,
                   metadata: JSON.stringify(element.Record.metadata),
+                  tags: element.Record.tags
+                    ? JSON.stringify(element.Record.tags)
+                    : null,
                   createdAt: element.Record.createdAt,
                   updatedAt: element.Record.updatedAt,
                 },
@@ -143,7 +149,12 @@ export class BackupService {
       const buffer = xlsx.write(workbook, { type: 'buffer', bookType: 'xlsx' });
       const encryptedBuffer = this.encrypt(buffer);
 
-      const filename = `backup-${uuidv4()}.zip`;
+      const structure = user.structures[0];
+
+      // Generate file name using structure name and timestamp
+      const timestamp = new Date();
+      const filename = `${structure.title || structure.name}.${timestamp}.zip`;
+
       const encryptedFilePath = path.resolve(
         backupDir,
         `backup-${uuidv4()}.enc`,
@@ -157,13 +168,18 @@ export class BackupService {
 
       fs.unlinkSync(encryptedFilePath);
 
-      const protocol = process.env.PROTOCOL || 'http';
-      const baseUrl = process.env.BASE_URL || 'localhost:4001';
+      const protocol = (process.env.PROTOCOL || 'http')?.replace(/:\/*$/, '');
+      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
+        .replace(/^https?:\/+/, '')
+        .replace(/^\/|\/$/, '');
+
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
+      const title = `${structure.title || structure.name}-${timestamp}`;
 
       const backup = await this.prisma.backup.create({
         data: {
           userId,
+          title,
           backupData: { filePath: zipFilePath },
           fileUrl,
         },
@@ -191,7 +207,111 @@ export class BackupService {
     }
   }
 
-  async getBackup(backupId: number) {
+  async createFullUserBackup(userId: string) {
+    try {
+      // Fetch user along with all structures, elements, and related records
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+        include: {
+          structures: {
+            include: {
+              elements: {
+                include: { Record: true },
+              },
+              StructureMap: true,
+            },
+          },
+        },
+      });
+
+      if (!user) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
+
+      // Prepare the backup data (all structures for the user)
+      const backupData = {
+        structures: user.structures,
+      };
+
+      // Convert backup data to JSON and encrypt it
+      const jsonData = JSON.stringify(backupData, null, 2);
+      const jsonBuffer = Buffer.from(jsonData);
+      const encryptedBuffer = this.encrypt(jsonBuffer);
+
+      // Prepare backup directory
+      const backupDir = path.resolve(__dirname, '../../public/backups');
+      if (!fs.existsSync(backupDir)) {
+        fs.mkdirSync(backupDir, { recursive: true });
+      }
+
+      // Generate filenames
+      const timestamp = new Date()
+        .toISOString()
+        .replace('T', '_')
+        .replace(/\..+/, '')
+        .replace(/:/g, '-');
+      const encryptedFilePath = path.resolve(
+        backupDir,
+        `backup-${uuidv4()}.enc`,
+      );
+      const filePrefix = user.username || user.email || 'user';
+      const zipFilePath = path.resolve(
+        backupDir,
+        `${filePrefix}-${timestamp}.zip`,
+      );
+
+      // Write encrypted data to a temporary file
+      fs.writeFileSync(encryptedFilePath, encryptedBuffer);
+
+      // Compress the encrypted backup into a ZIP file
+      const zip = new AdmZip();
+      zip.addLocalFile(encryptedFilePath);
+      zip.writeZip(zipFilePath);
+
+      // Remove the temporary encrypted file
+      fs.unlinkSync(encryptedFilePath);
+
+      // Construct public URL for the backup file
+      const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
+      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
+        .replace(/^https?:\/+/, '')
+        .replace(/^\/|\/$/, '');
+      const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
+
+      // Create a backup record in the database
+      const title = `${filePrefix}-${timestamp}`;
+      const backup = await this.prisma.backup.create({
+        data: {
+          userId,
+          title,
+          backupData: { filePath: zipFilePath },
+          fileUrl,
+        },
+      });
+
+      // Log the audit for full backup creation
+      await this.logAudit('create', 'full-user-backup', backup.id, {
+        fileUrl,
+        userId,
+      });
+
+      return {
+        message: 'Full user backup created successfully',
+        fileUrl,
+      };
+    } catch (error) {
+      console.error('Error creating full user backup:', error);
+      throw new InternalServerErrorException(
+        'Failed to create full user backup',
+      );
+    }
+  }
+
+  async getBackupByUserId(userId: string) {
+    return await this.prisma.backup.findMany({ where: { userId } });
+  }
+
+  async getBackup(backupId: string) {
     try {
       const backup = await this.prisma.backup.findUnique({
         where: { id: backupId },
@@ -211,7 +331,7 @@ export class BackupService {
     }
   }
 
-  async deleteBackup(backupId: number) {
+  async deleteBackup(backupId: string) {
     try {
       const backup = await this.prisma.backup.findUnique({
         where: { id: backupId },
@@ -235,12 +355,11 @@ export class BackupService {
 
       return { message: `Backup with ID ${backupId} deleted successfully` };
     } catch (error) {
-      console.error('Error deleting backup:', error);
       throw new InternalServerErrorException('Failed to delete the backup');
     }
   }
 
-  async getAllBackups(userId?: number) {
+  async getAllBackups(userId?: string) {
     try {
       const backups = userId
         ? await this.prisma.backup.findMany({ where: { userId } })

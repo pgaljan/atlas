@@ -1,6 +1,19 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useDispatch } from "react-redux";
 import useUndo from "use-undo";
+import useCaptureAndUploadSnapshot from "../../../hooks/useCaptureAndUploadSnapshot";
+import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
+import { reparentElements } from "../../../redux/slices/elements";
+import {
+  getStructure,
+  updateStructure,
+} from "../../../redux/slices/structures";
+import {
+  exportAsDoc,
+  exportAsHtml,
+  exportAsPdf,
+} from "../../../utils/exportFunctions";
 import {
   addNodeToTarget,
   assignWbsNumbers,
@@ -9,51 +22,85 @@ import {
   updateNodeLevels,
 } from "../../../utils/markmapHelpers";
 import NodeModal from "../../modals/NodeModal";
+import RightClickMenu from "../../modals/RightClickMenu";
 import { useMarkmap } from "../markmap-context/MarkmapContext";
 import MarkmapHeader from "../markmap-layout/MarkmapHeader";
 
-import useMarkmapInteractions from "../../../hooks/useMarkmapInteractions";
-
-const MarkmapEditor = ({ initialContent }) => {
+const MarkmapEditor = ({ structureId }) => {
+  const dispatch = useDispatch();
   const { markmapInstance, svgRef } = useMarkmap();
-
   const [treeDataState, { set: setTreeData, undo, redo, canUndo, canRedo }] =
     useUndo(null);
   const treeData = treeDataState.present;
-
+  const [showWbs, setShowWbsState] = useState();
+  const [isLoading, setIsLoading] = useState(true);
   const [draggedNode, setDraggedNode] = useState(null);
   const [modalData, setModalData] = useState(null);
+  const [savedTreeData, setSavedTreeData] = useState(null);
   const [modalPosition, setModalPosition] = useState({ x: 0, y: 0 });
   const [shouldFitView, setShouldFitView] = useState(true);
   const [filteredTree, setFilteredTree] = useState(null);
+  const [loaderSearch, setLoaderSearch] = useState(false);
+  const [rightClickModal, setRightClickModal] = useState({
+    visible: false,
+    position: { x: 0, y: 0 },
+  });
 
-  const localStorageKey = "markmapTreeData";
-  const localStorageWbsKey = "markmapShowWbs";
+  useEffect(() => {
+    const handleAutoSave = async () => {
+      if (svgRef.current) {
+        await useCaptureAndUploadSnapshot(
+          svgRef.current,
+          structureId,
+          dispatch
+        );
+      }
+    };
 
-  const [showWbs, setShowWbsState] = useState(
-    () => JSON.parse(localStorage.getItem(localStorageWbsKey)) ?? false
-  );
+    const debounceTimer = setTimeout(handleAutoSave, 2000);
 
-  const setShowWbs = (value) => {
+    return () => clearTimeout(debounceTimer);
+  }, [structureId]);
+
+  const setShowWbs = async (value) => {
     setShowWbsState(value);
-    localStorage.setItem(localStorageWbsKey, JSON.stringify(value));
+
+    try {
+      await dispatch(
+        updateStructure({
+          id: structureId,
+          updateData: { markmapShowWbs: value },
+        })
+      ).unwrap();
+    } catch (error) {
+      cogoToast.error("Failed to toggle WBS visibility.");
+    }
   };
 
-  const handleJsonChange = (e) => {
-    try {
-      const updatedTreeData = JSON.parse(e.target.value);
-      const treeWithWbs = assignWbsNumbers(updatedTreeData);
-      const treeWithLevels = updateNodeLevels(treeWithWbs);
-      setTreeData(treeWithLevels);
-      localStorage.setItem(localStorageKey, JSON.stringify(treeWithLevels));
-    } catch (error) {
-      console.error("Invalid JSON:", error);
+  const handleRightClick = (event) => {
+    event.preventDefault();
+
+    if (event.target.closest(".markmap-node, .markmap-header")) {
+      return;
+    }
+
+    setRightClickModal({
+      visible: true,
+      position: { x: event.clientX, y: event.clientY },
+    });
+  };
+
+  const handleLeftClick = (event) => {
+    if (
+      rightClickModal.visible &&
+      !event.target.closest(".right-click-modal")
+    ) {
+      setRightClickModal({ visible: false, position: { x: 0, y: 0 } });
     }
   };
 
   const loadInitialTreeData = () => {
-    const savedTreeData = localStorage.getItem(localStorageKey);
-    if (savedTreeData) {
+    if (treeData) {
       try {
         const parsedTreeData = JSON.parse(savedTreeData);
         const treeWithWbs = assignWbsNumbers(parsedTreeData);
@@ -63,15 +110,14 @@ const MarkmapEditor = ({ initialContent }) => {
       }
     }
 
-    // If nothing in localStorage, load default or initialContent
-    const content = initialContent || "Default Structrue";
-    return updateNodeLevels(assignWbsNumbers({ content, children: [] }));
+    // If nothing in localStorage, load default or structureId
+    return updateNodeLevels(assignWbsNumbers({ children: [] }));
   };
 
   /**
    * Moves draggedNodeData into targetNodeData's children
    */
-  const updateTreeData = (draggedNodeData, targetNodeData) => {
+  const updateTreeData = async (draggedNodeData, targetNodeData) => {
     if (!targetNodeData) {
       cogoToast.error("No valid target for the operation.");
       return;
@@ -82,67 +128,78 @@ const MarkmapEditor = ({ initialContent }) => {
       return;
     }
 
-    // Remove the dragged node from its original location
-    const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
+    const reparentingRequest = {
+      sourceElementId: targetNodeData.elementId
+        ? targetNodeData.elementId
+        : null,
+      targetElementId: draggedNodeData.elementId,
+      attributes: {
+        structureId: structureId ? structureId : null,
+      },
+    };
 
-    // Add the dragged node as a child of the drop target
-    const newTree = addNodeToTarget(
-      updatedTree,
-      targetNodeData.originalContent,
-      {
-        ...draggedNodeData,
-        children: draggedNodeData.children || [],
-      }
-    );
+    try {
+      await dispatch(
+        reparentElements({ reparentingRequests: [reparentingRequest] })
+      ).unwrap();
 
-    const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
-    setTreeData(treeWithWbsAndLevels);
-    localStorage.setItem(localStorageKey, JSON.stringify(treeWithWbsAndLevels));
+      fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
+
+      cogoToast.success("Element reparented successfully.");
+
+      // Update the tree data locally to reflect the reparenting
+      const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
+      const newTree = addNodeToTarget(
+        updatedTree,
+        targetNodeData.originalContent,
+        {
+          ...draggedNodeData,
+          children: draggedNodeData.children || [],
+        }
+      );
+
+      const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
+      setTreeData(treeWithWbsAndLevels);
+    } catch (error) {
+      cogoToast.error("Failed to reparent element.");
+    }
   };
 
-  /**
-   * For searching/filtering by level
-   */
-  const filterTreeByLevel = (node, level) => {
+  const filterTreeByCriteria = (node, level, searchTerm) => {
     if (!node) return null;
-
-    // Check if the current node matches the level
-    const matches = node.level === level;
-
-    // Recursively filter children
+    const matchesLevel = level !== null && node.level === level;
+    const lowerSearch = searchTerm?.toLowerCase();
+    const matchesText = lowerSearch
+      ? node.name?.toLowerCase().includes(lowerSearch) ||
+        node.content?.toLowerCase().includes(lowerSearch)
+      : false;
     const filteredChildren = node.children
-      ?.map((child) => filterTreeByLevel(child, level))
-      .filter(Boolean);
-
-    // Return node if it matches or has matching children
-    if (matches || filteredChildren?.length) {
-      return { ...node, children: filteredChildren };
-    }
-    return null;
+      ?.map((child) => filterTreeByCriteria(child, level, lowerSearch))
+      ?.filter(Boolean);
+    return matchesLevel || matchesText || filteredChildren?.length
+      ? { ...node, children: filteredChildren }
+      : null;
   };
 
-  const handleSearch = (level) => {
-    if (!level.trim()) {
-      setFilteredTree(null);
-      return;
-    }
-
-    const parsedLevel = parseInt(level, 10);
-
-    if (isNaN(parsedLevel)) {
-      cogoToast.error("Please enter a valid number");
-      return;
-    }
-
-    const result = filterTreeByLevel(treeData, parsedLevel);
-    if (result) {
-      setFilteredTree(result);
-    } else {
-      setFilteredTree("no-results");
-    }
+  const handleSearch = (level, searchTerm) => {
+    const result =
+      level === null && !searchTerm?.trim()
+        ? null
+        : filterTreeByCriteria(treeData, level, searchTerm) || "no-results";
+    setLoaderSearch(false);
+    setFilteredTree(result);
   };
 
-  // Close the modal if user scrolls or zooms away so it doesn't float incorrectly
+  // Flatten tree for faster lookups
+  const flattenTree = useCallback((node, map = {}) => {
+    if (!node) return map;
+    map[node.originalContent] = node;
+    node.children?.forEach((child) => flattenTree(child, map));
+    return map;
+  }, []);
+
+  const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree]);
+
   useEffect(() => {
     if (modalData) {
       const handleInteraction = () => {
@@ -181,12 +238,48 @@ const MarkmapEditor = ({ initialContent }) => {
     }
   }, [modalData, modalPosition, svgRef]);
 
-  // Load initial tree data on mount
+  const fetchStructure = async (
+    structureId,
+    dispatch,
+    setTreeData,
+    setIsLoading
+  ) => {
+    if (!structureId) return;
+
+    try {
+      const data = await dispatch(getStructure(structureId)).unwrap();
+      const treeWithWbs = assignWbsNumbers({
+        content: data.name,
+        children: data.elements,
+        structureId: data.id,
+      });
+      setShowWbsState(data.markmapShowWbs);
+      const treeWithLevels = updateNodeLevels(treeWithWbs);
+
+      setTreeData(treeWithLevels);
+    } catch (error) {
+      cogoToast.error("Failed to fetch structure data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const initialTreeData = loadInitialTreeData();
+    fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
+  }, [structureId, dispatch, setTreeData]);
+
+  // Load initial tree data on mount
+  const initialTreeData = useMemo(() => {
+    return loadInitialTreeData();
+  }, [structureId]);
+
+  useEffect(() => {
     setTreeData(initialTreeData);
     setShouldFitView(true);
-  }, []);
+    setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+  }, [initialTreeData]);
 
   useMarkmapInteractions({
     treeData,
@@ -203,14 +296,84 @@ const MarkmapEditor = ({ initialContent }) => {
     updateTreeData,
   });
 
+  const addChildNode = (parentContent, newChildContent) => {
+    const addNode = (node) => {
+      if (node.originalContent === parentContent) {
+        return {
+          ...node,
+          children: [
+            ...(node.children || []),
+            {
+              content: newChildContent,
+              originalContent: newChildContent,
+              children: [],
+            },
+          ],
+        };
+      }
+      return {
+        ...node,
+        children: node.children ? node.children.map(addNode) : [],
+      };
+    };
+
+    const updatedTree = addNode(treeData);
+    const treeWithWbsAndLevels = updateNodeLevels(
+      assignWbsNumbers(updatedTree)
+    );
+    setTreeData(treeWithWbsAndLevels);
+  };
+
+  const deleteNode = (targetContent) => {
+    const removeNode = (node) => {
+      if (node.originalContent === targetContent) return null;
+
+      return {
+        ...node,
+        children: node.children?.map(removeNode).filter(Boolean),
+      };
+    };
+
+    const updatedTree = removeNode(treeData);
+    const treeWithWbsAndLevels = updateNodeLevels(
+      assignWbsNumbers(updatedTree)
+    );
+    setTreeData(treeWithWbsAndLevels);
+  };
+
+  const sanitizeTreeData = (node) => {
+    const cleanedNode = {
+      content: node.name || node.content,
+      children: node.children ? node.children.map(sanitizeTreeData) : [],
+    };
+
+    return cleanedNode;
+  };
+
+  const handleExportOption = (option) => {
+    if (option === "exportHtml") {
+      exportAsHtml(treeData);
+    } else if (option === "exportDoc") {
+      exportAsDoc(treeData);
+    } else if (option === "exportPdf") {
+      exportAsPdf(treeData);
+    }
+  };
+
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
       style={{ userSelect: "none" }}
+      onContextMenu={handleRightClick}
+      onClick={handleLeftClick}
     >
       <div className="flex-1 border border-gray-300 rounded-md bg-white overflow-hidden">
         <MarkmapHeader
+          onSuccess={() =>
+            fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
+          }
           showWbs={showWbs}
+          structureId={structureId}
           setShowWbs={setShowWbs}
           undo={undo}
           redo={redo}
@@ -219,25 +382,53 @@ const MarkmapEditor = ({ initialContent }) => {
           canRedo={canRedo}
         />
         <svg ref={svgRef} className="w-full h-full dotted-bg" />
+
+        {(isLoading || loaderSearch) && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+          </div>
+        )}
+
         {filteredTree === "no-results" && (
           <div className="absolute inset-0 dotted-bg flex items-center justify-center text-gray-500">
-            No records found.
+            No elements found.
           </div>
         )}
       </div>
 
-      <textarea
-        className="w-full h-40 hidden mt-4 border border-gray-300 rounded-md p-2 resize-none focus:outline-none focus:ring focus:border-blue-300"
-        value={JSON.stringify(treeData, null, 2)}
-        onChange={handleJsonChange}
-        placeholder="Edit JSON data here..."
-      />
-
       {modalData && (
         <NodeModal
           position={modalPosition}
-          content={modalData}
+          structureId={structureId}
+          parentId={modalData.elementId}
+          elementId={modalData.elementId}
+          recordId={modalData.recordId}
+          structureName={modalData.structureName}
           onClose={() => setModalData(null)}
+          wbs={modalData.wbs}
+          onAddChild={(newChildContent) =>
+            addChildNode(modalData, newChildContent)
+          }
+          onDelete={() => deleteNode(modalData)}
+          onSuccess={() =>
+            fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
+          }
+          nodeData={modalData}
+        />
+      )}
+
+      {/* right click modal */}
+      {rightClickModal.visible && (
+        <RightClickMenu
+          position={rightClickModal.position}
+          structureId={structureId}
+          onClose={() =>
+            setRightClickModal({ visible: false, position: { x: 0, y: 0 } })
+          }
+          onOptionSelect={(option) => {
+            setRightClickModal({ visible: false, position: { x: 0, y: 0 } });
+            handleExportOption(option);
+          }}
         />
       )}
     </div>

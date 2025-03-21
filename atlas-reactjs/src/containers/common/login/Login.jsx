@@ -1,80 +1,82 @@
-import cogoToast from "@successtar/cogo-toast"
-import React, { useState } from "react"
-import { useDispatch } from "react-redux"
-import { Link } from "react-router-dom"
-import { loginUser } from "../../../redux/slices/auth"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import Icons from "../../../constants/icons";
+import { loginUser } from "../../../redux/slices/auth";
 
-const GoogleLoginButton = () => (
-  <button className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out">
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 512 512"
-      width="24"
-      height="24"
-      id="google"
+const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
+  const handleOAuthLogin = async () => {
+    try {
+      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
+    } catch (error) {
+      cogoToast.error(error.message || `${label} login failed!`);
+    }
+  };
+
+  return (
+    <button
+      onClick={handleOAuthLogin}
+      className="w-full text-black py-2 px-4 border rounded-lg flex items-center justify-center space-x-2 text-sm hover:bg-custom-tab-active transition duration-200 ease-in-out"
     >
-      <path
-        fill="#fbbb00"
-        d="M113.47 309.408 95.648 375.94l-65.139 1.378C11.042 341.211 0 299.9 0 256c0-42.451 10.324-82.483 28.624-117.732h.014L86.63 148.9l25.404 57.644c-5.317 15.501-8.215 32.141-8.215 49.456.002 18.792 3.406 36.797 9.651 53.408z"
-      ></path>
-      <path
-        fill="#518ef8"
-        d="M507.527 208.176C510.467 223.662 512 239.655 512 256c0 18.328-1.927 36.206-5.598 53.451-12.462 58.683-45.025 109.925-90.134 146.187l-.014-.014-73.044-3.727-10.338-64.535c29.932-17.554 53.324-45.025 65.646-77.911h-136.89V208.176h245.899z"
-      ></path>
-      <path
-        fill="#28b446"
-        d="m416.253 455.624.014.014C372.396 490.901 316.666 512 256 512c-97.491 0-182.252-54.491-225.491-134.681l82.961-67.91c21.619 57.698 77.278 98.771 142.53 98.771 28.047 0 54.323-7.582 76.87-20.818l83.383 68.262z"
-      ></path>
-      <path
-        fill="#f14336"
-        d="m419.404 58.936-82.933 67.896C313.136 112.246 285.552 103.82 256 103.82c-66.729 0-123.429 42.957-143.965 102.724l-83.397-68.276h-.014C71.23 56.123 157.06 0 256 0c62.115 0 119.068 22.126 163.404 58.936z"
-      ></path>
-    </svg>
-    <span>Log in with Google</span>
-  </button>
-)
+      <Icon />
+      <span>Log in with {label}</span>
+    </button>
+  );
+};
 
 const Login = () => {
-  const [email, setEmail] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const [password, setPassword] = useState("")
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const dispatch = useDispatch()
+  const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  const [password, setPassword] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  const handleSubmit = e => {
-    e.preventDefault()
+  const handleSubmit = (e) => {
+    e.preventDefault();
     if (!email) {
-      setEmailError("Email is required")
-      return
+      setEmailError("Email is required");
+      return;
     }
     if (!password) {
-      setPasswordError("Password is required")
-      return
+      setPasswordError("Password is required");
+      return;
     }
     if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Please enter a valid email")
-      return
+      setEmailError("Please enter a valid email");
+      return;
     }
-    setEmailError("")
-    setIsSubmitting(true)
+    setEmailError("");
+    setIsSubmitting(true);
 
     // Dispatch the login action
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then(() => {
-        cogoToast.success("Login successful!")
-        setIsSubmitting(false)
+      .then((response) => {
+        // Store token and user details in cookies
+        Cookies.set("atlas_access_token", response.access_token, {
+          expires: 1,
+        });
+        Cookies.set("atlas_email", response.user.email, { expires: 1 });
+        Cookies.set("atlas_username", response.user.username, { expires: 1 });
+        Cookies.set("atlas_userId", response.user.id, { expires: 1 });
+
+        cogoToast.success("Login successful!");
+        navigate("/app/dashboard");
+        setIsSubmitting(false);
       })
-      .catch(err => {
+      .catch((err) => {
         if (err && err.message && err.message === "User not found") {
-          cogoToast.error("No account found with this email.")
+          cogoToast.error("No account found with this email.");
         } else {
-          cogoToast.error(err.message || "Login failed!")
+          cogoToast.error(err.message || "Login failed!");
         }
-        setIsSubmitting(false)
-      })
-  }
+        setIsSubmitting(false);
+      });
+  };
 
   return (
     <div className="bg-custom-background-white">
@@ -89,7 +91,7 @@ const Login = () => {
         </div>
         <Link
           to="/register"
-          className="border border-white  transition duration-200 ease-in-out text-white px-4 py-1.5 rounded-lg text-sm"
+          className="border border-white transition duration-200 ease-in-out text-white px-4 py-1.5 rounded-lg text-sm"
         >
           Sign up for free
         </Link>
@@ -112,9 +114,9 @@ const Login = () => {
               <input
                 type="email"
                 value={email}
-                onChange={e => setEmail(e.target.value)}
+                onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your work email"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
               {emailError && (
                 <p className="text-red-500 text-xs mt-1">{emailError}</p>
@@ -131,9 +133,9 @@ const Login = () => {
               <input
                 type="password"
                 value={password}
-                onChange={e => setPassword(e.target.value)}
+                onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
               {passwordError && (
                 <p className="text-red-500 text-xs mt-1">{passwordError}</p>
@@ -153,7 +155,18 @@ const Login = () => {
             <p className="text-sm text-custom-text-grey">Or</p>
           </div>
 
-          <GoogleLoginButton />
+          <div className="flex flex-col gap-2">
+            <OAuthLoginButton
+              provider="google"
+              icon={Icons.GoogleIcon}
+              label="Google"
+            />
+            <OAuthLoginButton
+              provider="github"
+              icon={Icons.GithubIcon}
+              label="GitHub"
+            />
+          </div>
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, try entering your work email
@@ -172,7 +185,7 @@ const Login = () => {
         </div>
       </main>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;

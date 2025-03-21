@@ -8,12 +8,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RestoreService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Helper function to safely parse JSON
+  // Helper function to safely parse JSON.
   private safeParseJSON(data: string, fieldName: string): any {
     try {
-      if (data === undefined || data === null || data.trim() === '') {
-        return {};
-      }
+      if (!data || data.trim() === '') return {};
       return JSON.parse(data);
     } catch (error) {
       console.error(
@@ -41,25 +39,24 @@ export class RestoreService {
     }
   }
 
-  async restoreBackup(fileBuffer: Buffer) {
+  async restoreBackup(
+    fileBuffer: Buffer,
+    providedStructureId: string,
+    currentUserId: string,
+  ) {
     try {
-      // Unzip the file
       const zip = new AdmZip(fileBuffer);
       const zipEntries = zip.getEntries();
-
-      // Find the `.enc` file in the ZIP
       const encFile = zipEntries.find((entry) =>
-        entry.entryName.endsWith('.enc'),
+        entry.entryName.includes('.enc'),
       );
       if (!encFile) {
         throw new InternalServerErrorException('No .enc file found in the ZIP');
       }
-
-      // Decrypt the file
       const decryptedBuffer = this.decrypt(encFile.getData());
       const workbook = xlsx.read(decryptedBuffer, { type: 'buffer' });
 
-      // Extract data from sheets
+      // Extract sheets.
       const structuresSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Structures'],
       );
@@ -79,31 +76,54 @@ export class RestoreService {
         );
       }
 
-      // Restore records first
+      let foundBackupStructure = structuresSheet.find(
+        (s) => s.id === providedStructureId,
+      );
+      let backupStructure: any;
+      let originalBackupStructureId: string;
+      if (!foundBackupStructure) {
+        backupStructure = structuresSheet[0];
+        originalBackupStructureId = backupStructure.id;
+        backupStructure = {
+          ...backupStructure,
+          id: providedStructureId,
+          ownerId: currentUserId,
+        };
+      } else {
+        backupStructure = foundBackupStructure;
+        originalBackupStructureId = backupStructure.id;
+      }
+
+      // Decide on update vs. new record based on ownership.
+      let targetStructureId: string;
+      if (backupStructure.ownerId === currentUserId) {
+        targetStructureId = providedStructureId;
+      } else {
+        targetStructureId = crypto.randomUUID
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString('hex');
+        backupStructure = {
+          ...backupStructure,
+          id: targetStructureId,
+          ownerId: currentUserId,
+        };
+      }
+
+      // Restore records (structure-agnostic).
       for (const recordData of recordsSheet) {
         try {
-          // Handle undefined or null metadata/tags
-          const metadata = recordData.metadata ? recordData.metadata : '{}';
-          const tags = recordData.tags ? recordData.tags : '[]'; 
-
-          // Parse metadata and tags only if they are valid
+          const metadata = recordData.metadata || '{}';
+          const tags = recordData.tags || '[]';
           const parsedMetadata = this.safeParseJSON(metadata, 'metadata');
           const parsedTags = this.safeParseJSON(tags, 'tags');
 
           await this.prisma.record.upsert({
             where: { id: recordData.id },
-            update: {
-              metadata: parsedMetadata,
-              tags: parsedTags,
-              createdAt: new Date(recordData.createdAt),
-              updatedAt: new Date(recordData.updatedAt),
-            },
+            update: { metadata: parsedMetadata, tags: parsedTags },
             create: {
               id: recordData.id,
               metadata: parsedMetadata,
               tags: parsedTags,
-              createdAt: new Date(recordData.createdAt),
-              updatedAt: new Date(recordData.updatedAt),
             },
           });
         } catch (error) {
@@ -114,99 +134,281 @@ export class RestoreService {
         }
       }
 
-      // Restore structures
-      for (const structureData of structuresSheet) {
-        try {
-          await this.prisma.structure.upsert({
-            where: { id: structureData.id },
-            update: {
-              name: structureData.name,
-              description: structureData.description,
-              ownerId: structureData.ownerId,
-              visibility: structureData.visibility,
-              createdAt: new Date(structureData.createdAt),
-              updatedAt: new Date(structureData.updatedAt),
-            },
-            create: {
-              id: structureData.id,
-              name: structureData.name,
-              description: structureData.description,
-              ownerId: structureData.ownerId,
-              visibility: structureData.visibility,
-              createdAt: new Date(structureData.createdAt),
-              updatedAt: new Date(structureData.updatedAt),
-            },
-          });
-        } catch (error) {
-          throw new InternalServerErrorException(
-            `Failed to restore structure with ID ${structureData.id}: ${error.message}`,
-          );
-        }
+      // Restore the structure.
+      if (targetStructureId === providedStructureId) {
+        await this.prisma.structure.upsert({
+          where: { id: providedStructureId },
+          update: {
+            name: backupStructure.name,
+            description: backupStructure.description,
+            ownerId: backupStructure.ownerId,
+            title: backupStructure.title,
+            visibility: backupStructure.visibility,
+          },
+          create: {
+            id: providedStructureId,
+            name: backupStructure.name,
+            title: backupStructure.title,
+            description: backupStructure.description,
+            ownerId: backupStructure.ownerId,
+            visibility: backupStructure.visibility,
+          },
+        });
+      } else {
+        await this.prisma.structure.create({
+          data: {
+            id: targetStructureId,
+            name: backupStructure.name,
+            title: backupStructure.title,
+            description: backupStructure.description,
+            ownerId: backupStructure.ownerId,
+            visibility: backupStructure.visibility,
+          },
+        });
       }
 
-      // Restore elements
-      for (const elementData of elementsSheet) {
-        try {
-          await this.prisma.element.upsert({
-            where: { id: elementData.id },
-            update: {
-              structureId: elementData.structureId,
-              recordId: elementData.recordId,
-              type: elementData.type,
-              Guid: elementData.Guid,
-              wbsLevel: elementData.wbsLevel,
-              createdAt: new Date(elementData.createdAt),
-              updatedAt: new Date(elementData.updatedAt),
-            },
-            create: {
-              id: elementData.id,
-              structureId: elementData.structureId,
-              recordId: elementData.recordId,
-              type: elementData.type,
-              Guid: elementData.Guid,
-              wbsLevel: elementData.wbsLevel,
-              createdAt: new Date(elementData.createdAt),
-              updatedAt: new Date(elementData.updatedAt),
-            },
-          });
-        } catch (error) {
-          throw new InternalServerErrorException(
-            `Failed to restore element with ID ${elementData.id}: ${error.message}`,
-          );
+      const filteredElements = elementsSheet.filter(
+        (e) => e.structureId === originalBackupStructureId,
+      );
+      const backupElementIds = new Set(filteredElements.map((el) => el.id));
+      for (const elementData of filteredElements) {
+        if (
+          elementData.parentId &&
+          !backupElementIds.has(elementData.parentId)
+        ) {
+          elementData.parentId = null;
         }
+        elementData.structureId = targetStructureId;
+        await this.prisma.element.upsert({
+          where: { id: elementData.id },
+          update: {
+            structureId: elementData.structureId,
+            recordId: elementData.recordId,
+            name: elementData.name,
+            parentId: elementData.parentId,
+          },
+          create: {
+            id: elementData.id,
+            name: elementData.name,
+            structureId: elementData.structureId,
+            recordId: elementData.recordId,
+            parentId: elementData.parentId,
+          },
+        });
       }
 
-      // Restore structure maps
-      for (const mapData of structureMapsSheet) {
-        try {
-          await this.prisma.structureMap.upsert({
-            where: { id: mapData.id },
-            update: {
-              structureId: mapData.structureId,
-              name: mapData.name,
-              description: mapData.description,
-              createdAt: new Date(mapData.createdAt),
-              updatedAt: new Date(mapData.updatedAt),
-            },
-            create: {
-              id: mapData.id,
-              structureId: mapData.structureId,
-              name: mapData.name,
-              description: mapData.description,
-              createdAt: new Date(mapData.createdAt),
-              updatedAt: new Date(mapData.updatedAt),
-            },
-          });
-        } catch (error) {
-          throw new InternalServerErrorException(
-            `Failed to restore structure map with ID ${mapData.id}: ${error.message}`,
-          );
-        }
+      const filteredMaps = structureMapsSheet.filter(
+        (m) => m.structureId === originalBackupStructureId,
+      );
+      for (const mapData of filteredMaps) {
+        mapData.structureId = targetStructureId;
+        await this.prisma.structureMap.upsert({
+          where: { id: mapData.id },
+          update: {
+            structureId: mapData.structureId,
+            name: mapData.name,
+            description: mapData.description,
+          },
+          create: {
+            id: mapData.id,
+            structureId: mapData.structureId,
+            name: mapData.name,
+            description: mapData.description,
+          },
+        });
       }
 
       return { message: 'Backup restored successfully' };
     } catch (error) {
       console.error('Error during restore operation:', error);
+      throw new InternalServerErrorException(
+        'Failed to restore backup: ' + error.message,
+      );
+    }
+  }
+
+  async restoreFullBackup(fileBuffer: Buffer, currentUserId: string) {
+    try {
+      const zip = new AdmZip(fileBuffer);
+      const zipEntries = zip.getEntries();
+      const encFile = zipEntries.find((entry) =>
+        entry.entryName.endsWith('.enc'),
+      );
+      if (!encFile) {
+        throw new InternalServerErrorException(
+          'No encrypted backup file found in the ZIP.',
+        );
+      }
+      const decryptedBuffer = this.decrypt(encFile.getData());
+
+      // Attempt to parse as JSON; if it fails, try as an Excel workbook.
+      let backupData: any;
+      try {
+        backupData = JSON.parse(decryptedBuffer.toString());
+      } catch (parseError) {
+        try {
+          const workbook = xlsx.read(decryptedBuffer, { type: 'buffer' });
+          backupData = {};
+          backupData.structures = xlsx.utils.sheet_to_json<any>(
+            workbook.Sheets['Structures'],
+          );
+          backupData.elements = xlsx.utils.sheet_to_json<any>(
+            workbook.Sheets['Elements'],
+          );
+          backupData.StructureMap = xlsx.utils.sheet_to_json<any>(
+            workbook.Sheets['StructureMaps'],
+          );
+        } catch (excelError) {
+          throw new InternalServerErrorException(
+            'Failed to parse decrypted backup data as JSON or Excel.',
+          );
+        }
+      }
+
+      if (!backupData || !backupData.structures) {
+        throw new InternalServerErrorException(
+          'Invalid backup data: missing structures.',
+        );
+      }
+
+      // Process each structure from the full backup.
+      for (const structureData of backupData.structures) {
+        const originalStructureId = structureData.id;
+        let targetStructureId: string;
+        if (structureData.ownerId === currentUserId) {
+          targetStructureId = originalStructureId;
+        } else {
+          targetStructureId = crypto.randomUUID
+            ? crypto.randomUUID()
+            : crypto.randomBytes(16).toString('hex');
+          structureData.ownerId = currentUserId;
+          structureData.id = targetStructureId;
+        }
+
+        await this.prisma.structure.upsert({
+          where: { id: targetStructureId },
+          update: {
+            name: structureData.name,
+            title: structureData.title,
+            description: structureData.description,
+            ownerId: structureData.ownerId,
+            visibility: structureData.visibility,
+          },
+          create: {
+            id: targetStructureId,
+            name: structureData.name,
+            title: structureData.title,
+            description: structureData.description,
+            ownerId: structureData.ownerId,
+            visibility: structureData.visibility,
+          },
+        });
+
+        // Process structure maps.
+        if (structureData.StructureMap) {
+          if (Array.isArray(structureData.StructureMap)) {
+            for (const mapData of structureData.StructureMap) {
+              if (mapData.structureId === originalStructureId) {
+                mapData.structureId = targetStructureId;
+              }
+              await this.prisma.structureMap.upsert({
+                where: { id: mapData.id },
+                update: {
+                  structureId: mapData.structureId,
+                  name: mapData.name,
+                  description: mapData.description,
+                  createdAt: new Date(mapData.createdAt),
+                  updatedAt: new Date(mapData.updatedAt),
+                },
+                create: {
+                  id: mapData.id,
+                  structureId: mapData.structureId,
+                  name: mapData.name,
+                  description: mapData.description,
+                },
+              });
+            }
+          } else {
+            const mapData = structureData.StructureMap;
+            if (mapData.structureId === originalStructureId) {
+              mapData.structureId = targetStructureId;
+            }
+            await this.prisma.structureMap.upsert({
+              where: { id: mapData.id },
+              update: {
+                structureId: mapData.structureId,
+                name: mapData.name,
+                description: mapData.description,
+              },
+              create: {
+                id: mapData.id,
+                structureId: mapData.structureId,
+                name: mapData.name,
+                description: mapData.description,
+              },
+            });
+          }
+        }
+
+        if (structureData.elements && Array.isArray(structureData.elements)) {
+          for (const elementData of structureData.elements) {
+            if (elementData.structureId === originalStructureId) {
+              elementData.structureId = targetStructureId;
+            }
+            const origParentId = elementData.parentId;
+            elementData.parentId = null;
+            await this.prisma.element.upsert({
+              where: { id: elementData.id },
+              update: {
+                name: elementData.name,
+                structureId: elementData.structureId,
+                recordId: elementData.recordId,
+                parentId: null,
+              },
+              create: {
+                id: elementData.id,
+                name: elementData.name,
+                structureId: elementData.structureId,
+                recordId: elementData.recordId,
+                parentId: null,
+              },
+            });
+            elementData._originalParentId = origParentId;
+          }
+          const elementIds = new Set(structureData.elements.map((el) => el.id));
+          for (const elementData of structureData.elements) {
+            const newParentId = elementData._originalParentId;
+            if (newParentId && elementIds.has(newParentId)) {
+              await this.prisma.element.update({
+                where: { id: elementData.id },
+                data: { parentId: newParentId },
+              });
+            }
+          }
+        }
+
+        // Process records.
+        if (structureData.records && Array.isArray(structureData.records)) {
+          for (const recordData of structureData.records) {
+            const metadata = recordData.metadata || '{}';
+            const tags = recordData.tags || '[]';
+            const parsedMetadata = this.safeParseJSON(metadata, 'metadata');
+            const parsedTags = this.safeParseJSON(tags, 'tags');
+            await this.prisma.record.upsert({
+              where: { id: recordData.id },
+              update: { metadata: parsedMetadata, tags: parsedTags },
+              create: {
+                id: recordData.id,
+                metadata: parsedMetadata,
+                tags: parsedTags,
+              },
+            });
+          }
+        }
+      }
+
+      return { message: 'Backup restored successfully' };
+    } catch (error) {
       throw new InternalServerErrorException(
         'Failed to restore backup: ' + error.message,
       );

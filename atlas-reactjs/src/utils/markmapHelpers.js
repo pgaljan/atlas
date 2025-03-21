@@ -1,90 +1,108 @@
-export const assignWbsNumbers = (node, prefix = "1") => {
-  if (!node) return null
+export const assignWbsNumbers = (
+  node,
+  prefix = "1",
+  parentStructureId = null
+) => {
+  if (!node) return null;
 
   const wbsNode = {
     ...node,
     originalContent: node.originalContent || node.content,
     wbs: prefix,
-  }
-
+    structureId: node.structureId || parentStructureId,
+  };
   if (node.children) {
     wbsNode.children = node.children.map((child, index) =>
-      assignWbsNumbers(child, `${prefix}.${index + 1}`)
-    )
+      assignWbsNumbers(child, `${prefix}.${index + 1}`, wbsNode.structureId)
+    );
   }
 
-  return wbsNode
-}
+  return wbsNode;
+};
+
+const truncateText = (text, limit = 10) => {
+  if (!text) return "";
+  return text.length > limit ? text.substring(0, limit) + "..." : text;
+};
 
 export const treeToMarkmapData = (node, showWbs) => {
-  if (!node) return null
+  if (!node) return null;
 
-  const { originalContent, wbs, children = [] } = node
+  const actualContent = node.originalContent || node.content || node.name;
+  const isRoot = node.level === 0;
+  const truncatedContent = isRoot ? actualContent : truncateText(actualContent, 10);
   const updatedContent =
-    showWbs && wbs !== "1" ? `${wbs} - ${originalContent}` : originalContent
-
+    showWbs && node.wbs && node.wbs !== "1"
+      ? `${node.wbs} - ${truncatedContent}`
+      : truncatedContent;
   return {
     content: updatedContent,
-    originalContent,
-    children: children.map(child => treeToMarkmapData(child, showWbs)),
+    originalContent: actualContent,
+    children: (node.children || []).map((child) =>
+      treeToMarkmapData(child, showWbs)
+    ),
     state: node.state,
     wbs: node.wbs,
-  }
-}
+    structureId: node.structureId,
+    elementId: node.id,
+    parentId: node.parentId,
+    recordId: node.recordId,
+  };
+};
 
 export const isDescendant = (parent, childContent) => {
-  if (!parent.children) return false
+  if (!parent.children) return false;
 
   return parent.children.some(
-    child =>
+    (child) =>
       child.originalContent === childContent ||
       isDescendant(child, childContent)
-  )
-}
+  );
+};
 
 export const removeNode = (node, targetContent) => {
-  if (node.originalContent === targetContent) return null
+  if (node.originalContent === targetContent) return null;
 
   return {
     ...node,
     children: node.children
-      ?.map(child => removeNode(child, targetContent))
+      ?.map((child) => removeNode(child, targetContent))
       .filter(Boolean),
-  }
-}
+  };
+};
 
 export const addNodeToTarget = (node, targetContent, newNode) => {
   if (node.originalContent === targetContent) {
     return {
       ...node,
       children: [...(node.children || []), newNode],
-    }
+    };
   }
 
   return {
     ...node,
     children: node.children
-      ? node.children.map(child =>
+      ? node.children.map((child) =>
           addNodeToTarget(child, targetContent, newNode)
         )
       : [],
-  }
-}
+  };
+};
 
-export const resetDraggedElement = element => {
-  const draggedElement = d3.select(element)
-  const originalTransform = draggedElement.attr("original-transform")
+export const resetDraggedElement = (element) => {
+  const draggedElement = d3.select(element);
+  const originalTransform = draggedElement.attr("original-transform");
   if (originalTransform) {
-    draggedElement.attr("transform", originalTransform)
+    draggedElement.attr("transform", originalTransform);
   }
-}
+};
 
 export const updateNodeLevels = (node, currentLevel = 0) => {
-  node.level = currentLevel
+  node.level = currentLevel;
 
-  if (node.children && node.children.length > 0) {
-    node.children.forEach(child => updateNodeLevels(child, currentLevel + 1))
+  if (node.children && node.children?.length > 0) {
+    node.children.forEach((child) => updateNodeLevels(child, currentLevel + 1));
   }
 
-  return node
-}
+  return node;
+};

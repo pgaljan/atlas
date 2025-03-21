@@ -4,7 +4,6 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { generateMarkmapHeader } from '../utils/markmap-utils';
 import { CreateElementDto } from './dto/create-element.dto';
 import { ReparentElementsDto } from './dto/reparent-elements.dto';
 import { UpdateElementDto } from './dto/update-element.dto';
@@ -16,15 +15,15 @@ export class ElementService {
   private async logAudit(
     action: string,
     element: string,
-    elementId: number | string,
+    elementId: string,
     details: object,
-    userId?: number,
+    userId?: string,
   ) {
     await this.prisma.auditLog.create({
       data: {
         action,
         element,
-        elementId: elementId.toString(),
+        elementId,
         details: details,
         userId: userId || null,
       },
@@ -32,43 +31,41 @@ export class ElementService {
   }
 
   async createElement(createElementDto: CreateElementDto, userId?: number) {
-    const { structureId, type, recordId, wbsLevel, wbsNumber } =
-      createElementDto;
+    const { structureId, name, recordId } = createElementDto;
 
-    // Validate if required fields are provided
-    if (!structureId || !type || !wbsLevel || !wbsNumber) {
+    if (!structureId || !name) {
       throw new BadRequestException('Missing required fields');
     }
 
-    const markmapMM = generateMarkmapHeader(wbsLevel);
+    const structureExists = await this.prisma.structure.findUnique({
+      where: { id: structureId },
+    });
+
+    if (!structureExists) {
+      throw new BadRequestException('Invalid structureId: Structure not found');
+    }
 
     try {
       const createdElement = await this.prisma.element.create({
         data: {
           structureId,
-          type,
-          recordId,
-          wbsLevel,
-          wbsNumber,
-          markmapMM,
+          name,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       });
 
-      // Log the creation in the audit log
+      await this.prisma.structure.update({
+        where: { id: structureId },
+        data: { updatedAt: new Date() },
+      });
+
       await this.logAudit(
         'CREATE',
         'Element',
-        createdElement.id,
-        {
-          structureId,
-          type,
-          recordId,
-          wbsLevel,
-          wbsNumber,
-        },
-        userId,
+        createdElement.id.toString(),
+        { structureId, recordId },
+        userId?.toString(),
       );
 
       return createdElement;
@@ -78,33 +75,33 @@ export class ElementService {
   }
 
   async createNestedElements(
-    parentId: number,
+    parentId: string,
     nestedElements: CreateElementDto[],
   ) {
     for (const elementDto of nestedElements) {
-      const { structureId, type, recordId, wbsLevel, wbsNumber } = elementDto;
+      const { structureId, name, recordId } = elementDto;
 
-      if (!structureId || !type || !wbsLevel || !wbsNumber) {
+      if (!structureId || !name) {
         throw new BadRequestException(
           'Missing required fields in nested element',
         );
       }
-
-      const markmapMM = generateMarkmapHeader(wbsLevel);
 
       try {
         const createdElement = await this.prisma.element.create({
           data: {
             structureId,
             parentId,
-            type,
+            name,
             recordId,
-            wbsLevel,
-            wbsNumber,
-            markmapMM,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
+        });
+
+        await this.prisma.structure.update({
+          where: { id: structureId },
+          data: { updatedAt: new Date() },
         });
 
         if (
@@ -112,7 +109,7 @@ export class ElementService {
           elementDto.children.length > 0
         ) {
           await this.createNestedElements(
-            createdElement.id,
+            createdElement.id.toString(),
             elementDto.children,
           );
         }
@@ -128,7 +125,7 @@ export class ElementService {
     return this.prisma.element.findMany();
   }
 
-  async getElement(id: number) {
+  async getElement(id: string) {
     const element = await this.prisma.element.findUnique({ where: { id } });
     if (!element) {
       throw new NotFoundException(`Element with id ${id} not found`);
@@ -137,17 +134,16 @@ export class ElementService {
   }
 
   async updateElement(
-    id: number,
+    id: string,
     updateElementDto: UpdateElementDto,
-    userId?: number,
+    userId?: string,
   ) {
     const element = await this.getElement(id);
 
-    if (!updateElementDto.wbsNumber || !updateElementDto.wbsLevel) {
+    if (!updateElementDto.name) {
       throw new BadRequestException('Missing required fields for update');
     }
 
-    // Perform the update
     const updatedElement = await this.prisma.element.update({
       where: { id },
       data: {
@@ -156,11 +152,15 @@ export class ElementService {
       },
     });
 
-    // Log the update action in the audit log
+    await this.prisma.structure.update({
+      where: { id: updatedElement.structureId },
+      data: { updatedAt: new Date() },
+    });
+
     await this.logAudit(
       'UPDATE',
       'Element',
-      updatedElement.id,
+      updatedElement.id.toString(),
       {
         previousData: element,
         updatedData: updateElementDto,
@@ -172,12 +172,11 @@ export class ElementService {
   }
 
   async reparentElements(
-    ReparentElementsDto: ReparentElementsDto,
-    userId?: number,
+    reparentElementsDto: ReparentElementsDto,
+    userId?: string,
   ) {
-    const { reparentingRequests } = ReparentElementsDto;
+    const { reparentingRequests } = reparentElementsDto;
 
-    // Ensure that reparentingRequests is an array
     if (
       !Array.isArray(reparentingRequests) ||
       reparentingRequests.length === 0
@@ -185,58 +184,76 @@ export class ElementService {
       throw new BadRequestException('Invalid reparenting requests');
     }
 
-    const updatedElements = [];
+    const updatedElements = new Set<string>();
 
-    // Loop through each reparenting request and process it
     for (const request of reparentingRequests) {
       const { sourceElementId, targetElementId, attributes } = request;
 
-      const sourceElement = await this.prisma.element.findUnique({
-        where: { id: sourceElementId },
-      });
+      let sourceElement = null;
+      if (sourceElementId) {
+        sourceElement = await this.prisma.element.findUnique({
+          where: { id: sourceElementId },
+        });
+        if (!sourceElement) {
+          throw new NotFoundException(
+            `Source element not found for id ${sourceElementId}`,
+          );
+        }
+      }
+
       const targetElement = await this.prisma.element.findUnique({
         where: { id: targetElementId },
       });
-
-      if (!sourceElement || !targetElement) {
-        throw new NotFoundException(`One or both elements not found`);
+      if (!targetElement) {
+        throw new NotFoundException(
+          `Target element not found for id ${targetElementId}`,
+        );
       }
 
       if (!attributes) {
         throw new BadRequestException('Missing attributes for the link');
       }
 
-      // Update the target element's parentId to the source element's ID
       const updatedElement = await this.prisma.element.update({
         where: { id: targetElementId },
         data: {
-          parentId: sourceElementId,
+          parentId: sourceElementId || null,
         },
       });
 
-      // Log the reparenting action in the audit log
+      if (sourceElement) {
+        updatedElements.add(sourceElement.structureId);
+      } else {
+        updatedElements.add(targetElement.structureId);
+      }
+
       await this.logAudit(
         'REPARENT',
         'Element',
-        updatedElement.id,
+        updatedElement.id.toString(),
         {
-          sourceElementId,
+          sourceElementId: sourceElementId || null,
           targetElementId,
           attributes,
         },
         userId,
       );
+    }
 
-      updatedElements.push(updatedElement);
+    // Update updatedAt for each affected structure.
+    for (const structureId of updatedElements) {
+      await this.prisma.structure.update({
+        where: { id: structureId },
+        data: { updatedAt: new Date() },
+      });
     }
 
     return {
-      message: `${updatedElements.length} elements reparented successfully`,
-      updatedElements,
+      message: `${reparentingRequests.length} elements reparented successfully`,
     };
   }
 
-  async deleteElement(id: number, userId?: number) {
+  async deleteElement(id: string, userId?: string) {
     const element = await this.getElement(id);
 
     if (element.deletedAt) {
@@ -244,21 +261,24 @@ export class ElementService {
     }
 
     try {
-      const deletedElement = await this.prisma.element.update({
+      const deletedElement = await this.prisma.element.delete({
         where: { id },
-        data: { deletedAt: new Date() },
       });
 
-      // Log the deletion in the audit log
+      await this.prisma.structure.update({
+        where: { id: deletedElement.structureId },
+        data: { updatedAt: new Date() },
+      });
+
       await this.logAudit(
         'DELETE',
         'Element',
-        deletedElement.id,
+        deletedElement.id.toString(),
         {
-          deletedAt: deletedElement.deletedAt,
+          deletedAt: new Date(),
           reason: 'Deletion initiated by user',
         },
-        userId,
+        userId?.toString(),
       );
 
       return deletedElement;

@@ -1,15 +1,25 @@
-import React, { useState } from "react"
-import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi"
-import { FaUserPlus } from "react-icons/fa"
-import { RiDownloadCloud2Line } from "react-icons/ri"
-import { TbWorldUpload } from "react-icons/tb"
-import { VscGitPullRequestCreate } from "react-icons/vsc"
-import { Link } from "react-router-dom"
-import ImportModal from "../../modals/ImportModal"
-import ShareModal from "../../modals/ShareModal"
-import UserPopover from "../../modals/UserPopover"
-import Tooltip from "../../tooltip/Tooltip"
-import cogoToast from "@successtar/cogo-toast"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import React, { useCallback, useEffect, useState } from "react";
+import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi";
+import { FaUserPlus } from "react-icons/fa";
+import { RiDownloadCloud2Line } from "react-icons/ri";
+import { TbWorldUpload } from "react-icons/tb";
+import { VscGitPullRequestCreate } from "react-icons/vsc";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import Icons from "../../../constants/icons";
+import useFeatureFlag from "../../../hooks/useFeatureFlag";
+import { createBackup } from "../../../redux/slices/backups";
+import { restoreBackup } from "../../../redux/slices/restore-backups";
+import {
+  getStructure,
+  updateStructure,
+} from "../../../redux/slices/structures";
+import ImportModal from "../../modals/ImportModal";
+import ShareModal from "../../modals/ShareModal";
+import UserPopover from "../../modals/UserPopover";
+import Tooltip from "../../tooltip/Tooltip";
 
 const MarkmapHeader = ({
   undo,
@@ -19,55 +29,204 @@ const MarkmapHeader = ({
   showWbs,
   setShowWbs,
   onSearch,
+  structureId,
+  onSuccess,
 }) => {
-  const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false)
-  const [title, setTitle] = useState("Untitled")
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [searchValue, setSearchValue] = useState("Level: ")
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false);
+  const [title, setTitle] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaveDisabled, setIsSaveDisabled] = useState(true);
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [searchValue, setSearchValue] = useState("");
 
-  const handleTitleChange = e => {
-    setTitle(e.target.value)
-  }
+  // Feature flags
+  const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
+  const canDynamicWbs = useFeatureFlag("Dynamic WBS");
 
-  const handleSearchChange = e => {
-    const value = e.target.value
-
-    if (!value.startsWith("Level: ")) return
-    const afterColon = value?.slice(7)
-    if (afterColon === "0") {
-      // Prevent "0" from being searchable
-      cogoToast?.error("Level 0 is not searchable.")
-      return
-    }
-    if (afterColon && !/^\d*$/.test(afterColon)) return
-
-    setSearchValue(value)
-
-    // Pass the numeric value (if present) to the onSearch callback
-    const level = afterColon.trim()
-    if (level) {
-      onSearch(level)
+  const handleFeatureClick = (canAccess, action) => {
+    if (canAccess) {
+      action();
     } else {
-      onSearch("")
+      navigate(`?plan=upgrade-to-premium`);
     }
-  }
+  };
 
-  const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen)
-  const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen)
+  useEffect(() => {
+    if (structureId) {
+      dispatch(getStructure(structureId))
+        .unwrap()
+        .then((data) => {
+          setTitle(data?.title || "");
+        })
+        .catch((error) => {
+          cogoToast.error(`Failed to load structure: ${error}`);
+        });
+    }
+  }, [dispatch, structureId]);
+
+  // Debounce logic for updating the title
+  const debounceUpdateTitle = useCallback(
+    (() => {
+      let timer;
+      return (newTitle) => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          dispatch(
+            updateStructure({
+              id: structureId,
+              updateData: { title: newTitle },
+            })
+          ).unwrap();
+        }, 1000);
+      };
+    })(),
+    [dispatch, structureId]
+  );
+
+  const handleTitleChange = (e) => {
+    const newTitle = e.target.value;
+    setTitle(newTitle);
+    debounceUpdateTitle(newTitle);
+  };
+
+  const saveTitle = async (newTitle) => {
+    try {
+      await dispatch(
+        updateStructure({
+          id: structureId,
+          updateData: { title: newTitle },
+        })
+      ).unwrap();
+      cogoToast.success("Structure title updated successfully!");
+      setIsSaveDisabled(true);
+    } catch (error) {
+      cogoToast.error(`Failed to update structure title: ${error}`);
+    }
+  };
+
+  const handleTitleKeyDown = (e) => {
+    if (e.key === "Enter") {
+      e.preventDefault();
+      saveTitle(title);
+    }
+  };
+
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (!isSaveDisabled) {
+        e.preventDefault();
+        e.returnValue =
+          "You have unsaved changes. Are you sure you want to leave?";
+      }
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+    };
+  }, [isSaveDisabled]);
+
+  const handleSearchChange = (e) => {
+    let value = e?.target?.value
+      ?.replace(/^[\s]+/, "")
+      ?.replace(/[^a-zA-Z0-9 ]/g, "");
+    if (value === "0") {
+      cogoToast?.error("Level 0 is not searchable.");
+      return;
+    }
+    setSearchValue(value);
+    if (!value) {
+      onSearch(null, "");
+    }
+  };
+
+  const handleKeyPress = (e) => {
+    if (e?.key === "Enter") {
+      const level = /^\d+$/.test(searchValue?.trim())
+        ? +searchValue?.trim()
+        : null;
+      onSearch(level, level !== null ? "" : searchValue);
+    }
+  };
+
+  const handleCreateBackup = async () => {
+    setIsLoading(true);
+    const userId = Cookies.get("atlas_userId");
+
+    if (!userId) {
+      cogoToast.error("User ID not found in cookies.");
+      setIsLoading(false);
+      return;
+    }
+
+    try {
+      // Create the backup
+      const response = await dispatch(
+        createBackup({ userId, structureId })
+      ).unwrap();
+
+      setIsLoading(false);
+      cogoToast.success("Backup created successfully!");
+
+      const fileUrl = response?.fileUrl;
+      if (fileUrl) {
+        window.open(fileUrl, "_blank");
+      }
+    } catch (error) {
+      setIsLoading(false);
+
+      if (error?.statusCode === 401) {
+        navigate("?plan=upgrade-to-premium");
+      } else {
+        cogoToast.error(`Failed to create backup: ${error}`);
+      }
+    }
+  };
+
+  const handleFileSelection = (file) => {
+    if (!file) {
+      cogoToast.error("Please select a valid structure!");
+      return;
+    }
+
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
+
+  const handleFileUpload = async (file) => {
+    try {
+      setIsLoading(true);
+      const response = await dispatch(
+        restoreBackup({ fileData: file, structureId })
+      ).unwrap();
+      cogoToast.success("Backup restored successfully!");
+      onSuccess();
+    } catch (err) {
+      cogoToast.error("Failed to restore backups.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen);
+  const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen);
 
   return (
     <div className="absolute top-4 left-0 w-full flex items-center px-4 py-2 z-50">
       <div className="flex items-center w-full justify-between">
-        <div className="flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
-          <Link to="/home">
+        <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
+          <Link to="/app/dashboard">
             <h1 className="text-2xl font-bold text-[#660000]">ATLAS</h1>
           </Link>
           <input
             type="text"
             value={title}
             onChange={handleTitleChange}
-            className="text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all"
+            onKeyDown={handleTitleKeyDown}
+            className="structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all"
           />
 
           <Tooltip label="Undo">
@@ -102,27 +261,55 @@ const MarkmapHeader = ({
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Import Backups"
-              onClick={toggleImportModal}
+              onClick={() =>
+                handleFeatureClick(canRestoreBackup, toggleImportModal)
+              }
             >
               <VscGitPullRequestCreate size={24} className="text-custom-main" />
             </button>
           </Tooltip>
 
           <Tooltip label="Create Backup">
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Create Backup"
-            >
-              <RiDownloadCloud2Line size={26} className="text-custom-main" />
-            </button>
+            {isLoading ? (
+              <button
+                disabled={true}
+                className="p-2 hover:bg-gray-100 rounded-full"
+                aria-label="Create Backup"
+              >
+                <Icons.LoadingIcon />
+              </button>
+            ) : (
+              <button
+                disabled={isLoading}
+                onClick={() =>
+                  handleFeatureClick(canRestoreBackup, handleCreateBackup)
+                }
+                className="p-2 hover:bg-gray-100 rounded-full"
+                aria-label="Create Backup"
+              >
+                <RiDownloadCloud2Line size={26} className="text-custom-main" />
+              </button>
+            )}
           </Tooltip>
 
           <Tooltip label="Save">
             <button
-              className="p-3 hover:bg-gray-100 rounded-full"
+              disabled={isSaveDisabled}
+              className={`p-3 rounded-full ${
+                isSaveDisabled
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "hover:bg-gray-100 text-custom-main cursor-pointer"
+              }`}
               aria-label="Save"
             >
-              <TbWorldUpload size={24} className="text-custom-main" />
+              <TbWorldUpload
+                size={24}
+                className={`${
+                  isSaveDisabled
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-custom-main"
+                }`}
+              />
             </button>
           </Tooltip>
 
@@ -131,8 +318,11 @@ const MarkmapHeader = ({
               type="text"
               value={searchValue}
               onChange={handleSearchChange}
-              className="bg-white border border-gray-300 rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10"
+              onKeyDown={handleKeyPress}
+              placeholder="Search: By level or text"
+              className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10 "
             />
+
             <BiSearch size={24} className="absolute left-2 text-gray-500" />
           </div>
         </div>
@@ -155,7 +345,11 @@ const MarkmapHeader = ({
                 id="show-wbs-toggle"
                 type="checkbox"
                 checked={showWbs}
-                onChange={e => setShowWbs(e.target.checked)}
+                onChange={(e) =>
+                  handleFeatureClick(canDynamicWbs, () =>
+                    setShowWbs(e.target.checked)
+                  )
+                }
                 className="sr-only peer"
               />
               <div
@@ -167,8 +361,8 @@ const MarkmapHeader = ({
               ></div>
               <div
                 className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform
-                ${showWbs ? "" : "!bg-custom-main"}
-                `}
+      ${showWbs ? "" : "!bg-custom-main"}
+    `}
               ></div>
             </label>
           </div>
@@ -177,26 +371,33 @@ const MarkmapHeader = ({
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Profile"
-              onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
+              // onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
             >
               <BiUser size={24} className="text-custom-main" />
             </button>
           </Tooltip>
-
-          <button
-            onClick={toggleShareModal}
-            className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
-          >
-            <FaUserPlus size={20} className="mr-2" />
-            Share
-          </button>
+          <Link to="/app/coming-soon">
+            <button className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg">
+              <FaUserPlus size={20} className="mr-2" />
+              Share
+            </button>
+          </Link>
         </div>
       </div>
       {isUserPopoverVisible && <UserPopover />}
       <ShareModal isOpen={isShareModalOpen} onClose={toggleShareModal} />
-      <ImportModal isOpen={isImportModalOpen} onClose={toggleImportModal} />
+      <ImportModal
+        isOpen={isImportModalOpen}
+        onClose={toggleImportModal}
+        title={"Import Backups"}
+        onSuccess={onSuccess}
+        isLoading={isLoading}
+        handleFileSelection={handleFileSelection}
+        buttonText={"Restore"}
+        format={".zip"}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default MarkmapHeader
+export default MarkmapHeader;

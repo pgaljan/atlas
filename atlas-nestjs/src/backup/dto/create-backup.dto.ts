@@ -2,12 +2,18 @@ import { IsInt, IsString, IsOptional, isString } from 'class-validator';
 
 export class CreateBackupDto {
   @IsInt()
-  userId: number;
+  userId: string;
+
+  @IsString()
+  type: string;
 }
 
 export class BackupResponseDto {
   @IsString()
   message: string;
+
+  @IsString()
+  title: string;
 
   @IsString()
   backupFilePath: string;

@@ -1,34 +1,70 @@
 import React, { useEffect, useState } from "react";
+import cogoToast from "@successtar/cogo-toast";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
 import { fetchPlans } from "../../../redux/slices/plans";
+import Icons from "../../../constants/icons";
+import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
 
 // Helper to render checkmark and cross
 const renderCheckmark = (value) => {
-  return value ? (
-    <span className="text-green-500">&#10003;</span>
-  ) : (
-    <span className="text-red-500">&#10005;</span>
-  );
+  if (value === true) {
+    return <Icons.PriceCardTickIcons className="h-4 w-4 text-green-500" />;
+  } else if (value === false) {
+    return <Icons.PriceCardCrossIcons className="h-4 w-4 text-red-500" />;
+  } else {
+    return <span>{value}</span>;
+  }
 };
 
 const SubscriptionPlans = () => {
   const dispatch = useDispatch();
-  const { plans, status, error } = useSelector((state) => state.plans);
+  const navigate = useNavigate();
+  const { plans } = useSelector((state) => state.plans);
+
+  // Get userId from URL query params
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const userId = searchParams.get("userId");
+
+  // Redirect if userId is missing
+  useEffect(() => {
+    if (!userId) {
+      navigate("/register");
+    }
+  }, [userId, navigate]);
 
   // Fetch plans on component mount
   useEffect(() => {
     dispatch(fetchPlans());
   }, [dispatch]);
 
-  if (status === "loading") {
-    return <div>Loading...</div>;
-  }
+  // Handle plan selection
+  const handlePlanSelection = (planId) => {
+    if (!userId) {
+      cogoToast.warn("User ID is missing!");
+      return;
+    }
 
-  if (status === "failed") {
-    return <div>Error: {error}</div>;
-  }
+    dispatch(updateSubscriptionPlan({ userId, planId }))
+      .then(() => {
+        window.location.href = "/";
+      })
+      .catch((error) => {
+        console.error("Error updating subscription plan:", error);
+      });
+  };
+
+  const planOrder = ["Personal", "Educator", "Analyst", "Business"];
+
+  // Filter to only active plans
+  const activePlans = plans.filter((plan) => plan.status === "active");
+
+  // Sort the active plans based on the defined order
+  const sortedPlans = [...activePlans].sort(
+    (a, b) => planOrder.indexOf(a?.name) - planOrder.indexOf(b?.name)
+  );
 
   return (
     <div className="bg-custom-background-white">
@@ -60,14 +96,16 @@ const SubscriptionPlans = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {plans.map((plan) => (
+            {sortedPlans.map((plan) => (
               <PricingCard
+                id={plan.id}
                 key={plan.id}
                 type={plan.name}
-                price={`$0.0`}
+                price={`$${plan.price}`}
                 subscription="year"
                 description={plan.description}
                 buttonText={`Choose ${plan.name}`}
+                onSelectPlan={() => handlePlanSelection(plan.id)}
                 className="h-full"
               >
                 <FeatureList features={plan.features} />
@@ -94,7 +132,7 @@ const FeatureList = ({ features }) => {
         {firstFiveFeatures.map((featureKey) => (
           <List key={featureKey}>
             <div className="flex items-center justify-between">
-              <span>{featureKey}:</span>
+              <span>{featureKey}</span>
               <span>{renderCheckmark(features[featureKey])}</span>
             </div>
           </List>
@@ -106,7 +144,7 @@ const FeatureList = ({ features }) => {
           {remainingFeatures.map((featureKey) => (
             <List key={featureKey}>
               <div className="flex items-center justify-between">
-                <span>{featureKey}:</span>
+                <span>{featureKey}</span>
                 <span>{renderCheckmark(features[featureKey])}</span>
               </div>
             </List>

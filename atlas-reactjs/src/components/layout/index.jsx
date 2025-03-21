@@ -1,11 +1,11 @@
-import React from "react"
-import Header from "./Header"
-import { SidebarPage } from "./Sidebar"
-import { useLocation } from "react-router-dom"
+import React from "react";
+import Header from "./Header";
+import { SidebarPage } from "./Sidebar";
+import { useLocation } from "react-router-dom";
 
 const Layout = ({ children, onSubmit }) => {
-  const location = useLocation()
-  const routesneeded = location.pathname == "/canvas"
+  const location = useLocation();
+  const routesneeded = location.pathname == "/canvas";
   return (
     <div className="flex flex-col h-screen">
       {!routesneeded && <Header />}
@@ -20,7 +20,7 @@ const Layout = ({ children, onSubmit }) => {
         <main className="flex-1 bg-gray-200 p-2 overflow-auto">{children}</main>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Layout
+export default Layout;

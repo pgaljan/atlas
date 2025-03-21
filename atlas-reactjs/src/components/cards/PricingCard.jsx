@@ -1,6 +1,7 @@
 import React from "react";
 
 const PricingCard = ({
+  id,
   children,
   description,
   price,
@@ -8,6 +9,7 @@ const PricingCard = ({
   subscription,
   buttonText,
   active,
+  onSelectPlan,
 }) => {
   return (
     <>
@@ -17,7 +19,7 @@ const PricingCard = ({
             {type}
           </span>
           <h2 className="mb-3 text-[42px] font-bold text-custom-text-heading">
-            {price}
+            {price}.0
             <span className="text-base font-medium text-custom-text-grey">
               / {subscription}
             </span>
@@ -27,7 +29,8 @@ const PricingCard = ({
           </p>
           <div className="mb-9 flex flex-col gap-[14px]">{children}</div>
           <a
-            href="/#"
+            href="#"
+            onClick={onSelectPlan}
             className={`${
               active
                 ? "block w-full rounded-md border border-custom-main bg-custom-main p-3 text-center text-base font-medium text-custom-text-white transition hover:bg-opacity-90"

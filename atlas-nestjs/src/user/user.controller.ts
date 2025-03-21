@@ -10,8 +10,11 @@ import {
   Param,
   Patch,
   Request,
+  Res,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserService } from './user.service';
@@ -20,53 +23,52 @@ import { UserService } from './user.service';
 export class UserController {
   constructor(private readonly userService: UserService) {}
 
-  @UseGuards(JwtAuthGuard)
-  @Get(':id')
-  async getUser(@Param('id') id: string) {
+  // @UseGuards(JwtAuthGuard)
+  @Get('all')
+  async getAllUsers() {
     try {
-      return await this.userService.getUserById(+id);
+      return await this.userService.getAllUsers();
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
       throw new HttpException(
-        'Failed to fetch user details',
+        'Failed to fetch all users',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  @UseGuards(JwtAuthGuard)
-  @Patch('update/:id')
-  async updateUser(
-    @Param('id') id: string,
-    @Body() updateUserDto: UpdateUserDto,
-    @Request() req,
-  ) {
-    const userId = req.user.id;
+  @Get('export')
+  async exportUsers(@Res() res: Response) {
     try {
-      return await this.userService.updateUser(+id, updateUserDto, userId);
+      const buffer = await this.userService.exportUsersAsExcel();
+      res.set({
+        'Content-Type':
+          'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': 'attachment; filename="users.xlsx"',
+      });
+      return res.send(buffer);
     } catch (error) {
-      if (error instanceof NotFoundException) {
-        throw new NotFoundException(error.message);
-      }
+      console.error('Error in export endpoint:', error);
       throw new HttpException(
-        'Failed to update user details',
+        'Failed to export users',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
-  @UseGuards(JwtAuthGuard)
   @Delete('delete/:id')
   async deleteUser(
     @Param('id') id: string,
     @Body('reason') reason: string,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.params?.id;
+
+    if (!userId) {
+      throw new UnauthorizedException('User not authenticated');
+    }
+
     try {
-      return await this.userService.deleteUser(+id, reason, userId);
+      return await this.userService.deleteUser(userId, reason);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
@@ -79,6 +81,43 @@ export class UserController {
   }
 
   @UseGuards(JwtAuthGuard)
+  @Get(':id')
+  async getUser(@Param('id') id: string) {
+    try {
+      return await this.userService.getUserById(id);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new HttpException(
+        'Failed to fetch user details',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // @UseGuards(JwtAuthGuard)
+  @Patch('update/:id')
+  async updateUser(
+    @Param('id') id: string,
+    @Body() updateUserDto: UpdateUserDto,
+    @Request() req,
+  ) {
+    const userId = req.params.id;
+    try {
+      return await this.userService.updateUser(id, updateUserDto, userId);
+    } catch (error) {
+      if (error instanceof NotFoundException) {
+        throw new NotFoundException(error.message);
+      }
+      throw new HttpException(
+        'Failed to update user details',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  // @UseGuards(JwtAuthGuard)
   @Patch('change-password/:id')
   async changePassword(
     @Param('id') id: string,
@@ -89,7 +128,7 @@ export class UserController {
     const userId = req.user.id;
     try {
       return await this.userService.changePassword(
-        +id,
+        id,
         oldPassword,
         newPassword,
         userId,

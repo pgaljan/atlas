@@ -1,19 +1,44 @@
-import React, { useState } from "react";
+import cogoToast from "@successtar/cogo-toast";
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
+import Cookies from "js-cookie";
+import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
 import {
   HiInformationCircle,
-  HiSupport,
   HiMail,
   HiNewspaper,
+  HiSupport,
 } from "react-icons/hi";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { logoutUser } from "../../redux/slices/auth";
+
 const Header = () => {
   const [activeTab, setActiveTab] = useState("");
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const handleTabClick = (tab) => {
     setActiveTab(tab);
-    // Simulate URL change or content load logic
     window.location.href = `/${tab.toLowerCase()}`;
+  };
+
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUser()).unwrap();
+      Cookies.remove("atlas_access_token");
+      Cookies.remove("atlas_userId");
+      Cookies.remove("atlas_username");
+      Cookies.remove("atlas_email");
+
+      cogoToast.success("Logged out successfully!");
+      navigate("/");
+    } catch (error) {
+      cogoToast.error(
+        error?.message ||
+          "An unexpected error occurred during logout. Please try again."
+      );
+    }
   };
 
   return (
@@ -31,7 +56,7 @@ const Header = () => {
             <input
               type="text"
               placeholder="Search for structure..."
-              className="border border-gray-300 rounded-md px-4 py-2 w-full focus:outline-none pl-10"
+              className="border-2 border-gray-300 rounded-md px-4 py-2 w-full focus:border-custom-main  focus:outline-none pl-10"
             />
           </div>
         </div>
@@ -39,7 +64,7 @@ const Header = () => {
         {/* Right Side - Learning, Help, Upgrade, User Image */}
         <div className="flex items-center ml-4 space-x-6">
           {/* Learning Tab */}
-          <div
+          {/* <div
             className={`cursor-pointer ${
               activeTab === "Learning"
                 ? "underline underline-offset-4 text-black"
@@ -48,9 +73,9 @@ const Header = () => {
             onClick={() => handleTabClick("Learning")}
           >
             Support
-          </div>
+          </div> */}
 
-          <Dropdown
+          {/* <Dropdown
             arrowIcon={false}
             inline
             label={
@@ -71,7 +96,7 @@ const Header = () => {
             <Dropdown.Item icon={HiNewspaper}>
               <span className="ml-2">Atlas News and Updates</span>
             </Dropdown.Item>
-          </Dropdown>
+          </Dropdown> */}
 
           {/* User Icon */}
           <Dropdown
@@ -82,22 +107,23 @@ const Header = () => {
                 alt="User settings"
                 img="/assets/userimg.jpeg"
                 rounded
-                className="w-[40px] h-[28px]"
+                className="w-[40px]"
               />
             }
           >
-            <Dropdown.Header>
-              <span className="block text-sm">Bonnie Green</span>
-              <span className="block truncate text-sm font-medium">
-                name@flowbite.com
-              </span>
-            </Dropdown.Header>
-            <Dropdown.Item>Profile</Dropdown.Item>
-            <Dropdown.Item>Settings</Dropdown.Item>
-            <Dropdown.Item>Notification preference</Dropdown.Item>
-            <Dropdown.Item>More account options</Dropdown.Item>
-            <Dropdown.Divider />
-            <Dropdown.Item>Sign out</Dropdown.Item>
+            <div className="w-auto min-w-[150px]">
+              <Dropdown.Header>
+                <span className="block truncate text-sm font-medium">
+                  {Cookies.get("atlas_username")}
+                </span>
+              </Dropdown.Header>
+              {/* <Link to="/app/me">
+                <Dropdown.Item>Profile</Dropdown.Item>
+              </Link> */}
+              {/* <Dropdown.Item>Notification preferences</Dropdown.Item> */}
+              <Dropdown.Divider />
+              <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
+            </div>
           </Dropdown>
         </div>
       </Navbar>

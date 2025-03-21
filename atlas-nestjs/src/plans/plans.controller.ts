@@ -34,7 +34,7 @@ export class PlanController {
   @Get(':id')
   async getPlanById(@Param('id') id: string) {
     try {
-      return await this.planService.getPlanById(+id);
+      return await this.planService.getPlanById(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;
@@ -63,7 +63,7 @@ export class PlanController {
     @Body() updatePlanDto: UpdatePlanDto,
   ) {
     try {
-      return await this.planService.updatePlan(+id, updatePlanDto);
+      return await this.planService.updatePlan(id, updatePlanDto);
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -79,7 +79,7 @@ export class PlanController {
   @Delete('delete/:id')
   async deletePlan(@Param('id') id: string) {
     try {
-      return await this.planService.deletePlan(+id);
+      return await this.planService.deletePlan(id);
     } catch (error) {
       if (error instanceof NotFoundException) {
         throw error;

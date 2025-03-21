@@ -1,3 +1,4 @@
+import cogoToast from "@successtar/cogo-toast";
 import React, { useState } from "react";
 
 const ShareModal = ({ isOpen, onClose }) => {
@@ -51,9 +52,9 @@ const ShareModal = ({ isOpen, onClose }) => {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               onKeyDown={handleAddEmail}
-              className="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="flex-grow border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none  focus:border-custom-main"
             />
-            <select className="border border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <select className="border-2 border-gray-300 rounded-md px-2 py-2 focus:outline-none  focus:border-custom-main">
               <option value="edit">Can edit</option>
               <option value="view">Can view</option>
             </select>
@@ -120,12 +121,12 @@ const ShareModal = ({ isOpen, onClose }) => {
           <button
             className={`text-white px-4 py-2 rounded-md ${
               selectedEmails.length > 0
-                ? "bg-custom-main hover:bg-red-600"
-                : "bg-custom-main hover:bg-red-600"
+                ? "bg-custom-main hover:bg-red-800"
+                : "bg-custom-main hover:bg-red-800"
             }`}
             onClick={() => {
               if (selectedEmails.length > 0) {
-                alert(
+                cogoToast.success(
                   `Invites sent to: ${selectedEmails.join(
                     ", "
                   )}\nMessage: ${customMessage}`
@@ -134,7 +135,7 @@ const ShareModal = ({ isOpen, onClose }) => {
                 setCustomMessage("");
               } else {
                 navigator.clipboard.writeText("Copied link!");
-                alert("Link copied to clipboard!");
+                cogoToast.success("Link copied to clipboard!");
               }
             }}
           >

@@ -1,24 +1,16 @@
-import React, { useState, useRef } from "react"
-import TinyMCE from "../editors/tinymce"
+import React, { useState } from "react";
+import TinyMCE from "../editors/tinymce";
 
 const AddRecordModal = ({ position, onClose, onSave }) => {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
-  })
-
-  const handleInputChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
+  });
 
   const handleSave = () => {
-    onSave(formData)
-    onClose()
-  }
+    onSave(formData);
+    onClose();
+  };
 
   return (
     <>
@@ -33,7 +25,7 @@ const AddRecordModal = ({ position, onClose, onSave }) => {
           top: position.y,
           transform: "translate(-50%, -50%)",
         }}
-        className="bg-white border border-gray-300 rounded-lg shadow-lg w-[600px] z-50"
+        className="bg-white border border-gray-300 rounded-lg shadow-lg w-[850px] z-50"
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-t-lg border-b border-gray-300">
@@ -73,7 +65,7 @@ const AddRecordModal = ({ position, onClose, onSave }) => {
         </div>
       </div>
     </>
-  )
-}
+  );
+};
 
-export default AddRecordModal
+export default AddRecordModal;

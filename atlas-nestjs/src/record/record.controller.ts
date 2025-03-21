@@ -22,28 +22,28 @@ export class RecordController {
     @Query('elementId') elementId: string,
     @Body() createRecordDto: CreateRecordDto,
   ) {
-    if (!elementId || isNaN(Number(elementId))) {
+    if (!elementId) {
       throw new BadRequestException('Invalid element ID');
     }
 
-    await this.recordService.createRecord(+elementId, createRecordDto);
+    await this.recordService.createRecord(elementId, createRecordDto);
     return { message: 'Record created successfully' };
   }
 
   @Get('record/:recordId')
   async findOne(@Param('recordId') recordId: string) {
-    if (isNaN(Number(recordId))) {
+    if (!recordId) {
       throw new BadRequestException('Invalid record ID');
     }
-    return this.recordService.getRecordById(+recordId);
+    return this.recordService.getRecordById(recordId);
   }
 
   @Get('element/:elementId')
   async findAll(@Param('elementId') elementId: string) {
-    if (isNaN(Number(elementId))) {
+    if (!elementId) {
       throw new BadRequestException('Invalid element ID');
     }
-    return this.recordService.getAllRecords(+elementId);
+    return this.recordService.getAllRecords(elementId);
   }
 
   @Patch('update/:recordId')
@@ -51,21 +51,21 @@ export class RecordController {
     @Param('recordId') recordId: string,
     @Body() updateRecordDto: UpdateRecordDto,
   ) {
-    if (isNaN(Number(recordId))) {
+    if (!recordId) {
       throw new BadRequestException('Invalid record ID');
     }
 
-    await this.recordService.updateRecord(+recordId, updateRecordDto);
+    await this.recordService.updateRecord(recordId, updateRecordDto);
     return { message: 'Record updated successfully' };
   }
 
   @Delete('delete/:recordId')
   async remove(@Param('recordId') recordId: string) {
-    if (isNaN(Number(recordId))) {
+    if (!recordId) {
       throw new BadRequestException('Invalid record ID');
     }
 
-    await this.recordService.deleteRecord(+recordId);
+    await this.recordService.deleteRecord(recordId);
     return { message: 'Record deleted successfully' };
   }
 
