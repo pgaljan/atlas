@@ -13,9 +13,7 @@ The front-end is paired with a simple, flexible and scalable multi-user key/valu
 
 The same data set can be leveraged in multiple structures, leaving the user free to create multiple structures of the same library. The links between each element in the renderer can carry its own attributes, allowing for dynamic re-representation, aggregation, and summarization of data based on the rendered view.  This allows visual and quantitative comparison based on the relationships defined by the user in the renderer. 
 
-###### example implementation
-
-![map](./img/author-atlas.drawio.png)
+[Strategy Deck](./atlasStrategy.pdf)
 
 # Use Cases
 
@@ -280,67 +278,7 @@ Record {
     elements Element[]
 }
 ```
-
-## User Roles
-
-* **Structure Owner**: Add Collaborators, Structure and Structure Link CRUD, Export Structure
-* **Structure Editor**: Edit Structure Map and Records
-* **Structure Commenter**:  Browse and comment on structure map and records
-* **Structure Viewer**: Browse structure map and records
-* **Instance Admininstrator**:  Instance CRUD, Structure Owner CRUD 
   
-## Reference and Mock Data Sets
-
-### Kickstarter
-
-Create a structure in excel, preview its WBS numbering, and import it into the Atlas platform
-
-[Download](./AtlasKickstarter.xlsx)
-
-### Example Structures
-
-Example structures for business, engineering, project management and educational use cases
-
-[Download](./unitTestData/element/structureLibrary.csv)
-
-| type                   | dataset                     |
-|------------------------|-----------------------------|
-| Personal              | [Vacation Plans](https://atlasstructure.tiiny.site/vacation.html) |
-| Personal              | [Film Library](https://atlasstructure.tiiny.site/film.html) |
-| Education              | [Human Languages](https://atlasstructure.tiiny.site/languages.html)             |
-| Education              | [Human Brain](https://atlasstructure.tiiny.site/brain.html) |
-| Education              | [French Revolution](https://atlasstructure.tiiny.site/frenchrev.html) |
-| Business               | [Product Breakdown Structure](https://atlasstructure.tiiny.site/autonomous.html)        |
-| Business               | [Insurance Sales Plan](https://atlasstructure.tiiny.site/insurance.html)        |
-| Business               | [Design/Build Project](https://atlasstructure.tiiny.site/designbuild.html)        |
-| Business               | [Marketing Plan](https://atlasstructure.tiiny.site/marketing.html)        |
-| Business               | [Process Improvement](https://atlasstructure.tiiny.site/processimprove.html)         |
-| Business               | [Outsourcing Project](https://atlasstructure.tiiny.site/outsource.html)         |
-| Business               | [Software Development](https://atlasstructure.tiiny.site/softwaredev.html)        |
-| Business               | [Telecom](https://atlasstructure.tiiny.site/telecom.html)                    |
-| Business               | [Web Design](https://atlasstructure.tiiny.site/webdesign.html)                  |
-| Construction           | [Environmental Remediation](https://atlasstructure.tiiny.site/envmgmt.html)   |
-| Construction           | [Factory Construction](https://atlasstructure.tiiny.site/processplant.html)        |
-| Construction               | [Production Platform](https://atlasstructure.tiiny.site/prodplatform.html)         |
-| Medical              | [Patient Medical Record](https://atlasstructure.tiiny.site/pmr.html)                  |
-| Research & Development | [Research Project](https://atlasstructure.tiiny.site/research.html)            |
-| Research & Development | [New Compound](https://atlasstructure.tiiny.site/compound.html)                |
-| MIL-STD-811F           | [Aircraft System](https://atlasstructure.tiiny.site/aircraft.html)             |
-| MIL-STD-811F           | [Electronics/Avionics](https://atlasstructure.tiiny.site/avionics.html)        |
-| MIL-STD-811F           | [Missile/Ordnance](https://atlasstructure.tiiny.site/ordnance.html)            |
-| MIL-STD-811F           | [Strategic Missile System](https://atlasstructure.tiiny.site/sms.html)    |
-| MIL-STD-811F           | [Sea System](https://atlasstructure.tiiny.site/seasystem.html)                  |
-| MIL-STD-811F           | [Space System](https://atlasstructure.tiiny.site/spacesystem.html)                |
-| MIL-STD-811F           | [Ground Vehicle](https://atlasstructure.tiiny.site/groundvehicle.html)              |
-| MIL-STD-811F           | [Unmanned Maritime System](https://atlasstructure.tiiny.site/unmannedmaritime.html)    |
-| MIL-STD-811F           | [Launch Vehicle](https://atlasstructure.tiiny.site/launchvehicle.html)              |
-| MIL-STD-811F           | [Information/Business System](https://atlasstructure.tiiny.site/infosys.html) |
-| MIL-STD-811F           | [Sustainment](https://atlasstructure.tiiny.site/sustainment.html)                 |
-| Platform Test          | [Bicycle](https://atlasstructure.tiiny.site/bicycle.html)                     |
-| Platform Test          | [Bicycle for UI Sim](https://atlasstructure.tiiny.site/bicyclesim.html)          |
-| Platform Test          | [Depth Gauge](https://atlasstructure.tiiny.site/depthGauge.html)                 |
-| Platform Test          | [Width Gauge](https://atlasstructure.tiiny.site/widthGauge.html)                 |
-
 ## Editions
 
 🅿️ - Prototype Feature
