@@ -1,3 +1,5 @@
+import * as d3 from "d3";
+
 export const assignWbsNumbers = (
   node,
   prefix = "1",
@@ -30,7 +32,9 @@ export const treeToMarkmapData = (node, showWbs) => {
 
   const actualContent = node.originalContent || node.content || node.name;
   const isRoot = node.level === 0;
-  const truncatedContent = isRoot ? actualContent : truncateText(actualContent, 10);
+  const truncatedContent = isRoot
+    ? actualContent
+    : truncateText(actualContent, 10);
   const updatedContent =
     showWbs && node.wbs && node.wbs !== "1"
       ? `${node.wbs} - ${truncatedContent}`

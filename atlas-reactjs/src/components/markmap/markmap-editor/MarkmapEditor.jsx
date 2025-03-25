@@ -146,7 +146,7 @@ const MarkmapEditor = ({ structureId }) => {
       fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
 
       cogoToast.success("Element reparented successfully.");
-
+      
       // Update the tree data locally to reflect the reparenting
       const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
       const newTree = addNodeToTarget(

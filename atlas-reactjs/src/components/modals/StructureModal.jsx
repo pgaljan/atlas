@@ -37,6 +37,7 @@ const StructureModal = ({ isOpen, onClose }) => {
     if (!inputValue.trim()) return;
 
     const ownerId = Cookies.get("atlas_userId");
+    const workspaceId = Cookies.get("workspaceId");
     const username = Cookies.get("atlas_username");
 
     if (!ownerId) {
@@ -49,6 +50,7 @@ const StructureModal = ({ isOpen, onClose }) => {
       description,
       visibility,
       ownerId: ownerId,
+      workspaceId: workspaceId,
     };
 
     try {

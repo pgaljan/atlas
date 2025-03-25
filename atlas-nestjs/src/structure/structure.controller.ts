@@ -33,11 +33,11 @@ export class StructureController {
     }
   }
 
-  @Get('user/:userId')
-  async getStructuresByUserId(@Param('userId') userId: string) {
+  @Get('workspace/:workspaceId')
+  async getStructuresByUserId(@Param('workspaceId') workspaceId: string) {
     try {
       const structures =
-        await this.structureService.getStructuresByUserId(userId);
+        await this.structureService.getStructuresByWorkspaceId(workspaceId);
       return {
         message: 'Structures retrieved successfully',
         structures,

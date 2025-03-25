@@ -14,6 +14,7 @@ import {
   deletePlan,
   fetchPlans,
   updatePlan,
+  createPlan,
 } from "../../../redux/slices/plans";
 
 const SubscriptionTable = () => {
@@ -43,12 +44,6 @@ const SubscriptionTable = () => {
 
   const headers = ["Plan Name", "Description", "Price", "Status", "Actions"];
 
-  // Function to remove the plan from local state
-  const handleDelete = (id) => {
-    setTableData((prevData) => prevData.filter((item) => item.id !== id));
-    cogoToast.success("Plan deleted successfully!");
-  };
-
   // Toggle status API call
   const toggleUserStatus = (id) => {
     const plan = tableData.find((p) => p.id === id);
@@ -75,23 +70,48 @@ const SubscriptionTable = () => {
     setDeleteModalOpen(true);
   };
 
+  // Updated openModal function to toggle the correct modal state.
+  const openModal = (type, plan = null) => {
+    setSelectedPlan(plan);
+    if (type === "add") {
+      setAddModalOpen(true);
+    } else if (type === "edit") {
+      setEditModalOpen(true);
+    }
+  };
+
   // Close modal and reset selected plan
   const closeDeleteModal = () => {
     setDeleteModalOpen(false);
     setSelectedPlan(null);
   };
 
-  const handleAddPlan = (newPlan) => {
-    setTableData([...tableData, newPlan]);
-    cogoToast.success("Plan added successfully!");
-    setAddModalOpen(false);
+  // Updated handleAddPlan to use createPlan API
+  const handleAddPlan = async (newPlan) => {
+    try {
+      const createdPlan = await dispatch(createPlan(newPlan)).unwrap();
+      setTableData([...tableData, createdPlan]);
+      cogoToast.success("Plan added successfully!");
+      setAddModalOpen(false);
+    } catch (error) {
+      cogoToast.error(error?.message || "Failed to add plan");
+    }
   };
 
-  const handleEditPlan = (updatedPlan) => {
-    setTableData((prevData) =>
-      prevData.map((plan) => (plan.id === updatedPlan.id ? updatedPlan : plan))
-    );
-    cogoToast.success("Plan updated successfully!");
+  // Updated handleEditPlan to dispatch the update API
+  const handleEditPlan = async (updatedPlan) => {
+    try {
+      const result = await dispatch(
+        updatePlan({ id: updatedPlan.id, updatePlanDto: updatedPlan })
+      ).unwrap();
+      setTableData((prevData) =>
+        prevData.map((plan) => (plan.id === result.id ? result : plan))
+      );
+      cogoToast.success("Plan updated successfully!");
+      setEditModalOpen(false);
+    } catch (error) {
+      cogoToast.error(error?.message || "Failed to update plan");
+    }
   };
 
   const confirmDelete = () => {
@@ -139,7 +159,10 @@ const SubscriptionTable = () => {
             There are no subscription plans to display at the moment. <br />{" "}
             Please add a new subscription plan.
           </p>
-          <button className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition">
+          <button
+            className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
+            onClick={() => openModal("add")}
+          >
             <MdAddTask size={20} />
             Add Plan
           </button>
@@ -159,7 +182,7 @@ const SubscriptionTable = () => {
             <div className="flex items-center gap-3">
               <button
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-                onClick={() => setAddModalOpen(true)}
+                onClick={() => openModal("add")}
               >
                 <MdAddTask size={20} />
                 Add Plan
@@ -209,10 +232,7 @@ const SubscriptionTable = () => {
                     <Tooltip label="Edit">
                       <button
                         className="p-2 text-black rounded transition"
-                        onClick={() => {
-                          setSelectedPlan(plan);
-                          setEditModalOpen(true);
-                        }}
+                        onClick={() => openModal("edit", plan)}
                       >
                         <TbEditCircle className="w-6 h-6" />
                       </button>

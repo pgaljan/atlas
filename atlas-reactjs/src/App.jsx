@@ -2,17 +2,20 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
-import UserTable from "./containers/admin-portal/users-management";
-import UserProfiles from "./containers/admin-portal/user-profile";
-import SubscriptionTable from "./containers/admin-portal/subscription-management";
-import AdminDashboard from "./containers/admin-portal/dashboard";
-import AdminLogin from "./containers/admin-portal/login";
-import AdministratorsTable from "./containers/admin-portal/administrator-management";
+import AdminPrivateRoute from "./routes/AdminPrivateRoute"; 
 
-// Error and Fallback Pages
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
+const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
+const PremiumModal = lazy(() => import("./components/modals/PremiumModal"));
 
-// OAuth Callback Handlers
+// Authentication Pages
+const Login = lazy(() => import("./containers/common/login/Login"));
+const Register = lazy(() => import("./containers/common/register/Register"));
+const ResetPassword = lazy(() =>
+  import("./containers/common/reset-password/ResetPassword")
+);
+
+// OAuth Callbacks
 const GoogleCallback = lazy(() =>
   import("./containers/callbacks/google-callback")
 );
@@ -20,19 +23,9 @@ const GithubCallback = lazy(() =>
   import("./containers/callbacks/github-callback")
 );
 
-// Common Authentication Pages
-const Login = lazy(() => import("./containers/common/login/Login"));
-const Register = lazy(() => import("./containers/common/register/Register"));
-const ResetPassword = lazy(() =>
-  import("./containers/common/reset-password/ResetPassword")
-);
-
-// Subscription and Plan Management
+// Subscription Routes
 const SubscriptionPlans = lazy(() =>
   import("./containers/common/subscription-plans/SubscriptionPlans")
-);
-const UpgradePlans = lazy(() =>
-  import("./containers/user-portal/upgrade-plans/UpgradePlans")
 );
 
 // User Portal Pages
@@ -40,26 +33,29 @@ const Dashboard = lazy(() =>
   import("./containers/user-portal/dashboard/Dashboard")
 );
 const Backups = lazy(() => import("./containers/user-portal/backups/Backups"));
-const Profile = lazy(() => import("./containers/user-portal/profile/Profile"));
-const Support = lazy(() => import("./containers/user-portal/support/Support"));
-const UploadedFiles = lazy(() =>
-  import("./containers/user-portal/uploaded-files/UploadedFiles")
+const UpgradePlans = lazy(() =>
+  import("./containers/user-portal/upgrade-plans/UpgradePlans")
 );
-const TeamMembers = lazy(() =>
-  import("./containers/user-portal/team-members/TeamMembers")
-);
-const DeletedMindmaps = lazy(() =>
-  import("./containers/user-portal/deleted-markmaps/DeletedMarkmaps")
-);
-
-// Additional Components
-const PremiumModal = lazy(() => import("./components/modals/PremiumModal"));
-const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
 const MarkmapCanvas = lazy(() =>
   import("./components/markmap/markmap-canvas/MarkmapCanvas")
 );
 
-// Organize public routes by type
+// Admin Portal Pages
+const UserTable = lazy(() =>
+  import("./containers/admin-portal/users-management")
+);
+const UserProfiles = lazy(() =>
+  import("./containers/admin-portal/user-profile")
+);
+const SubscriptionTable = lazy(() =>
+  import("./containers/admin-portal/subscription-management")
+);
+const AdminDashboard = lazy(() =>
+  import("./containers/admin-portal/dashboard")
+);
+const AdminLogin = lazy(() => import("./containers/admin-portal/login"));
+
+// Route Grouping
 const authRoutes = [
   { path: "/", element: <Login /> },
   { path: "/register", element: <Register /> },
@@ -82,30 +78,21 @@ const publicRoutes = [
   { path: "*", element: <NotFound /> },
 ];
 
-// Group private (user) routes
 const userRoutes = [
   { path: "/app/dashboard", element: <Dashboard /> },
-  { path: "/app/s/:username/:structureId", element: <MarkmapCanvas /> },
-  { path: "/app/coming-soon", element: <ComingSoon /> },
   { path: "/app/backups", element: <Backups /> },
   { path: "/app/upgrade-plans", element: <UpgradePlans /> },
-  { path: "/app/admin/user-management", element: <UserTable /> },
-  {
-    path: "/app/admin/administrator-management",
-    element: <AdministratorsTable />,
-  },
-  { path: "/app/admin/user-profile", element: <UserProfiles /> },
-  { path: "/app/admin/subscription-plan", element: <SubscriptionTable /> },
-  { path: "/app/admin", element: <AdminLogin /> },
-  { path: "/app/admin/dashboard", element: <AdminDashboard /> },
-  // { path: "/app/team-members", element: <TeamMembers /> },
-  // { path: "/app/support", element: <Support /> },
-  // { path: "/app/me", element: <Profile /> },
-  // { path: "/app/uploaded-files", element: <UploadedFiles /> },
-  // { path: "/app/deleted-markmaps", element: <DeletedMindmaps /> },
+  { path: "/app/s/:username/:structureId", element: <MarkmapCanvas /> },
+  { path: "/app/coming-soon", element: <ComingSoon /> },
 ];
 
-const privateRoutes = userRoutes;
+const adminRoutes = [
+  { path: "/app/admin-portal/user-management", element: <UserTable /> },
+  { path: "/app/admin-portal/user-profile", element: <UserProfiles /> },
+  { path: "/app/admin-portal/subscription-plan", element: <SubscriptionTable /> },
+  { path: "/app/admin-portal/dashboard", element: <AdminDashboard /> },
+  { path: "/app/admin-portal", element: <AdminLogin /> },
+];
 
 const App = () => {
   const location = useLocation();
@@ -113,9 +100,8 @@ const App = () => {
   const [isModalVisible, setIsModalVisible] = useState(false);
 
   useEffect(() => {
-    setIsModalVisible(
-      new URLSearchParams(location.search).get("plan") === "upgrade-to-premium"
-    );
+    const params = new URLSearchParams(location.search);
+    setIsModalVisible(params.get("plan") === "upgrade-to-premium");
   }, [location.search]);
 
   const closeModal = () => {
@@ -135,6 +121,7 @@ const App = () => {
         }
       >
         <Routes>
+          {/* Public Routes */}
           {publicRoutes.map(({ path, element }) => (
             <Route
               key={path}
@@ -142,11 +129,20 @@ const App = () => {
               element={<PublicRoute>{element}</PublicRoute>}
             />
           ))}
-          {privateRoutes.map(({ path, element }) => (
+          {/* User Private Routes */}
+          {userRoutes.map(({ path, element }) => (
             <Route
               key={path}
               path={path}
               element={<PrivateRoute>{element}</PrivateRoute>}
+            />
+          ))}
+          {/* Admin Private Routes */}
+          {adminRoutes.map(({ path, element }) => (
+            <Route
+              key={path}
+              path={path}
+              element={<AdminPrivateRoute>{element}</AdminPrivateRoute>}
             />
           ))}
         </Routes>

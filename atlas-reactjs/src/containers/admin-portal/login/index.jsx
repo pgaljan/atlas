@@ -1,9 +1,9 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
-import { loginAdministrator } from "../../../redux/slices/administrator-auth";
+import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useNavigate } from "react-router-dom";
+import { loginUser } from "../../../redux/slices/auth";
 
 const AdminLogin = () => {
   const dispatch = useDispatch();
@@ -35,15 +35,25 @@ const AdminLogin = () => {
     setIsSubmitting(true);
 
     try {
-      const response = await dispatch(
-        loginAdministrator({ email, password })
-      ).unwrap();
+      const response = await dispatch(loginUser({ email, password })).unwrap();
+
+      // Check if user is admin
+      if (!response.user.isAdmin === true) {
+        // Remove token if set
+        Cookies.remove("atlas_admin_token");
+        cogoToast.error("You are not authorized to access the admin area");
+        setIsSubmitting(false);
+        return;
+      }
 
       // Store the token in a cookie
       Cookies.set("atlas_admin_token", response.access_token);
+      Cookies.set("atlas_email", response.user.email, { expires: 1 });
+      Cookies.set("atlas_username", response.user.username, { expires: 1 });
+      Cookies.set("atlas_userId", response.user.id, { expires: 1 });
 
       cogoToast.success("Admin login successful!");
-      navigate("/app/admin/user-management");
+      navigate("/app/admin-portal/user-management");
     } catch (error) {
       cogoToast.error(error.message || "Admin login failed!");
     } finally {
@@ -84,7 +94,6 @@ const AdminLogin = () => {
                 Email
               </label>
               <input
-                id="admin-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -104,7 +113,6 @@ const AdminLogin = () => {
                 Password
               </label>
               <input
-                id="admin-password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}

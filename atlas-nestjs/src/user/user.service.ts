@@ -22,6 +22,8 @@ export class UserService {
           fullName: true,
           username: true,
           email: true,
+          inviteCount: true,
+          isAdmin: true,
           createdAt: true,
           deletedAt: true,
           status: true,
@@ -71,9 +73,26 @@ export class UserService {
         throw new NotFoundException(`User with ID ${id} not found`);
       }
 
+      // Destructure role and other new fields from DTO.
+      const { role, isAdmin, inviteCount, ...rest } = updateUserDto;
+
+      const updateData: any = {
+        ...rest,
+        ...(role && { role: { connect: { id: role } } }),
+      };
+
+      // Update new fields if provided
+      if (isAdmin !== undefined) {
+        updateData.isAdmin = isAdmin;
+      }
+
+      if (inviteCount !== undefined) {
+        updateData.inviteCount = inviteCount;
+      }
+
       const updatedUser = await this.prisma.user.update({
         where: { id },
-        data: updateUserDto,
+        data: updateData,
       });
 
       // Log the update action in the AuditLog
@@ -104,7 +123,7 @@ export class UserService {
           teamMembers: true,
           tokens: true,
           backups: true,
-          deletionLogs: true, 
+          deletionLogs: true,
         },
       });
 
@@ -130,7 +149,7 @@ export class UserService {
         this.prisma.token.deleteMany({ where: { userId: id } }),
         this.prisma.backup.deleteMany({ where: { userId: id } }),
         this.prisma.attachment.deleteMany({ where: { userId: id } }),
-        this.prisma.deletionLog.deleteMany({ where: { userId: id } }), 
+        this.prisma.deletionLog.deleteMany({ where: { userId: id } }),
         this.prisma.user.delete({ where: { id } }),
       ]);
 

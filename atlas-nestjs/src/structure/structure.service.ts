@@ -22,7 +22,7 @@ export class StructureService {
   }
 
   async createStructure(createStructureDto: CreateStructureDto) {
-    const { name, description, visibility, ownerId, elements } =
+    const { name, description, visibility, ownerId, elements, workspaceId } =
       createStructureDto;
 
     try {
@@ -86,6 +86,7 @@ export class StructureService {
           description,
           visibility: visibility || Visibility.private,
           ownerId,
+          workspaceId,
           elements: {
             create: elements ? this.formatElements(elements) : [],
           },
@@ -154,15 +155,15 @@ export class StructureService {
     }
   }
 
-  async getStructuresByUserId(userId: string) {
+  async getStructuresByWorkspaceId(workspaceId: string) {
     try {
       const structures = await this.prisma.structure.findMany({
-        where: { ownerId: userId },
+        where: { workspaceId: workspaceId },
       });
 
       if (!structures || structures.length === 0) {
         throw new NotFoundException(
-          `No structures found for user with id ${userId}`,
+          `No structures found for user with id ${workspaceId}`,
         );
       }
 
@@ -205,7 +206,7 @@ export class StructureService {
           title: title || undefined,
           description: description || undefined,
           visibility: visibility || undefined,
-          imageUrl: imageUrl || undefined, 
+          imageUrl: imageUrl || undefined,
           updatedAt: new Date(),
           elements: elements
             ? {

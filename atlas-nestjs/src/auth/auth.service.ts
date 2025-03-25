@@ -9,6 +9,7 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Plan } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
+import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { Response } from 'express';
 import { generateFromEmail } from 'unique-username-generator';
@@ -57,6 +58,7 @@ export class AuthService {
           throw new ConflictException('User with this email already exists');
         }
 
+        // Generate a modified username based on fullName
         let modifiedUsername = fullName;
         if (fullName.includes(' ')) {
           const parts = fullName.split(' ');
@@ -84,6 +86,14 @@ export class AuthService {
           throw new ConflictException('Role not found');
         }
 
+        // Create a new workspace record for the user
+        const newWorkspace = await prisma.workspace.create({
+          data: {
+            name: `${modifiedUsername}'s Workspace`,
+          },
+        });
+
+        // Create the new user with the new workspace id as defaultWorkspaceId
         const newUser = await prisma.user.create({
           data: {
             username: modifiedUsername,
@@ -91,6 +101,7 @@ export class AuthService {
             email,
             password: hashedPassword,
             roleId: role.id,
+            defaultWorkspaceId: newWorkspace.id,
           },
         });
 
@@ -121,7 +132,6 @@ export class AuthService {
           email,
         });
 
-        // Return user ID along with a success message
         return {
           id: newUser.id,
           message: 'User registered successfully',
@@ -198,15 +208,15 @@ export class AuthService {
           },
         });
       }
-      // Log the audit action for login
       await this.logAudit('User Login', 'User', user.id, { email: user.email });
-      // Return user data and the access token
       return {
         message: 'Login successful',
         user: {
           id: user.id,
           email: user.email,
           username: user.username,
+          isAdmin: user.isAdmin,
+          workspaceId: user.defaultWorkspaceId,
           role: user.role,
         },
         access_token: accessToken,
@@ -368,7 +378,7 @@ export class AuthService {
       });
 
       if (!existingUser) {
-        const defaultRoleName = 'Admin';
+        const defaultRoleName = 'User';
 
         const role = await this.prismaService.role.findFirst({
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
@@ -474,7 +484,7 @@ export class AuthService {
       });
 
       if (!existingUser) {
-        const defaultRoleName = 'Admin';
+        const defaultRoleName = 'User';
 
         const role = await this.prismaService.role.findFirst({
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },

@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../../components/cards/Card";
 import { createFullUserBackup } from "../../redux/slices/backups";
 import { restoreFullBackup } from "../../redux/slices/restore-backups";
-import { getStructuresByUserId } from "../../redux/slices/structures";
+import { getStructuresByWorkspaceId } from "../../redux/slices/structures";
 import { formatRelativeTime } from "../../utils/timeUtils";
 import ImportModal from "../modals/ImportModal";
 
@@ -21,6 +21,7 @@ const StructureCard = () => {
   const [isExporting, setIsExporting] = useState(false);
   const [isImporting, setIsImporting] = useState(false);
   const ownerId = Cookies.get("atlas_userId");
+  const workspaceId = Cookies.get("workspaceId");
   const username = Cookies.get("atlas_username");
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
 
@@ -31,7 +32,7 @@ const StructureCard = () => {
   const fetchStructures = () => {
     if (ownerId) {
       setLoading(true);
-      dispatch(getStructuresByUserId(ownerId))
+      dispatch(getStructuresByWorkspaceId(workspaceId))
         .then((data) => {
           const sortedStructures = Array.isArray(data?.payload)
             ? data.payload.sort(

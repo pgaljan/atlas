@@ -8,6 +8,7 @@ export class CreateStructureDto {
   title: string;
   imageUrl: string;
   ownerId: string;
+  workspaceId: string;
   markmapShowWbs: boolean;
   elements?: CreateElementDto[];
   maps?: CreateStructureMapDto[];

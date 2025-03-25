@@ -26,8 +26,11 @@ export class RecordController {
       throw new BadRequestException('Invalid element ID');
     }
 
-    await this.recordService.createRecord(elementId, createRecordDto);
-    return { message: 'Record created successfully' };
+    const newRecord = await this.recordService.createRecord(
+      elementId,
+      createRecordDto,
+    );
+    return { message: 'Record created successfully', recordId: newRecord.id };
   }
 
   @Get('record/:recordId')

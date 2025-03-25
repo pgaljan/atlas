@@ -1,21 +1,17 @@
 import React, { useState } from "react";
-import Select from "react-select";
 import InputField from "../../input-field/InputField";
+import Select from "react-select";
 
 const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
   const [formData, setFormData] = useState({
-    firstName: "",
-    lastName: "",
+    fullName: "",
     email: "",
     role: "",
     password: "",
-    confirmPassword: "",
   });
 
-  // Define role options for the select dropdown
   const roleOptions = [
     { value: "admin", label: "Admin" },
-    { value: "super-admin", label: "Super Admin" },
     { value: "user", label: "User" },
   ];
 
@@ -44,19 +40,11 @@ const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
-            label="First Name"
-            placeholder="Enter first name"
+            label="Full Name"
+            placeholder="Enter full name"
             type="text"
-            name="firstName"
-            value={formData.firstName}
-            onChange={handleChange}
-          />
-          <InputField
-            label="Last Name"
-            placeholder="Enter last name"
-            type="text"
-            name="lastName"
-            value={formData.lastName}
+            name="fullName"
+            value={formData.fullName}
             onChange={handleChange}
           />
           <InputField

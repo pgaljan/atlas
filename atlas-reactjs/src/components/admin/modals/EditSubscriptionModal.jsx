@@ -1,18 +1,13 @@
-import cogoToast from "@successtar/cogo-toast";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { updatePlan } from "../../../redux/slices/plans";
+import { useState, useEffect } from "react";
 import InputField from "../../input-field/InputField";
 
-const EditSubscriptionModal = ({ isOpen, onClose, onSuccess, plan, title }) => {
-  const dispatch = useDispatch();
+const EditSubscriptionModal = ({ isOpen, onClose, onSubmit, plan, title }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     price: "",
     features: {},
   });
-  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (plan) {
@@ -40,22 +35,10 @@ const EditSubscriptionModal = ({ isOpen, onClose, onSuccess, plan, title }) => {
     }));
   };
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setLoading(true);
-
-    try {
-      await dispatch(
-        updatePlan({ id: plan.id, updatePlanDto: formData })
-      ).unwrap();
-      cogoToast.success("Plan updated successfully!");
-      onSuccess();
-      onClose();
-    } catch (error) {
-      cogoToast.error(error || "Failed to update plan.");
-    } finally {
-      setLoading(false);
-    }
+    onSubmit(formData);
+    onClose();
   };
 
   return (
@@ -127,16 +110,14 @@ const EditSubscriptionModal = ({ isOpen, onClose, onSuccess, plan, title }) => {
               type="button"
               className="py-2 px-4 rounded-md bg-gray-600 text-white hover:bg-gray-500 transition"
               onClick={onClose}
-              disabled={loading}
             >
               Cancel
             </button>
             <button
               type="submit"
               className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-red-800 transition"
-              disabled={loading}
             >
-              {loading ? "Saving..." : "Save Changes"}
+              Save Changes
             </button>
           </div>
         </form>

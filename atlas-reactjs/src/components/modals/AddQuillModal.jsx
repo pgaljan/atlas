@@ -1,6 +1,5 @@
-import React from "react";
 import cogoToast from "@successtar/cogo-toast";
-import { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { BsTags } from "react-icons/bs";
 import { IoTrash } from "react-icons/io5";
 import { useDispatch } from "react-redux";
@@ -24,8 +23,9 @@ const AddQuillModal = ({
   submitText,
   cancelText,
   recordId,
-  fetchData,
+  elementValue,
 }) => {
+  console.log(recordId)
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -36,7 +36,7 @@ const AddQuillModal = ({
   });
   const [tags, setTags] = useState([]);
   const canTags = useFeatureFlag("Record Tagging");
-  
+
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action();
@@ -45,25 +45,28 @@ const AddQuillModal = ({
     }
   };
 
-  useEffect(() => {
-    if (actionType === "view" || (actionType === "edit" && recordId)) {
-      dispatch(getRecordById(recordId))
-        .unwrap()
-        .then((record) => {
-          if (record) {
-            setFormData({ metadata: record.metadata.content });
-            setTags(record.tags);
-            setInitialData({
-              metadata: record.metadata.content,
-              tags: record.tags,
-            });
-          }
-        })
-        .catch((error) => {
-          cogoToast.error(`Failed to fetch record: ${error.message}`);
-        });
+  // Custom function to fetch record data
+  const fetchRecordData = useCallback(async () => {
+    if (actionType === "edit" && recordId) {
+      try {
+        const record = await dispatch(getRecordById(recordId)).unwrap();
+        if (record) {
+          setFormData({ metadata: record.metadata.content });
+          setTags(record.tags);
+          setInitialData({
+            metadata: record.metadata.content,
+            tags: record.tags,
+          });
+        }
+      } catch (error) {
+        cogoToast.error(`Failed to fetch record: ${error.message}`);
+      }
     }
   }, [actionType, recordId, dispatch]);
+
+  useEffect(() => {
+    fetchRecordData();
+  }, [fetchRecordData]);
 
   useEffect(() => {
     const metadataChanged = formData.metadata !== initialData.metadata;
@@ -79,54 +82,45 @@ const AddQuillModal = ({
     }));
   };
 
-
-const handleSave = async () => {
-  if (!formData.metadata?.trim()) {
-    cogoToast.error("Metadata is required!");
-    return;
-  }
-
-  // Validate tags only if the user has added any
-  if (tags.length > 0 && tags.some(tag => !tag.key.trim() || !tag.value.trim())) {
-    cogoToast.error("Each tag must have both a key and a value.");
-    return;
-  }
-
-  // Convert metadata to JSON
-  const parsedMetadata = {
-    content: formData.metadata,
-  };
-
-  const createRecordDto = {
-    metadata: parsedMetadata,
-    tags, 
-  };
-
-  try {
-    setIsLoading(true);
-    if (actionType === "edit") {
-      const updateRecordDto = {
-        metadata: parsedMetadata,
-        tags, 
-      };
-      await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
-      fetchData();
-      cogoToast.success("Record updated successfully!");
-    } else if (actionType === "add") {
-      await dispatch(createRecord({ elementId, createRecordDto })).unwrap();
-      fetchData();
-      cogoToast.success("Record added successfully!");
+  const handleSave = async () => {
+    if (!formData.metadata?.trim()) {
+      cogoToast.error("Metadata is required!");
+      return;
     }
-    onSuccess();
-    onClose();
-  } catch (error) {
-    cogoToast.error(`Error adding record: ${error.message}`);
-  } finally {
-    setIsLoading(false);
-  }
-};
 
-  
+    if (
+      tags.length > 0 &&
+      tags.some((tag) => !tag.key.trim() || !tag.value.trim())
+    ) {
+      cogoToast.error("Each tag must have both a key and a value.");
+      return;
+    }
+
+    const parsedMetadata = { content: formData.metadata };
+    const createRecordDto = { metadata: parsedMetadata, tags };
+
+    try {
+      setIsLoading(true);
+      if (actionType === "edit") {
+        const updateRecordDto = { metadata: parsedMetadata, tags };
+        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
+        cogoToast.success("Record updated successfully!");
+        await dispatch(getRecordById(recordId)).unwrap();
+      } else if (actionType === "add") {
+        const response = await dispatch(
+          createRecord({ elementId, createRecordDto })
+        ).unwrap();
+        onSuccess(response.recordId);
+        await dispatch(getRecordById(response.recordId)).unwrap();
+        cogoToast.success("Record added successfully!");
+      }
+      onClose();
+    } catch (error) {
+      cogoToast.error(`Error adding record: ${error.message}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const addTag = () => {
     setTags((prev) => [...prev, { key: "", value: "", id: Date.now() }]);
@@ -171,7 +165,7 @@ const handleSave = async () => {
         {/* Body */}
         <div className="p-4 space-y-4 overflow-y-auto">
           <label className="block text-sm font-medium text-gray-700">
-            Metadata
+            {elementValue}
           </label>
           <div>
             <QuillEditor

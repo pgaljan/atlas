@@ -1,11 +1,7 @@
-import cogoToast from "@successtar/cogo-toast";
 import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { createPlan } from "../../../redux/slices/plans";
 import InputField from "../../input-field/InputField";
 
-const AddSubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
-  const dispatch = useDispatch();
+const AddSubscriptionModal = ({ isOpen, onClose, onSubmit, title }) => {
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -45,24 +41,14 @@ const AddSubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    dispatch(createPlan(formData))
-      .unwrap()
-      .then(() => {
-        cogoToast.success("Plan created successfully!");
-        onClose();
-        onSuccess();
-      })
-      .catch((error) => {
-        cogoToast.error(error || "Failed to create plan");
-      });
+    onSubmit(formData);
+    onClose();
   };
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white rounded-3xl shadow-lg p-6 w-[600px] h-full max-h-[70%] overflow-scroll">
-        <h2 className="mb-2 text-3xl font-bold text-gray-800">
-          Add Subscription Plan
-        </h2>
+        <h2 className="mb-2 text-3xl font-bold text-gray-800">{title}</h2>
         <h3 className="text-base text-gray-500 mb-6">
           Add the details to create a new subscription plan.
         </h3>
@@ -102,7 +88,7 @@ const AddSubscriptionModal = ({ isOpen, onClose, onSuccess }) => {
                 onChange={handleDropdownChange}
                 className="block w-full p-2 border-2 border-gray-300 rounded-md focus:ring-custom-main focus:border-custom-main"
               >
-                <option value="10">10</option>
+                <option value="10">5</option>
                 <option value="50">50</option>
                 <option value="Unlimited">Unlimited</option>
               </select>

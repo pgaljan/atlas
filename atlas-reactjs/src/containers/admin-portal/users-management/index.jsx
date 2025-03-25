@@ -1,14 +1,15 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useEffect, useState } from "react";
+import { FaChevronDown } from "react-icons/fa";
 import { IoTrash } from "react-icons/io5";
 import { MdGroupAdd, MdOutlineDownloading } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
-import InputField from "../../../components/input-field/InputField";
-import Modal from "../../../components/modals/AdminModal";
+import GenericModal from "../../../components/admin/modals/GenericModal";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
+import useOutsideClick from "../../../hooks/useOutsideClick";
 import { registerUser } from "../../../redux/slices/auth";
 import {
   deleteUser,
@@ -16,68 +17,37 @@ import {
   fetchAllUsers,
   updateUser,
 } from "../../../redux/slices/users";
-import { fetchRoles } from "../../../redux/slices/roles";
-import Select from "react-select";
 
 const UserTable = () => {
   const dispatch = useDispatch();
-  const [isOpen, setIsOpen] = useState(false);
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Local state for add/edit form fields
-  const [fullName, setFullName] = useState("");
-  const [username, setUsername] = useState("");
-  const [userEmail, setUserEmail] = useState("");
+  const [isOpen, setIsOpen] = useState(false);
+  const [isSortOpen, setIsSortOpen] = useState(false);
+  const [selectedOption, setSelectedOption] = useState("Sort");
+  const options = ["Personal", "Analyst", "Business", "Educator"];
+  const sortRef = useOutsideClick(() => setIsSortOpen(false));
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-  const [userPassword, setUserPassword] = useState("");
-  const [role, setRole] = useState(null);
-  const [roles, setRoles] = useState([]);
 
-  useEffect(() => {
-    dispatch(fetchRoles())
-      .unwrap()
-      .then((data) => {
-        setRoles(data.map((role) => ({ value: role.id, label: role.name })));
-      })
-      .catch((error) => console.error("Failed to fetch roles:", error));
-  }, [dispatch]);
-
-  // Open add/edit modal; if a user is passed, prefill for editing
   const openModal = (user = null) => {
-    if (user) {
-      setEditingUser(user);
-      setFullName(user.fullName || "");
-      setUsername(user.username || "");
-      setUserEmail(user.email || "");
-      setUserPassword("");
-      setRole(user.role?.roleId || "");
-    } else {
-      setEditingUser(null);
-      setFullName("");
-      setUsername("");
-      setUserEmail("");
-      setUserPassword("");
-      setRole("");
-    }
+    setEditingUser(user);
     setIsOpen(true);
   };
 
   const closeModal = () => {
     setIsOpen(false);
     setEditingUser(null);
-    setFullName("");
-    setUsername("");
-    setUserEmail("");
-    setUserPassword("");
-    setRole("");
   };
 
-  // Open delete modal and store the full user object
+  const handleSelect = (option) => {
+    setSelectedOption(option);
+    setIsSortOpen(false);
+  };
+
+  // Open delete modal
   const openDeleteModal = (user) => {
-    console.log(user.id);
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
   };
@@ -87,7 +57,6 @@ const UserTable = () => {
     setIsDeleteModalOpen(false);
   };
 
-  // Fetch all users on mount and after any changes
   useEffect(() => {
     setLoading(true);
     dispatch(fetchAllUsers())
@@ -102,7 +71,15 @@ const UserTable = () => {
       });
   }, [dispatch]);
 
-  const headers = ["User", "Email", "Role", "Status", "Actions"];
+  const headers = [
+    "User",
+    "Email",
+    "Role",
+    "Admin",
+    "Status",
+    "Invites",
+    "Actions",
+  ];
 
   const toggleUserStatus = (id) => {
     setTableData((prevData) =>
@@ -137,18 +114,9 @@ const UserTable = () => {
       });
   };
 
-  // For adding a new user
-  const handleSaveUser = async () => {
-    const registerData = {
-      fullName,
-      username,
-      email: userEmail,
-      password: userPassword,
-      role,
-    };
-
+  const handleSaveUser = async (data) => {
     try {
-      await dispatch(registerUser(registerData)).unwrap();
+      await dispatch(registerUser(data)).unwrap();
       cogoToast.success("User registered successfully!");
       closeModal();
       dispatch(fetchAllUsers())
@@ -159,14 +127,13 @@ const UserTable = () => {
     }
   };
 
-  // For updating an existing user
-  const handleUpdateUser = async () => {
+  const handleUpdateUser = async (data) => {
     const updateData = {
-      fullName,
-      username,
-      email: userEmail,
-      role,
-      ...(userPassword && { password: userPassword }),
+      fullName: data.fullName,
+      username: data.username,
+      email: data.email,
+      role: data.role,
+      ...(data.password && { password: data.password }),
     };
 
     try {
@@ -203,6 +170,38 @@ const UserTable = () => {
     }
   };
 
+  const toggleAdminStatus = async (id) => {
+    const user = tableData.find((u) => u.id === id);
+    if (!user) return;
+
+    try {
+      const updatedUser = await dispatch(
+        updateUser({ userId: id, updateData: { isAdmin: !user.isAdmin } })
+      ).unwrap();
+      setTableData((prevData) =>
+        prevData.map((u) => (u.id === id ? updatedUser : u))
+      );
+      cogoToast.success("User admin status updated successfully!");
+    } catch (error) {
+      cogoToast.error(error.message || "Failed to update admin status");
+    }
+  };
+
+  const handleInviteUpdate = async (id, newCount) => {
+    const inviteCount = Number(newCount);
+    try {
+      const updatedUser = await dispatch(
+        updateUser({ userId: id, updateData: { inviteCount } })
+      ).unwrap();
+      setTableData((prevData) =>
+        prevData.map((u) => (u.id === id ? updatedUser : u))
+      );
+      cogoToast.success("Invite count updated successfully!");
+    } catch (error) {
+      cogoToast.error(error.message || "Failed to update invites");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen flex-col text-center p-6">
@@ -213,6 +212,17 @@ const UserTable = () => {
     );
   }
 
+  // Prepare initial data for the modal.
+  const initialModalData = editingUser
+    ? {
+        fullName: editingUser.fullName || "",
+        username: editingUser.username || "",
+        email: editingUser.email || "",
+        role: editingUser.role?.name || "",
+        password: "",
+      }
+    : undefined;
+
   return (
     <AdminLayout>
       <div className="p-2">
@@ -220,6 +230,7 @@ const UserTable = () => {
           <div className="mb-6 flex justify-between w-full items-center">
             <h2 className="text-3xl font-semibold text-gray-800">Users</h2>
             <div className="flex items-center gap-3">
+              {/* Export Users Button */}
               <button
                 onClick={handleExportUsers}
                 className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
@@ -227,6 +238,8 @@ const UserTable = () => {
                 <MdOutlineDownloading size={20} />
                 Export Users
               </button>
+
+              {/* Add User Button */}
               <button
                 onClick={() => openModal()}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
@@ -234,91 +247,43 @@ const UserTable = () => {
                 <MdGroupAdd size={20} />
                 Add User
               </button>
+
+              {/* Sort Dropdown */}
+              <div className="relative z-20" ref={sortRef}>
+                <button
+                  className="flex items-center justify-between w-36 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 focus:border-custom-main transition"
+                  onClick={() => setIsSortOpen(!isSortOpen)}
+                >
+                  {selectedOption}
+                  <FaChevronDown className="text-gray-500 ml-2" />
+                </button>
+
+                {isSortOpen && (
+                  <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
+                    {options.map((option) => (
+                      <li
+                        key={option}
+                        className="px-4 py-2 text-black hover:bg-gray-100 cursor-pointer"
+                        onClick={() => handleSelect(option)}
+                      >
+                        {option}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Add/Edit Modal */}
-          <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[800px]">
-            <div className="no-scrollbar relative w-[600px] overflow-y-auto rounded-3xl bg-white p-6">
-              <div className="px-2 pr-14">
-                <h4 className="mb-2 text-3xl font-bold text-gray-800">
-                  {editingUser ? "Edit User" : "Add User"}
-                </h4>
-                <p className="text-base text-gray-500 mb-6">
-                  {editingUser
-                    ? "Update user details."
-                    : "Enter user details to add a new user."}
-                </p>
-              </div>
-              <div className="flex flex-col custom-scrollbar overflow-y-auto px-2 space-y-5">
-                <InputField
-                  label="Full Name"
-                  placeholder="Enter name"
-                  type="text"
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
-                  className="w-full"
-                />
-                <InputField
-                  label="Username"
-                  placeholder="Enter username"
-                  type="text"
-                  value={username}
-                  onChange={(e) => setUsername(e.target.value)}
-                  className="w-full"
-                />
-                <InputField
-                  label="Email Address"
-                  type="email"
-                  placeholder="Enter your working email"
-                  value={userEmail}
-                  onChange={(e) => setUserEmail(e.target.value)}
-                  className="w-full"
-                />
-                <div className="mb-4">
-                  <label className="block text-gray-700 font-medium mb-2">
-                    Role
-                  </label>
-                  <Select
-                    options={roles}
-                    value={roles.find((r) => r.value === role) || null}
-                    onChange={(selectedOption) => setRole(selectedOption.value)}
-                    placeholder="Select a role"
-                  />
-                </div>
-                <InputField
-                  label="Password"
-                  type="password"
-                  placeholder={
-                    editingUser
-                      ? "Enter new password (optional)"
-                      : "Enter your password"
-                  }
-                  value={userPassword}
-                  onChange={(e) => setUserPassword(e.target.value)}
-                  className="w-full"
-                />
-              </div>
-              <div className="flex items-center gap-3 px-2 justify-end mt-8">
-                <button
-                  type="button"
-                  onClick={closeModal}
-                  className="px-4 py-2 text-base font-medium text-white rounded-md bg-gray-600 hover:bg-gray-500"
-                >
-                  Close
-                </button>
-                <button
-                  type="button"
-                  onClick={editingUser ? handleUpdateUser : handleSaveUser}
-                  className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-red-800"
-                >
-                  {editingUser ? "Update User" : "Save User"}
-                </button>
-              </div>
-            </div>
-          </Modal>
+          <GenericModal
+            isOpen={isOpen}
+            onClose={closeModal}
+            onSubmit={editingUser ? handleUpdateUser : handleSaveUser}
+            type="user"
+            title={editingUser ? "Edit User" : "Add User"}
+            initialData={initialModalData}
+          />
 
-          {/* Delete Modal */}
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={closeDeleteModal}
@@ -371,6 +336,25 @@ const UserTable = () => {
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
+                        checked={user.isAdmin === true}
+                        onChange={() => toggleAdminStatus(user.id)}
+                        className="sr-only peer"
+                      />
+                      <div
+                        className={`w-12 h-6 rounded-full transition-all ${
+                          user.isAdmin === true
+                            ? "bg-custom-main"
+                            : "bg-gray-300"
+                        }`}
+                      ></div>
+                      <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
+                    </label>
+                  </td>
+
+                  <td className="px-4 py-3">
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input
+                        type="checkbox"
                         checked={user.status === "active"}
                         onChange={() => toggleUserStatus(user.id)}
                         className="sr-only peer"
@@ -387,7 +371,17 @@ const UserTable = () => {
                       ></div>
                     </label>
                   </td>
-                  <td className="px-2 py-2 flex">
+                  <td className="px-4 py-3">
+                    <input
+                      type="number"
+                      defaultValue={user.inviteCount || 0}
+                      onBlur={(e) =>
+                        handleInviteUpdate(user.id, e.target.value)
+                      }
+                      className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
+                    />
+                  </td>
+                  <td className="px-2 py-2 flex mt-2">
                     <Tooltip label="Edit">
                       <button
                         onClick={() => openModal(user)}

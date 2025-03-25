@@ -31,6 +31,7 @@ export class AuthController {
       const result = await this.authService.register(registerDto);
       return result;
     } catch (error) {
+      console.log(error)
       if (error.name === 'ConflictException') {
         throw new BadRequestException(error.message);
       }

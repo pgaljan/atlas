@@ -96,7 +96,6 @@ export class UserController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Patch('update/:id')
   async updateUser(
     @Param('id') id: string,
@@ -117,7 +116,6 @@ export class UserController {
     }
   }
 
-  // @UseGuards(JwtAuthGuard)
   @Patch('change-password/:id')
   async changePassword(
     @Param('id') id: string,

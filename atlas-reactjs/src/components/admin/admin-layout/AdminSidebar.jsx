@@ -4,7 +4,6 @@ import { Link, useLocation } from "react-router-dom";
 import { IoMdArrowRoundBack } from "react-icons/io";
 import { FaUsersGear } from "react-icons/fa6";
 import { MdWorkspacePremium } from "react-icons/md";
-import { ImUserPlus } from "react-icons/im";
 
 const ownTheme = {
   root: {
@@ -14,7 +13,7 @@ const ownTheme = {
       off: "w-64",
     },
     inner:
-      "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 pt-0 pb-4 px-3 border-t-0",
+      "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 pt-2 pb-4 px-3 border-t-0",
   },
   item: {
     base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-[#660000] transition duration-75",
@@ -34,17 +33,12 @@ const AdminSidebar = () => {
     {
       name: "Users",
       icon: FaUsersGear,
-      link: "/app/admin/user-management",
-    },
-    {
-      name: "Administrators",
-      icon: ImUserPlus,
-      link: "/app/admin/administrator-management",
+      link: "/app/admin-portal/user-management",
     },
     {
       name: "Subscription Plan",
       icon: MdWorkspacePremium,
-      link: "/app/admin/subscription-plan",
+      link: "/app/admin-portal/subscription-plan",
     },
   ];
 

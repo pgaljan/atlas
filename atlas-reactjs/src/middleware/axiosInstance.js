@@ -31,15 +31,31 @@ export const handleLogout = async () => {
     "atlas_userId",
     "atlas_username",
     "atlas_email",
+    "atlas_admin_token", 
+    "workspaceId", 
   ];
 
   keysToRemove.forEach((key) => Cookies.remove(key));
   window.location.href = "/";
 };
 
-// Token validation helper
+// Token validation helper for regular users
 export const isTokenValid = async () => {
   const token = Cookies.get("atlas_access_token");
+  if (!token) {
+    return false;
+  }
+
+  try {
+    return true;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Admin token validation helper
+export const isAdminTokenValid = async () => {
+  const token = Cookies.get("atlas_admin_token");
   if (!token) {
     return false;
   }

@@ -18,7 +18,6 @@ export class TeamMemberService {
     role: string,
     ownerId: string,
   ) {
-    // Check if team exists and is owned by the requester
     const team = await this.prisma.team.findUnique({
       where: { id: teamId },
     });
@@ -34,7 +33,6 @@ export class TeamMemberService {
     let user = await this.prisma.user.findUnique({ where: { email } });
 
     if (!user) {
-      // Create user with a pending status
       user = await this.prisma.user.create({
         data: {
           email,
@@ -48,10 +46,8 @@ export class TeamMemberService {
       });
     }
 
-    // Generate verification code
     const verificationCode = randomUUID();
 
-    // Store verification code
     await this.prisma.token.create({
       data: {
         userId: user.id,
@@ -61,16 +57,15 @@ export class TeamMemberService {
       },
     });
 
-    // Add team member entry
     await this.prisma.teamMember.create({
       data: {
         teamId,
         userId: user.id,
+        workspaceId: team.workspaceId,
         role,
       },
     });
 
-    // Return verification code (should be emailed in a real system)
     return { message: 'Invitation sent', verificationCode };
   }
 

@@ -136,6 +136,7 @@ const NodeModal = ({
       if (!deleteRecordId) {
         await dispatch(deleteElement(elementId)).unwrap();
         cogoToast.success("Element deleted successfully!");
+        onSuccess();
       } else {
         await dispatch(deleteRecord(deleteRecordId)).unwrap();
         cogoToast.success("Record deleted successfully!");
@@ -143,7 +144,6 @@ const NodeModal = ({
       setDeleteModalVisible(false);
       setDeleteRecordId(null);
       onClose();
-      onSuccess();
     } catch (error) {
       cogoToast.error(
         "Error deleting element: " + (error.message || "Unknown error")
@@ -195,6 +195,7 @@ const NodeModal = ({
     switch (actionType) {
       case "add":
         setActionType("add");
+        setElementValue(initialStructureName);
         setModalVisible(true);
         setIsEdit(false);
         break;
@@ -244,6 +245,11 @@ const NodeModal = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleRecordSuccess = (newRecordId) => {
+    setRecordId(newRecordId);
+    dispatch(getRecordById(newRecordId));
   };
 
   return (
@@ -380,6 +386,7 @@ const NodeModal = ({
           onClose={() => setModalVisible(false)}
           onSuccess={onClose}
           fetchData={onSuccess}
+          elementValue={elementValue}
           elementId={elementId}
           isEdit={isEdit}
           actionType={actionType}

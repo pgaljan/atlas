@@ -63,6 +63,7 @@ const Login = () => {
         Cookies.set("atlas_email", response.user.email, { expires: 1 });
         Cookies.set("atlas_username", response.user.username, { expires: 1 });
         Cookies.set("atlas_userId", response.user.id, { expires: 1 });
+        Cookies.set("workspaceId", response.user.workspaceId, { expires: 1 });
 
         cogoToast.success("Login successful!");
         navigate("/app/dashboard");
