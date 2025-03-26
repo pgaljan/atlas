@@ -18,18 +18,29 @@ import {
   updateUser,
 } from "../../../redux/slices/users";
 
-const UserTable = () => {
+const index = () => {
   const dispatch = useDispatch();
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Sort");
-  const options = ["Personal", "Analyst", "Business", "Educator"];
+  const options = [
+    "Personal",
+    "Analyst",
+    "Business",
+    "Educator",
+    "User",
+    "Admin",
+  ];
   const sortRef = useOutsideClick(() => setIsSortOpen(false));
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
+
+  // New states for filtering
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterActive, setFilterActive] = useState(false);
 
   const openModal = (user = null) => {
     setEditingUser(user);
@@ -223,30 +234,46 @@ const UserTable = () => {
       }
     : undefined;
 
+  // Filter table data based on search term and status checkbox
+  const filteredUsers = tableData.filter((user) => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      user.fullName?.toLowerCase().includes(searchLower) ||
+      user.username?.toLowerCase().includes(searchLower) ||
+      user.email?.toLowerCase().includes(searchLower);
+    const matchesStatus = filterActive ? user.status === "active" : true;
+    return matchesSearch && matchesStatus;
+  });
+
   return (
     <AdminLayout>
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <div className="mb-6 flex justify-between w-full items-center">
-            <h2 className="text-3xl font-semibold text-gray-800">Users</h2>
-            <div className="flex items-center gap-3">
-              {/* Export Users Button */}
-              <button
-                onClick={handleExportUsers}
-                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
-              >
-                <MdOutlineDownloading size={20} />
-                Export Users
-              </button>
-
-              {/* Add User Button */}
-              <button
-                onClick={() => openModal()}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-              >
-                <MdGroupAdd size={20} />
-                Add User
-              </button>
+          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between w-full">
+            <h2 className="text-3xl font-semibold text-gray-800 mb-4 sm:mb-0">
+              Users
+            </h2>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+              {/* Search Box */}
+              <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+                <input
+                  type="text"
+                  placeholder="Search users..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="px-4 py-2 w-64 focus:outline-none focus:border-custom-main"
+                />
+              </div>
+              {/* Status Checkbox */}
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={filterActive}
+                  onChange={() => setFilterActive((prev) => !prev)}
+                  className="form-checkbox h-5 w-5 text-custom-main"
+                />
+                <span className="text-gray-700">Active Only</span>
+              </label>
 
               {/* Sort Dropdown */}
               <div className="relative z-20" ref={sortRef}>
@@ -257,7 +284,6 @@ const UserTable = () => {
                   {selectedOption}
                   <FaChevronDown className="text-gray-500 ml-2" />
                 </button>
-
                 {isSortOpen && (
                   <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
                     {options.map((option) => (
@@ -272,6 +298,22 @@ const UserTable = () => {
                   </ul>
                 )}
               </div>
+
+              {/* Export Users Button */}
+              <button
+                onClick={handleExportUsers}
+                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
+              >
+                <MdOutlineDownloading size={20} />
+                Export Users
+              </button>
+              {/* Add User Button */}
+              <button
+                onClick={() => openModal()}
+                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
+              >
+                <MdGroupAdd size={20} />
+              </button>
             </div>
           </div>
 
@@ -309,7 +351,7 @@ const UserTable = () => {
               </tr>
             </thead>
             <tbody>
-              {tableData.map((user) => (
+              {filteredUsers.map((user) => (
                 <tr key={user.id} className="border-b border-gray-100">
                   <td className="px-5 py-4 sm:px-6">
                     <div className="flex items-center gap-3">
@@ -350,7 +392,6 @@ const UserTable = () => {
                       <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
                     </label>
                   </td>
-
                   <td className="px-4 py-3">
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
@@ -409,4 +450,4 @@ const UserTable = () => {
   );
 };
 
-export default UserTable;
+export default index;

@@ -29,6 +29,7 @@ export class BackupController {
   async createBackup(
     @Query('userId') userId: string,
     @Query('structureId') structureId?: string,
+    @Query('workspaceId') workspaceId?: string,
   ) {
     try {
       if (!userId || !this.isValidUUID(userId)) {
@@ -45,7 +46,11 @@ export class BackupController {
         );
       }
 
-      return await this.backupService.createBackup(userId, structureId);
+      return await this.backupService.createBackup(
+        userId,
+        structureId,
+        workspaceId,
+      );
     } catch (error) {
       if (error instanceof HttpException) {
         throw error;
@@ -79,9 +84,9 @@ export class BackupController {
     }
   }
 
-  @Get('user/:userId')
-  async getBackupByUserId(@Param('userId') userId: string) {
-    return await this.backupService.getBackupByUserId(userId);
+  @Get('workspace/:workspaceId')
+  async getBackupByWorkspaceId(@Param('workspaceId') workspaceId: string) {
+    return await this.backupService.getBackupByWorkspaceId(workspaceId);
   }
 
   @Get(':id')
@@ -94,7 +99,6 @@ export class BackupController {
       if (error instanceof HttpException) {
         throw error;
       }
-      console.error('Unexpected error during fetching backup:', error);
       throw new HttpException(
         error.message || 'Failed to retrieve the backup',
         HttpStatus.INTERNAL_SERVER_ERROR,

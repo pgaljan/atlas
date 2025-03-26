@@ -2,7 +2,7 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
-import AdminPrivateRoute from "./routes/AdminPrivateRoute"; 
+import AdminPrivateRoute from "./routes/AdminPrivateRoute";
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
 const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
@@ -42,24 +42,30 @@ const MarkmapCanvas = lazy(() =>
 
 // Admin Portal Pages
 const UserTable = lazy(() =>
-  import("./containers/admin-portal/users-management")
+  import("./containers/admin-portal/users-management/index")
 );
 const UserProfiles = lazy(() =>
   import("./containers/admin-portal/user-profile")
 );
 const SubscriptionTable = lazy(() =>
-  import("./containers/admin-portal/subscription-management")
+  import("./containers/admin-portal/subscription-management/index")
 );
 const AdminDashboard = lazy(() =>
   import("./containers/admin-portal/dashboard")
 );
-const AdminLogin = lazy(() => import("./containers/admin-portal/login"));
+const AdminLogin = lazy(() => import("./containers/admin-portal/admin-login"));
 
 // Route Grouping
 const authRoutes = [
   { path: "/", element: <Login /> },
   { path: "/register", element: <Register /> },
   { path: "/reset-password", element: <ResetPassword /> },
+  { path: "/admin-portal", element: <AdminLogin /> },
+  { path: "/app/admin-portal/user-management", element: <UserTable /> },
+  {
+    path: "/app/admin-portal/subscription-plan",
+    element: <SubscriptionTable />,
+  },
 ];
 
 const callbackRoutes = [
@@ -87,11 +93,8 @@ const userRoutes = [
 ];
 
 const adminRoutes = [
-  { path: "/app/admin-portal/user-management", element: <UserTable /> },
   { path: "/app/admin-portal/user-profile", element: <UserProfiles /> },
-  { path: "/app/admin-portal/subscription-plan", element: <SubscriptionTable /> },
   { path: "/app/admin-portal/dashboard", element: <AdminDashboard /> },
-  { path: "/app/admin-portal", element: <AdminLogin /> },
 ];
 
 const App = () => {
@@ -137,7 +140,6 @@ const App = () => {
               element={<PrivateRoute>{element}</PrivateRoute>}
             />
           ))}
-          {/* Admin Private Routes */}
           {adminRoutes.map(({ path, element }) => (
             <Route
               key={path}

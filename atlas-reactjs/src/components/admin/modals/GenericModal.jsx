@@ -21,7 +21,7 @@ const GenericModal = ({
   };
 
   const [formData, setFormData] = useState(
-    initialData || (type === "user" ? defaultUserData : defaultSubscriptionData)
+    initialData || (type === "user" ? defaultUserData : {})
   );
 
   // Local state to store roles and their loading/error status.
@@ -76,70 +76,66 @@ const GenericModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl shadow-lg p-6 w-[600px] h-full max-h-[70%] overflow-scroll">
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-end z-50">
+      <div className="bg-white rounded-3xl shadow-lg p-6 w-[400px] h-full overflow-auto relative">
         <h4 className="mb-2 text-3xl font-bold text-gray-800">{title}</h4>
-        <p className="text-base text-gray-500 mb-6">
-          Enter user details
+        <p className="text-base text-gray-500 mb-3">
+          Please provide the user details below:
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <>
-            <InputField
-              label="Full Name"
-              name="fullName"
-              placeholder="Enter full name"
-              value={formData.fullName}
-              onChange={handleChange}
-            />
-            <InputField
-              label="Username"
-              name="username"
-              placeholder="Enter username"
-              value={formData.username}
-              onChange={handleChange}
-            />
-            <InputField
-              label="Email"
-              name="email"
-              type="email"
-              placeholder="Enter email address"
-              value={formData.email}
-              onChange={handleChange}
-            />
-            <div>
-              <label className="block text-gray-700 font-medium mb-2">
-                Role
-              </label>
-              {rolesLoading ? (
-                <p>Loading roles...</p>
-              ) : rolesError ? (
-                <p className="text-red-500">Failed to load roles</p>
-              ) : (
-                <Select
-                  placeholder="Select Role"
-                  options={roleOptions}
-                  onChange={handleRoleChange}
-                  value={roleOptions.find(
-                    (option) =>
-                      option.value ===
-                      (typeof formData.role === "object"
-                        ? formData.role.id
-                        : formData.role)
-                  )}
-                />
-              )}
-            </div>
-            <InputField
-              label="Password"
-              name="password"
-              type="password"
-              placeholder="Enter password"
-              value={formData.password}
-              onChange={handleChange}
-            />
-          </>
+          <InputField
+            label="Full Name"
+            name="fullName"
+            placeholder="Enter full name"
+            value={formData.fullName}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Username"
+            name="username"
+            placeholder="Enter username"
+            value={formData.username}
+            onChange={handleChange}
+          />
+          <InputField
+            label="Email"
+            name="email"
+            type="email"
+            placeholder="Enter email address"
+            value={formData.email}
+            onChange={handleChange}
+          />
+          <div>
+            <label className="block text-gray-700 font-medium mb-2">Role</label>
+            {rolesLoading ? (
+              <p>Loading roles...</p>
+            ) : rolesError ? (
+              <p className="text-red-500">Failed to load roles</p>
+            ) : (
+              <Select
+                placeholder="Select Role"
+                options={roleOptions}
+                onChange={handleRoleChange}
+                value={roleOptions.find(
+                  (option) =>
+                    option.value ===
+                    (typeof formData.role === "object"
+                      ? formData.role.id
+                      : formData.role)
+                )}
+              />
+            )}
+          </div>
+          <InputField
+            label="Password"
+            name="password"
+            type="password"
+            placeholder="Enter password"
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-          <div className="flex justify-end gap-4 mt-4">
+          <div className="flex justify-end gap-4 pt-12">
             <button
               type="button"
               className="py-2 px-4 rounded-md bg-gray-600 text-white"

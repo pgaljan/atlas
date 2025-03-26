@@ -44,11 +44,11 @@ export const createFullUserBackup = createAsyncThunk(
 );
 
 // Async thunk to fetch backups by userId
-export const fetchBackupsByUserId = createAsyncThunk(
-  "backup/user",
-  async (userId, { rejectWithValue }) => {
+export const fetchBackupsByWorkspaceId = createAsyncThunk(
+  "backup/workspace",
+  async (workspaceId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/backup/user/${userId}`);
+      const response = await axiosInstance.get(`/backup/workspace/${workspaceId}`);
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

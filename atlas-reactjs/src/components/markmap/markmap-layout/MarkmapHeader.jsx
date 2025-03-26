@@ -376,12 +376,14 @@ const MarkmapHeader = ({
               <BiUser size={24} className="text-custom-main" />
             </button>
           </Tooltip>
-          <Link to="/app/coming-soon">
-            <button className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg">
-              <FaUserPlus size={20} className="mr-2" />
-              Share
-            </button>
-          </Link>
+
+          <button
+            className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
+            onClick={() => setIsShareModalOpen(true)}
+          >
+            <FaUserPlus size={20} className="mr-2" />
+            Share
+          </button>
         </div>
       </div>
       {isUserPopoverVisible && <UserPopover />}

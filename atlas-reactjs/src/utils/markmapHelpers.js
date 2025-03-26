@@ -22,7 +22,7 @@ export const assignWbsNumbers = (
   return wbsNode;
 };
 
-const truncateText = (text, limit = 10) => {
+const truncateText = (text, limit = 16) => {
   if (!text) return "";
   return text.length > limit ? text.substring(0, limit) + "..." : text;
 };
@@ -34,7 +34,7 @@ export const treeToMarkmapData = (node, showWbs) => {
   const isRoot = node.level === 0;
   const truncatedContent = isRoot
     ? actualContent
-    : truncateText(actualContent, 10);
+    : truncateText(actualContent, 16);
   const updatedContent =
     showWbs && node.wbs && node.wbs !== "1"
       ? `${node.wbs} - ${truncatedContent}`

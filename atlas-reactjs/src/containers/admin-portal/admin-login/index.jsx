@@ -36,10 +36,7 @@ const AdminLogin = () => {
 
     try {
       const response = await dispatch(loginUser({ email, password })).unwrap();
-
-      // Check if user is admin
-      if (!response.user.isAdmin === true) {
-        // Remove token if set
+      if (!response.user.isAdmin) {
         Cookies.remove("atlas_admin_token");
         cogoToast.error("You are not authorized to access the admin area");
         setIsSubmitting(false);
@@ -55,6 +52,7 @@ const AdminLogin = () => {
       cogoToast.success("Admin login successful!");
       navigate("/app/admin-portal/user-management");
     } catch (error) {
+      console.error("Login error:", error);
       cogoToast.error(error.message || "Admin login failed!");
     } finally {
       setIsSubmitting(false);

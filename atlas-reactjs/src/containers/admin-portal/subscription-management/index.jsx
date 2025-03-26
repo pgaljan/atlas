@@ -17,7 +17,7 @@ import {
   createPlan,
 } from "../../../redux/slices/plans";
 
-const SubscriptionTable = () => {
+const index = () => {
   const dispatch = useDispatch();
   const [tableData, setTableData] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
@@ -278,4 +278,4 @@ const SubscriptionTable = () => {
   );
 };
 
-export default SubscriptionTable;
+export default index;

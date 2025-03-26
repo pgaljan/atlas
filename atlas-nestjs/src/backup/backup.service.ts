@@ -50,7 +50,11 @@ export class BackupService {
     });
   }
 
-  async createBackup(userId: string, structureId?: string) {
+  async createBackup(
+    userId: string,
+    structureId?: string,
+    workspaceId?: string,
+  ) {
     try {
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
@@ -176,12 +180,20 @@ export class BackupService {
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
       const title = `${structure.title || structure.name}-${timestamp}`;
 
+      const validWorkspaceId = workspaceId || user.defaultWorkspaceId;
+      if (!validWorkspaceId) {
+        throw new InternalServerErrorException(
+          'No valid workspaceId provided for backup creation',
+        );
+      }
+
       const backup = await this.prisma.backup.create({
         data: {
           userId,
           title,
           backupData: { filePath: zipFilePath },
           fileUrl,
+          workspaceId: validWorkspaceId,
         },
       });
 
@@ -307,8 +319,8 @@ export class BackupService {
     }
   }
 
-  async getBackupByUserId(userId: string) {
-    return await this.prisma.backup.findMany({ where: { userId } });
+  async getBackupByWorkspaceId(workspaceId: string) {
+    return await this.prisma.backup.findMany({ where: { workspaceId } });
   }
 
   async getBackup(backupId: string) {
@@ -326,7 +338,6 @@ export class BackupService {
         publicUrl: backup.fileUrl,
       };
     } catch (error) {
-      console.error('Error fetching backup:', error);
       throw new InternalServerErrorException('Failed to retrieve the backup');
     }
   }

@@ -8,12 +8,12 @@ import DeleteModal from "../../../components/modals/DeleteModal";
 import { backupConfig } from "../../../constants";
 import {
   deleteBackup,
-  fetchBackupsByUserId,
+  fetchBackupsByWorkspaceId,
 } from "../../../redux/slices/backups";
 
 const Backups = ({ onSubmit }) => {
   const dispatch = useDispatch();
-  const userId = Cookies.get("atlas_userId");
+  const workspaceId = Cookies.get("workspaceId");
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
@@ -21,11 +21,13 @@ const Backups = ({ onSubmit }) => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        if (!userId) {
-          console.error("User ID is not available in cookies.");
+        if (!workspaceId) {
+          console.error("Workspace ID is not available in cookies.");
           return;
         }
-        const result = await dispatch(fetchBackupsByUserId(userId)).unwrap();
+        const result = await dispatch(
+          fetchBackupsByWorkspaceId(workspaceId)
+        ).unwrap();
         setBackups(result);
       } catch (err) {
         console.error("Error fetching backups:", err);
@@ -33,7 +35,7 @@ const Backups = ({ onSubmit }) => {
     };
 
     fetchData();
-  }, [dispatch, userId]);
+  }, [dispatch, workspaceId]);
 
   // Delete Modal Handler
   const handleDelete = (item) => {
@@ -58,7 +60,7 @@ const Backups = ({ onSubmit }) => {
   };
 
   const updatedBackupConfig = {
-  ...backupConfig,
+    ...backupConfig,
     actions: backupConfig.actions.map((action) => {
       if (action.tooltip === "Delete") {
         return { ...action, onClick: handleDelete };

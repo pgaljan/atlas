@@ -46,9 +46,9 @@ const AddSubscriptionModal = ({ isOpen, onClose, onSubmit, title }) => {
   };
 
   return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-3xl shadow-lg p-6 w-[600px] h-full max-h-[70%] overflow-scroll">
-        <h2 className="mb-2 text-3xl font-bold text-gray-800">{title}</h2>
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-end z-50">
+      <div className="bg-white rounded-3xl shadow-lg p-6 w-[400px] h-full overflow-auto relative">
+      <h2 className="mb-2 text-3xl font-bold text-gray-800">{title}</h2>
         <h3 className="text-base text-gray-500 mb-6">
           Add the details to create a new subscription plan.
         </h3>
