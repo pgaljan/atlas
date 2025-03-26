@@ -9,8 +9,8 @@ This document is intended solely for personal use and may not be shared, reprodu
 # Overview
 Atlas is a prototype multi-user structure visualization and annotation platform hosted at [dev.atlasflow.co](https://dev.atlasflow.co), featuring a modular interactive renderer that allows the user to create or calculate multiple structured or unstructured views of a shared dataset (represented as "Elements" and "Records" in the object model). These views can be shared with others, and the same data may be represented in different views while maintaining consistency.
 
-[Strategy Deck](./atlasStrategy.pdf)
-[Object & Data Model](./object-data-model.md)
+- [Strategy Deck](./atlasStrategy.pdf)
+- [Object & Data Model](./object-data-model.md)
 
 # Use Cases
 
