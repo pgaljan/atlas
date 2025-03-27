@@ -61,11 +61,6 @@ const authRoutes = [
   { path: "/register", element: <Register /> },
   { path: "/reset-password", element: <ResetPassword /> },
   { path: "/admin-portal", element: <AdminLogin /> },
-  { path: "/app/admin-portal/user-management", element: <UserTable /> },
-  {
-    path: "/app/admin-portal/subscription-plan",
-    element: <SubscriptionTable />,
-  },
 ];
 
 const callbackRoutes = [
@@ -93,7 +88,12 @@ const userRoutes = [
 ];
 
 const adminRoutes = [
+  { path: "/app/admin-portal/user-management", element: <UserTable /> },
   { path: "/app/admin-portal/user-profile", element: <UserProfiles /> },
+  {
+    path: "/app/admin-portal/subscription-plan",
+    element: <SubscriptionTable />,
+  },
   { path: "/app/admin-portal/dashboard", element: <AdminDashboard /> },
 ];
 

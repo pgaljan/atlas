@@ -146,7 +146,7 @@ const MarkmapEditor = ({ structureId }) => {
       fetchStructure(structureId, dispatch, setTreeData, setIsLoading);
 
       cogoToast.success("Element reparented successfully.");
-      
+
       // Update the tree data locally to reflect the reparenting
       const updatedTree = removeNode(treeData, draggedNodeData.originalContent);
       const newTree = addNodeToTarget(
@@ -360,6 +360,39 @@ const MarkmapEditor = ({ structureId }) => {
     }
   };
 
+  const fetchAndSortStructure = async (
+    structureId,
+    dispatch,
+    setTreeData,
+    setIsLoading
+  ) => {
+    if (!structureId) return;
+
+    try {
+      const data = await dispatch(getStructure(structureId)).unwrap();
+      const treeWithWbs = assignWbsNumbers({
+        content: data.name,
+        children: data.elements,
+        structureId: data.id,
+      });
+      setShowWbsState(data.markmapShowWbs);
+
+      const sortedTree = {
+        ...treeWithWbs,
+        children: [...(treeWithWbs.children || [])].sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        ),
+      };
+
+      const treeWithLevels = updateNodeLevels(sortedTree);
+      setTreeData(treeWithLevels);
+    } catch (error) {
+      cogoToast.error("Failed to fetch structure data");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
@@ -411,7 +444,12 @@ const MarkmapEditor = ({ structureId }) => {
           }
           onDelete={() => deleteNode(modalData)}
           onSuccess={() =>
-            fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
+            fetchAndSortStructure(
+              structureId,
+              dispatch,
+              setTreeData,
+              setIsLoading
+            )
           }
           nodeData={modalData}
         />

@@ -68,18 +68,23 @@ const index = () => {
     setIsDeleteModalOpen(false);
   };
 
-  useEffect(() => {
+  const fetchUsersData = async () => {
     setLoading(true);
-    dispatch(fetchAllUsers())
-      .unwrap()
-      .then((users) => {
-        setTableData(users);
-        setLoading(false);
-      })
-      .catch((error) => {
-        console.error("Failed to fetch users:", error);
-        setLoading(false);
-      });
+    try {
+      const users = await dispatch(fetchAllUsers()).unwrap();
+      const sortedUsers = [...users].sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setTableData(sortedUsers);
+    } catch (error) {
+      console.error("Failed to fetch users:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchUsersData();
   }, [dispatch]);
 
   const headers = [
@@ -92,17 +97,25 @@ const index = () => {
     "Actions",
   ];
 
-  const toggleUserStatus = (id) => {
-    setTableData((prevData) =>
-      prevData.map((user) =>
-        user.id === id
-          ? {
-              ...user,
-              status: user.status === "active" ? "inactive" : "active",
-            }
-          : user
-      )
-    );
+  const toggleUserStatus = async (id) => {
+    const user = tableData.find((u) => u.id === id);
+    if (!user) return;
+
+    const newStatus = user.status === "active" ? "inactive" : "active";
+
+    try {
+      await dispatch(
+        updateUser({ userId: id, updateData: { status: newStatus } })
+      ).unwrap();
+      cogoToast.success("User status updated successfully!");
+      setTableData((prevData) =>
+        prevData.map((user) =>
+          user.id === id ? { ...user, status: newStatus } : user
+        )
+      );
+    } catch (error) {
+      cogoToast.error(error.message || "Failed to update user status");
+    }
   };
 
   const handleExportUsers = () => {
@@ -130,9 +143,7 @@ const index = () => {
       await dispatch(registerUser(data)).unwrap();
       cogoToast.success("User registered successfully!");
       closeModal();
-      dispatch(fetchAllUsers())
-        .unwrap()
-        .then((users) => setTableData(users));
+      fetchUsersData();
     } catch (error) {
       cogoToast.error(error.message || "Failed to register user");
     }
@@ -153,9 +164,7 @@ const index = () => {
       ).unwrap();
       cogoToast.success("User updated successfully!");
       closeModal();
-      dispatch(fetchAllUsers())
-        .unwrap()
-        .then((users) => setTableData(users));
+      fetchUsersData();
     } catch (error) {
       cogoToast.error(error.message || "Failed to update user");
     }
@@ -173,9 +182,7 @@ const index = () => {
 
       cogoToast.success("User deleted successfully!");
       closeDeleteModal();
-      dispatch(fetchAllUsers())
-        .unwrap()
-        .then((users) => setTableData(users));
+      fetchUsersData();
     } catch (error) {
       cogoToast.error(error.message || "Failed to delete user");
     }
@@ -192,6 +199,7 @@ const index = () => {
       setTableData((prevData) =>
         prevData.map((u) => (u.id === id ? updatedUser : u))
       );
+      fetchUsersData();
       cogoToast.success("User admin status updated successfully!");
     } catch (error) {
       cogoToast.error(error.message || "Failed to update admin status");
@@ -351,97 +359,105 @@ const index = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredUsers.map((user) => (
-                <tr key={user.id} className="border-b border-gray-100">
-                  <td className="px-5 py-4 sm:px-6">
-                    <div className="flex items-center gap-3">
-                      <img
-                        className="w-10 h-10 rounded-full"
-                        src={user.image || "/assets/userimg.jpeg"}
-                        alt={user.username}
-                      />
-                      <div>
-                        <p className="text-gray-600 font-medium">
-                          {user.fullName}
-                        </p>
-                        <p className="text-gray-500 text-sm italic">
-                          @{user.username}
-                        </p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">{user.email}</td>
-                  <td className="px-4 py-3 capitalize text-gray-500">
-                    {user.role?.name}
-                  </td>
-                  <td className="px-4 py-3">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={user.isAdmin === true}
-                        onChange={() => toggleAdminStatus(user.id)}
-                        className="sr-only peer"
-                      />
-                      <div
-                        className={`w-12 h-6 rounded-full transition-all ${
-                          user.isAdmin === true
-                            ? "bg-custom-main"
-                            : "bg-gray-300"
-                        }`}
-                      ></div>
-                      <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
-                    </label>
-                  </td>
-                  <td className="px-4 py-3">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={user.status === "active"}
-                        onChange={() => toggleUserStatus(user.id)}
-                        className="sr-only peer"
-                      />
-                      <div
-                        className={`w-12 h-6 rounded-full transition-all ${
-                          user.status === "active"
-                            ? "bg-custom-main"
-                            : "bg-gray-300"
-                        }`}
-                      ></div>
-                      <div
-                        className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform`}
-                      ></div>
-                    </label>
-                  </td>
-                  <td className="px-4 py-3">
-                    <input
-                      type="number"
-                      defaultValue={user.inviteCount || 0}
-                      onBlur={(e) =>
-                        handleInviteUpdate(user.id, e.target.value)
-                      }
-                      className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
-                    />
-                  </td>
-                  <td className="px-2 py-2 flex mt-2">
-                    <Tooltip label="Edit">
-                      <button
-                        onClick={() => openModal(user)}
-                        className="p-2 text-custom-main rounded transition hover:text-green-600"
-                      >
-                        <TbEditCircle className="w-5 h-5" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip label="Delete">
-                      <button
-                        onClick={() => openDeleteModal(user)}
-                        className="p-2 text-red-500 rounded transition hover:text-red-600"
-                      >
-                        <IoTrash className="w-5 h-5" />
-                      </button>
-                    </Tooltip>
+              {filteredUsers.length === 0 ? (
+                <tr>
+                  <td colSpan={headers.length} className="text-center py-4">
+                    No users found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filteredUsers.map((user) => (
+                  <tr key={user.id} className="border-b border-gray-100">
+                    <td className="px-5 py-4 sm:px-6">
+                      <div className="flex items-center gap-3">
+                        <img
+                          className="w-10 h-10 rounded-full"
+                          src={user.image || "/assets/userimg.jpeg"}
+                          alt={user.username}
+                        />
+                        <div>
+                          <p className="text-gray-600 font-medium">
+                            {user.fullName}
+                          </p>
+                          <p className="text-gray-500 text-sm italic">
+                            @{user.username}
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3 text-gray-500">{user.email}</td>
+                    <td className="px-4 py-3 capitalize text-gray-500">
+                      {user.role?.name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={user.isAdmin === true}
+                          onChange={() => toggleAdminStatus(user.id)}
+                          className="sr-only peer"
+                        />
+                        <div
+                          className={`w-12 h-6 rounded-full transition-all ${
+                            user.isAdmin === true
+                              ? "bg-custom-main"
+                              : "bg-gray-300"
+                          }`}
+                        ></div>
+                        <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
+                      </label>
+                    </td>
+                    <td className="px-4 py-3">
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={user.status === "active"}
+                          onChange={() => toggleUserStatus(user.id)}
+                          className="sr-only peer"
+                        />
+                        <div
+                          className={`w-12 h-6 rounded-full transition-all ${
+                            user.status === "active"
+                              ? "bg-custom-main"
+                              : "bg-gray-300"
+                          }`}
+                        ></div>
+                        <div
+                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform`}
+                        ></div>
+                      </label>
+                    </td>
+                    <td className="px-4 py-3">
+                      <input
+                        type="number"
+                        defaultValue={user.inviteCount || 0}
+                        onBlur={(e) =>
+                          handleInviteUpdate(user.id, e.target.value)
+                        }
+                        className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
+                      />
+                    </td>
+                    <td className="px-2 py-2 flex mt-2">
+                      <Tooltip label="Edit">
+                        <button
+                          onClick={() => openModal(user)}
+                          className="p-2 text-custom-main rounded transition hover:text-green-600"
+                        >
+                          <TbEditCircle className="w-5 h-5" />
+                        </button>
+                      </Tooltip>
+                      <Tooltip label="Delete">
+                        <button
+                          onClick={() => openDeleteModal(user)}
+                          className="p-2 text-red-500 rounded transition hover:text-red-600"
+                        >
+                          <IoTrash className="w-5 h-5" />
+                        </button>
+                      </Tooltip>
+                    </td>
+                  </tr>
+                ))
+              )}
             </tbody>
           </table>
         </div>

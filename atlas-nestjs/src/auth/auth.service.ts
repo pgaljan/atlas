@@ -9,7 +9,6 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { Plan } from '@prisma/client';
 import * as bcrypt from 'bcryptjs';
-import { v4 as uuidv4 } from 'uuid';
 import * as crypto from 'crypto';
 import { Response } from 'express';
 import { generateFromEmail } from 'unique-username-generator';
@@ -46,7 +45,7 @@ export class AuthService {
 
   // Register method in AuthService
   async register(registerDto: RegisterDto) {
-    const { fullName, email, password, roleName } = registerDto;
+    const { fullName, email, password } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
@@ -73,10 +72,11 @@ export class AuthService {
 
         const hashedPassword = await bcrypt.hash(password, 10);
 
+        const defaultRoleName = 'User';
         const role = await prisma.role.findFirst({
           where: {
             name: {
-              equals: roleName,
+              equals: defaultRoleName,
               mode: 'insensitive',
             },
           },
@@ -384,11 +384,29 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
+        let modifiedUsername = existingUser.fullName;
+        if (existingUser.fullName.includes(' ')) {
+          const parts = existingUser.fullName.split(' ');
+          const baseUsername = parts
+            .map((word, index) =>
+              index === parts.length - 1 ? word : word.toLowerCase(),
+            )
+            .join('_');
+          const suffix = new Date().getFullYear() - 2000;
+          modifiedUsername = `${baseUsername}${suffix}`;
+        }
+
         if (!role) {
           throw new ConflictException(
             `Default role '${defaultRoleName}' not found`,
           );
         }
+
+        const newWorkspace = await this.prismaService.workspace.create({
+          data: {
+            name: `${modifiedUsername}'s Workspace`,
+          },
+        });
 
         existingUser = await this.prismaService.user.create({
           data: {
@@ -397,6 +415,7 @@ export class AuthService {
             fullName: user.name || user.displayName,
             password: '',
             roleId: role.id,
+            defaultWorkspaceId: newWorkspace.id,
           },
         });
 
@@ -490,11 +509,29 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
+        let modifiedUsername = existingUser.fullName;
+        if (existingUser.fullName.includes(' ')) {
+          const parts = existingUser.fullName.split(' ');
+          const baseUsername = parts
+            .map((word, index) =>
+              index === parts.length - 1 ? word : word.toLowerCase(),
+            )
+            .join('_');
+          const suffix = new Date().getFullYear() - 2000;
+          modifiedUsername = `${baseUsername}${suffix}`;
+        }
+
         if (!role) {
           throw new ConflictException(
             `Default role '${defaultRoleName}' not found`,
           );
         }
+
+        const newWorkspace = await this.prismaService.workspace.create({
+          data: {
+            name: `${modifiedUsername}'s Workspace`,
+          },
+        });
 
         existingUser = await this.prismaService.user.create({
           data: {
@@ -503,6 +540,7 @@ export class AuthService {
             fullName: user.name,
             password: '',
             roleId: role.id,
+            defaultWorkspaceId: newWorkspace.id,
           },
         });
 

@@ -110,7 +110,7 @@ const AddQuillModal = ({
         const response = await dispatch(
           createRecord({ elementId, createRecordDto })
         ).unwrap();
-        onSuccess(response.recordId);
+        onSuccess();
         await dispatch(getRecordById(response.recordId)).unwrap();
         cogoToast.success("Record added successfully!");
       }

@@ -26,7 +26,7 @@ const AdminPrivateRoute = ({ children }) => {
     }
     return children;
   } else {
-    return <Navigate to="/app/admin-portal" />;
+    return <Navigate to="/admin-portal" />;
   }
 };
 

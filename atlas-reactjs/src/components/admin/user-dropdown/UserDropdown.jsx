@@ -24,7 +24,7 @@ const UserDropdown = () => {
       Cookies.remove("atlas_admin_token");
 
       cogoToast.success("Logged out successfully!");
-      navigate("/app/admin-portal");
+      navigate("/admin-portal");
     } catch (error) {
       cogoToast.error(
         error?.message ||
