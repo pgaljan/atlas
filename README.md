@@ -11,6 +11,7 @@ Atlas is a prototype multi-user structure visualization and annotation platform 
 
 - [Strategy Deck](./atlasStrategy.pdf)
 - [Object Model, Data Model, Architecture](./object-data-model.md)
+- [User Interface Tour](./atlasUItour.pdf)
 
 # Use Cases
 
