@@ -23,13 +23,19 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
     refreshToken: string,
     profile: any,
   ): Promise<any> {
-    if (!profile || !profile.emails || !profile.emails[0]) {
-      throw new BadRequestException('Invalid Google user data');
-    }
+    try {
 
-    return {
-      email: profile.emails[0].value,
-      name: profile.displayName,
-    };
+      if (!profile || !profile.emails || !profile.emails[0]) {
+        throw new BadRequestException('Invalid Google user data');
+      }
+
+      return {
+        email: profile.emails[0].value,
+        name: profile.displayName,
+      };
+    } catch (error) {
+      console.error('Error during Google authentication:', error);
+      throw new BadRequestException('Error during Google authentication');
+    }
   }
 }

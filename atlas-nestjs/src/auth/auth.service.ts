@@ -142,7 +142,6 @@ export class AuthService {
         };
       });
     } catch (error) {
-      console.log(error);
       if (error instanceof ConflictException) {
         throw error;
       }
@@ -389,9 +388,12 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
-        let modifiedUsername = existingUser.fullName;
-        if (existingUser.fullName.includes(' ')) {
-          const parts = existingUser.fullName.split(' ');
+        // Ensure we have the fullName or default to displayName if it's missing
+        const fullName = user.name || user.displayName;
+
+        let modifiedUsername = fullName;
+        if (fullName && fullName.includes(' ')) {
+          const parts = fullName.split(' ');
           const baseUsername = parts
             .map((word, index) =>
               index === parts.length - 1 ? word : word.toLowerCase(),
@@ -413,11 +415,12 @@ export class AuthService {
           },
         });
 
+        // Create new user entry
         existingUser = await this.prismaService.user.create({
           data: {
             email: user.email,
             username: generateFromEmail(user.email, 5),
-            fullName: user.name || user.displayName,
+            fullName: fullName,
             password: '',
             roleId: role.id,
             defaultWorkspaceId: newWorkspace.id,
@@ -493,6 +496,7 @@ export class AuthService {
         `${frontendUrl}/app/google-callback?token=${encodeURIComponent(encryptedPayload)}`,
       );
     } catch (error) {
+      console.log(error);
       throw new InternalServerErrorException('Google login failed');
     }
   }
