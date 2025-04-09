@@ -20,8 +20,8 @@ import {
 } from "../../../utils/markmapHelpers"
 import NodeModal from "../../modals/NodeModal"
 import RightClickMenu from "../../modals/RightClickMenu"
-import MarkmapHeader from "../markmap-layout/MarkmapHeader"
 import useMarkmap from "../markmap-context/MarkmapContext"
+import MarkmapHeader from "../markmap-layout/MarkmapHeader"
 
 const MarkmapEditor = ({ structureId }) => {
   const dispatch = useDispatch()

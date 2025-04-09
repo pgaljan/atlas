@@ -53,6 +53,7 @@ const GithubCallback = () => {
         Cookies.set("atlas_userId", parsedUserData.userId, { expires: 1 });
         Cookies.set("atlas_email", parsedUserData.email, { expires: 1 });
         Cookies.set("atlas_username", parsedUserData.username, { expires: 1 });
+        Cookies.set("workspaceId", parsedUserData.workspaceId, { expires: 1 });
 
         setUserData(parsedUserData);
         cogoToast.success("Login successful!");

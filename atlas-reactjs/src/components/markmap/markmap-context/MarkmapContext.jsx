@@ -19,8 +19,7 @@ export const MarkmapProvider = ({ children }) => {
         autoFit: true,
         nodeMinHeight: 20,
         duration: 300,
-        // The color function now returns the color assigned in node.data.
-        color: node => node.color || "#1f77b4", // Default to blue if no color is assigned
+        color: node => node.color || "#1f77b4", 
       })
 
       setMarkmapInstance(instance)

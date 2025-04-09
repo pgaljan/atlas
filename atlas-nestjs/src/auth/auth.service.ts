@@ -480,6 +480,7 @@ export class AuthService {
         userId: existingUser.id,
         email: existingUser.email,
         username: existingUser.username,
+        workspaceId: existingUser.defaultWorkspaceId,
       });
 
       // Generate IV
@@ -599,6 +600,7 @@ export class AuthService {
         userId: existingUser.id,
         email: existingUser.email,
         username: existingUser.username,
+        workspaceId: existingUser.defaultWorkspaceId,
       });
 
       const iv = crypto.randomBytes(16);

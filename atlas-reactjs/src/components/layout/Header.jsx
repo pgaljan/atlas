@@ -22,6 +22,7 @@ const Header = () => {
       Cookies.remove("atlas_userId");
       Cookies.remove("atlas_username");
       Cookies.remove("atlas_email");
+      Cookies.remove("workspaceId");
 
       cogoToast.success("Logged out successfully!");
       navigate("/");
