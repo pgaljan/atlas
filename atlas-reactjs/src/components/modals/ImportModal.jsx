@@ -1,8 +1,8 @@
-import React, { useEffect, useRef, useState } from "react";
-import cogoToast from "@successtar/cogo-toast";
-import { GoCheck, GoCopy } from "react-icons/go";
-import Tooltip from "../tooltip/Tooltip";
-import { sampleData } from "../../constants";
+import React, { useEffect, useRef, useState } from "react"
+import cogoToast from "@successtar/cogo-toast"
+import { GoCheck, GoCopy } from "react-icons/go"
+import Tooltip from "../tooltip/Tooltip"
+import { sampleData } from "../../constants"
 const ImportModal = ({
   isOpen,
   onClose,
@@ -13,118 +13,123 @@ const ImportModal = ({
   isLoading,
   showDownloadSample = false,
 }) => {
-  const [dragging, setDragging] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [selectedFormat, setSelectedFormat] = useState("");
-  const [copied, setCopied] = useState(false);
+  const [dragging, setDragging] = useState(false)
+  const [selectedFile, setSelectedFile] = useState(null)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [selectedFormat, setSelectedFormat] = useState("")
+  const [copied, setCopied] = useState(false)
 
-  const handleFormatChange = (e) => {
-    setSelectedFormat(e.target.value);
-  };
+  const handleFormatChange = e => {
+    setSelectedFormat(e.target.value)
+  }
 
   const allowedExtensions = format
     .split(",")
-    .map((ext) => ext?.trim()?.replace(".", ""));
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragging(true);
-  };
+    .map(ext => ext?.trim()?.replace(".", ""))
+  const handleDragOver = e => {
+    e.preventDefault()
+    setDragging(true)
+  }
 
-  const handleDragLeave = (e) => {
-    e.preventDefault();
-    setDragging(false);
-  };
+  const handleDragLeave = e => {
+    e.preventDefault()
+    setDragging(false)
+  }
 
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragging(false);
+  const handleDrop = e => {
+    e.preventDefault()
+    setDragging(false)
 
-    const file = e.dataTransfer?.files[0];
-    validateFile(file);
-  };
+    const file = e.dataTransfer?.files[0]
+    validateFile(file)
+  }
 
-  const handleFileSelect = (e) => {
-    const file = e.target?.files[0];
-    validateFile(file);
-  };
+  const handleFileSelect = e => {
+    const file = e.target?.files[0]
+    validateFile(file)
+  }
 
-  const validateFile = (file) => {
-    const fileExtension = file?.name?.split(".")?.pop()?.toLowerCase();
+  const validateFile = file => {
+    const fileExtension = file?.name?.split(".")?.pop()?.toLowerCase()
     if (file && allowedExtensions?.includes(fileExtension)) {
-      setSelectedFile(file);
-      setErrorMessage("");
+      setSelectedFile(file)
+      setErrorMessage("")
     } else {
       setErrorMessage(
         `Only ${format} files are allowed. Please upload a valid file.`
-      );
-      setSelectedFile(null);
+      )
+      setSelectedFile(null)
     }
-  };
+  }
   const handleConfirmUpload = () => {
     if (selectedFile) {
-      handleFileSelection(selectedFile);
-      setSelectedFile(null);
-      onClose();
+      handleFileSelection(selectedFile)
+      setSelectedFile(null)
+      onClose()
     } else {
-      setErrorMessage("No file selected!");
+      setErrorMessage("No file selected!")
     }
-  };
+  }
 
-  const fallbackCopy = (text) => {
-    const textarea = document.createElement("textarea");
-    textarea.value = text;
-    document.body.appendChild(textarea);
-    textarea.select();
-    const success = document.execCommand("copy");
-    document.body.removeChild(textarea);
+  const fallbackCopy = text => {
+    const textarea = document.createElement("textarea")
+    textarea.value = text
+    document.body.appendChild(textarea)
+    textarea.select()
+    const success = document.execCommand("copy")
+    document.body.removeChild(textarea)
 
     success
       ? cogoToast.success("Data copied to clipboard!")
-      : cogoToast.error("Failed to copy data");
-  };
+      : cogoToast.error("Failed to copy data")
+  }
 
   const copyToClipboard = async (data, format) => {
-    let formattedData = data;
+    let formattedData = data
     if (format === "xlsx") {
-      formattedData = data.replace(/,/g, "\t");
+      formattedData = data.replace(/,/g, "\t")
     } else if (format === "csv") {
       formattedData = data
         .split("\n")
-        .map((row) =>
+        .map(row =>
           row
             .split(",")
-            .map((value) => `"${value.trim()}"`)
+            .map(value => `"${value.trim()}"`)
             .join(",")
         )
-        .join("\n");
+        .join("\n")
     } else if (format === "json") {
-      formattedData = JSON.stringify(JSON.parse(data), null, 2);
+      formattedData = JSON.stringify(JSON.parse(data), null, 2)
     }
 
     if (navigator?.clipboard?.writeText) {
       try {
-        await navigator.clipboard.writeText(formattedData);
+        await navigator.clipboard.writeText(formattedData)
         return cogoToast.success(
           `${format.toUpperCase()} data copied to clipboard!`
-        );
+        )
       } catch {
-        fallbackCopy(formattedData);
+        fallbackCopy(formattedData)
       }
     } else {
-      fallbackCopy(formattedData);
+      fallbackCopy(formattedData)
     }
-  };
+  }
 
   const handleCopy = () => {
     if (selectedFormat) {
-      copyToClipboard(sampleData[selectedFormat], selectedFormat);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      copyToClipboard(sampleData[selectedFormat], selectedFormat)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
-  };
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
+  const handleCancel = () => {
+    setSelectedFile(null)
+    setErrorMessage("")
+    onClose()
+  }
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -140,7 +145,7 @@ const ImportModal = ({
             <div className="flex justify-center space-x-4">
               <button
                 className="bg-gray-500 text-white px-4 py-2 rounded"
-                onClick={onClose}
+                onClick={handleCancel}
               >
                 Cancel
               </button>
@@ -279,7 +284,7 @@ const ImportModal = ({
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default ImportModal;
+export default ImportModal

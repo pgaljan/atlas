@@ -66,6 +66,7 @@ export const exportAsDoc = (treeData) => {
   };
 
   treeData.children.forEach((child) => processNode(child));
+  const sanitizedData = sanitizeTreeData(treeData);
 
   const htmlContent = `<!DOCTYPE html>
 <html>
@@ -89,8 +90,11 @@ export const exportAsDoc = (treeData) => {
     <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
     <script>
       window.onload = function () {
-        const data = ${JSON.stringify(treeData, null, 2)};
-        const markmapInstance = window.markmap.Markmap.create("#mindmap", null, data);
+ const data = ${JSON.stringify(
+   sanitizedData,
+   null,
+   2
+ )};         const markmapInstance = window.markmap.Markmap.create("#mindmap", null, data);
       };
     </script>
   </body>
@@ -132,7 +136,7 @@ export const exportAsPdf = async (treeData) => {
   // Helper function to strip HTML tags
   const stripHtml = (html) => {
     const tmp = document.createElement("DIV");
-    tmp.innerHTML = html; 
+    tmp.innerHTML = html;
     return tmp.textContent || tmp.innerText || "";
   };
 
@@ -159,9 +163,9 @@ export const exportAsPdf = async (treeData) => {
       let yOffset = 40;
       for (let img of images) {
         try {
-          const imageData = img.src; 
-          const width = 80; 
-          const height = 80; 
+          const imageData = img.src;
+          const width = 80;
+          const height = 80;
           doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
           yOffset += height + 10;
         } catch (error) {
@@ -218,7 +222,7 @@ export const exportAsPdf = async (treeData) => {
     <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
     <script>
       window.onload = function () {
-        const data = ${JSON.stringify(treeData, null, 2)};
+        const data = ${JSON.stringify(sanitizedData, null, 2)};
         const markmapInstance = window.markmap.Markmap.create("#mindmap", null, data);
       };
     </script>

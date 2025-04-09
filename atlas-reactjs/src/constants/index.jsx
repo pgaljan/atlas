@@ -1,5 +1,6 @@
 import React from "react";
 import { BsDatabaseFillCheck } from "react-icons/bs";
+import { FaSlideshare } from "react-icons/fa";
 import { HiUsers } from "react-icons/hi2";
 import { IoTrash } from "react-icons/io5";
 import { MdOutlineRestore, MdPermMedia } from "react-icons/md";
@@ -8,6 +9,7 @@ import Icons from "./icons";
 
 export const teamMembersConfig = {
   title: "Team Members",
+  showId: true, 
   tabs: [
     { key: "users", label: "Users" },
     { key: "pending", label: "Pending Invitations" },
@@ -23,7 +25,6 @@ export const teamMembersConfig = {
     { key: "name", label: "Full Name" },
     { key: "email", label: "Email" },
     { key: "userType", label: "Role" },
-    { key: "lastAccess", label: "Last Login" },
     { key: "status", label: "Status" },
     { key: "joinDate", label: "Date Joined" },
   ],
@@ -51,8 +52,39 @@ export const teamMembersConfig = {
   ],
 };
 
+export const invitedMembersConfig = {
+  title: "Invited Members",
+  showId: false, 
+  tabs: [
+    { key: "members", label: "All Invitations" },
+    { key: "pending", label: "Pending Invitations" },
+  ],
+  enableSearch: true,
+  emptyState: {
+    title: "No Invitations found.",
+    description: "Invite members to display here.",
+    icon: <FaSlideshare className="text-5xl text-custom-main" />,
+  },
+  enableCheckbox: false,
+  columns: [
+    { key: "email", label: "Email" },
+    { key: "token", label: "Token" },
+    { key: "generated", label: "Generated at" },
+    { key: "accepted", label: "Accepted at" },
+    { key: "expire", label: "Expires at" },
+    { key: "status", label: "Status" },
+  ],
+  actions: [
+    {
+      icon: <IoTrash className="w-6 h-6" color="red" />,
+      tooltip: "Delete",
+    },
+  ],
+};
+
 export const trashConfig = {
   title: "Deleted Markmaps",
+  showId: true, 
   tabs: [],
   enableSearch: false,
   emptyState: {
@@ -79,6 +111,7 @@ export const trashConfig = {
 
 export const mediaConfig = {
   title: "Uploaded Files",
+  showId: true, 
   tabs: [],
   enableSearch: false,
   emptyState: {
@@ -105,6 +138,7 @@ export const mediaConfig = {
 
 export const backupConfig = {
   title: "My Backups",
+  showId: true, 
   tabs: [],
   enableSearch: false,
   emptyState: {

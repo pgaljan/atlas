@@ -1,10 +1,11 @@
-import * as d3 from "d3";
-import { useEffect } from "react";
+import * as d3 from "d3"
+import { useEffect } from "react"
 import {
+  assignNodeColors,
   isDescendant,
   resetDraggedElement,
   treeToMarkmapData,
-} from "../utils/markmapHelpers";
+} from "../utils/markmapHelpers"
 
 export default function useMarkmapInteractions({
   treeData,
@@ -21,37 +22,47 @@ export default function useMarkmapInteractions({
   updateTreeData,
 }) {
   useEffect(() => {
-    if (!markmapInstance) return;
+    if (!markmapInstance) return
 
     // Decide which data to render (filtered or full)
     const dataToRender =
-      filteredTree === "no-results" ? null : filteredTree || treeData;
+      filteredTree === "no-results" ? null : filteredTree || treeData
 
     if (!dataToRender) {
       // Ensure a valid structure with an empty children array.
-      markmapInstance.setData({ name: "No results", children: [] });
-      markmapInstance.fit();
-      return;
+      markmapInstance.setData({ name: "No results", children: [] })
+      markmapInstance.fit()
+      return
     }
 
     // Ensure that the markmap data always has a children array
     const markmapData = treeToMarkmapData(dataToRender, showWbs) || {
       name: "",
       children: [],
-    };
-    markmapInstance.setData(markmapData);
+    }
+    // Step 1: create color scale (up to 10 top-level branches)
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10)
+
+    // Step 2: assign color to each top-level branch and descendants
+    if (markmapData.children) {
+      markmapData.children.forEach((topLevelNode, index) => {
+        const color = colorScale(index)
+        assignNodeColors(topLevelNode, () => color) // Pass a function that returns fixed color
+      })
+    }
+    markmapInstance.setData(markmapData)
 
     // If a fit view is requested, delay the fit call to ensure the data is rendered.
     if (shouldFitView) {
       setTimeout(() => {
-        markmapInstance.fit();
-        setShouldFitView(false);
-      }, 0);
+        markmapInstance.fit()
+        setShouldFitView(false)
+      }, 0)
     }
 
     // Reference to track the currently highlighted (hovered) drop target
-    let currentlyHighlighted = null;
-    const nodes = markmapInstance.svg.selectAll("g.markmap-node");
+    let currentlyHighlighted = null
+    const nodes = markmapInstance.svg.selectAll("g.markmap-node")
 
     // Create tooltip element (for full name display)
     const tooltip = d3
@@ -66,51 +77,51 @@ export default function useMarkmapInteractions({
       .style("font-size", "14px")
       .style("white-space", "nowrap")
       .style("pointer-events", "none")
-      .style("opacity", 0);
+      .style("opacity", 0)
 
     // Attach mouse events for tooltip and hover highlight
     nodes
       .on("mouseover", function (event, d) {
-        d3.select(this).classed("hovered", true);
-        const nodeText = d.originalContent || d.content;
+        d3.select(this).classed("hovered", true)
+        const nodeText = d.originalContent || d.content
         // Only show tooltip if not the root and the content includes ellipsis
         if (d.level !== 0 && d.content && d.content.includes("...")) {
           tooltip
             .text(nodeText)
             .style("opacity", 1)
             .style("left", `${event.pageX + 10}px`)
-            .style("top", `${event.pageY + 10}px`);
+            .style("top", `${event.pageY + 10}px`)
         } else {
-          tooltip.style("opacity", 0);
+          tooltip.style("opacity", 0)
         }
       })
       .on("mousemove", function (event) {
         tooltip
           .style("left", `${event.pageX + 10}px`)
-          .style("top", `${event.pageY + 10}px`);
+          .style("top", `${event.pageY + 10}px`)
       })
       .on("mouseout", function () {
-        d3.select(this).classed("hovered", false);
-        tooltip.style("opacity", 0);
-      });
+        d3.select(this).classed("hovered", false)
+        tooltip.style("opacity", 0)
+      })
 
     // Click event for node selection
     nodes.on("click", function (event, d) {
-      event.stopPropagation();
-      const target = event.target;
-      const isCircle = target.tagName === "circle";
+      event.stopPropagation()
+      const target = event.target
+      const isCircle = target.tagName === "circle"
 
       if (isCircle) {
-        d.state.collapsed = !d.state.collapsed;
-        markmapInstance.updateTreeData(treeToMarkmapData(treeData, showWbs));
-        return;
+        d.state.collapsed = !d.state.collapsed
+        markmapInstance.updateTreeData(treeToMarkmapData(treeData, showWbs))
+        return
       }
 
-      const nodePosition = d3.select(this).node().getBoundingClientRect();
+      const nodePosition = d3.select(this).node().getBoundingClientRect()
       setModalPosition({
         x: nodePosition.x + nodePosition.width / 2,
         y: nodePosition.y,
-      });
+      })
 
       setModalData({
         content: d.content,
@@ -120,15 +131,15 @@ export default function useMarkmapInteractions({
         parentId: d.parentId,
         recordId: d.recordId,
         wbs: d.wbs,
-      });
+      })
 
-      nodes.classed("active", false);
-      d3.select(this).classed("active", true);
-    });
+      nodes.classed("active", false)
+      d3.select(this).classed("active", true)
+    })
 
     // Append drag icon to each node
     nodes.each(function (d) {
-      if (d.state && d.state.id === 1) return;
+      if (d.state && d.state.id === 1) return
 
       d3
         .select(this)
@@ -140,7 +151,7 @@ export default function useMarkmapInteractions({
         .attr("x", -8)
         .attr("y", 2)
         .style("cursor", "grab")
-        .on("click", (event) => event.stopPropagation()).html(`
+        .on("click", event => event.stopPropagation()).html(`
           <g>
             <rect width="25" height="25" fill="transparent" />
             <path
@@ -150,121 +161,116 @@ export default function useMarkmapInteractions({
               fill="#000"
             ></path>
           </g>
-        `);
-    });
+        `)
+    })
 
     // Drag-and-drop handlers
     nodes.call(
       d3
         .drag()
         .on("start", function (event, d) {
-          const svgRect = svgRef.current.getBoundingClientRect();
-          const node = d3.select(this);
-          const originalTransform = node.attr("transform") || "translate(0,0)";
-          node.attr("original-transform", originalTransform);
+          const svgRect = svgRef.current.getBoundingClientRect()
+          const node = d3.select(this)
+          const originalTransform = node.attr("transform") || "translate(0,0)"
+          node.attr("original-transform", originalTransform)
           const transform = originalTransform.match(
             /translate\(([^,]+),\s*([^)]+)\)/
-          );
+          )
           const currentX =
-            transform && transform[1] ? parseFloat(transform[1]) : 0;
+            transform && transform[1] ? parseFloat(transform[1]) : 0
           const currentY =
-            transform && transform[2] ? parseFloat(transform[2]) : 0;
+            transform && transform[2] ? parseFloat(transform[2]) : 0
           setDraggedNode({
             data: d,
             startX: event.x - svgRect.left - currentX,
             startY: event.y - svgRect.top - currentY,
-          });
+          })
         })
         .on("drag", function (event) {
-          if (!draggedNode) return;
-          const svgRect = svgRef.current.getBoundingClientRect();
-          const newX = event.x - svgRect.left - draggedNode.startX;
-          const newY = event.y - svgRect.top - draggedNode.startY;
-          d3.select(this).attr("transform", `translate(${newX}, ${newY})`);
+          if (!draggedNode) return
+          const svgRect = svgRef.current.getBoundingClientRect()
+          const newX = event.x - svgRect.left - draggedNode.startX
+          const newY = event.y - svgRect.top - draggedNode.startY
+          d3.select(this).attr("transform", `translate(${newX}, ${newY})`)
 
-          const dropTargets = d3.selectAll("g.markmap-node");
+          const dropTargets = d3.selectAll("g.markmap-node")
           const validTargets = dropTargets.filter(function () {
-            const bbox = this.getBoundingClientRect();
+            const bbox = this.getBoundingClientRect()
             const isWithinX =
               event.sourceEvent.clientX >= bbox.left &&
-              event.sourceEvent.clientX <= bbox.right;
+              event.sourceEvent.clientX <= bbox.right
             const isWithinY =
               event.sourceEvent.clientY >= bbox.top &&
-              event.sourceEvent.clientY <= bbox.bottom;
+              event.sourceEvent.clientY <= bbox.bottom
             return (
               isWithinX &&
               isWithinY &&
               this !== event.sourceEvent.target &&
               this !== d3.select(this).node()
-            );
-          });
+            )
+          })
 
           if (validTargets.size() > 0) {
-            const closestTarget = validTargets.nodes()[0];
+            const closestTarget = validTargets.nodes()[0]
             if (currentlyHighlighted !== closestTarget) {
               if (currentlyHighlighted) {
                 d3.select(currentlyHighlighted).classed(
                   "highlight-target",
                   false
-                );
+                )
               }
-              currentlyHighlighted = closestTarget;
-              d3.select(closestTarget)
-                .classed("highlight-target", true)
-                .raise();
+              currentlyHighlighted = closestTarget
+              d3.select(closestTarget).classed("highlight-target", true).raise()
             }
           } else {
             if (currentlyHighlighted) {
-              d3.select(currentlyHighlighted).classed(
-                "highlight-target",
-                false
-              );
-              currentlyHighlighted = null;
+              d3.select(currentlyHighlighted).classed("highlight-target", false)
+              currentlyHighlighted = null
             }
           }
         })
         .on("end", function (event) {
-          if (!draggedNode) return;
-          const draggedElement = d3.select(this);
-          const dropTargets = d3.selectAll("g.markmap-node");
+          if (!draggedNode) return
+          const draggedElement = d3.select(this)
+          const dropTargets = d3.selectAll("g.markmap-node")
           if (currentlyHighlighted) {
-            d3.select(currentlyHighlighted).classed("highlight-target", false);
-            currentlyHighlighted = null;
+            d3.select(currentlyHighlighted).classed("highlight-target", false)
+            currentlyHighlighted = null
           }
           const validTargets = dropTargets.filter(function () {
-            const bbox = this.getBoundingClientRect();
-            if (this === draggedElement.node()) return false;
+            const bbox = this.getBoundingClientRect()
+            if (this === draggedElement.node()) return false
             return (
               event.sourceEvent.clientX >= bbox.left &&
               event.sourceEvent.clientX <= bbox.right &&
               event.sourceEvent.clientY >= bbox.top &&
               event.sourceEvent.clientY <= bbox.bottom
-            );
-          });
+            )
+          })
           if (validTargets.size() > 0) {
-            const closestTarget = validTargets.nodes()[0];
-            const targetNode = d3.select(closestTarget).datum();
-            const draggedNodeContent = draggedNode.data.originalContent;
-            const targetNodeContent = targetNode.originalContent;
+            const closestTarget = validTargets.nodes()[0]
+            const targetNode = d3.select(closestTarget).datum()
+            const draggedNodeContent = draggedNode.data.originalContent
+            const targetNodeContent = targetNode.originalContent
             if (
               targetNodeContent !== draggedNodeContent &&
               !isDescendant(draggedNode.data, targetNodeContent)
             ) {
-              updateTreeData(draggedNode.data, targetNode);
+              updateTreeData(draggedNode.data, targetNode)
             } else {
-              resetDraggedElement(this);
+              resetDraggedElement(this)
             }
           } else {
-            resetDraggedElement(this);
+            resetDraggedElement(this)
           }
-          setDraggedNode(null);
+          setDraggedNode(null)
         })
-    );
+    )
 
     // Cleanup tooltip on unmount
     return () => {
-      tooltip.remove();
-    };
+      tooltip.remove()
+    }
   }, [
     treeData,
     markmapInstance,
@@ -278,5 +284,5 @@ export default function useMarkmapInteractions({
     setModalPosition,
     svgRef,
     updateTreeData,
-  ]);
+  ])
 }

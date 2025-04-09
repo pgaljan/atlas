@@ -8,10 +8,10 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RestoreService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Helper function to safely parse JSON.
+  // Helper to safely parse JSON from a string.
   private safeParseJSON(data: string, fieldName: string): any {
     try {
-      if (!data || data.trim() === '') return {};
+      if (!data || data.trim() === '') return fieldName === 'tags' ? [] : {};
       return JSON.parse(data);
     } catch (error) {
       console.error(
@@ -45,6 +45,17 @@ export class RestoreService {
     currentUserId: string,
   ) {
     try {
+      // Retrieve user to get a valid workspaceId.
+      const user = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+      });
+      if (!user || !user.defaultWorkspaceId) {
+        throw new InternalServerErrorException(
+          'No valid workspaceId found for the user',
+        );
+      }
+      const validWorkspaceId = user.defaultWorkspaceId;
+
       const zip = new AdmZip(fileBuffer);
       const zipEntries = zip.getEntries();
       const encFile = zipEntries.find((entry) =>
@@ -63,9 +74,9 @@ export class RestoreService {
       const elementsSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Elements'],
       );
-      const structureMapsSheet = xlsx.utils.sheet_to_json<any>(
-        workbook.Sheets['StructureMaps'],
-      );
+      const structureMapsSheet = workbook.Sheets['StructureMaps']
+        ? xlsx.utils.sheet_to_json<any>(workbook.Sheets['StructureMaps'])
+        : [];
       const recordsSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Records'],
       );
@@ -76,6 +87,7 @@ export class RestoreService {
         );
       }
 
+      // Retrieve the backup structure.
       let foundBackupStructure = structuresSheet.find(
         (s) => s.id === providedStructureId,
       );
@@ -84,6 +96,7 @@ export class RestoreService {
       if (!foundBackupStructure) {
         backupStructure = structuresSheet[0];
         originalBackupStructureId = backupStructure.id;
+        // Overwrite ID to restore into the provided structure.
         backupStructure = {
           ...backupStructure,
           id: providedStructureId,
@@ -94,7 +107,7 @@ export class RestoreService {
         originalBackupStructureId = backupStructure.id;
       }
 
-      // Decide on update vs. new record based on ownership.
+      // Determine target structure id.
       let targetStructureId: string;
       if (backupStructure.ownerId === currentUserId) {
         targetStructureId = providedStructureId;
@@ -109,83 +122,65 @@ export class RestoreService {
         };
       }
 
-      // Restore records (structure-agnostic).
-      for (const recordData of recordsSheet) {
-        try {
-          const metadata = recordData.metadata || '{}';
-          const tags = recordData.tags || '[]';
-          const parsedMetadata = this.safeParseJSON(metadata, 'metadata');
-          const parsedTags = this.safeParseJSON(tags, 'tags');
-
-          await this.prisma.record.upsert({
-            where: { id: recordData.id },
-            update: { metadata: parsedMetadata, tags: parsedTags },
-            create: {
-              id: recordData.id,
-              metadata: parsedMetadata,
-              tags: parsedTags,
-            },
-          });
-        } catch (error) {
-          console.error('Error processing record:', recordData, error.message);
-          throw new InternalServerErrorException(
-            `Failed to restore record with ID ${recordData.id}: ${error.message}`,
-          );
-        }
-      }
-
       // Restore the structure.
-      if (targetStructureId === providedStructureId) {
-        await this.prisma.structure.upsert({
-          where: { id: providedStructureId },
-          update: {
-            name: backupStructure.name,
-            description: backupStructure.description,
-            ownerId: backupStructure.ownerId,
-            title: backupStructure.title,
-            visibility: backupStructure.visibility,
-          },
-          create: {
-            id: providedStructureId,
-            name: backupStructure.name,
-            title: backupStructure.title,
-            description: backupStructure.description,
-            ownerId: backupStructure.ownerId,
-            visibility: backupStructure.visibility,
-          },
-        });
-      } else {
-        await this.prisma.structure.create({
-          data: {
-            id: targetStructureId,
-            name: backupStructure.name,
-            title: backupStructure.title,
-            description: backupStructure.description,
-            ownerId: backupStructure.ownerId,
-            visibility: backupStructure.visibility,
-          },
-        });
-      }
+      await this.prisma.structure.upsert({
+        where: { id: targetStructureId },
+        update: {
+          name: backupStructure.name,
+          description: backupStructure.description,
+          ownerId: backupStructure.ownerId,
+          title: backupStructure.title,
+          visibility: backupStructure.visibility,
+          workspaceId: validWorkspaceId,
+          imageUrl: backupStructure.imageUrl,
+          markmapShowWbs: backupStructure.markmapShowWbs,
+        },
+        create: {
+          id: targetStructureId,
+          name: backupStructure.name,
+          title: backupStructure.title,
+          description: backupStructure.description,
+          ownerId: backupStructure.ownerId,
+          visibility: backupStructure.visibility,
+          workspaceId: validWorkspaceId,
+          imageUrl: backupStructure.imageUrl,
+          markmapShowWbs: backupStructure.markmapShowWbs,
+        },
+      });
 
-      const filteredElements = elementsSheet.filter(
+      // ---------- Elements Restoration in Two Passes ----------
+      // Phase 1: Upsert each element without setting elementLinkId, also map original -> new id.
+      const elementIdMapping = new Map<string, string>();
+      for (const elementData of elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
-      );
-      const backupElementIds = new Set(filteredElements.map((el) => el.id));
-      for (const elementData of filteredElements) {
+      )) {
+        // If parentId is not in the set of elements, set it to null.
+        // (The parent-child updates will be handled in a later phase.)
         if (
           elementData.parentId &&
-          !backupElementIds.has(elementData.parentId)
+          !elementsSheet.some((el) => el.id === elementData.parentId)
         ) {
           elementData.parentId = null;
         }
+        // Overwrite structureId to target structure.
         elementData.structureId = targetStructureId;
+        // Temporarily force elementLinkId to null to avoid FK issues.
+        const originalElementLinkId = elementData.elementLinkId || null;
+        elementData.elementLinkId = null;
+
+        // Optionally, generate a new id for the element (or use the original)
+        // Here, we'll assume we keep the original id.
+        elementIdMapping.set(elementData.id, elementData.id);
+
         await this.prisma.element.upsert({
           where: { id: elementData.id },
           update: {
+            name: elementData.name,
             structureId: elementData.structureId,
             recordId: elementData.recordId,
-            name: elementData.name,
             parentId: elementData.parentId,
+            // Do NOT set elementLinkId in the upsert
+            orderIndex: elementData.orderIndex,
           },
           create: {
             id: elementData.id,
@@ -193,10 +188,52 @@ export class RestoreService {
             structureId: elementData.structureId,
             recordId: elementData.recordId,
             parentId: elementData.parentId,
+            // Exclude elementLinkId on create; it will be updated in phase 2.
+            orderIndex: elementData.orderIndex,
+          },
+        });
+
+        // Store the original elementLinkId for use in phase 2.
+        elementData._originalElementLinkId = originalElementLinkId;
+      }
+
+      // Phase 2: Update elementLinkId based on the stored mapping.
+      for (const elementData of elementsSheet.filter(
+        (e) => e.structureId === targetStructureId,
+      )) {
+        // If there is an original elementLinkId, try mapping it.
+        const originalLinkId = elementData._originalElementLinkId;
+        if (originalLinkId) {
+          const newLinkId = elementIdMapping.get(originalLinkId) || null;
+          // Only update if the newLinkId is found.
+          if (newLinkId) {
+            await this.prisma.element.update({
+              where: { id: elementData.id },
+              data: { elementLinkId: newLinkId },
+            });
+          }
+        }
+      }
+      // ---------- End Elements Restoration ----------
+
+      // Restore records (structure-agnostic)
+      for (const recordData of recordsSheet) {
+        const metadata = recordData.metadata || '{}';
+        const tags = recordData.tags || '[]';
+        const parsedMetadata = this.safeParseJSON(metadata, 'metadata');
+        const parsedTags = this.safeParseJSON(tags, 'tags');
+        await this.prisma.record.upsert({
+          where: { id: recordData.id },
+          update: { metadata: parsedMetadata, tags: parsedTags },
+          create: {
+            id: recordData.id,
+            metadata: parsedMetadata,
+            tags: parsedTags,
           },
         });
       }
 
+      // Restore Structure Maps.
       const filteredMaps = structureMapsSheet.filter(
         (m) => m.structureId === originalBackupStructureId,
       );
@@ -208,6 +245,12 @@ export class RestoreService {
             structureId: mapData.structureId,
             name: mapData.name,
             description: mapData.description,
+            createdAt: mapData.createdAt
+              ? new Date(mapData.createdAt)
+              : new Date(),
+            updatedAt: mapData.updatedAt
+              ? new Date(mapData.updatedAt)
+              : new Date(),
           },
           create: {
             id: mapData.id,
@@ -229,6 +272,17 @@ export class RestoreService {
 
   async restoreFullBackup(fileBuffer: Buffer, currentUserId: string) {
     try {
+      // Retrieve user to get a valid workspaceId.
+      const user = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+      });
+      if (!user || !user.defaultWorkspaceId) {
+        throw new InternalServerErrorException(
+          'No valid workspaceId found for the user',
+        );
+      }
+      const validWorkspaceId = user.defaultWorkspaceId;
+
       const zip = new AdmZip(fileBuffer);
       const zipEntries = zip.getEntries();
       const encFile = zipEntries.find((entry) =>
@@ -241,7 +295,6 @@ export class RestoreService {
       }
       const decryptedBuffer = this.decrypt(encFile.getData());
 
-      // Attempt to parse as JSON; if it fails, try as an Excel workbook.
       let backupData: any;
       try {
         backupData = JSON.parse(decryptedBuffer.toString());
@@ -258,6 +311,9 @@ export class RestoreService {
           backupData.StructureMap = xlsx.utils.sheet_to_json<any>(
             workbook.Sheets['StructureMaps'],
           );
+          backupData.records = xlsx.utils.sheet_to_json<any>(
+            workbook.Sheets['Records'],
+          );
         } catch (excelError) {
           throw new InternalServerErrorException(
             'Failed to parse decrypted backup data as JSON or Excel.',
@@ -271,7 +327,7 @@ export class RestoreService {
         );
       }
 
-      // Process each structure from the full backup.
+      // Process each structure in the full backup.
       for (const structureData of backupData.structures) {
         const originalStructureId = structureData.id;
         let targetStructureId: string;
@@ -293,6 +349,9 @@ export class RestoreService {
             description: structureData.description,
             ownerId: structureData.ownerId,
             visibility: structureData.visibility,
+            workspaceId: validWorkspaceId,
+            imageUrl: structureData.imageUrl,
+            markmapShowWbs: structureData.markmapShowWbs,
           },
           create: {
             id: targetStructureId,
@@ -301,10 +360,13 @@ export class RestoreService {
             description: structureData.description,
             ownerId: structureData.ownerId,
             visibility: structureData.visibility,
+            workspaceId: validWorkspaceId,
+            imageUrl: structureData.imageUrl,
+            markmapShowWbs: structureData.markmapShowWbs,
           },
         });
 
-        // Process structure maps.
+        // Process Structure Maps.
         if (structureData.StructureMap) {
           if (Array.isArray(structureData.StructureMap)) {
             for (const mapData of structureData.StructureMap) {
@@ -317,8 +379,12 @@ export class RestoreService {
                   structureId: mapData.structureId,
                   name: mapData.name,
                   description: mapData.description,
-                  createdAt: new Date(mapData.createdAt),
-                  updatedAt: new Date(mapData.updatedAt),
+                  createdAt: mapData.createdAt
+                    ? new Date(mapData.createdAt)
+                    : new Date(),
+                  updatedAt: mapData.updatedAt
+                    ? new Date(mapData.updatedAt)
+                    : new Date(),
                 },
                 create: {
                   id: mapData.id,
@@ -350,13 +416,23 @@ export class RestoreService {
           }
         }
 
+        // Process Elements.
         if (structureData.elements && Array.isArray(structureData.elements)) {
+          // Two-phase restoration for elements.
+          const fullElementMapping = new Map<string, string>();
+          // Phase 1: Upsert elements without elementLinkId.
           for (const elementData of structureData.elements) {
             if (elementData.structureId === originalStructureId) {
               elementData.structureId = targetStructureId;
             }
             const origParentId = elementData.parentId;
-            elementData.parentId = null;
+            elementData.parentId = null; // We'll update parent-child relationships later.
+            // Force elementLinkId to null in phase 1.
+            const originalElementLinkId = elementData.elementLinkId || null;
+            elementData.elementLinkId = null;
+
+            fullElementMapping.set(elementData.id, elementData.id);
+
             await this.prisma.element.upsert({
               where: { id: elementData.id },
               update: {
@@ -364,6 +440,7 @@ export class RestoreService {
                 structureId: elementData.structureId,
                 recordId: elementData.recordId,
                 parentId: null,
+                orderIndex: elementData.orderIndex,
               },
               create: {
                 id: elementData.id,
@@ -371,23 +448,39 @@ export class RestoreService {
                 structureId: elementData.structureId,
                 recordId: elementData.recordId,
                 parentId: null,
+                orderIndex: elementData.orderIndex,
               },
             });
+            elementData._originalElementLinkId = originalElementLinkId;
             elementData._originalParentId = origParentId;
           }
-          const elementIds = new Set(structureData.elements.map((el) => el.id));
+          // Phase 2: Update elementLinkId and parentId.
           for (const elementData of structureData.elements) {
-            const newParentId = elementData._originalParentId;
-            if (newParentId && elementIds.has(newParentId)) {
+            const newLinkId = elementData._originalElementLinkId
+              ? fullElementMapping.get(elementData._originalElementLinkId) ||
+                null
+              : null;
+            if (newLinkId) {
               await this.prisma.element.update({
                 where: { id: elementData.id },
-                data: { parentId: newParentId },
+                data: { elementLinkId: newLinkId },
+              });
+            }
+          }
+          // Update parent-child relationships.
+          const elementIds = new Set(structureData.elements.map((el) => el.id));
+          for (const elementData of structureData.elements) {
+            const origParentId = elementData._originalParentId;
+            if (origParentId && elementIds.has(origParentId)) {
+              await this.prisma.element.update({
+                where: { id: elementData.id },
+                data: { parentId: origParentId },
               });
             }
           }
         }
 
-        // Process records.
+        // Process Records.
         if (structureData.records && Array.isArray(structureData.records)) {
           for (const recordData of structureData.records) {
             const metadata = recordData.metadata || '{}';
@@ -409,6 +502,7 @@ export class RestoreService {
 
       return { message: 'Backup restored successfully' };
     } catch (error) {
+      console.error('Error during full backup restore:', error);
       throw new InternalServerErrorException(
         'Failed to restore backup: ' + error.message,
       );

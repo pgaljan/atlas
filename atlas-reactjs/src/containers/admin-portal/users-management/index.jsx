@@ -242,15 +242,27 @@ const index = () => {
       }
     : undefined;
 
-  // Filter table data based on search term and status checkbox
   const filteredUsers = tableData.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
       user.fullName?.toLowerCase().includes(searchLower) ||
       user.username?.toLowerCase().includes(searchLower) ||
       user.email?.toLowerCase().includes(searchLower);
+
     const matchesStatus = filterActive ? user.status === "active" : true;
-    return matchesSearch && matchesStatus;
+
+    let matchesSort = true;
+    if (selectedOption !== "Sort") {
+      if (selectedOption === "Admin") {
+        matchesSort = user.isAdmin === true;
+      } else if (selectedOption === "User") {
+        matchesSort = user.isAdmin === false;
+      } else {
+        matchesSort = user.subscription?.plan?.name === selectedOption;
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesSort;
   });
 
   return (

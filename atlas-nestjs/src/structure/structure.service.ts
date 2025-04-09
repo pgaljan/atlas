@@ -126,6 +126,7 @@ export class StructureService {
         include: {
           elements: {
             where: { deletedAt: null },
+            orderBy: { orderIndex: 'asc' },
             include: {
               sourceLinks: true,
               targetLinks: true,
@@ -139,7 +140,10 @@ export class StructureService {
         throw new NotFoundException(`Structure with id ${id} not found`);
       }
 
-      const buildHierarchy = (elements: any[], parentId = null) =>
+      const buildHierarchy = (
+        elements: any[],
+        parentId: string | null = null,
+      ) =>
         elements
           .filter((element) => element.parentId === parentId)
           .map((element) => ({
@@ -148,7 +152,6 @@ export class StructureService {
           }));
 
       const nestedElements = buildHierarchy(structure.elements);
-
       return { ...structure, elements: nestedElements };
     } catch (error) {
       throw new NotFoundException(`Structure not found: ${error.message}`);

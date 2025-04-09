@@ -31,6 +31,12 @@ enum WorkspaceRole {
   member
 }
 
+enum InvitationStatus {
+  pending
+  expired
+  accepted
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -38,8 +44,9 @@ model Workspace {
 
   teams      Team[]
   structures Structure[]
-  defaultFor User[]      @relation("UserDefaultWorkspace")
+  defaultFor User[]       @relation("UserDefaultWorkspace")
   Backup     Backup[]
+  Invitation Invitation[]
 }
 
 model User {
@@ -51,8 +58,10 @@ model User {
   password           String
   isAdmin            Boolean       @default(false)
   inviteCount        Int           @default(0)
+  commissionEarned   Decimal       @default(0)
   createdAt          DateTime      @default(now())
   deletedAt          DateTime?
+  referredBy         String?
   apiKeys            ApiKey[]
   attachments        Attachment[]
   auditLogs          AuditLog[]
@@ -63,11 +72,50 @@ model User {
   tokens             Token[]
   role               Role          @relation("UserRole", fields: [roleId], references: [id])
   roles              Role[]        @relation("UserRoles")
+  invitationsSent    Invitation[]  @relation("UserInvitations")
+  invitedBy          Invitation[]  @relation("UserInvited")
   teamMembers        TeamMember[]
   Team               Team[]
   defaultWorkspaceId String?
   defaultWorkspace   Workspace?    @relation("UserDefaultWorkspace", fields: [defaultWorkspaceId], references: [id])
   status             Status        @default(active)
+}
+
+model Invitation {
+  id           String           @id @default(uuid())
+  inviterId    String
+  inviteeEmail String?
+  token        String           @unique
+  expiresAt    DateTime
+  status       InvitationStatus @default(pending)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  usedAt       DateTime?
+
+  inviter User    @relation("UserInvitations", fields: [inviterId], references: [id])
+  userId  String?
+  user    User?   @relation("UserInvited", fields: [userId], references: [id])
+
+  referralCode String @unique
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([inviterId])
+  @@index([status])
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  userId    String
+  key       String
+  value     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, key])
 }
 
 model Role {
@@ -108,19 +156,6 @@ model TeamMember {
 
   @@unique([teamId, userId])
   @@index([workspaceId])
-}
-
-model Token {
-  id        String   @id @default(uuid())
-  userId    String
-  key       String
-  value     String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
-
-  @@unique([userId, key])
 }
 
 model Subscription {
@@ -180,6 +215,7 @@ model Element {
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
   elementLinkId String?
+  orderIndex    Int            @default(0)
   ElementLink   ElementLink?   @relation(fields: [elementLinkId], references: [id])
   parent        Element?       @relation("ParentChild", fields: [parentId], references: [id])
   children      Element[]      @relation("ParentChild")

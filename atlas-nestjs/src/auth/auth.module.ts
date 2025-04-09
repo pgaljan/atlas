@@ -10,6 +10,7 @@ import { GoogleStrategy } from './strategies/google.strategy';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { LocalStrategy } from './strategies/local.strategy';
 import { GitHubStrategy } from './strategies/github.strategy';
+import { InvitationModule } from 'src/invitations/invitations.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { GitHubStrategy } from './strategies/github.strategy';
       signOptions: { expiresIn: '24h' },
     }),
     PrismaModule,
+    InvitationModule
   ],
   providers: [
     AuthService,

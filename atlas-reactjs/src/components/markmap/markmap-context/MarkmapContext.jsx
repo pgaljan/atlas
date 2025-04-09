@@ -1,17 +1,17 @@
-import { Markmap } from "markmap-view";
+import { Markmap } from "markmap-view"
 import React, {
   createContext,
   useContext,
   useEffect,
   useRef,
   useState,
-} from "react";
+} from "react"
 
-const MarkmapContext = createContext();
+const MarkmapContext = createContext()
 
 export const MarkmapProvider = ({ children }) => {
-  const svgRef = useRef(null);
-  const [markmapInstance, setMarkmapInstance] = useState(null);
+  const svgRef = useRef(null)
+  const [markmapInstance, setMarkmapInstance] = useState(null)
 
   useEffect(() => {
     if (svgRef.current && !markmapInstance) {
@@ -19,28 +19,33 @@ export const MarkmapProvider = ({ children }) => {
         autoFit: true,
         nodeMinHeight: 20,
         duration: 300,
-      });
-      setMarkmapInstance(instance);
+        // The color function now returns the color assigned in node.data.
+        color: node => node.color || "#1f77b4", // Default to blue if no color is assigned
+      })
 
-      instance.fit();
+      setMarkmapInstance(instance)
+
+      instance.fit()
 
       setTimeout(() => {
-        instance.setOptions({ autoFit: false });
-      }, 0);
+        instance.setOptions({ autoFit: false })
+      }, 0)
     }
-  }, [svgRef, markmapInstance]);
+  }, [svgRef, markmapInstance])
 
   return (
     <MarkmapContext.Provider value={{ markmapInstance, svgRef }}>
       <div className="h-full w-full">{children}</div>
     </MarkmapContext.Provider>
-  );
-};
+  )
+}
 
-export const useMarkmap = () => {
-  const context = useContext(MarkmapContext);
+const useMarkmap = () => {
+  const context = useContext(MarkmapContext)
   if (!context) {
-    throw new Error("useMarkmap must be used within a MarkmapProvider");
+    throw new Error("useMarkmap must be used within a MarkmapProvider")
   }
-  return context;
-};
+  return context
+}
+
+export default useMarkmap

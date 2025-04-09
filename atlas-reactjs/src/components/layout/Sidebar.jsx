@@ -4,6 +4,7 @@ import { useState } from "react";
 import { BsDatabaseFillCheck, BsFillTrashFill } from "react-icons/bs";
 import { FaPlusCircle, FaRocket } from "react-icons/fa";
 import { FaImages, FaUsersGear } from "react-icons/fa6";
+import { FaSlideshare } from "react-icons/fa";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useFeatureFlag from "../../hooks/useFeatureFlag";
@@ -59,11 +60,11 @@ export function SidebarPage({ onSubmit }) {
       link: "/app/dashboard",
     },
     // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
-    // {
-    //   name: "Team Members",
-    //   icon: FaUsersGear,
-    //   link: "/app/team-members",
-    // },
+    {
+      name: "Invited Members",
+      icon: FaSlideshare,
+      link: "/app/invited-members",
+    },
     {
       name: "My Backups",
       icon: BsDatabaseFillCheck,

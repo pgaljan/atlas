@@ -16,5 +16,8 @@ export class RegisterDto {
   password: string;
 
   @IsString()
+  referralCode: string;
+
+  @IsString()
   roleName: string;
 }

@@ -143,6 +143,7 @@ const NodeModal = ({
       }
       setDeleteModalVisible(false);
       setDeleteRecordId(null);
+      onSuccess();
       onClose();
     } catch (error) {
       cogoToast.error(
@@ -245,11 +246,6 @@ const NodeModal = ({
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleRecordSuccess = (newRecordId) => {
-    setRecordId(newRecordId);
-    dispatch(getRecordById(newRecordId));
   };
 
   return (

@@ -15,6 +15,7 @@ import { generateFromEmail } from 'unique-username-generator';
 import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
+import { InvitationService } from 'src/invitations/invitations.service';
 
 @Injectable()
 export class AuthService {
@@ -22,6 +23,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly prismaService: PrismaService,
     private configService: ConfigService,
+    private invitationService: InvitationService,
   ) {}
 
   // Audit log method
@@ -43,21 +45,17 @@ export class AuthService {
     });
   }
 
-  // Register method in AuthService
+  // AuthService
   async register(registerDto: RegisterDto) {
-    const { fullName, email, password } = registerDto;
+    const { fullName, email, password, referralCode } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
-        const existingUser = await prisma.user.findUnique({
-          where: { email },
-        });
-
+        const existingUser = await prisma.user.findUnique({ where: { email } });
         if (existingUser) {
           throw new ConflictException('User with this email already exists');
         }
 
-        // Generate a modified username based on fullName
         let modifiedUsername = fullName;
         if (fullName.includes(' ')) {
           const parts = fullName.split(' ');
@@ -74,26 +72,16 @@ export class AuthService {
 
         const defaultRoleName = 'User';
         const role = await prisma.role.findFirst({
-          where: {
-            name: {
-              equals: defaultRoleName,
-              mode: 'insensitive',
-            },
-          },
+          where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
-
         if (!role) {
           throw new ConflictException('Role not found');
         }
 
-        // Create a new workspace record for the user
         const newWorkspace = await prisma.workspace.create({
-          data: {
-            name: `${modifiedUsername}'s Workspace`,
-          },
+          data: { name: `${modifiedUsername}'s Workspace` },
         });
 
-        // Create the new user with the new workspace id as defaultWorkspaceId
         const newUser = await prisma.user.create({
           data: {
             username: modifiedUsername,
@@ -105,10 +93,17 @@ export class AuthService {
           },
         });
 
-        const freePlan: Plan = await prisma.plan.findFirst({
-          where: { name: 'Personal' },
+        await prisma.team.create({
+          data: {
+            name: `${modifiedUsername}'s Team`,
+            ownerId: newUser.id,
+            workspaceId: newWorkspace.id,
+          },
         });
 
+        const freePlan = await prisma.plan.findFirst({
+          where: { name: 'Personal' },
+        });
         if (!freePlan) {
           throw new ConflictException('Free plan not found');
         }
@@ -132,12 +127,22 @@ export class AuthService {
           email,
         });
 
+        if (referralCode) {
+          await this.invitationService.applyReferralCodeWithTx(
+            prisma,
+            newUser.id,
+            email,
+            referralCode,
+          );
+        }
+
         return {
           id: newUser.id,
           message: 'User registered successfully',
         };
       });
     } catch (error) {
+      console.log(error);
       if (error instanceof ConflictException) {
         throw error;
       }

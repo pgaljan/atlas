@@ -90,11 +90,16 @@ export class BackupService {
         title: structure.title,
         description: structure.description,
         ownerId: structure.ownerId,
+        workspaceId: structure.workspaceId,
+        imageUrl: structure.imageUrl,
+        markmapShowWbs: structure.markmapShowWbs,
         createdAt: structure.createdAt,
         updatedAt: structure.updatedAt,
+        deletedAt: structure.deletedAt || '',
         visibility: structure.visibility,
       }));
 
+      // Elements sheet: include extra fields such as elementLinkId, orderIndex, and deletedAt
       const elementsSheet = user.structures.flatMap((structure: any) =>
         structure.elements.map((element: any) => ({
           id: element.id,
@@ -102,13 +107,17 @@ export class BackupService {
           structureId: element.structureId,
           recordId: element.recordId,
           parentId: element.parentId,
-          type: element.type,
+          elementLinkId: element.elementLinkId || '',
+          orderIndex: element.orderIndex,
           createdAt: element.createdAt,
           updatedAt: element.updatedAt,
-          Record: element.Record ? element.Record.id : null,
+          deletedAt: element.deletedAt || '',
+          // You may choose to include a reference to Record id, if applicable.
+          RecordId: element.Record ? element.Record.id : null,
         })),
       );
 
+      // Records sheet: include all fields from the Record model.
       const recordsSheet = user.structures.flatMap((structure: any) =>
         structure.elements.flatMap((element: any) =>
           element.Record
@@ -240,6 +249,14 @@ export class BackupService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
 
+      // Validate the workspace ID
+      const validWorkspaceId = user.defaultWorkspaceId;
+      if (!validWorkspaceId) {
+        throw new InternalServerErrorException(
+          'No valid workspaceId found for the user',
+        );
+      }
+
       // Prepare the backup data (all structures for the user)
       const backupData = {
         structures: user.structures,
@@ -290,7 +307,7 @@ export class BackupService {
         .replace(/^\/|\/$/, '');
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
 
-      // Create a backup record in the database
+      // Create a backup record in the database, providing a valid workspaceId
       const title = `${filePrefix}-${timestamp}`;
       const backup = await this.prisma.backup.create({
         data: {
@@ -298,6 +315,7 @@ export class BackupService {
           title,
           backupData: { filePath: zipFilePath },
           fileUrl,
+          workspaceId: validWorkspaceId,
         },
       });
 

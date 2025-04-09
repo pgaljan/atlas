@@ -116,13 +116,16 @@ const GenericModal = ({
                 placeholder="Select Role"
                 options={roleOptions}
                 onChange={handleRoleChange}
-                value={roleOptions.find(
-                  (option) =>
-                    option.value ===
-                    (typeof formData.role === "object"
-                      ? formData.role.id
-                      : formData.role)
-                )}
+                value={
+                  formData.role
+                    ? roleOptions.find((option) =>
+                        typeof formData.role === "object"
+                          ? option.value === formData.role.id
+                          : option.value === formData.role ||
+                            option.label === formData.role
+                      )
+                    : null
+                }
               />
             )}
           </div>

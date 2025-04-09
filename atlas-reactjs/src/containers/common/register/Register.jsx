@@ -1,7 +1,7 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { registerUser } from "../../../redux/slices/auth";
 import Icons from "../../../constants/icons";
 
@@ -28,6 +28,12 @@ const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
 const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  const searchParams = new URLSearchParams(location.search);
+  const token = searchParams.get("token");
+  const code = searchParams.get("code");
+
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState("");
   const [password, setPassword] = useState("");
@@ -46,17 +52,22 @@ const Register = () => {
 
     setIsSubmitting(true);
 
-    dispatch(registerUser({ fullName, email, password }))
+    const registrationData = {
+      fullName,
+      email,
+      password,
+      ...(token && code ? { referralCode: code } : {}),
+    };
+
+    dispatch(registerUser(registrationData))
       .unwrap()
       .then((response) => {
         cogoToast.success("Registration successful!");
 
-        // Extract user ID from response
         const userId = response?.id;
-        // Redirect to subscription plans with user ID (if needed)
         navigate(`/subscription-plans?userId=${userId}`);
 
-        // Reset form
+        // Reset form values
         setEmail("");
         setPassword("");
         setFullName("");
@@ -107,13 +118,14 @@ const Register = () => {
           <form onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
               <label
-                htmlFor="confirm-password-input"
+                htmlFor="full-name-input"
                 className="block text-sm font-medium text-custom-text-grey mb-1"
               >
                 Full Name
               </label>
               <input
                 type="text"
+                id="full-name-input"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
                 placeholder="Enter your full name"
@@ -126,10 +138,11 @@ const Register = () => {
                 htmlFor="work-email-input"
                 className="block text-sm font-medium text-custom-text-grey mb-1"
               >
-                Work email
+                Work Email
               </label>
               <input
                 type="email"
+                id="work-email-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your work email"
@@ -146,6 +159,7 @@ const Register = () => {
               </label>
               <input
                 type="password"
+                id="password-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"

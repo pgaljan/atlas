@@ -1,47 +1,72 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useDispatch } from "react-redux";
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import GenericTable from "../../../components/generic-table/GenericTable";
 import Layout from "../../../components/layout";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import ModalComponent from "../../../components/modals/Modal";
 import { teamMembersConfig } from "../../../constants/index";
 import InputField from "../../../components/input-field/InputField";
+import { fetchTeamMembers } from "../../../redux/slices/team-memebers";
 
 const TeamMembersPage = ({ onSubmit }) => {
-  const [teamMembers, setTeamMembers] = useState([
-    {
-      id: "61ef352e-ed80-4e25-8229-091eb79dcb49",
-      name: "John Doe",
-      email: "john@gmail.com",
-      userType: "admin",
-      lastAccess: "12-23-2024 12:00 pm",
-      status: "Active",
-      joinDate: "12-23-2024 12:00 pm",
-    },
-    {
-      id: "61ef352e-ed80-4e25-8229-091eb79dcs321",
-      name: "Jane Smith",
-      email: "jane.smith@email.com",
-      userType: "member",
-      lastAccess: "01-10-2025 09:30 am",
-      status: "Inactive",
-      joinDate: "01-05-2025 02:15 pm",
-    },
+  const dispatch = useDispatch();
+  const workspaceId = Cookies.get("workspaceId");
 
-  ]);
-
+  // Team members state and loading/error states
+  const [teamMembers, setTeamMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-  });
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        if (!workspaceId) {
+          console.error("Workspace ID is not available in cookies.");
+          return;
+        }
+        setIsLoading(true);
+        const result = await dispatch(fetchTeamMembers(workspaceId)).unwrap();
+
+        // Map the fetched data to match the existing teamMembers state structure
+        const formattedMembers = result.map((member) => ({
+          id: member.id,
+          name: member.user?.fullName || member.user?.username || "Unknown",
+          email: member.user?.email || "No email",
+          userType: member.role,
+          lastAccess: member.createdAt,
+          status: member.user?.status || "N/A",
+          joinDate: new Date(member.createdAt).toLocaleString("en-US", {
+            month: "2-digit",
+            day: "2-digit",
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true,
+          }),
+        }));
+        setTeamMembers(formattedMembers);
+      } catch (err) {
+        console.error("Error fetching team members:", err);
+        setError(err?.message || "Failed to fetch team members.");
+        cogoToast.error(error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [dispatch, workspaceId, error]);
 
   // Edit Modal Handler
   const handleEdit = (member) => {
     setSelectedMember(member);
-    setFormData({ name: member.name, email: member.email });
+    setFormData({ name: member?.user?.name, email: member?.user?.email });
     setIsEditModalOpen(true);
   };
 
@@ -60,7 +85,6 @@ const TeamMembersPage = ({ onSubmit }) => {
     setIsDeleteModalOpen(true);
   };
 
-  // Confirm Delete
   const confirmDelete = () => {
     if (!selectedMember) return;
 
@@ -82,11 +106,16 @@ const TeamMembersPage = ({ onSubmit }) => {
       return action;
     }),
   };
+
   const handleKeyPress = (e) => {
     if (e?.key === "Enter") {
       saveEdit();
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <Layout onSubmit={onSubmit}>

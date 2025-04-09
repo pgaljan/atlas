@@ -93,7 +93,6 @@ export class BackupController {
   async getBackup(@Param('id') backupId: string) {
     try {
       const parsedBackupId = parseInt(backupId, 10);
-
       return await this.backupService.getBackup(parsedBackupId.toString());
     } catch (error) {
       if (error instanceof HttpException) {
@@ -125,14 +124,12 @@ export class BackupController {
   async getAllBackups(@Query('userId') userId?: string) {
     try {
       const parsedUserId = userId ? parseInt(userId, 10) : undefined;
-
       if (userId && isNaN(parsedUserId)) {
         throw new HttpException(
           'Invalid userId provided',
           HttpStatus.BAD_REQUEST,
         );
       }
-
       return await this.backupService.getAllBackups(parsedUserId?.toString());
     } catch (error) {
       if (error instanceof HttpException) {

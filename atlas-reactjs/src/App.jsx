@@ -33,6 +33,9 @@ const Dashboard = lazy(() =>
   import("./containers/user-portal/dashboard/Dashboard")
 );
 const Backups = lazy(() => import("./containers/user-portal/backups/Backups"));
+const InvitedMembers = lazy(() =>
+  import("./containers/user-portal/invited-members/InvitedMembers")
+);
 const UpgradePlans = lazy(() =>
   import("./containers/user-portal/upgrade-plans/UpgradePlans")
 );
@@ -82,6 +85,7 @@ const publicRoutes = [
 const userRoutes = [
   { path: "/app/dashboard", element: <Dashboard /> },
   { path: "/app/backups", element: <Backups /> },
+  { path: "/app/invited-members", element: <InvitedMembers /> },
   { path: "/app/upgrade-plans", element: <UpgradePlans /> },
   { path: "/app/s/:username/:structureId", element: <MarkmapCanvas /> },
   { path: "/app/coming-soon", element: <ComingSoon /> },

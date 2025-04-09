@@ -1,16 +1,22 @@
 import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import React, { useState } from "react";
+import { useDispatch } from "react-redux";
+import { inviteTeamMember } from "../../redux/slices/team-memebers";
 
 const ShareModal = ({ isOpen, onClose }) => {
   const [email, setEmail] = useState("");
+  const workspaceId = Cookies.get("workspaceId");
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [customMessage, setCustomMessage] = useState("");
+  const [selectedRole, setSelectedRole] = useState("edit");
+  const [isSending, setIsSending] = useState(false);
 
-  // Regex for validating email
+  const dispatch = useDispatch();
+
   const isValidEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-  // Add email to the selected list
   const handleAddEmail = (e) => {
     if (e.key === "Enter" && isValidEmail(email)) {
       setSelectedEmails((prev) => [...prev, email.trim()]);
@@ -18,11 +24,47 @@ const ShareModal = ({ isOpen, onClose }) => {
     }
   };
 
-  // Remove email from the selected list
   const handleRemoveEmail = (emailToRemove) => {
     setSelectedEmails((prev) =>
       prev.filter((selectedEmail) => selectedEmail !== emailToRemove)
     );
+  };
+
+  const handleSendInvites = async () => {
+    if (!workspaceId) {
+      cogoToast.error("Workspace ID is missing.");
+      return;
+    }
+
+    if (selectedEmails.length === 0) {
+      navigator.clipboard.writeText("Copied link!");
+      cogoToast.success("Link copied to clipboard!");
+      return;
+    }
+
+    setIsSending(true);
+
+    try {
+      await Promise.all(
+        selectedEmails.map((email) =>
+          dispatch(
+            inviteTeamMember({
+              workspaceId,
+              email,
+              role: selectedRole,
+            })
+          ).unwrap()
+        )
+      );
+
+      cogoToast.success("Invites sent successfully!");
+      setSelectedEmails([]);
+      setCustomMessage("");
+    } catch (error) {
+      cogoToast.error(`Failed to send invites: ${error?.message || error}`);
+    } finally {
+      setIsSending(false);
+    }
   };
 
   if (!isOpen) return null;
@@ -54,7 +96,11 @@ const ShareModal = ({ isOpen, onClose }) => {
               onKeyDown={handleAddEmail}
               className="flex-grow border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none  focus:border-custom-main"
             />
-            <select className="border-2 border-gray-300 rounded-md px-2 py-2 focus:outline-none  focus:border-custom-main">
+            <select
+              value={selectedRole}
+              onChange={(e) => setSelectedRole(e.target.value)}
+              className="border-2 border-gray-300 rounded-md px-2 py-2 focus:outline-none focus:border-custom-main"
+            >
               <option value="edit">Can edit</option>
               <option value="view">Can view</option>
             </select>
@@ -88,7 +134,6 @@ const ShareModal = ({ isOpen, onClose }) => {
 
         {/* Conditional Rendering */}
         {selectedEmails.length > 0 ? (
-          // Custom Message Section (Visible when emails are added)
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700">
               Add a custom message (optional)
@@ -102,7 +147,6 @@ const ShareModal = ({ isOpen, onClose }) => {
             ></textarea>
           </div>
         ) : (
-          // Link Settings Section (Visible when no emails are added)
           <div className="mt-4">
             <label className="block text-sm font-medium text-gray-700">
               Link settings
@@ -126,20 +170,19 @@ const ShareModal = ({ isOpen, onClose }) => {
             }`}
             onClick={() => {
               if (selectedEmails.length > 0) {
-                cogoToast.success(
-                  `Invites sent to: ${selectedEmails.join(
-                    ", "
-                  )}\nMessage: ${customMessage}`
-                );
-                setSelectedEmails([]);
-                setCustomMessage("");
+                handleSendInvites();
               } else {
                 navigator.clipboard.writeText("Copied link!");
                 cogoToast.success("Link copied to clipboard!");
               }
             }}
+            disabled={selectedEmails.length > 0 ? isSending : false}
           >
-            {selectedEmails.length > 0 ? "Send Invites" : "Copy Link"}
+            {isSending && selectedEmails.length > 0
+              ? "Sending..."
+              : selectedEmails.length > 0
+              ? "Send Invites"
+              : "Copy Link"}
           </button>
         </div>
       </div>

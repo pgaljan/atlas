@@ -17,6 +17,7 @@ const AddQuillModal = ({
   position,
   onClose,
   elementId,
+  fetchData,
   onSuccess,
   actionType,
   text,
@@ -25,7 +26,6 @@ const AddQuillModal = ({
   recordId,
   elementValue,
 }) => {
-  console.log(recordId)
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
@@ -110,11 +110,12 @@ const AddQuillModal = ({
         const response = await dispatch(
           createRecord({ elementId, createRecordDto })
         ).unwrap();
-        onSuccess();
         await dispatch(getRecordById(response.recordId)).unwrap();
         cogoToast.success("Record added successfully!");
       }
       onClose();
+      onSuccess();
+      fetchData();
     } catch (error) {
       cogoToast.error(`Error adding record: ${error.message}`);
     } finally {

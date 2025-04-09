@@ -30,8 +30,24 @@ export class ElementService {
     });
   }
 
+  // Helper method to get the next order index for the given structure and parent
+  private async getNextOrderIndex(
+    structureId: string,
+    parentId: string | null,
+  ): Promise<number> {
+    const maxElement = await this.prisma.element.findFirst({
+      where: {
+        structureId,
+        parentId,
+      },
+      orderBy: { orderIndex: 'desc' },
+      select: { orderIndex: true },
+    });
+    return maxElement ? maxElement.orderIndex + 1 : 0;
+  }
+
   async createElement(createElementDto: CreateElementDto, userId?: number) {
-    const { structureId, name, recordId } = createElementDto;
+    const { structureId, name, recordId, parentId } = createElementDto;
 
     if (!structureId || !name) {
       throw new BadRequestException('Missing required fields');
@@ -46,15 +62,25 @@ export class ElementService {
     }
 
     try {
+      // Determine next order index for the current parent (or top-level if no parent)
+      const nextOrderIndex = await this.getNextOrderIndex(
+        structureId,
+        parentId ? parentId : null,
+      );
+
       const createdElement = await this.prisma.element.create({
         data: {
           structureId,
+          parentId: parentId || null,
           name,
+          recordId,
+          orderIndex: nextOrderIndex,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
       });
 
+      // Update structure updatedAt field.
       await this.prisma.structure.update({
         where: { id: structureId },
         data: { updatedAt: new Date() },
@@ -88,12 +114,18 @@ export class ElementService {
       }
 
       try {
+        const nextOrderIndex = await this.getNextOrderIndex(
+          structureId,
+          parentId,
+        );
+
         const createdElement = await this.prisma.element.create({
           data: {
             structureId,
             parentId,
             name,
             recordId,
+            orderIndex: nextOrderIndex,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -104,6 +136,7 @@ export class ElementService {
           data: { updatedAt: new Date() },
         });
 
+        // If the current nested element has its own children, recursively create them.
         if (
           Array.isArray(elementDto.children) &&
           elementDto.children.length > 0

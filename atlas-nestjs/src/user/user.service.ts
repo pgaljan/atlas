@@ -33,6 +33,24 @@ export class UserService {
               name: true,
             },
           },
+          subscription: {
+            select: {
+              id: false,
+              planId: false,
+              startDate: false,
+              endDate: false,
+              status: false,
+              plan: {
+                select: {
+                  id: false,
+                  name: true,
+                  description: false,
+                  price: false,
+                  features: false,
+                },
+              },
+            },
+          },
         },
       });
       return users;

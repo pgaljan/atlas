@@ -39,22 +39,22 @@ export class RestoreController {
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
       throw new HttpException('Invalid userId', HttpStatus.BAD_REQUEST);
     }
+    // Ensure file has a .zip extension
+    if (!file.originalname.endsWith('.zip')) {
+      throw new HttpException(
+        'Invalid file type. Expected a .zip file.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
 
     try {
-      // Check file extension
-      if (!file.originalname.endsWith('.zip')) {
-        throw new HttpException(
-          'Invalid file type. Expected .zip file.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
       return await this.restoreService.restoreBackup(
         file.buffer,
         structureId,
         userId,
       );
     } catch (error) {
+      console.error(error);
       throw new HttpException(
         `Failed to restore backup: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -62,7 +62,6 @@ export class RestoreController {
     }
   }
 
-  // Updated full backup endpoint to accept userId as well.
   @Post('full')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -79,19 +78,18 @@ export class RestoreController {
     if (!userId || typeof userId !== 'string' || userId.trim() === '') {
       throw new HttpException('Invalid userId', HttpStatus.BAD_REQUEST);
     }
-
+    if (!file.originalname.endsWith('.zip')) {
+      throw new HttpException(
+        'Invalid file type. Expected a .zip file.',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
     try {
-      if (!file.originalname.endsWith('.zip')) {
-        throw new HttpException(
-          'Invalid file type. Expected .zip file.',
-          HttpStatus.BAD_REQUEST,
-        );
-      }
-
       return await this.restoreService.restoreFullBackup(file.buffer, userId);
     } catch (error) {
+      console.error('Restore full backup error:', error);
       throw new HttpException(
-        `Failed to restore backup: ${error.message}`,
+        `Failed to restore full backup: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

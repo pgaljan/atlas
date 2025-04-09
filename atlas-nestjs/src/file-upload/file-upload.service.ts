@@ -9,6 +9,22 @@ import { PrismaService } from '../prisma/prisma.service';
 export class FileUploadService {
   constructor(private readonly prisma: PrismaService) {}
 
+  // Helper method to get the next order index for a given structure and parent element.
+  private async getNextOrderIndex(
+    structureId: string,
+    parentId: string | null,
+  ): Promise<number> {
+    const maxElement = await this.prisma.element.findFirst({
+      where: {
+        structureId,
+        parentId, 
+      },
+      orderBy: { orderIndex: 'desc' },
+      select: { orderIndex: true },
+    });
+    return maxElement ? maxElement.orderIndex + 1 : 0;
+  }
+
   async createAttachment(
     userId: string,
     file: Express.Multer.File,
@@ -77,7 +93,7 @@ export class FileUploadService {
     try {
       let structure: any;
 
-      // If a structure ID is provided, fetch it, else create a new one
+      // If a structure ID is provided, fetch it; otherwise create a new one.
       if (structureId) {
         structure = await this.prisma.structure.findUnique({
           where: { id: structureId },
@@ -96,9 +112,10 @@ export class FileUploadService {
         });
       }
 
+      // Stack to track the last element at each heading level.
       const levelStack: { level: number; id: string }[] = [];
 
-      // Update elements to set their correct parentId
+      // Iterate through parsed data rows to create elements.
       for (const row of parsedData) {
         const match = row.element.match(/^(#+)\s*(.*)$/);
         if (!match) continue;
@@ -106,10 +123,10 @@ export class FileUploadService {
         const level = match[1].length;
         const name = match[2].trim();
 
-        // **Skip elements where there is only a single `#`**
+        // **Skip elements where there is only a single `#` (level 1)**
         if (level === 1) continue;
 
-        // Find the correct parent
+        // Find the correct parent by popping levels that are equal or higher.
         while (
           levelStack.length &&
           levelStack[levelStack.length - 1].level >= level
@@ -121,11 +138,15 @@ export class FileUploadService {
           ? levelStack[levelStack.length - 1].id
           : null;
 
+        // Determine the next order index for the new element.
+        const orderIndex = await this.getNextOrderIndex(structure.id, parentId);
+
         const element = await this.prisma.element.create({
           data: {
             name,
             structureId: structure.id,
             parentId,
+            orderIndex, // set the auto-incremented orderIndex
           },
         });
 
@@ -135,7 +156,7 @@ export class FileUploadService {
           };
 
           const tags = row['Tags']
-            ? row['Tags'].split(',').map((tag: any, index) => ({
+            ? row['Tags'].split(',').map((tag: string, index: number) => ({
                 id: Date.now() + index,
                 key: tag.trim().toLowerCase().replace(/\s+/g, '_'),
                 value: tag.trim(),
@@ -145,16 +166,17 @@ export class FileUploadService {
           await this.prisma.record.create({
             data: {
               metadata,
-              tags, 
+              tags,
               Element: { connect: { id: element.id } },
             },
           });
         }
 
+        // Push the created element into the level stack.
         levelStack.push({ level, id: element.id });
       }
 
-      // **Update the structure title based on level 1 element**
+      // Update the structure title based on the level 1 element.
       await this.updateStructureTitle(structure.id, parsedData);
 
       return structure;

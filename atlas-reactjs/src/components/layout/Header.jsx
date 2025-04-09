@@ -3,25 +3,17 @@ import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import Cookies from "js-cookie";
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
-import {
-  HiInformationCircle,
-  HiMail,
-  HiNewspaper,
-  HiSupport,
-} from "react-icons/hi";
+import { HiUserAdd } from "react-icons/hi";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
+import { BiMailSend } from "react-icons/bi";
+import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../redux/slices/auth";
+import InviteModal from "../modals/InviteModal";
 
 const Header = () => {
-  const [activeTab, setActiveTab] = useState("");
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
-  const handleTabClick = (tab) => {
-    setActiveTab(tab);
-    window.location.href = `/${tab.toLowerCase()}`;
-  };
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -42,7 +34,7 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-gray-100  flex justify-between items-center">
+    <header className="bg-gray-100 flex justify-between items-center">
       <Navbar fluid rounded className="w-full p-4">
         {/* Logo on the Left */}
         <Navbar.Brand href="#">
@@ -56,47 +48,21 @@ const Header = () => {
             <input
               type="text"
               placeholder="Search for structure..."
-              className="border-2 border-gray-300 rounded-md px-4 py-2 w-full focus:border-custom-main  focus:outline-none pl-10"
+              className="border-2 border-gray-300 rounded-md px-4 py-2 w-full focus:border-custom-main focus:outline-none pl-10"
             />
           </div>
         </div>
 
         {/* Right Side - Learning, Help, Upgrade, User Image */}
         <div className="flex items-center ml-4 space-x-6">
-          {/* Learning Tab */}
-          {/* <div
-            className={`cursor-pointer ${
-              activeTab === "Learning"
-                ? "underline underline-offset-4 text-black"
-                : "text-gray-600"
-            }`}
-            onClick={() => handleTabClick("Learning")}
+          {/* Invite Button */}
+          <button
+            onClick={() => setIsInviteModalOpen(true)}
+            className="flex items-center gap-2 px-4 py-2 text-custom-main rounded-lg border-2 border-custom-main hover:text-white hover:bg-custom-main transition"
           >
-            Support
-          </div> */}
-
-          {/* <Dropdown
-            arrowIcon={false}
-            inline
-            label={
-              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center cursor-pointer">
-                ?
-              </div>
-            }
-          >
-            <Dropdown.Item icon={HiInformationCircle}>
-              <span className="ml-2">Intro to Atlas</span>
-            </Dropdown.Item>
-            <Dropdown.Item icon={HiSupport}>
-              <span className="ml-2">Help Center</span>
-            </Dropdown.Item>
-            <Dropdown.Item icon={HiMail}>
-              <span className="ml-2">Email Support</span>
-            </Dropdown.Item>
-            <Dropdown.Item icon={HiNewspaper}>
-              <span className="ml-2">Atlas News and Updates</span>
-            </Dropdown.Item>
-          </Dropdown> */}
+            <BiMailSend size={20} />
+            <span className="text-base">Invite Members</span>
+          </button>
 
           {/* User Icon */}
           <Dropdown
@@ -117,16 +83,20 @@ const Header = () => {
                   {Cookies.get("atlas_username")}
                 </span>
               </Dropdown.Header>
-              {/* <Link to="/app/me">
-                <Dropdown.Item>Profile</Dropdown.Item>
-              </Link> */}
-              {/* <Dropdown.Item>Notification preferences</Dropdown.Item> */}
               <Dropdown.Divider />
               <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
             </div>
           </Dropdown>
         </div>
       </Navbar>
+
+      {/* Invite Modal */}
+      {isInviteModalOpen && (
+        <InviteModal
+          isOpen={isInviteModalOpen}
+          onClose={() => setIsInviteModalOpen(false)}
+        />
+      )}
     </header>
   );
 };

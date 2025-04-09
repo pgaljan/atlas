@@ -2,23 +2,38 @@ import * as d3 from "d3";
 
 export const assignWbsNumbers = (
   node,
-  prefix = "1",
+  prefix = null,
   parentStructureId = null
 ) => {
   if (!node) return null;
 
+  const currentWbs = node.wbs ? node.wbs : prefix ? prefix : "1";
   const wbsNode = {
     ...node,
     originalContent: node.originalContent || node.content,
-    wbs: prefix,
+    wbs: currentWbs,
     structureId: node.structureId || parentStructureId,
   };
-  if (node.children) {
-    wbsNode.children = node.children.map((child, index) =>
-      assignWbsNumbers(child, `${prefix}.${index + 1}`, wbsNode.structureId)
+
+  // If node has children, sort them based on orderIndex (if present) before processing
+  if (node.children && node.children.length > 0) {
+    const sortedChildren = node.children.slice().sort((a, b) => {
+      // Check if both nodes have an orderIndex field
+      if (a.orderIndex != null && b.orderIndex != null) {
+        return a.orderIndex - b.orderIndex;
+      }
+      // Fallback: if orderIndex isn’t present, keep riginal order
+      return 0;
+    });
+
+    wbsNode.children = sortedChildren.map((child, index) =>
+      assignWbsNumbers(
+        child,
+        child.wbs ? child.wbs : `${currentWbs}.${index + 1}`,
+        wbsNode.structureId
+      )
     );
   }
-
   return wbsNode;
 };
 
@@ -109,4 +124,19 @@ export const updateNodeLevels = (node, currentLevel = 0) => {
   }
 
   return node;
+};
+
+
+
+// Function to assign colors to each node and its descendants
+export const assignNodeColors = (node, colorScale) => {
+  // Assign a color based on the node's depth or any other property
+  node.color = colorScale(node.depth);
+
+  // Recursively assign the same color to all children
+  if (node.children) {
+    node.children.forEach((child) => {
+      assignNodeColors(child, colorScale);
+    });
+  }
 };

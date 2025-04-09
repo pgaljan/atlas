@@ -17,6 +17,7 @@ import { StructureModule } from './structure/structure.module';
 import { UserModule } from './user/user.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TeamMemberModule } from './team-member/team-member.module';
+import { InvitationModule } from './invitations/invitations.module';
 
 @Module({
   imports: [
@@ -38,6 +39,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
     RestoreBackupModule,
     SubscriptionsModule,
     TeamMemberModule,
+    InvitationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
