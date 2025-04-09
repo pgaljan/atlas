@@ -126,17 +126,28 @@ export const updateNodeLevels = (node, currentLevel = 0) => {
   return node;
 };
 
-
-
-// Function to assign colors to each node and its descendants
 export const assignNodeColors = (node, colorScale) => {
-  // Assign a color based on the node's depth or any other property
+  // Set the custom property so markmap’s color function can use it.
   node.color = colorScale(node.depth);
-
-  // Recursively assign the same color to all children
+  
   if (node.children) {
     node.children.forEach((child) => {
+      // Here you can decide how you want to assign the color.
+      // In your interactions, you pass a constant color function.
       assignNodeColors(child, colorScale);
     });
   }
+};
+
+export const sanitizeTreeData = (node) => {
+  return {
+    // Use node.name OR fallback to node.content for labeling.
+    content: node.name || node.content,
+    // Preserve the custom color (if previously assigned)
+    color: node.color || null,
+    // Preserve node depth if you need it elsewhere (optional)
+    depth: node.depth || 0,
+    // Recursively sanitize children, if any.
+    children: node.children ? node.children.map(sanitizeTreeData) : [],
+  };
 };

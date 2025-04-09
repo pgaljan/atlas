@@ -1,7 +1,7 @@
-import { Navbar } from "flowbite-react";
-import React from "react";
-import NotificationDropdown from "../notification-dropdown/NotificationDropdown";
-import UserDropdown from "../user-dropdown/UserDropdown";
+import { Navbar } from "flowbite-react"
+import React from "react"
+import NotificationDropdown from "../notification-dropdown/NotificationDropdown"
+import UserDropdown from "../user-dropdown/UserDropdown"
 
 const AdminHeader = () => {
   return (
@@ -13,12 +13,12 @@ const AdminHeader = () => {
           </h1>
         </Navbar.Brand>
         <div className="flex items-center gap-x-4">
-          <NotificationDropdown />
+          {/* <NotificationDropdown /> */}
           <UserDropdown />
         </div>
       </Navbar>
     </header>
-  );
-};
+  )
+}
 
-export default AdminHeader;
+export default AdminHeader
