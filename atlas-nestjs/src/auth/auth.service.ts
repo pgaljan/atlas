@@ -518,6 +518,31 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
+        if (!role) {
+          throw new ConflictException(
+            `Default role '${defaultRoleName}' not found`,
+          );
+        }
+
+        const tempUsername = generateFromEmail(user.email, 5);
+
+        const newWorkspace = await this.prismaService.workspace.create({
+          data: {
+            name: `${user.name}'s Workspace`,
+          },
+        });
+
+        existingUser = await this.prismaService.user.create({
+          data: {
+            email: user.email,
+            username: tempUsername,
+            fullName: user.name,
+            password: '',
+            roleId: role.id,
+            defaultWorkspaceId: newWorkspace.id,
+          },
+        });
+
         let modifiedUsername = existingUser.fullName;
         if (existingUser.fullName.includes(' ')) {
           const parts = existingUser.fullName.split(' ');
@@ -530,31 +555,12 @@ export class AuthService {
           modifiedUsername = `${baseUsername}${suffix}`;
         }
 
-        if (!role) {
-          throw new ConflictException(
-            `Default role '${defaultRoleName}' not found`,
-          );
-        }
-
-        const newWorkspace = await this.prismaService.workspace.create({
-          data: {
-            name: `${modifiedUsername}'s Workspace`,
-          },
+        await this.prismaService.workspace.update({
+          where: { id: newWorkspace.id },
+          data: { name: `${modifiedUsername}'s Workspace` },
         });
 
-        existingUser = await this.prismaService.user.create({
-          data: {
-            email: user.email,
-            username: generateFromEmail(user.email, 5),
-            fullName: user.name,
-            password: '',
-            roleId: role.id,
-            defaultWorkspaceId: newWorkspace.id,
-          },
-        });
-
-        // Assign a default payment plan (e.g., "Personal")
-        const freePlan: Plan = await this.prismaService.plan.findFirst({
+        const freePlan = await this.prismaService.plan.findFirst({
           where: { name: 'Personal' },
         });
 
@@ -580,12 +586,13 @@ export class AuthService {
       const payload = { email: existingUser.email, sub: existingUser.id };
       const accessToken = this.jwtService.sign(payload);
 
-      // Redirect to frontend with encrypted data
       const frontendUrl = process.env.FRONTEND_URL;
       const secretKeyHex = process.env.ENCRYPTION_SECRET;
+
       if (!secretKeyHex || secretKeyHex.length !== 64) {
         throw new InternalServerErrorException('Invalid ENCRYPTION_SECRET');
       }
+
       const secretKey = Buffer.from(secretKeyHex, 'hex');
       const userData = JSON.stringify({
         token: accessToken,
