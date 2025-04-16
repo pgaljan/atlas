@@ -3,15 +3,12 @@ import { jsPDF } from "jspdf"
 import JSZip from "jszip"
 import { assignNodeColors } from "../utils/markmapHelpers"
 import * as d3 from "d3"
+
 export const sanitizeTreeData = node => {
   return {
-    // Use node.name OR fallback to node.content for labeling.
     content: node.name || node.content,
-    // Preserve the custom color (if previously assigned)
     color: node.color || null,
-    // Preserve node depth if you need it elsewhere (optional)
     depth: node.depth || 0,
-    // Recursively sanitize children, if any.
     children: node.children ? node.children.map(sanitizeTreeData) : [],
   }
 }

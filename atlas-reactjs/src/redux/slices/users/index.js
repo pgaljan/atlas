@@ -56,7 +56,6 @@ export const deleteUser = createAsyncThunk(
   "user/deleteUser",
   async ({ userId, reason }, { rejectWithValue }) => {
     try {
-      console.log(userId)
       const response = await axiosInstance.delete(`/user/delete/${userId}`, {
         data: { reason },
       });

@@ -42,11 +42,12 @@ model Workspace {
   name      String
   createdAt DateTime @default(now())
 
-  teams      Team[]
-  structures Structure[]
-  defaultFor User[]       @relation("UserDefaultWorkspace")
-  Backup     Backup[]
-  Invitation Invitation[]
+  teams            Team[]
+  structures       Structure[]
+  defaultFor       User[]             @relation("UserDefaultWorkspace")
+  Backup           Backup[]
+  Invitation       Invitation[]
+  StructureCatalog StructureCatalog[]
 }
 
 model User {
@@ -358,4 +359,20 @@ model Webhook {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   structure   Structure @relation(fields: [structureId], references: [id])
+}
+
+model StructureCatalog {
+  id           String   @id @default(uuid())
+  name         String
+  description  String?
+  thumbnailUrl String?
+  fileUrl      String?
+  userTier     String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  workspaceId String?
+  workspace   Workspace? @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
 }

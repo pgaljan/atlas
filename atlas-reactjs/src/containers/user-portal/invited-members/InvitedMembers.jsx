@@ -19,6 +19,7 @@ const InvitedMembers = ({ onSubmit }) => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     const fetchData = async () => {
@@ -109,6 +110,9 @@ const InvitedMembers = ({ onSubmit }) => {
       setIsDeleteModalOpen(false);
     }
   };
+  const filteredMembers = teamMembers.filter((member) =>
+    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const updatedinvitedMembersConfig = {
     ...invitedMembersConfig,
@@ -118,6 +122,7 @@ const InvitedMembers = ({ onSubmit }) => {
       }
       return action;
     }),
+    onSearchChange: setSearchQuery,
   };
 
   return (
@@ -130,7 +135,11 @@ const InvitedMembers = ({ onSubmit }) => {
             </div>
           </div>
         ) : (
-          <GenericTable {...updatedinvitedMembersConfig} data={teamMembers} />
+          <GenericTable
+            {...updatedinvitedMembersConfig}
+            data={filteredMembers}
+            searchQuery={searchQuery}
+          />
         )}
       </div>
 

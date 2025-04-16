@@ -13,7 +13,7 @@ const InviteModal = ({ onClose }) => {
   const [customMessage, setCustomMessage] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [userData, setUserData] = useState(null);
-  const [emailError, setEmailError] = useState(""); 
+  const [emailError, setEmailError] = useState("");
 
   const userId = Cookies.get("atlas_userId");
 
@@ -33,16 +33,36 @@ const InviteModal = ({ onClose }) => {
   const isValidEmail = (email) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim());
 
-  const handleAddEmail = (e) => {
-    if (e.key === "Enter") {
-      if (isValidEmail(email)) {
-        setSelectedEmails((prev) => [...prev, email.trim()]);
-        setEmail("");
-        setEmailError(""); // Clear error when email is valid
-      } else {
-        setEmailError("Please enter a valid email.");
+  const handleAddEmail = (e, triggeredByBlur = false) => {
+    if (!triggeredByBlur && e.key !== "Enter") return;
+
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail) {
+      if (!triggeredByBlur) {
+        setEmailError("Please enter an email.");
       }
+      return;
     }
+
+    if (!isValidEmail(trimmedEmail)) {
+      setEmailError("That doesn’t look like a valid email.");
+      return;
+    }
+
+    if (selectedEmails.includes(trimmedEmail)) {
+      setEmailError("This email has already been added.");
+      return;
+    }
+
+    if (userData?.inviteCount <= selectedEmails.length) {
+      setEmailError("You’ve used all your invites. Contact admin for more.");
+      return;
+    }
+
+    setSelectedEmails((prev) => [...prev, trimmedEmail]);
+    setEmail("");
+    setEmailError("");
   };
 
   const handleRemoveEmail = (emailToRemove) => {
@@ -103,12 +123,25 @@ const InviteModal = ({ onClose }) => {
               type="text"
               placeholder="Enter a teammate's email and press Enter"
               value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (emailError) setEmailError("");
+              }}
               onKeyDown={handleAddEmail}
+              onBlur={() => handleAddEmail(null, true)}
               className="flex-grow border-2 border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
             />
+            <button
+              type="button"
+              onClick={() => handleAddEmail({ key: "Enter" })}
+              className="bg-custom-main text-white px-4 py-2 rounded-md hover:bg-custom-main-dark transition duration-200 ease-in-out"
+            >
+              Enter
+            </button>
           </div>
+
           {emailError && <p className="text-red-500 text-sm">{emailError}</p>}
+
           <p className="text-sm text-gray-500 mt-2">
             Press <b>Enter</b> to add an email address.
           </p>
@@ -138,7 +171,7 @@ const InviteModal = ({ onClose }) => {
 
         {/* Personalization Section */}
         <div className="mt-4">
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             Personalize Your Invitation (Optional)
           </label>
           <textarea
@@ -146,7 +179,7 @@ const InviteModal = ({ onClose }) => {
             placeholder="Write a brief message to invite your teammate..."
             value={customMessage}
             onChange={(e) => setCustomMessage(e.target.value)}
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-custom-main"
           ></textarea>
         </div>
 

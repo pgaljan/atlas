@@ -1,8 +1,13 @@
 import React, { Suspense, lazy, useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import Cookies from "js-cookie";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
+import Carousel from "./components/carousels/TourCarousel";
+import { fetchCatalogsByUserTier } from "./redux/slices/structure-catalogues";
+import AdminPrivateRoute from "./routes/AdminPrivateRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
-import AdminPrivateRoute from "./routes/AdminPrivateRoute";
+import { fetchSubscription } from "./redux/slices/subscriptions";
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
 const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
@@ -45,13 +50,16 @@ const MarkmapCanvas = lazy(() =>
 
 // Admin Portal Pages
 const UserTable = lazy(() =>
-  import("./containers/admin-portal/users-management/index")
+  import("./containers/admin-portal/users-management")
+);
+const StructureCatalogues = lazy(() =>
+  import("./containers/admin-portal/structure-catalogues")
 );
 const UserProfiles = lazy(() =>
   import("./containers/admin-portal/user-profile")
 );
 const SubscriptionTable = lazy(() =>
-  import("./containers/admin-portal/subscription-management/index")
+  import("./containers/admin-portal/subscription-management")
 );
 const AdminDashboard = lazy(() =>
   import("./containers/admin-portal/dashboard")
@@ -93,6 +101,10 @@ const userRoutes = [
 
 const adminRoutes = [
   { path: "/app/admin-portal/user-management", element: <UserTable /> },
+  {
+    path: "/app/admin-portal/structure-catalogues",
+    element: <StructureCatalogues />,
+  },
   { path: "/app/admin-portal/user-profile", element: <UserProfiles /> },
   {
     path: "/app/admin-portal/subscription-plan",
@@ -104,7 +116,34 @@ const adminRoutes = [
 const App = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const userId = Cookies.get("atlas_userId");
+  const [catalogs, setCatalogs] = useState([]);
+  const [currentPlan, setCurrentPlan] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
+  const [showBanner, setShowBanner] = useState(true);
+
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res.payload?.plan?.name);
+      });
+    }
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentPlan) return;
+
+      const resultAction = await dispatch(fetchCatalogsByUserTier(currentPlan));
+
+      if (fetchCatalogsByUserTier.fulfilled.match(resultAction)) {
+        setCatalogs(resultAction.payload);
+      }
+    };
+
+    fetchData();
+  }, [dispatch, currentPlan]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -118,8 +157,20 @@ const App = () => {
     navigate({ search: params.toString() }, { replace: true });
   };
 
+  const handleBannerClose = () => {
+    setShowBanner(false);
+  };
+
+  const isUserRoute = userRoutes.some((route) =>
+    location.pathname.startsWith(route.path)
+  );
+
   return (
     <div className="min-h-screen bg-gray-100">
+      {userId && isUserRoute && showBanner && (
+        <Carousel data={catalogs} duration={5000} onClose={handleBannerClose} />
+      )}
+
       <Suspense
         fallback={
           <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
@@ -136,6 +187,7 @@ const App = () => {
               element={<PublicRoute>{element}</PublicRoute>}
             />
           ))}
+
           {/* User Private Routes */}
           {userRoutes.map(({ path, element }) => (
             <Route
@@ -144,6 +196,8 @@ const App = () => {
               element={<PrivateRoute>{element}</PrivateRoute>}
             />
           ))}
+
+          {/* Admin Routes */}
           {adminRoutes.map(({ path, element }) => (
             <Route
               key={path}
@@ -152,6 +206,7 @@ const App = () => {
             />
           ))}
         </Routes>
+
         {isModalVisible && <PremiumModal closeModal={closeModal} />}
       </Suspense>
     </div>

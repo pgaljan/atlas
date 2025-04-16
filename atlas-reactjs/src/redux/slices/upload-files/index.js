@@ -38,6 +38,27 @@ export const uploadFile = createAsyncThunk(
   }
 );
 
+// Async thunk for uploading a raw file (without parsing)
+export const uploadRawFile = createAsyncThunk(
+  "file/uploadRaw",
+  async ({ file, userId }, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("userId", userId);
+
+      const response = await axiosInstance.post("/file/upload-raw", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Async thunk for fetching media by userId
 export const fetchMediaByUserId = createAsyncThunk(
   "file/fetchByUserId",
@@ -91,7 +112,7 @@ const fileSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // Upload file
+      // Upload file (parsed)
       .addCase(uploadFile.pending, (state) => {
         state.status = "loading";
         state.error = null;
@@ -106,6 +127,23 @@ const fileSlice = createSlice({
         }
       })
       .addCase(uploadFile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Upload raw file
+      .addCase(uploadRawFile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(uploadRawFile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        // Assuming the raw upload returns a fileUrl and a record (if needed)
+        if (action.payload.fileUrl) {
+          state.fileUrl = action.payload.fileUrl;
+        }
+        state.uploadedFile = action.payload.record || action.payload;
+      })
+      .addCase(uploadRawFile.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       })

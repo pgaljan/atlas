@@ -13,6 +13,8 @@ const GenericTable = ({
   emptyState = {},
   actions = null,
   buttons = [],
+  onSearchChange,
+  searchQuery = "",
   showId,
 }) => {
   const [activeTab, setActiveTab] = useState(tabs ? tabs[0]?.key : null);
@@ -87,7 +89,7 @@ const GenericTable = ({
         )}
       </ModalComponent>
 
-      {filteredData?.length === 0 && activeTab != "pending" ? (
+      {filteredData?.length === 0 && !searchQuery && activeTab != "pending" ? (
         <div className="flex h-screen flex-col text-center p-6">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
@@ -136,6 +138,7 @@ const GenericTable = ({
                   type="text"
                   placeholder="Search..."
                   className="w-full pl-10 pr-4 py-2 max-w-[60%] border-2 rounded-lg focus:border-custom-main focus:outline-none"
+                  onChange={(e) => onSearchChange?.(e.target.value)}
                 />
               </div>
               <div className="flex space-x-2">
@@ -178,7 +181,22 @@ const GenericTable = ({
               </thead>
               <tbody>
                 {filteredData?.length === 0 ? (
-                  activeTab === "pending" ? (
+                  searchQuery ? (
+                    <tr>
+                      <td
+                        colSpan={
+                          columns.length + (showId ? 1 : 0) + (actions ? 1 : 0)
+                        }
+                        className="text-center py-10 text-custom-text-grey"
+                      >
+                        <div className="flex flex-col items-center justify-center">
+                          <p className="text-lg text-custom-text-grey">
+                            No member found against this email.
+                          </p>
+                        </div>
+                      </td>
+                    </tr>
+                  ) : activeTab === "pending" ? (
                     <tr>
                       <td
                         colSpan={columns.length + (showId ? 1 : 0)}

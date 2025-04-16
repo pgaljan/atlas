@@ -2,7 +2,8 @@ import { Sidebar } from "flowbite-react";
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { IoMdArrowRoundBack } from "react-icons/io";
-import { FaUsersGear } from "react-icons/fa6";
+import { BiCarousel } from "react-icons/bi";
+import { FiUsers } from "react-icons/fi";
 import { MdWorkspacePremium } from "react-icons/md";
 
 const ownTheme = {
@@ -31,9 +32,14 @@ const AdminSidebar = () => {
 
   const menuItems = [
     {
-      name: "Users",
-      icon: FaUsersGear,
+      name: "Users Management",
+      icon: FiUsers,
       link: "/app/admin-portal/user-management",
+    },
+    {
+      name: "Structure Catalogues",
+      icon: BiCarousel,
+      link: "/app/admin-portal/structure-catalogues",
     },
     {
       name: "Subscription Plan",

@@ -46,7 +46,6 @@ export class FileUploadController {
     @Request() req: Request,
     @Body('structureId') structureId?: string,
   ) {
-    // Check if file is uploaded
     if (!file) {
       throw new BadRequestException('No file uploaded.');
     }
@@ -71,13 +70,6 @@ export class FileUploadController {
       'video/avi',
       'video/mpeg',
     ];
-
-    if (
-      !allowedParseTypes.includes(fileType) &&
-      !imageAndVideoTypes.includes(fileType)
-    ) {
-      throw new BadRequestException('Unsupported file type.');
-    }
 
     const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
       (req.headers as any).host
@@ -133,7 +125,55 @@ export class FileUploadController {
       if (fs.existsSync(filePath)) {
         fs.unlinkSync(filePath);
       }
+      throw error;
+    }
+  }
 
+  @Post('upload-raw')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: 'public/',
+        filename: (req, file, callback) => {
+          const uniqueName = uuidv4() + extname(file.originalname);
+          callback(null, uniqueName);
+        },
+      }),
+    }),
+  )
+  async uploadRaw(
+    @UploadedFile() file: Express.Multer.File,
+    @Body('userId') userId: string,
+    @Request() req: Request,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded.');
+    }
+    if (!userId) {
+      throw new BadRequestException('UserId is required.');
+    }
+
+    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
+      (req.headers as any).host
+    }/api/public/${file.filename}`;
+    const filePath = join('public', file.filename);
+
+    try {
+      const record = await this.fileUploadService.saveRawFile(
+        userId,
+        file,
+        fileUrl,
+      );
+      return {
+        message: 'File uploaded successfully.',
+        fileUrl,
+        filePath,
+        record,
+      };
+    } catch (error) {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
       throw error;
     }
   }
@@ -156,6 +196,7 @@ export class FileUploadController {
     const sheet = workbook.Sheets[sheetName];
     return XLSX.utils.sheet_to_json(sheet);
   }
+
   private parseJSON(filePath: string): any[] {
     const fileContent = fs.readFileSync(filePath, 'utf8');
     return JSON.parse(fileContent);
@@ -174,7 +215,6 @@ export class FileUploadController {
     if (!newFileUrl) {
       throw new BadRequestException('New file URL is required.');
     }
-
     return await this.fileUploadService.updateMedia(id, newFileUrl);
   }
 

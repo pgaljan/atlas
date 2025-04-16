@@ -7,11 +7,6 @@
   display: none !important;
 }
 
-.markmap-node.drop-target {
-  outline: 2px solid #00ff00;
-  outline-offset: 2px;
-}
-
 .highlight-target {
   opacity: 0.3;
   transition: transform 0.2s ease, fill-opacity 0.2s ease;
@@ -57,4 +52,3 @@
 .header-container.structure-title::first-letter {
   text-transform: capitalize !important;
 }
-

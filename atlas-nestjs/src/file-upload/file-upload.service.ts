@@ -17,12 +17,38 @@ export class FileUploadService {
     const maxElement = await this.prisma.element.findFirst({
       where: {
         structureId,
-        parentId, 
+        parentId,
       },
       orderBy: { orderIndex: 'desc' },
       select: { orderIndex: true },
     });
     return maxElement ? maxElement.orderIndex + 1 : 0;
+  }
+
+  async saveRawFile(
+    userId: string,
+    file: Express.Multer.File,
+    fileUrl: string,
+  ) {
+    try {
+      const user = await this.prisma.user.findUnique({
+        where: { id: userId },
+      });
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+      return await this.prisma.attachment.create({
+        data: {
+          userId,
+          fileUrl,
+          fileType: file.mimetype,
+          data: {},
+        },
+      });
+    } catch (error) {
+      console.error('Error saving raw file:', error.message);
+      throw new InternalServerErrorException('Failed to save raw file.');
+    }
   }
 
   async createAttachment(
