@@ -79,7 +79,6 @@ const CatalogueModal = ({
   const handleSubmit = async () => {
     setIsSubmitting(true);
     try {
-      // If no new file is uploaded, use the existing file.
       const fileUrlToSubmit = previewFileUrl || file;
       const thumbnailUrlToSubmit = previewThumbnailUrl || thumbnailUrl;
 

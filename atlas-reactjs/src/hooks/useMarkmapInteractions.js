@@ -20,7 +20,6 @@ export default function useMarkmapInteractions({
   setModalPosition,
   svgRef,
   updateTreeData,
-  initialCollapse,
 }) {
   const collapsedNodes = useRef(new Set());
 
@@ -31,35 +30,61 @@ export default function useMarkmapInteractions({
     }
   }, []);
 
-  // Helper: recursively mark nodes as collapsed.
-  // If forceCollapse is true then all passed nodes will be collapsed.
-  const applyCollapsedState = (nodes, forceCollapse = false) => {
-    if (nodes && Array.isArray(nodes)) {
-      nodes.forEach((node) => {
-        // If forceCollapse is true OR node has been collapsed previously (by elementId)
-        if (
-          forceCollapse ||
-          (node.elementId && collapsedNodes.current.has(node.elementId))
-        ) {
-          node.state = node.state || {};
-          node.state.collapsed = true;
-        }
-        if (node.children) {
-          applyCollapsedState(node.children, forceCollapse);
-        }
+  useEffect(() => {
+    if (!markmapInstance) return;
+
+    const dataToRender =
+      filteredTree === "no-results" ? null : filteredTree || treeData;
+
+    if (!dataToRender) {
+      markmapInstance.setData({ name: "No results", children: [] });
+      markmapInstance.fit();
+      return;
+    }
+
+    const markmapData = treeToMarkmapData(dataToRender, showWbs) || {
+      name: "",
+      children: [],
+    };
+
+    // Apply collapsed state from localStorage
+    const applyCollapsedState = (nodes) => {
+      if (nodes && Array.isArray(nodes)) {
+        nodes.forEach((node) => {
+          if (node.structureId && collapsedNodes.current.has(node.structureId)) {
+            if (!node.state) {
+              node.state = {};
+            }
+            node.state.collapsed = true;
+          }
+          if (node.children) {
+            applyCollapsedState(node.children);
+          }
+        });
+      }
+    };
+
+    applyCollapsedState(markmapData.children);
+
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    if (markmapData.children) {
+      markmapData.children.forEach((topLevelNode, index) => {
+        const color = colorScale(index);
+        assignNodeColors(topLevelNode, () => color);
       });
     }
-  };
+    markmapInstance.setData(markmapData);
 
-  // Helper: attach all custom event listeners to markmap nodes.
-  const attachCustomListeners = () => {
-    if (!markmapInstance) return;
-    d3.selectAll("div.tooltip").remove();
+    if (shouldFitView) {
+      setTimeout(() => {
+        markmapInstance.fit();
+        setShouldFitView(false);
+      }, 0);
+    }
 
     let currentlyHighlighted = null;
     const nodes = markmapInstance.svg.selectAll("g.markmap-node");
 
-    // Create tooltip.
     const tooltip = d3
       .select("body")
       .append("div")
@@ -74,7 +99,6 @@ export default function useMarkmapInteractions({
       .style("pointer-events", "none")
       .style("opacity", 0);
 
-    // Tooltip events.
     nodes
       .on("mouseover", function (event, d) {
         d3.select(this).classed("hovered", true);
@@ -99,10 +123,14 @@ export default function useMarkmapInteractions({
         tooltip.style("opacity", 0);
       });
 
-    // Attach circle click.
     nodes
       .selectAll("circle")
       .attr("r", 8)
+      .attr("fill", (d) => {
+        return d.payload?.fold ? "#ff0000" : "#00ff00";
+      })
+      .attr("stroke", "#000000")
+      .attr("stroke-width", 2)
       .style("cursor", "pointer")
       .on("click", function (event, d) {
         event.stopPropagation();
@@ -110,42 +138,26 @@ export default function useMarkmapInteractions({
         markmapInstance.toggleNode(d, event.ctrlKey);
       });
 
-    // Attach group click.
     nodes.on("click", function (event, d) {
       event.stopPropagation();
       const target = event.target;
       const isCircle = target.tagName === "circle";
       if (isCircle) {
-        console.log("Toggle collapse on node:", d.elementId);
+        console.log("hello this is ", isCircle);
         d.state = d.state || {};
         d.state.collapsed = !d.state.collapsed;
         if (d.state.collapsed) {
-          collapsedNodes.current.add(d.elementId);
+          collapsedNodes.current.add(d.structureId);
         } else {
-          collapsedNodes.current.delete(d.elementId);
+          collapsedNodes.current.delete(d.structureId);
         }
         localStorage.setItem(
           "markmapCollapsedNodes",
           JSON.stringify(Array.from(collapsedNodes.current))
         );
-        // Rebuild the markmap data.
-        const updatedData = treeToMarkmapData(treeData, showWbs);
-        // Do not force collapse on expansion (pass false)
-        applyCollapsedState(updatedData.children, false);
-        // Reassign node colors.
-        const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-        if (updatedData.children) {
-          updatedData.children.forEach((topLevelNode, index) => {
-            const color = colorScale(index);
-            assignNodeColors(topLevelNode, () => color);
-          });
-        }
-        markmapInstance.setData(updatedData);
-        // Reattach all listeners.
-        attachCustomListeners();
+        markmapInstance.setData(treeToMarkmapData(treeData, showWbs));
         return;
       }
-      // Otherwise, open modal and mark node active.
       const nodePosition = d3.select(this).node().getBoundingClientRect();
       setModalPosition({
         x: nodePosition.x + nodePosition.width / 2,
@@ -164,7 +176,6 @@ export default function useMarkmapInteractions({
       d3.select(this).classed("active", true);
     });
 
-    // Append the drag icon.
     nodes.each(function (d) {
       if (d.state && d.state.id === 1) return;
       d3
@@ -180,7 +191,9 @@ export default function useMarkmapInteractions({
         .on("click", (event) => event.stopPropagation()).html(`
           <g>
             <rect width="25" height="25" fill="transparent" />
-            <path fill-rule="evenodd" clip-rule="evenodd"
+            <path
+              fill-rule="evenodd"
+              clip-rule="evenodd"
               d="M9.5 8C10.3284 8 11 7.32843 11 6.5C11 5.67157 10.3284 5 9.5 5C8.67157 5 8 5.67157 8 6.5C8 7.32843 8.67157 8 9.5 8ZM9.5 14C10.3284 14 11 13.3284 11 12.5C11 11.6716 10.3284 11 9.5 11C8.67157 11 8 11.6716 8 12.5C8 13.3284 8.67157 14 9.5 14ZM11 18.5C11 19.3284 10.3284 20 9.5 20C8.67157 20 8 19.3284 8 18.5C8 17.6716 8.67157 17 9.5 17C10.3284 17 11 17.6716 11 18.5ZM15.5 8C16.3284 8 17 7.32843 17 6.5C17 5.67157 16.3284 5 15.5 5C14.6716 5 14 5.67157 14 6.5C14 7.32843 14.6716 8 15.5 8ZM17 12.5C17 13.3284 16.3284 14 15.5 14C14.6716 14 14 13.3284 14 12.5C14 11.6716 14.6716 11 15.5 11C16.3284 11 17 11.6716 17 12.5ZM15.5 20C16.3284 20 17 19.3284 17 18.5C17 17.6716 16.3284 17 15.5 17C14.6716 17 14 17.6716 14 18.5C14 19.3284 14.6716 20 15.5 20Z"
               fill="#000"
             ></path>
@@ -188,7 +201,6 @@ export default function useMarkmapInteractions({
         `);
     });
 
-    // Attach drag behavior.
     nodes.call(
       d3
         .drag()
@@ -290,15 +302,19 @@ export default function useMarkmapInteractions({
               !isDescendant(draggedNode.data, targetNodeContent)
             ) {
               targetNode.isNewParent = true;
-              // updateTreeData(draggedNode.data, targetNode);
+
+              updateTreeData(draggedNode.data, targetNode);
+
               setTimeout(() => {
                 const targetSelection = markmapInstance.svg
                   .selectAll("g.markmap-node")
                   .filter((d) => d.elementId === targetNode.elementId);
+
                 targetSelection
                   .selectAll("foreignObject div div")
                   .style("font-weight", "bold")
                   .style("color", "black");
+
                 setTimeout(() => {
                   targetSelection
                     .selectAll("foreignObject div div")
@@ -315,50 +331,9 @@ export default function useMarkmapInteractions({
           setDraggedNode(null);
         })
     );
-  };
-
-  // Primary effect: render markmap and attach event listeners.
-  useEffect(() => {
-    if (!markmapInstance) return;
-
-    const dataToRender =
-      filteredTree === "no-results" ? null : filteredTree || treeData;
-
-    if (!dataToRender) {
-      markmapInstance.setData({ name: "No results", children: [] });
-      markmapInstance.fit();
-      return;
-    }
-
-    const markmapData = treeToMarkmapData(dataToRender, showWbs) || {
-      name: "",
-      children: [],
-    };
-
-    // Apply the saved collapsed state and initialCollapse flag.
-    applyCollapsedState(markmapData.children, initialCollapse);
-
-    // Assign colors before setting data.
-    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-    if (markmapData.children) {
-      markmapData.children.forEach((topLevelNode, index) => {
-        const color = colorScale(index);
-        assignNodeColors(topLevelNode, () => color);
-      });
-    }
-    markmapInstance.setData(markmapData);
-
-    if (shouldFitView) {
-      setTimeout(() => {
-        markmapInstance.fit();
-        setShouldFitView(false);
-      }, 0);
-    }
-
-    attachCustomListeners();
 
     return () => {
-      d3.selectAll("div.tooltip").remove();
+      tooltip.remove();
     };
   }, [
     treeData,
@@ -368,29 +343,10 @@ export default function useMarkmapInteractions({
     draggedNode,
     shouldFitView,
     setShouldFitView,
+    setDraggedNode,
     setModalData,
     setModalPosition,
     svgRef,
-    initialCollapse,
+    updateTreeData,
   ]);
-
-  // On treeData change, reapply collapse state, color assignment, and update.
-  useEffect(() => {
-    if (markmapInstance && treeData) {
-      const markmapData = treeToMarkmapData(treeData, showWbs) || {
-        name: "",
-        children: [],
-      };
-      applyCollapsedState(markmapData.children, initialCollapse);
-      const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-      if (markmapData.children) {
-        markmapData.children.forEach((topLevelNode, index) => {
-          const color = colorScale(index);
-          assignNodeColors(topLevelNode, () => color);
-        });
-      }
-      markmapInstance.setData(markmapData);
-      attachCustomListeners();
-    }
-  }, [treeData, markmapInstance, showWbs]);
 }
