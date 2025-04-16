@@ -125,12 +125,12 @@ export default function useMarkmapInteractions({
 
     nodes
       .selectAll("circle")
-      .attr("r", 8)
-      .attr("fill", (d) => {
-        return d.payload?.fold ? "#ff0000" : "#00ff00";
-      })
-      .attr("stroke", "#000000")
-      .attr("stroke-width", 2)
+      // .attr("r", 8)
+      // .attr("fill", (d) => {
+      //   return d.payload?.fold ? "#ff0000" : "#00ff00";
+      // })
+      // .attr("stroke", "#000000")
+      // .attr("stroke-width", 2)
       .style("cursor", "pointer")
       .on("click", function (event, d) {
         event.stopPropagation();
@@ -143,7 +143,6 @@ export default function useMarkmapInteractions({
       const target = event.target;
       const isCircle = target.tagName === "circle";
       if (isCircle) {
-        console.log("hello this is ", isCircle);
         d.state = d.state || {};
         d.state.collapsed = !d.state.collapsed;
         if (d.state.collapsed) {
