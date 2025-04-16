@@ -25,7 +25,7 @@ const CatalogueModal = ({
 
   const [previewFileUrl, setPreviewFileUrl] = useState("");
   const [previewThumbnailUrl, setPreviewThumbnailUrl] = useState("");
-
+  const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // When the modal opens, pre-populate preview state from props
@@ -40,7 +40,23 @@ const CatalogueModal = ({
     }
   }, [isOpen, file, thumbnailUrl]);
 
+  useEffect(() => {
+    if (!isOpen) {
+      setErrors({});
+    }
+  }, [isOpen]);
+
   if (!isOpen) return null;
+  const validate = () => {
+    const newErrors = {};
+    if (!catalogueName.trim())
+      newErrors.catalogueName = "Catalogue name is required !";
+    if (!previewThumbnailUrl) newErrors.thumbnailUrl = "Thumbnail is required!";
+    if (!previewFileUrl) newErrors.file = "File is required!";
+    if (!selectedUserTier) newErrors.userTier = "Please select a user tier!";
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
@@ -56,6 +72,7 @@ const CatalogueModal = ({
     if (result.type.endsWith("fulfilled")) {
       setPreviewFileUrl(result.payload.fileUrl);
       setFile(result.payload.fileUrl);
+      setErrors((prev) => ({ ...prev, file: undefined }));
     }
   };
 
@@ -73,10 +90,12 @@ const CatalogueModal = ({
     if (result.type.endsWith("fulfilled")) {
       setPreviewThumbnailUrl(result.payload.fileUrl);
       setThumbnailUrl(result.payload.fileUrl);
+      setErrors((prev) => ({ ...prev, thumbnailUrl: undefined }));
     }
   };
 
   const handleSubmit = async () => {
+    if (!validate()) return;
     setIsSubmitting(true);
     try {
       const fileUrlToSubmit = previewFileUrl || file;
@@ -129,15 +148,25 @@ const CatalogueModal = ({
           {/* Catalogue Name */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Catalogue Name
+              Catalogue Name <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-custom-main"
               value={catalogueName}
-              onChange={(e) => setCatalogueName(e.target.value)}
+              onChange={(e) => {
+                setCatalogueName(e.target.value);
+                if (e.target.value.trim() !== "") {
+                  setErrors((prev) => ({ ...prev, catalogueName: undefined }));
+                }
+              }}
               placeholder="Enter catalogue name"
             />
+            {errors.catalogueName && (
+              <p className="text-red-500 text-sm mt-1">
+                {errors.catalogueName}
+              </p>
+            )}
           </div>
 
           {/* Catalogue Description */}
@@ -157,7 +186,7 @@ const CatalogueModal = ({
           {/* Thumbnail Upload */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Select Thumbnail
+              Select Thumbnail <span className="text-red-600">*</span>
             </label>
             <input
               type="file"
@@ -173,12 +202,15 @@ const CatalogueModal = ({
                 {renderFilePreview(previewThumbnailUrl)}
               </div>
             )}
+            {errors.thumbnailUrl && (
+              <p className="text-red-500 text-sm mt-1">{errors.thumbnailUrl}</p>
+            )}
           </div>
 
           {/* File Upload */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Select File
+              Select File <span className="text-red-600">*</span>
             </label>
             <input
               type="file"
@@ -192,17 +224,25 @@ const CatalogueModal = ({
             {previewFileUrl && (
               <div className="mt-2">{renderFilePreview(previewFileUrl)}</div>
             )}
+            {errors.file && (
+              <p className="text-red-500 text-sm mt-1">{errors.file}</p>
+            )}
           </div>
 
           {/* User Tier */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Available for User Tier
+              Available for User Tier <span className="text-red-600">*</span>
             </label>
             <select
               className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-custom-main"
               value={selectedUserTier}
-              onChange={(e) => setSelectedUserTier(e.target.value)}
+              onChange={(e) => {
+                setSelectedUserTier(e.target.value);
+                if (e.target.value) {
+                  setErrors((prev) => ({ ...prev, userTier: undefined }));
+                }
+              }}
             >
               {userTiers.map((tier) => (
                 <option key={tier} value={tier}>
@@ -210,6 +250,9 @@ const CatalogueModal = ({
                 </option>
               ))}
             </select>
+            {errors.userTier && (
+              <p className="text-red-500 text-sm mt-1">{errors.userTier}</p>
+            )}
           </div>
 
           <div className="flex justify-end gap-4 mt-4">

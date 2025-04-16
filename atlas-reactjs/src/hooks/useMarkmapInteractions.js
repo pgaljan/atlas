@@ -125,12 +125,6 @@ export default function useMarkmapInteractions({
 
     nodes
       .selectAll("circle")
-      // .attr("r", 8)
-      // .attr("fill", (d) => {
-      //   return d.payload?.fold ? "#ff0000" : "#00ff00";
-      // })
-      // .attr("stroke", "#000000")
-      // .attr("stroke-width", 2)
       .style("cursor", "pointer")
       .on("click", function (event, d) {
         event.stopPropagation();

@@ -160,6 +160,7 @@ const StructureCatalogue = () => {
     setFile(null);
     setSelectedUserTier(plans?.[0]?.name || "Personal");
     setEditedCatalog(null);
+    setThumbnailUrl(null)
   };
 
   // Open add modal
@@ -175,6 +176,7 @@ const StructureCatalogue = () => {
     setDescription(catalog.description || "");
     setSelectedUserTier(catalog.userTier);
     setFile(catalog.fileUrl); // Optionally pre-set file value (if applicable)
+    setThumbnailUrl(catalog.thumbnailUrl)
     setEditModalOpen(true);
   };
 
