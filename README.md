@@ -7,7 +7,7 @@
 This document is intended solely for personal use and may not be shared, reproduced, or modified without prior written consent. Violators may be subject to legal action.
 
 # Overview
-Atlas is a prototype multi-user structure visualization and annotation platform hosted at [dev.atlasflow.co](https://dev.atlasflow.co), featuring a modular interactive renderer that allows the user to create or calculate multiple structured or unstructured views of a shared dataset (represented as "Elements" in the object model). Each element may have an arbitrary number of user-created documents ("Records" in the object model), each of each may be tagged for downstream reporting.  These views can be shared with others, and the same data may be represented in different views while maintaining consistency.
+Atlas is a prototype multi-user structure visualization and annotation platform hosted at [dev.atlasflow.co](https://dev.atlasflow.co), featuring a modular interactive renderer that allows the user to create or calculate multiple structured or unstructured views of a shared dataset (represented as "Elements" in the object model). Each element may have an arbitrary number of user-created documents ("Records" in the object model), each of which may be tagged for downstream reporting.  These views can be shared with others, and the same data may be represented in different views while maintaining consistency.
 
 - [Strategy Deck](./atlasStrategy.pdf)
 - [Object Model, Data Model, Architecture](./object-data-model.md)
