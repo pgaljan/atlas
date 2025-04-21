@@ -8,26 +8,28 @@
 - **Decision**: After comparing with alternatives, Alex signs up for a free trial to test the platform with their team.
 
 ### Onboarding
-- **Account Creation**: Alex provides basic information and creates an organizational account.
+- **Account Creation**: Alex creates an account using SSO (local accounts disabled)
 - **Welcome Tour**: An interactive tour highlights key features like document creation, whiteboard tools, and collaboration settings.
-- **Team Invitations**: Alex invites team members via email integration, setting appropriate access permissions.
+- **Team Invitations**: Alex generates invite codes, and communicates the codes to the team via their communication channel of choice (email, slack, etc)
 - **First Login**: Team members receive invitations, create accounts, and personalize their profiles.
 
-## 2. First Use Experience
+## 2. First Use/Single User Experience
 
-### Document Creation
-- **Template Selection**: The team browses pre-built templates or starts with a blank document.
-- **Intuitive Interface**: Users encounter a clean, intuitive interface with familiar formatting tools.
-- **Early Success**: Quick wins during the first session (e.g., creating an outline, formatting text) establish confidence.
+### Structure Creation
+- **Template Selection**: Alex browses pre-built templates or starts with a blank document.
+- **Intuitive Interface**: Upon selection, he encounters a clean, intuitive interface with familiar formatting tools.
+- **Early Success**: Alex establishes confidence in the platform as he is quickly able to intuitively leverage Atlas to structure his project or idea.
 
-### Whiteboard Exploration
-- **Tool Discovery**: Users explore drawing tools, sticky notes, shapes, and connectors.
-- **Initial Collaboration**: Multiple team members add elements simultaneously, seeing real-time updates.
-- **First Artifact**: The team creates their first collaborative diagram or mind map.
+### Structure Exploration
+- **Tool Discovery**: Alex explores document options, and begins creation documents tuned to his needs.
+- **Useful Export**: Alex can easily find the option to export the structure to a one or more documents, of varying formats
+- **Backup and Restore**:  Alex observes that there are multiple places for him to create and manage persistent snahpshots
+- **Confidence**: Alex sees that the core Atlas authoring tools will allow him to reliably and independently create a consistent project document
 
 ## 3. Collaboration & Workflow Integration
 
 ### Real-time Collaboration
+- **Initial Collaboration**: Alex invites team members, who can add elements and records to the structure simultaneously, seeing real-time updates.
 - **Synchronous Editing**: Multiple team members work on documents simultaneously with visual indicators showing who's editing what.
 - **Comment & Feedback**: Team members leave contextual comments, suggestions, and feedback.
 - **Version History**: Users explore the version history feature to track changes and revert if needed.
@@ -39,15 +41,15 @@
 
 ## 4. Advanced Feature Discovery
 
-### Advanced Document Features
-- **Rich Media Integration**: Users embed videos, interactive charts, and external content.
+### Advanced Features
+- **Tagging**: Users leverage key:value tagging to quantify and categorize the elements of the structure.
 - **Document Branching**: Team creates variants of documents for different audiences or scenarios.
-- **Custom Templates**: The team creates reusable templates tailored to their workflows.
+- **Custom Templates**: The team creates reusable templates and tags tailored to their workflows.
 
-### Advanced Whiteboard Features
-- **Structured Diagramming**: Users create complex flowcharts, user journey maps, and architecture diagrams.
-- **Presentation Mode**: Team uses whiteboard as a presentation tool during meetings.
-- **Integration with Documents**: Users learn to connect whiteboard elements with document content.
+### Reporting Features
+- **Tag-based Structure**: Users can leverage tags to create alternative structures to the same data set.
+- **Cross-structre Reporting**: Users can leverage tags, structure content, and structure metadata to report across all structure.
+- **2D/3D Graph visualization**: Users leverage tags to generate graph visualizations using a robust library of templates.
 
 ## 5. Team Adoption & Scaling
 
@@ -65,8 +67,8 @@
 
 ### Power User Features
 - **API Integration**: Technical users connect the platform with custom workflows.
+- **3rd Party Integration**:  Users can integrate with Jira, Microsoft Power Platform, Salesforce, etc
 - **Automation**: Teams set up templates with automation for recurring document needs.
-- **Advanced Permissions**: Granular access controls are implemented for sensitive projects.
 
 ### Community Engagement
 - **Internal Champions**: Power users become internal advocates and trainers.
