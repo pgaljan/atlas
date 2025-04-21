@@ -1,4 +1,4 @@
-# User Journey: Multi-User Document Authoring & Whiteboarding Application
+# Atlas - User Journey
 
 ## 1. Discovery & Onboarding
 
