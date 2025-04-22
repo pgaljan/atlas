@@ -88,7 +88,7 @@ const AddSubscriptionModal = ({ isOpen, onClose, onSubmit, title }) => {
                 onChange={handleDropdownChange}
                 className="block w-full p-2 border-2 border-gray-300 rounded-md focus:ring-custom-main focus:border-custom-main"
               >
-                <option value="10">5</option>
+                <option value="5">5</option>
                 <option value="50">50</option>
                 <option value="Unlimited">Unlimited</option>
               </select>
