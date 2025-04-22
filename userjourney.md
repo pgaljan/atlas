@@ -8,7 +8,7 @@
 - **Decision**: After comparing with alternatives, Alex signs up for a free trial to test the platform with their team.
 
 ### Onboarding
-- **Account Creation**: Alex creates an account using SSO (local accounts disabled)
+- **Account Creation**: Alex creates an account using SSO (local accounts disabled).
 - **Welcome Tour**: An interactive tour highlights key features like document creation, whiteboard tools, and collaboration settings.
 - **Team Invitations**: Alex generates invite codes, and communicates the codes to the team via their communication channel of choice (email, slack, etc)
 - **First Login**: Team members receive invitations, create accounts, and personalize their profiles.
@@ -21,10 +21,10 @@
 - **Early Success**: Alex establishes confidence in the platform as he is quickly able to intuitively leverage Atlas to structure his project or idea.
 
 ### Structure Exploration
-- **Tool Discovery**: Alex explores document options, and begins creation documents tuned to his needs.
-- **Useful Export**: Alex can easily find the option to export the structure to a one or more documents, of varying formats
-- **Backup and Restore**:  Alex observes that there are multiple places for him to create and manage persistent snahpshots
-- **Confidence**: Alex sees that the core Atlas authoring tools will allow him to reliably and independently create a consistent project document
+- **Tool Discovery**: Alex explores document options and finds that their domain-specific editor and renderer, and begins creating documents tuned to their needs.
+- **Structured Export**: Alex can easily find the option to export the structure to one or more documents in a variety of formats.
+- **Backup and Restore**:  Alex observes that there are multiple places for them to create and manage persistent snahpshots.
+- **Confidence**: Alex sees that the core Atlas authoring tools will allow them to reliably and independently create a consistent project document.
 
 ## 3. Collaboration & Workflow Integration
 
@@ -48,7 +48,7 @@
 
 ### Reporting Features
 - **Tag-based Structure**: Users can leverage tags to create alternative structures to the same data set.
-- **Cross-structre Reporting**: Users can leverage tags, structure content, and structure metadata to report across all structure.
+- **Cross-structure Reporting**: Users can leverage tags, structure content, and structure metadata to report across all structure.
 - **2D/3D Graph visualization**: Users leverage tags to generate graph visualizations using a robust library of templates.
 
 ## 5. Team Adoption & Scaling
