@@ -70,6 +70,7 @@ export class UserController {
     try {
       return await this.userService.deleteUser(userId, reason);
     } catch (error) {
+      console.log(error)
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }

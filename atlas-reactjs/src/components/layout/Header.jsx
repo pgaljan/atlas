@@ -3,7 +3,6 @@ import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import Cookies from "js-cookie";
 import React, { useState } from "react";
 import { FiSearch } from "react-icons/fi";
-import { HiUserAdd } from "react-icons/hi";
 import { useDispatch } from "react-redux";
 import { BiMailSend } from "react-icons/bi";
 import { useNavigate } from "react-router-dom";

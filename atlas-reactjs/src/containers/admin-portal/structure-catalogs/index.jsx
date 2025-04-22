@@ -7,7 +7,7 @@ import { MdAddTask } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
-import CatalogueModal from "../../../components/admin/modals/CatalogueModal";
+import CatalogModal from "../../../components/admin/modals/CatalogModal";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
 import { fetchPlans } from "../../../redux/slices/plans";
@@ -16,16 +16,16 @@ import {
   deleteCatalog,
   fetchCatalogs,
   updateCatalog,
-} from "../../../redux/slices/structure-catalogues";
+} from "../../../redux/slices/structure-catalog";
 
-const StructureCatalogue = () => {
+const StructureCatalog = () => {
   const dispatch = useDispatch();
   const workspaceId = Cookies.get("workspaceId");
   const [addModalOpen, setAddModalOpen] = useState(false);
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [catalogueName, setCatalogueName] = useState("");
-  const [selectedUserTier, setSelectedUserTier] = useState("Personal");
+  const [CatalogName, setCatalogName] = useState("");
+  const [selectedUserTier, setSelectedUserTier] = useState([]);
   const [file, setFile] = useState(null);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [description, setDescription] = useState("");
@@ -67,13 +67,13 @@ const StructureCatalogue = () => {
 
   // Handle adding new catalog
   const handleAddCatalog = async () => {
-    if (!catalogueName || !file) {
+    if (!CatalogName || !file) {
       cogoToast.error("Please provide both a structure name and a file.");
       return;
     }
 
     const catalogData = {
-      name: catalogueName,
+      name: CatalogName,
       description,
       userTier: selectedUserTier,
       fileUrl: file,
@@ -84,13 +84,13 @@ const StructureCatalogue = () => {
     try {
       await dispatch(createCatalog(catalogData)).unwrap();
       await fetchCatalogData();
-      cogoToast.success("Catalogue added successfully!");
+      cogoToast.success("Catalog added successfully!");
       setAddModalOpen(false);
       resetForm();
     } catch (error) {
       console.error("Error creating catalog:", error);
       cogoToast.error(
-        error?.message || "Something went wrong while adding catalogue."
+        error?.message || "Something went wrong while adding Catalog."
       );
     }
   };
@@ -100,7 +100,7 @@ const StructureCatalogue = () => {
     if (!editedCatalog) return;
 
     const updateCatalogDto = {
-      name: catalogueName,
+      name: CatalogName,
       description,
       userTier: selectedUserTier,
       fileUrl: file,
@@ -113,13 +113,13 @@ const StructureCatalogue = () => {
         updateCatalog({ id: editedCatalog.id, updateCatalogDto })
       ).unwrap();
       await fetchCatalogData();
-      cogoToast.success("Catalogue updated successfully!");
+      cogoToast.success("Catalog updated successfully!");
       setEditModalOpen(false);
       resetForm();
     } catch (error) {
       console.error("Error updating catalog:", error);
       cogoToast.error(
-        error?.message || "Something went wrong while updating catalogue."
+        error?.message || "Something went wrong while updating Catalog."
       );
     }
   };
@@ -155,12 +155,12 @@ const StructureCatalogue = () => {
 
   // Reset form fields
   const resetForm = () => {
-    setCatalogueName("");
+    setCatalogName("");
     setDescription("");
     setFile(null);
-    setSelectedUserTier(plans?.[0]?.name || "Personal");
+    setSelectedUserTier(plans?.[0]?.name ? [plans[0].name] : []);
     setEditedCatalog(null);
-    setThumbnailUrl(null)
+    setThumbnailUrl(null);
   };
 
   // Open add modal
@@ -169,14 +169,19 @@ const StructureCatalogue = () => {
     setAddModalOpen(true);
   };
 
-  // Open edit modal: pre-fill the form with existing catalogue data
+  // Open edit modal: pre-fill the form with existing Catalog data
   const openEditModal = (catalog) => {
     setEditedCatalog(catalog);
-    setCatalogueName(catalog.name);
+    setCatalogName(catalog.name);
     setDescription(catalog.description || "");
-    setSelectedUserTier(catalog.userTier);
-    setFile(catalog.fileUrl); // Optionally pre-set file value (if applicable)
-    setThumbnailUrl(catalog.thumbnailUrl)
+    setSelectedUserTier(
+      Array.isArray(catalog.userTier)
+        ? catalog.userTier.map((t) => (typeof t === "string" ? t : t.tier))
+        : []
+    );
+
+    setFile(catalog.fileUrl);
+    setThumbnailUrl(catalog.thumbnailUrl);
     setEditModalOpen(true);
   };
 
@@ -198,26 +203,26 @@ const StructureCatalogue = () => {
             <BiCarousel className="text-5xl text-custom-main" />
           </div>
           <h2 className="text-2xl font-bold text-custom-text-grey mb-2">
-            No catalogue found
+            No Catalog found
           </h2>
           <p className="text-lg text-custom-text-grey mb-4">
-            There are no catalogue to display. Please upload a new one.
+            There are no Catalog to display. Please upload a new one.
           </p>
           <button
             className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
             onClick={openAddModal}
           >
             <MdAddTask size={20} />
-            Upload Catalogue
+            Upload Catalog
           </button>
         </div>
-        <CatalogueModal
+        <CatalogModal
           isOpen={addModalOpen}
           onClose={() => setAddModalOpen(false)}
           onSubmit={handleAddCatalog}
-          title="Add Catalogue"
-          catalogueName={catalogueName}
-          setCatalogueName={setCatalogueName}
+          title="Add Catalog"
+          CatalogName={CatalogName}
+          setCatalogName={setCatalogName}
           description={description}
           setDescription={setDescription}
           thumbnailUrl={thumbnailUrl}
@@ -238,7 +243,7 @@ const StructureCatalogue = () => {
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex justify-between w-full items-center">
             <h2 className="text-3xl font-semibold text-gray-800">
-              Structures Catalogue
+              Structures Catalog
             </h2>
             <div className="flex items-center gap-3">
               <button
@@ -246,14 +251,14 @@ const StructureCatalogue = () => {
                 onClick={openAddModal}
               >
                 <MdAddTask size={20} />
-                Upload Catalogue
+                Upload Catalog
               </button>
             </div>
           </div>
           <table className="p-10 w-full">
             <thead className="border-b border-gray-100">
               <tr>
-                <th className="px-5 py-3 text-left">Catalogue Name</th>
+                <th className="px-5 py-3 text-left">Catalog Name</th>
                 <th className="px-5 py-3 text-left">Description</th>
                 <th className="px-5 py-3 text-left">User Tier</th>
                 <th className="px-5 py-3 text-left">Thumbnail</th>
@@ -274,8 +279,9 @@ const StructureCatalogue = () => {
                       : "N/A"}
                   </td>
                   <td className="px-5 py-4 text-gray-500">
-                    {catalog.userTier}
+                    {catalog.userTier.map((t) => t.tier).join(", ")}
                   </td>
+
                   <td className="px-5 py-4">
                     {catalog.fileUrl ? (
                       <img
@@ -310,13 +316,13 @@ const StructureCatalogue = () => {
             </tbody>
           </table>
 
-          <CatalogueModal
+          <CatalogModal
             isOpen={addModalOpen}
             onClose={() => setAddModalOpen(false)}
             onSubmit={handleAddCatalog}
-            title="Add Catalogue"
-            catalogueName={catalogueName}
-            setCatalogueName={setCatalogueName}
+            title="Add Catalog"
+            CatalogName={CatalogName}
+            setCatalogName={setCatalogName}
             description={description}
             setDescription={setDescription}
             thumbnailUrl={thumbnailUrl}
@@ -329,17 +335,18 @@ const StructureCatalogue = () => {
           />
 
           {/* Edit Modal */}
-          <CatalogueModal
+          <CatalogModal
             isOpen={editModalOpen}
             onClose={() => setEditModalOpen(false)}
             onSubmit={handleEditCatalog}
-            title="Edit Catalogue"
-            catalogueName={catalogueName}
-            setCatalogueName={setCatalogueName}
+            title="Edit Catalog"
+            CatalogName={CatalogName}
+            setCatalogName={setCatalogName}
             description={description}
             setDescription={setDescription}
             file={file}
             thumbnailUrl={thumbnailUrl}
+            setFile={setFile}
             setThumbnailUrl={setThumbnailUrl}
             handleFileChange={handleFileChange}
             selectedUserTier={selectedUserTier}
@@ -358,4 +365,4 @@ const StructureCatalogue = () => {
   );
 };
 
-export default StructureCatalogue;
+export default StructureCatalog;

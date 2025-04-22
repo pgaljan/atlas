@@ -1,40 +1,51 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useState, useMemo } from "react";
 import { clsx } from "clsx";
+import Cookies from "js-cookie";
 import { twMerge } from "tailwind-merge";
-import { IoCloseSharp } from "react-icons/io5";
-import { IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { IoCloseSharp, IoChevronBack, IoChevronForward } from "react-icons/io5";
+import { useDispatch } from "react-redux";
+import cogoToast from "@successtar/cogo-toast";
+import { restoreFullFromUrl } from "../../redux/slices/restore-backups";
+import { useNavigate } from "react-router-dom";
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
-const Carousel = ({ data = [], duration = 5000, onClose }) => {
+const Carousel = ({ data = [], onClose }) => {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const username = Cookies.get("atlas_username");
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
   const hasData = useMemo(() => data.length > 0, [data]);
 
-  useEffect(() => {
-    if (!hasData) return;
-
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % data.length);
-    }, duration);
-
-    return () => clearInterval(interval);
-  }, [hasData, data.length, duration]);
-
-  const handleDownload = () => {
+  const handleUseTemplate = async () => {
     const currentItem = data[currentIndex];
     const fileUrl = currentItem?.fileUrl;
-    if (fileUrl) {
-      const link = document.createElement("a");
-      link.href = fileUrl;
-      const fileExtension = fileUrl.substring(fileUrl.lastIndexOf("."));
-      link.download = currentItem?.name
-        ? `${currentItem.name}${fileExtension}`
-        : "";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    } else {
-      console.error("File URL is not available for download.");
+
+    if (!fileUrl) {
+      return cogoToast.error("No template file available to use.");
+    }
+
+    try {
+      setIsUploading(true);
+      const response = await dispatch(restoreFullFromUrl(fileUrl)).unwrap();
+
+      cogoToast.success("Template applied successfully!");
+      const structureId = response?.result?.structureId;
+      if (structureId) {
+        onClose();
+        setTimeout(() => {
+          navigate(`/app/s/${username}/${structureId}`);
+        }, 1000);
+      }
+    } catch (err) {
+      const msg =
+        err?.message ||
+        err?.error ||
+        "Something went wrong while using the template.";
+      cogoToast.error(`${msg}`);
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -43,7 +54,7 @@ const Carousel = ({ data = [], duration = 5000, onClose }) => {
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex justify-center items-center">
       <div className="relative w-full max-w-2xl bg-white rounded-lg overflow-hidden shadow-lg">
-        {/* Close Button */}
+        {/* Close */}
         <button
           onClick={onClose}
           className="absolute top-2 right-2 text-white bg-black/50 hover:bg-black/80 rounded-full p-2 z-10"
@@ -51,7 +62,7 @@ const Carousel = ({ data = [], duration = 5000, onClose }) => {
           <IoCloseSharp />
         </button>
 
-        {/* Image Section */}
+        {/* Preview */}
         <div className="w-full h-[300px] md:h-[400px] bg-gray-200">
           <img
             src={
@@ -62,7 +73,7 @@ const Carousel = ({ data = [], duration = 5000, onClose }) => {
           />
         </div>
 
-        {/* Title */}
+        {/* Info */}
         <div className="px-4 py-2 bg-white">
           <h2 className="text-lg md:text-xl font-semibold text-gray-800">
             {data[currentIndex]?.name}
@@ -74,57 +85,55 @@ const Carousel = ({ data = [], duration = 5000, onClose }) => {
 
         {/* Actions */}
         <div className="flex justify-between items-center px-4 py-3 bg-gray-50">
-          {/* Download Button on the left */}
           <button
-            onClick={handleDownload}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm rounded-md"
+            onClick={handleUseTemplate}
+            disabled={isUploading}
+            className={cn(
+              "px-4 py-2 text-white text-sm rounded-md",
+              isUploading
+                ? "bg-gray-500 text-white cursor-wait"
+                : "bg-custom-main hover:opacity-65"
+            )}
           >
-            Download
+            {isUploading ? "Applying..." : "Use this template"}
           </button>
 
+          {/* Pagination */}
           <div className="flex flex-col items-center gap-2">
-            {/* Dots */}
             <div className="flex gap-2">
-              {data.map((_, index) => (
+              {data.map((_, idx) => (
                 <div
-                  key={index}
+                  key={idx}
                   className={cn(
                     "w-2 h-2 rounded-full",
-                    currentIndex === index ? "bg-amber-500" : "bg-gray-300"
+                    currentIndex === idx ? "bg-amber-500" : "bg-gray-300"
                   )}
                 />
               ))}
             </div>
-
-            {/* Left & Right Arrows*/}
             {data.length > 1 && (
               <div className="flex gap-2">
                 <button
-                  onClick={() =>
-                    setCurrentIndex((prev) => (prev === 0 ? prev : prev - 1))
-                  }
+                  onClick={() => setCurrentIndex((i) => (i === 0 ? i : i - 1))}
                   disabled={currentIndex === 0}
-                  className={`text-2xl ${
+                  className={
                     currentIndex === 0
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:text-amber-500"
-                  }`}
+                      ? "text-gray-400 cursor-not-allowed text-2xl"
+                      : "text-gray-700 hover:text-amber-500 text-2xl"
+                  }
                 >
                   <IoChevronBack />
                 </button>
-
                 <button
                   onClick={() =>
-                    setCurrentIndex((prev) =>
-                      prev === data.length - 1 ? prev : prev + 1
-                    )
+                    setCurrentIndex((i) => (i === data.length - 1 ? i : i + 1))
                   }
                   disabled={currentIndex === data.length - 1}
-                  className={`text-2xl ${
+                  className={
                     currentIndex === data.length - 1
-                      ? "text-gray-400 cursor-not-allowed"
-                      : "text-gray-700 hover:text-amber-500"
-                  }`}
+                      ? "text-gray-400 cursor-not-allowed text-2xl"
+                      : "text-gray-700 hover:text-amber-500 text-2xl"
+                  }
                 >
                   <IoChevronForward />
                 </button>

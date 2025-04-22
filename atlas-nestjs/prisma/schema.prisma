@@ -367,12 +367,23 @@ model StructureCatalog {
   description  String?
   thumbnailUrl String?
   fileUrl      String?
-  userTier     String
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   workspaceId String?
   workspace   Workspace? @relation(fields: [workspaceId], references: [id])
 
+  userTier CatalogTier[]
+
   @@index([workspaceId])
+}
+
+model CatalogTier {
+  id        String @id @default(uuid())
+  catalogId String
+  tier      String
+
+  catalog StructureCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@unique([catalogId, tier])
 }

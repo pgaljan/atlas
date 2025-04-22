@@ -37,9 +37,9 @@ const AdminSidebar = () => {
       link: "/app/admin-portal/user-management",
     },
     {
-      name: "Structure Catalogues",
+      name: "Structure Catalogs",
       icon: BiCarousel,
-      link: "/app/admin-portal/structure-catalogues",
+      link: "/app/admin-portal/structure-catalogs",
     },
     {
       name: "Subscription Plan",
@@ -88,7 +88,7 @@ const AdminSidebar = () => {
             className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center gap-2 rounded-md hover:bg-custom-main hover:text-white transition whitespace-nowrap min-w-max"
           >
             <IoMdArrowRoundBack />
-            <span>Return to site</span>
+            <span>Return to Atlas</span>
           </Link>
         </div>
       </div>

@@ -46,8 +46,12 @@ export class StructureCataloguesController {
   }
 
   @Post('create')
-  async createCatalog(@Body() createDto: CreateStructureCatalogDto) {
+  async createCatalog(@Body() createDto: any) {
     try {
+      if (!createDto.userTier && createDto.userTier) {
+        createDto.userTier = createDto.userTier;
+      }
+
       return await this.catalogService.createCatalog(createDto);
     } catch (error) {
       throw new BadRequestException('Error creating structure catalog');

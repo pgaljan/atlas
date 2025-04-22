@@ -1,15 +1,15 @@
-import React, { useState, useEffect } from "react";
 import Cookies from "js-cookie";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { uploadRawFile } from "../../../redux/slices/upload-files";
 
-const CatalogueModal = ({
+const CatalogModal = ({
   isOpen,
   onClose,
   onSubmit,
   title,
-  catalogueName,
-  setCatalogueName,
+  CatalogName,
+  setCatalogName,
   selectedUserTier,
   setSelectedUserTier,
   userTiers,
@@ -22,7 +22,6 @@ const CatalogueModal = ({
 }) => {
   const dispatch = useDispatch();
   const userId = Cookies.get("atlas_userId");
-
   const [previewFileUrl, setPreviewFileUrl] = useState("");
   const [previewThumbnailUrl, setPreviewThumbnailUrl] = useState("");
   const [errors, setErrors] = useState({});
@@ -49,11 +48,13 @@ const CatalogueModal = ({
   if (!isOpen) return null;
   const validate = () => {
     const newErrors = {};
-    if (!catalogueName.trim())
-      newErrors.catalogueName = "Catalogue name is required !";
+    if (!CatalogName.trim())
+      newErrors.CatalogName = "Catalog name is required !";
     if (!previewThumbnailUrl) newErrors.thumbnailUrl = "Thumbnail is required!";
     if (!previewFileUrl) newErrors.file = "File is required!";
-    if (!selectedUserTier) newErrors.userTier = "Please select a user tier!";
+    if (!selectedUserTier || selectedUserTier.length === 0) {
+      newErrors.userTier = "Please select at least one user tier!";
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -61,6 +62,12 @@ const CatalogueModal = ({
   const handleFileChange = async (e) => {
     const selectedFile = e.target.files[0];
     if (!selectedFile) return;
+
+    // enforce zip
+    if (!selectedFile.name.toLowerCase().endsWith(".zip")) {
+      setErrors((prev) => ({ ...prev, file: "Only .zip files are allowed" }));
+      return;
+    }
 
     const result = await dispatch(
       uploadRawFile({
@@ -102,21 +109,20 @@ const CatalogueModal = ({
       const thumbnailUrlToSubmit = previewThumbnailUrl || thumbnailUrl;
 
       await onSubmit({
-        catalogueName,
+        CatalogName,
         description,
         fileUrl: fileUrlToSubmit,
         thumbnailUrl: thumbnailUrlToSubmit,
         userTier: selectedUserTier,
       });
       setIsSubmitting(false);
-      // Clear form fields if desired.
-      setCatalogueName("");
+      setCatalogName("");
       setDescription("");
       setFile("");
       setThumbnailUrl("");
       setPreviewFileUrl("");
       setPreviewThumbnailUrl("");
-      onClose();
+      // onClose();
     } catch (error) {
       setIsSubmitting(false);
     }
@@ -145,40 +151,38 @@ const CatalogueModal = ({
         </p>
 
         <form className="space-y-4">
-          {/* Catalogue Name */}
+          {/* Catalog Name */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Catalogue Name <span className="text-red-600">*</span>
+              Catalog Name <span className="text-red-600">*</span>
             </label>
             <input
               type="text"
               className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-custom-main"
-              value={catalogueName}
+              value={CatalogName}
               onChange={(e) => {
-                setCatalogueName(e.target.value);
+                setCatalogName(e.target.value);
                 if (e.target.value.trim() !== "") {
-                  setErrors((prev) => ({ ...prev, catalogueName: undefined }));
+                  setErrors((prev) => ({ ...prev, CatalogName: undefined }));
                 }
               }}
-              placeholder="Enter catalogue name"
+              placeholder="Enter Catalog name"
             />
-            {errors.catalogueName && (
-              <p className="text-red-500 text-sm mt-1">
-                {errors.catalogueName}
-              </p>
+            {errors.CatalogName && (
+              <p className="text-red-500 text-sm mt-1">{errors.CatalogName}</p>
             )}
           </div>
 
-          {/* Catalogue Description */}
+          {/* Catalog Description */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
-              Catalogue Description
+              Catalog Description
             </label>
             <textarea
               className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-custom-main"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Enter catalogue description"
+              placeholder="Enter Catalog description"
               rows={3}
             />
           </div>
@@ -214,12 +218,12 @@ const CatalogueModal = ({
             </label>
             <input
               type="file"
-              accept=".zip, .xlsx, .xls, .csv, .json"
+              accept=".zip"
               className="border border-gray-300 rounded-md p-2 w-full"
               onChange={handleFileChange}
             />
             <p className="text-xs text-gray-500 mt-2">
-              Allowed formats: <strong>.zip, .xlsx, .xls, .csv, .json</strong>
+              Allowed formats: <strong>.zip</strong>
             </p>
             {previewFileUrl && (
               <div className="mt-2">{renderFilePreview(previewFileUrl)}</div>
@@ -234,22 +238,36 @@ const CatalogueModal = ({
             <label className="block text-gray-700 font-medium mb-2">
               Available for User Tier <span className="text-red-600">*</span>
             </label>
-            <select
-              className="border border-gray-300 rounded-md p-2 w-full focus:outline-none focus:ring-2 focus:ring-custom-main"
-              value={selectedUserTier}
-              onChange={(e) => {
-                setSelectedUserTier(e.target.value);
-                if (e.target.value) {
-                  setErrors((prev) => ({ ...prev, userTier: undefined }));
-                }
-              }}
-            >
+            <div className="grid grid-cols-2 gap-2 w-full">
               {userTiers.map((tier) => (
-                <option key={tier} value={tier}>
-                  {tier}
-                </option>
+                <label
+                  key={tier}
+                  className="inline-flex items-center space-x-2"
+                >
+                  <input
+                    type="checkbox"
+                    value={tier}
+                    checked={selectedUserTier.includes(tier)}
+                    onChange={(e) => {
+                      const checked = e.target.checked;
+                      if (checked) {
+                        setSelectedUserTier((prev) => [...prev, tier]);
+                      } else {
+                        setSelectedUserTier((prev) =>
+                          prev.filter((t) => t !== tier)
+                        );
+                      }
+
+                      if (checked || selectedUserTier.length > 0) {
+                        setErrors((prev) => ({ ...prev, userTier: undefined }));
+                      }
+                    }}
+                    className="accent-custom-main"
+                  />
+                  <span>{tier}</span>
+                </label>
               ))}
-            </select>
+            </div>
             {errors.userTier && (
               <p className="text-red-500 text-sm mt-1">{errors.userTier}</p>
             )}
@@ -278,4 +296,4 @@ const CatalogueModal = ({
   );
 };
 
-export default CatalogueModal;
+export default CatalogModal;

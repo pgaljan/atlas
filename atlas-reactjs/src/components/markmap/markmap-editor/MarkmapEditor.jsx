@@ -1,4 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import useUndo from "use-undo";
@@ -42,6 +43,8 @@ const MarkmapEditor = ({ structureId }) => {
   const [shouldFitView, setShouldFitView] = useState(true);
   const [filteredTree, setFilteredTree] = useState(null);
   const [loaderSearch, setLoaderSearch] = useState(false);
+  const userId = Cookies.get("atlas_userId");
+  const [showBanner, setShowBanner] = useState(false);
   const [rightClickModal, setRightClickModal] = useState({
     visible: false,
     position: { x: 0, y: 0 },
@@ -200,7 +203,7 @@ const MarkmapEditor = ({ structureId }) => {
   }, []);
 
   const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree]);
-
+;
   useEffect(() => {
     if (modalData) {
       const handleInteraction = () => {
@@ -249,6 +252,7 @@ const MarkmapEditor = ({ structureId }) => {
 
     try {
       const data = await dispatch(getStructure(structureId)).unwrap();
+
       const treeWithWbs = assignWbsNumbers({
         content: data.name,
         children: data.elements,

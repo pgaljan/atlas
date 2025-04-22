@@ -161,6 +161,9 @@ export class UserService {
 
       // Delete all related records before deleting the user
       await this.prisma.$transaction([
+        this.prisma.team.deleteMany({ where: { ownerId: id } }),
+
+        // 2) your other dependent deletes
         this.prisma.subscription.deleteMany({ where: { userId: id } }),
         this.prisma.structure.deleteMany({ where: { ownerId: id } }),
         this.prisma.teamMember.deleteMany({ where: { userId: id } }),
@@ -168,12 +171,13 @@ export class UserService {
         this.prisma.backup.deleteMany({ where: { userId: id } }),
         this.prisma.attachment.deleteMany({ where: { userId: id } }),
         this.prisma.deletionLog.deleteMany({ where: { userId: id } }),
+
+        // 3) finally delete the user
         this.prisma.user.delete({ where: { id } }),
       ]);
 
       return { message: `User ${id} and related data successfully deleted.` };
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(
         `Failed to delete user with ID ${id}: ${error.message}`,
       );

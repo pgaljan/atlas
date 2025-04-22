@@ -1,4 +1,4 @@
-import { IsOptional, IsString } from 'class-validator';
+import { IsArray, IsOptional, IsString } from 'class-validator';
 
 export class CreateStructureCatalogDto {
   @IsString()
@@ -16,8 +16,9 @@ export class CreateStructureCatalogDto {
   @IsString()
   fileUrl?: string;
 
-  @IsString()
-  userTier: string;
+  @IsArray()
+  @IsString({ each: true })
+  userTier: string[];
 
   @IsOptional()
   @IsString()

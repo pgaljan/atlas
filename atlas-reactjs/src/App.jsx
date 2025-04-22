@@ -2,8 +2,6 @@ import React, { Suspense, lazy, useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
 import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import Carousel from "./components/carousels/TourCarousel";
-import { fetchCatalogsByUserTier } from "./redux/slices/structure-catalogues";
 import AdminPrivateRoute from "./routes/AdminPrivateRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
@@ -52,8 +50,8 @@ const MarkmapCanvas = lazy(() =>
 const UserTable = lazy(() =>
   import("./containers/admin-portal/users-management")
 );
-const StructureCatalogues = lazy(() =>
-  import("./containers/admin-portal/structure-catalogues")
+const StructureCatalogs = lazy(() =>
+  import("./containers/admin-portal/structure-catalogs")
 );
 const UserProfiles = lazy(() =>
   import("./containers/admin-portal/user-profile")
@@ -102,8 +100,8 @@ const userRoutes = [
 const adminRoutes = [
   { path: "/app/admin-portal/user-management", element: <UserTable /> },
   {
-    path: "/app/admin-portal/structure-catalogues",
-    element: <StructureCatalogues />,
+    path: "/app/admin-portal/structure-Catalogs",
+    element: <StructureCatalogs />,
   },
   { path: "/app/admin-portal/user-profile", element: <UserProfiles /> },
   {
@@ -118,10 +116,8 @@ const App = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const userId = Cookies.get("atlas_userId");
-  const [catalogs, setCatalogs] = useState([]);
   const [currentPlan, setCurrentPlan] = useState(null);
   const [isModalVisible, setIsModalVisible] = useState(false);
-  const [showBanner, setShowBanner] = useState(true);
 
   useEffect(() => {
     if (userId) {
@@ -130,20 +126,6 @@ const App = () => {
       });
     }
   }, [dispatch, userId]);
-
-  useEffect(() => {
-    const fetchData = async () => {
-      if (!currentPlan) return;
-
-      const resultAction = await dispatch(fetchCatalogsByUserTier(currentPlan));
-
-      if (fetchCatalogsByUserTier.fulfilled.match(resultAction)) {
-        setCatalogs(resultAction.payload);
-      }
-    };
-
-    fetchData();
-  }, [dispatch, currentPlan]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
@@ -157,20 +139,8 @@ const App = () => {
     navigate({ search: params.toString() }, { replace: true });
   };
 
-  const handleBannerClose = () => {
-    setShowBanner(false);
-  };
-
-  const isUserRoute = userRoutes.some((route) =>
-    location.pathname.startsWith(route.path)
-  );
-
   return (
     <div className="min-h-screen bg-gray-100">
-      {userId && isUserRoute && showBanner && (
-        <Carousel data={catalogs} duration={5000} onClose={handleBannerClose} />
-      )}
-
       <Suspense
         fallback={
           <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">

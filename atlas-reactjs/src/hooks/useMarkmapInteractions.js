@@ -314,7 +314,7 @@ export default function useMarkmapInteractions({
                     .style("font-weight", "")
                     .style("color", "");
                 }, 5000);
-              }, 500);
+              }, 800);
             } else {
               resetDraggedElement(this);
             }

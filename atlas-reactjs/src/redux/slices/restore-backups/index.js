@@ -25,9 +25,7 @@ export const restoreBackup = createAsyncThunk(
       }
 
       const response = await axiosInstance.post("/restore", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
     } catch (error) {
@@ -43,7 +41,6 @@ export const restoreFullBackup = createAsyncThunk(
       const formData = new FormData();
       formData.append("file", fileData);
 
-      // Pass userId for full backup restore as well.
       const userId = Cookies.get("atlas_userId");
       if (userId) {
         formData.append("userId", userId);
@@ -52,9 +49,7 @@ export const restoreFullBackup = createAsyncThunk(
       }
 
       const response = await axiosInstance.post("/restore/full", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
+        headers: { "Content-Type": "multipart/form-data" },
       });
       return response.data;
     } catch (error) {
@@ -63,14 +58,36 @@ export const restoreFullBackup = createAsyncThunk(
   }
 );
 
-// Restore slice
+// ← CORRECTED: no extra () here!
+export const restoreFullFromUrl = createAsyncThunk(
+  "restore/restoreFullFromUrl",
+  async (url, { rejectWithValue }) => {
+    try {
+      const userId = Cookies.get("atlas_userId");
+      const workspaceId = Cookies.get("workspaceId");
+      if (!userId) {
+        throw new Error("User not authenticated. No userId found in cookies.");
+      }
+
+      const response = await axiosInstance.post(
+        "/restore/full-from-url",
+        { url, userId, workspaceId },
+        { headers: { "Content-Type": "application/json" } }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 const restoreSlice = createSlice({
   name: "restore",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // restoreBackup cases
+      // restoreBackup
       .addCase(restoreBackup.pending, (state) => {
         state.status = "loading";
       })
@@ -82,7 +99,7 @@ const restoreSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
-      // restoreFullBackup cases
+      // restoreFullBackup
       .addCase(restoreFullBackup.pending, (state) => {
         state.status = "loading";
       })
@@ -91,6 +108,20 @@ const restoreSlice = createSlice({
         state.message = action.payload.message;
       })
       .addCase(restoreFullBackup.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // restoreFullFromUrl
+      .addCase(restoreFullFromUrl.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+        state.message = null;
+      })
+      .addCase(restoreFullFromUrl.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.message = action.payload.message;
+      })
+      .addCase(restoreFullFromUrl.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

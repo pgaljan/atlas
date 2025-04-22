@@ -13,7 +13,11 @@ export class StructureCataloguesService {
 
   async getAllCatalogs() {
     try {
-      return await this.prisma.structureCatalog.findMany();
+      return await this.prisma.structureCatalog.findMany({
+        include: {
+          userTier: true,
+        },
+      });
     } catch (error) {
       throw new BadRequestException('Error fetching structure catalogs');
     }
@@ -34,7 +38,16 @@ export class StructureCataloguesService {
   async getCatalogsByUserTier(userTier: string) {
     try {
       return await this.prisma.structureCatalog.findMany({
-        where: { userTier },
+        where: {
+          userTier: {
+            some: {
+              tier: userTier,
+            },
+          },
+        },
+        include: {
+          userTier: true,
+        },
       });
     } catch (error) {
       throw new BadRequestException('Error fetching catalogs by user tier');
@@ -43,30 +56,60 @@ export class StructureCataloguesService {
 
   async createCatalog(createDto: CreateStructureCatalogDto) {
     try {
-      return await this.prisma.structureCatalog.create({
-        data: createDto,
+      const { userTier, ...catalogData } = createDto;
+
+      if (!Array.isArray(userTier)) {
+        throw new BadRequestException('Invalid userTier array');
+      }
+
+      return this.prisma.structureCatalog.create({
+        data: {
+          ...catalogData,
+          userTier: {
+            create: userTier.map((tier) => ({ tier })),
+          },
+        },
+        include: { userTier: true },
       });
     } catch (error) {
-      console.log('Prisma Error:', error);
       throw new BadRequestException('Error creating structure catalog');
     }
   }
-  
+
   async updateCatalog(id: string, updateDto: UpdateStructureCatalogDto) {
     const catalog = await this.prisma.structureCatalog.findUnique({
       where: { id },
+      include: { userTier: true },
     });
 
     if (!catalog) {
       throw new NotFoundException(`StructureCatalog with ID ${id} not found`);
     }
 
+    const { userTier, ...catalogData } = updateDto;
+
     try {
-      return await this.prisma.structureCatalog.update({
-        where: { id },
-        data: updateDto,
-      });
+      return await this.prisma
+        .$transaction([
+          this.prisma.catalogTier.deleteMany({
+            where: { catalogId: id },
+          }),
+          this.prisma.structureCatalog.update({
+            where: { id },
+            data: {
+              ...catalogData,
+              userTier: {
+                create: (userTier ?? []).map((tier) => ({
+                  tier,
+                })),
+              },
+            },
+            include: { userTier: true },
+          }),
+        ])
+        .then(([, updatedCatalog]) => updatedCatalog);
     } catch (error) {
+      console.error('Update Error:', error);
       throw new BadRequestException('Error updating structure catalog');
     }
   }
@@ -74,6 +117,7 @@ export class StructureCataloguesService {
   async deleteCatalog(id: string) {
     const catalog = await this.prisma.structureCatalog.findUnique({
       where: { id },
+      include: { userTier: true },
     });
 
     if (!catalog) {
@@ -81,10 +125,18 @@ export class StructureCataloguesService {
     }
 
     try {
+      await this.prisma.catalogTier.deleteMany({
+        where: {
+          catalogId: id,
+        },
+      });
+
+      // Step 2: Delete the StructureCatalog
       return await this.prisma.structureCatalog.delete({
         where: { id },
       });
     } catch (error) {
+      console.error(error);
       throw new BadRequestException('Error deleting structure catalog');
     }
   }

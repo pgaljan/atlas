@@ -1,14 +1,18 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Sidebar } from "flowbite-react";
 import { useState } from "react";
-import { BsDatabaseFillCheck, BsFillTrashFill } from "react-icons/bs";
+import { BsDatabaseFillCheck } from "react-icons/bs";
 import { FaPlusCircle, FaRocket } from "react-icons/fa";
-import { FaImages, FaUsersGear } from "react-icons/fa6";
 import { FaSlideshare } from "react-icons/fa";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useFeatureFlag from "../../hooks/useFeatureFlag";
 import StructureModal from "../modals/StructureModal";
+import Carousel from "../carousels/TourCarousel";
+import Cookies from "js-cookie";
+import { fetchSubscription } from "../../redux/slices/subscriptions";
+import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
+import { useDispatch } from "react-redux";
 
 // Define custom theme for the Sidebar
 const ownTheme = {
@@ -36,14 +40,40 @@ export function SidebarPage({ onSubmit }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const userId = Cookies.get("atlas_userId");
+  const [showBanner, setShowBanner] = useState(false);
+  const [catalogs, setCatalogs] = useState([]);
+  const [currentPlan, setCurrentPlan] = useState(null);
+  const dispatch = useDispatch();
 
+  useEffect(() => {
+    if (userId) {
+      dispatch(fetchSubscription(userId)).then((res) => {
+        setCurrentPlan(res.payload?.plan?.name);
+      });
+    }
+  }, [dispatch, userId]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!currentPlan) return;
+      const resultAction = await dispatch(fetchCatalogsByUserTier(currentPlan));
+      if (fetchCatalogsByUserTier.fulfilled.match(resultAction)) {
+        setCatalogs(resultAction.payload);
+      }
+    };
+    fetchData();
+  }, [dispatch, currentPlan]);
   const handleModalToggle = () => {
     setIsModalOpen((prev) => !prev);
   };
 
+  const handleCatalogClose = () => {
+    setShowBanner(false);
+    handleModalToggle();
+  };
   // Check if the user can create a new structure
   const canCreateStructure = useFeatureFlag("Structures");
-
   // Reusable function to handle feature restrictions
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
@@ -52,7 +82,6 @@ export function SidebarPage({ onSubmit }) {
       navigate("?plan=upgrade-to-premium");
     }
   };
-
   const menuItems = [
     {
       name: "Dashboard",
@@ -76,7 +105,12 @@ export function SidebarPage({ onSubmit }) {
     //   link: "/app/deleted-markmaps",
     // },
   ];
-
+  const handleNewStructureClick = () => {
+    if (!canCreateStructure) {
+      return handleFeatureClick(false);
+    }
+    return catalogs.length > 0 ? setShowBanner(true) : handleModalToggle();
+  };
   return (
     <>
       <Sidebar
@@ -87,16 +121,13 @@ export function SidebarPage({ onSubmit }) {
           <Sidebar.Items>
             <div className="flex justify-center mb-4 mt-3">
               <button
-                onClick={() =>
-                  handleFeatureClick(canCreateStructure, handleModalToggle)
-                }
+                onClick={handleNewStructureClick}
                 className="bg-custom-main text-white py-2 px-6 font-semibold flex items-center space-x-3 rounded-md"
               >
                 <FaPlusCircle />
                 <span>New Structure</span>
               </button>
             </div>
-
             <Sidebar.ItemGroup>
               {menuItems.map((item) => (
                 <Sidebar.Item
@@ -123,7 +154,6 @@ export function SidebarPage({ onSubmit }) {
               ))}
             </Sidebar.ItemGroup>
           </Sidebar.Items>
-
           <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 mb-4">
             <Link
               to="/app/upgrade-plans"
@@ -140,6 +170,9 @@ export function SidebarPage({ onSubmit }) {
         onClose={handleModalToggle}
         onSubmit={onSubmit}
       />
+      {userId && showBanner && (
+        <Carousel data={catalogs} onClose={handleCatalogClose} />
+      )}
     </>
   );
 }
