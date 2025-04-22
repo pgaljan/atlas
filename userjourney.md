@@ -57,6 +57,7 @@
 - **Cross-Department Collaboration**: Other departments join the platform.
 - **Process Documentation**: Teams begin documenting standard procedures within the application.
 - **Client Collaboration**: External stakeholders are invited as limited-access guests.
+- **On-Premises Deployment**: The team purchases an on-premises license for Atlas, allowing them to process data and integrate with systems of any data classification level.
 
 ### Knowledge Management
 - **Searchable Repository**: Users leverage search functionality to find content across all documents.
