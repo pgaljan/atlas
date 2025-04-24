@@ -14,6 +14,10 @@ Atlas is a prototype multi-user structure visualization and annotation platform 
 - [User Interface Tour](./atlasUItour.pdf)
 - [User Journey](./userjourney.md)
 
+# UI Tour
+[![User UI](https://img.youtube.com/vi/-BzIK7cK4b0/0.jpg)](https://www.youtube.com/watch?v=-BzIK7cK4b0)
+
+
 # Use Cases
 
 * **Strategy teams** can collaborate to quickly generate, iterate, assess, and compare business plan and proposal assets.
