@@ -6,7 +6,9 @@ import {
   HttpStatus,
   Param,
   Post,
+  Req,
 } from '@nestjs/common';
+import { Request } from 'express';
 import { CreateTermsOfConditions } from './dto/create-terms-of-service.dto';
 import { TermsOfServiceService } from './terms-of-service.service';
 
@@ -14,14 +16,13 @@ import { TermsOfServiceService } from './terms-of-service.service';
 export class TermsOfServiceController {
   constructor(private readonly termsOfServiceService: TermsOfServiceService) {}
 
-  // Single Create or Update API
   @Post('save')
   async createOrUpdateTerms(
-    @Body() CreateTermsOfConditions: CreateTermsOfConditions,
+    @Body() createTermsOfConditions: CreateTermsOfConditions,
   ) {
     try {
       const terms = await this.termsOfServiceService.createOrUpdateTerms(
-        CreateTermsOfConditions,
+        createTermsOfConditions,
       );
       return {
         message: 'Terms of service saved successfully',
@@ -35,7 +36,6 @@ export class TermsOfServiceController {
     }
   }
 
-  // Separate Get API
   @Get()
   async getTerms() {
     try {
@@ -52,7 +52,6 @@ export class TermsOfServiceController {
     }
   }
 
-  // Delete Terms of Service
   @Post('remove/:id')
   async removeTerms(@Param('id') id: string) {
     try {
@@ -61,6 +60,31 @@ export class TermsOfServiceController {
     } catch (error) {
       throw new HttpException(
         `Failed to delete terms of service: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('check-terms-status/:userId')
+  async checkTermsStatus(@Param('userId') userId: string) {
+    try {
+      return await this.termsOfServiceService.checkTermsStatus(userId);
+    } catch (error) {
+      console.log(error);
+      throw new HttpException(
+        `Failed to check terms status: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Post('accept-terms/:userId')
+  async acceptTerms(@Param('userId') userId: string) {
+    try {
+      return await this.termsOfServiceService.acceptTerms(userId);
+    } catch (error) {
+      throw new HttpException(
+        `Failed to accept terms: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }

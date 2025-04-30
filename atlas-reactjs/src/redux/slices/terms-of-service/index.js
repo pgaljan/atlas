@@ -8,6 +8,7 @@ const initialState = {
   error: null,
   message: null,
   terms: null,
+  showTermsModal: false,
 };
 
 // Async thunk to fetch Terms of Service
@@ -47,6 +48,38 @@ export const saveOrUpdateTermsOfService = createAsyncThunk(
   }
 );
 
+// Async thunk to check Terms of Service status (whether user needs to accept)
+export const checkTermsStatus = createAsyncThunk(
+  "termsOfService/checkTermsStatus",
+  async (_, { rejectWithValue }) => {
+    try {
+      const userId = Cookies.get("atlas_userId");
+      const response = await axiosInstance.get(
+        `/terms-of-service/check-terms-status/${userId}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk to accept Terms of Service
+export const acceptTerms = createAsyncThunk(
+  "termsOfService/acceptTerms",
+  async (_, { rejectWithValue }) => {
+    try {
+      const userId = Cookies.get("atlas_userId");
+      const response = await axiosInstance.post(
+        `/terms-of-service/accept-terms/${userId}`
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Terms of Service slice
 const termsOfServiceSlice = createSlice({
   name: "termsOfService",
@@ -77,6 +110,33 @@ const termsOfServiceSlice = createSlice({
         state.terms = action.payload.terms;
       })
       .addCase(saveOrUpdateTermsOfService.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // checkTermsStatus
+      .addCase(checkTermsStatus.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(checkTermsStatus.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.showTermsModal = action.payload.showTermsModal;
+        state.terms = action.payload.terms;
+      })
+      .addCase(checkTermsStatus.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // acceptTerms
+      .addCase(acceptTerms.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(acceptTerms.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.message = action.payload.message;
+      })
+      .addCase(acceptTerms.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });
