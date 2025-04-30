@@ -642,7 +642,9 @@ export class RestoreService {
 
       // ---------- Elements Restoration in Two Passes ----------
       const elementIdMapping = new Map<string, string>();
+      const recordIdMapping = new Map<string, string>(); // New map to track recordId
 
+      // First pass: Upsert elements and track recordIds.
       for (const elementData of elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
       )) {
@@ -651,12 +653,34 @@ export class RestoreService {
         // Map the original ID
         elementIdMapping.set(elementData.id, elementData.id);
 
+        // Ensure the recordId exists before attempting upsert
+        if (elementData.recordId) {
+          const record = await this.prisma.record.findUnique({
+            where: { id: elementData.recordId },
+          });
+
+          if (record) {
+            recordIdMapping.set(elementData.recordId, record.id); // Store the valid recordId
+          } else {
+            // If record doesn't exist, create a new record or handle error
+            const newRecord = await this.prisma.record.create({
+              data: {
+                id: elementData.recordId,
+                metadata: '{}',
+                tags: '[]',
+              },
+            });
+            recordIdMapping.set(elementData.recordId, newRecord.id); // Use the new recordId
+          }
+        }
+
         await this.prisma.element.upsert({
           where: { id: elementData.id },
           update: {
             name: elementData.name,
             structureId: elementData.structureId,
-            recordId: elementData.recordId,
+            recordId:
+              recordIdMapping.get(elementData.recordId) || elementData.recordId, // Use mapped recordId
             orderIndex: elementData.orderIndex,
             parentId: null,
           },
@@ -664,7 +688,8 @@ export class RestoreService {
             id: elementData.id,
             name: elementData.name,
             structureId: elementData.structureId,
-            recordId: elementData.recordId,
+            recordId:
+              recordIdMapping.get(elementData.recordId) || elementData.recordId, // Use mapped recordId
             orderIndex: elementData.orderIndex,
             parentId: null,
           },
@@ -677,11 +702,9 @@ export class RestoreService {
       for (const elementData of elementsSheet.filter(
         (e) => e.structureId === targetStructureId,
       )) {
-        // If there is an original elementLinkId, try mapping it.
         const originalLinkId = elementData._originalElementLinkId;
         if (originalLinkId) {
           const newLinkId = elementIdMapping.get(originalLinkId) || null;
-          // Only update if the newLinkId is found.
           if (newLinkId) {
             await this.prisma.element.update({
               where: { id: elementData.id },
@@ -691,17 +714,15 @@ export class RestoreService {
         }
       }
 
+      // Phase 3: Update parentId for elements.
       for (const elementData of elementsSheet.filter(
         (e) => e.structureId === targetStructureId,
       )) {
         const parentId = elementData._originalParentId;
-
         if (parentId && elementIdMapping.has(parentId)) {
           await this.prisma.element.update({
             where: { id: elementData.id },
-            data: {
-              parentId: parentId,
-            },
+            data: { parentId: parentId },
           });
         }
       }

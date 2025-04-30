@@ -19,6 +19,8 @@ import { StructureModule } from './structure/structure.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TeamMemberModule } from './team-member/team-member.module';
 import { UserModule } from './user/user.module';
+import { PolicyModule } from './policy/policy.module';
+import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module';
 
 @Module({
   imports: [
@@ -42,6 +44,8 @@ import { UserModule } from './user/user.module';
     TeamMemberModule,
     InvitationModule,
     StructureCataloguesModule,
+    PolicyModule,
+    TermsOfServiceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

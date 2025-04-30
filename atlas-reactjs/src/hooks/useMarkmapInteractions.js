@@ -128,7 +128,6 @@ export default function useMarkmapInteractions({
       .style("cursor", "pointer")
       .on("click", function (event, d) {
         event.stopPropagation();
-        console.log("Custom circle click", d);
         markmapInstance.toggleNode(d, event.ctrlKey);
       });
 

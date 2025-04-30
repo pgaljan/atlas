@@ -12,6 +12,15 @@ import { v4 as uuidv4 } from 'uuid';
 import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
 
+const MAX_CELL_LENGTH = 32767;
+
+function safeCellValue(v: any): string {
+  const s = typeof v === 'string' ? v : JSON.stringify(v);
+  return s.length > MAX_CELL_LENGTH
+    ? s.slice(0, MAX_CELL_LENGTH - 20) + '…[truncated]'
+    : s;
+}
+
 @Injectable()
 export class BackupService {
   constructor(private readonly prisma: PrismaService) {}
@@ -112,7 +121,6 @@ export class BackupService {
           createdAt: element.createdAt,
           updatedAt: element.updatedAt,
           deletedAt: element.deletedAt || '',
-          // You may choose to include a reference to Record id, if applicable.
           RecordId: element.Record ? element.Record.id : null,
         })),
       );
@@ -124,9 +132,9 @@ export class BackupService {
             ? [
                 {
                   id: element.Record.id,
-                  metadata: JSON.stringify(element.Record.metadata),
+                  metadata: safeCellValue(element.Record.metadata),
                   tags: element.Record.tags
-                    ? JSON.stringify(element.Record.tags)
+                    ? safeCellValue(element.Record.tags)
                     : null,
                   createdAt: element.Record.createdAt,
                   updatedAt: element.Record.updatedAt,

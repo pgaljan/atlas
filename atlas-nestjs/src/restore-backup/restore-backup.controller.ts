@@ -11,8 +11,6 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import * as multer from 'multer';
 import { RestoreService } from './restore-backup.service';
 import axios from 'axios';
-import { PrismaService } from 'src/prisma/prisma.service';
-
 @Controller('restore')
 export class RestoreController {
   constructor(private readonly restoreService: RestoreService) {}

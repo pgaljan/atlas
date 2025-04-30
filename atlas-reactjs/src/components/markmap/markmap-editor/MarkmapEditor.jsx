@@ -203,7 +203,6 @@ const MarkmapEditor = ({ structureId }) => {
   }, []);
 
   const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree]);
-;
   useEffect(() => {
     if (modalData) {
       const handleInteraction = () => {
@@ -358,14 +357,30 @@ const MarkmapEditor = ({ structureId }) => {
 
   const handleExportOption = (option) => {
     if (option === "exportHtml") {
-      exportAsHtml(treeData);
+      exportAsHtml(treeData, showWbs);
     } else if (option === "exportDoc") {
-      exportAsDoc(treeData);
+      exportAsDoc(treeData, showWbs);
     } else if (option === "exportPdf") {
-      exportAsPdf(treeData);
+      exportAsPdf(treeData, showWbs);
     }
   };
-
+  const handleExportModal = ({ formats, includeWbs, includeTags }) => {
+    formats.forEach((fmt) => {
+      switch (fmt) {
+        case "HTML":
+          exportAsHtml(treeData, includeWbs, includeTags);
+          break;
+        case "PDF":
+          exportAsPdf(treeData, includeWbs, includeTags, includeTags);
+          break;
+        case "DOC":
+          exportAsDoc(treeData, includeWbs, includeTags, includeTags);
+          break;
+        default:
+          break;
+      }
+    });
+  };
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
@@ -386,6 +401,7 @@ const MarkmapEditor = ({ structureId }) => {
           onSearch={handleSearch}
           canUndo={canUndo}
           canRedo={canRedo}
+          onExportModal={handleExportModal}
         />
         <svg ref={svgRef} className="w-full h-full dotted-bg" />
 

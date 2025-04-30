@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 
 const cn = (...inputs) => twMerge(clsx(inputs));
 
-const Carousel = ({ data = [], onClose }) => {
+const Carousel = ({ data = [], onClose, onUseTemplate }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const username = Cookies.get("atlas_username");
@@ -33,7 +33,7 @@ const Carousel = ({ data = [], onClose }) => {
       cogoToast.success("Template applied successfully!");
       const structureId = response?.result?.structureId;
       if (structureId) {
-        onClose();
+        (onUseTemplate || onClose)?.();
         setTimeout(() => {
           navigate(`/app/s/${username}/${structureId}`);
         }, 1000);

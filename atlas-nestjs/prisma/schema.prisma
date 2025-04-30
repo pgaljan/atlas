@@ -79,7 +79,16 @@ model User {
   Team               Team[]
   defaultWorkspaceId String?
   defaultWorkspace   Workspace?    @relation("UserDefaultWorkspace", fields: [defaultWorkspaceId], references: [id])
+  lastLogin          DateTime?     @default(now())
+  termsAcceptedAt    DateTime?
+  policyAcceptedAt   DateTime?
   status             Status        @default(active)
+
+  acceptedPrivacyPolicyId  String?
+  acceptedTermsOfServiceId String?
+
+  acceptedPrivacyPolicy  PrivacyPolicy?  @relation(fields: [acceptedPrivacyPolicyId], references: [id])
+  acceptedTermsOfService TermsOfService? @relation(fields: [acceptedTermsOfServiceId], references: [id])
 }
 
 model Invitation {
@@ -386,4 +395,20 @@ model CatalogTier {
   catalog StructureCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
 
   @@unique([catalogId, tier])
+}
+
+model PrivacyPolicy {
+  id        String   @id @default(uuid())
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User[]
+}
+
+model TermsOfService {
+  id        String   @id @default(uuid())
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User[]
 }

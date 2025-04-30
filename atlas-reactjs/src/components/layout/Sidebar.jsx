@@ -13,6 +13,7 @@ import Cookies from "js-cookie";
 import { fetchSubscription } from "../../redux/slices/subscriptions";
 import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
 import { useDispatch } from "react-redux";
+import { BiSolidMessageRoundedDots } from "react-icons/bi";
 
 // Define custom theme for the Sidebar
 const ownTheme = {
@@ -99,6 +100,7 @@ export function SidebarPage({ onSubmit }) {
       icon: BsDatabaseFillCheck,
       link: "/app/backups",
     },
+
     // {
     //   name: "Deleted Markmaps",
     //   icon: BsFillTrashFill,
@@ -110,6 +112,11 @@ export function SidebarPage({ onSubmit }) {
       return handleFeatureClick(false);
     }
     return catalogs.length > 0 ? setShowBanner(true) : handleModalToggle();
+  };
+
+  const handleUseTemplate = () => {
+    setShowBanner(false);
+    setIsModalOpen(false);
   };
   return (
     <>
@@ -154,14 +161,26 @@ export function SidebarPage({ onSubmit }) {
               ))}
             </Sidebar.ItemGroup>
           </Sidebar.Items>
-          <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 mb-4">
+
+          <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 mb-4">
             <Link
-              to="/app/upgrade-plans"
-              className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white"
+              target="_blank"
+              rel="noopener noreferrer"
+              to="https://github.com/pgaljan/atlas/issues/new"
+              className="border-2 border-custom-main text-custom-main py-2 flex items-center justify-center rounded-md hover:bg-custom-main hover:text-white transition-colors"
             >
-              <FaRocket />
-              <span>Upgrade</span>
+              <BiSolidMessageRoundedDots className="mr-2" />
+              <span>Feedback</span>
             </Link>
+            <div className="pt-4">
+              <Link
+                to="/app/upgrade-plans"
+                className="border-2 border-custom-main text-custom-main py-2 px-10 flex items-center space-x-4 rounded-md hover:bg-custom-main hover:text-white"
+              >
+                <FaRocket />
+                <span>Upgrade</span>
+              </Link>
+            </div>
           </div>
         </div>
       </Sidebar>
@@ -171,7 +190,11 @@ export function SidebarPage({ onSubmit }) {
         onSubmit={onSubmit}
       />
       {userId && showBanner && (
-        <Carousel data={catalogs} onClose={handleCatalogClose} />
+        <Carousel
+          data={catalogs}
+          onClose={handleCatalogClose}
+          onUseTemplate={handleUseTemplate}
+        />
       )}
     </>
   );

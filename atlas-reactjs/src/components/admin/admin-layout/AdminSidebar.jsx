@@ -1,10 +1,12 @@
-import { Sidebar } from "flowbite-react";
-import React from "react";
-import { Link, useLocation } from "react-router-dom";
-import { IoMdArrowRoundBack } from "react-icons/io";
-import { BiCarousel } from "react-icons/bi";
-import { FiUsers } from "react-icons/fi";
-import { MdWorkspacePremium } from "react-icons/md";
+import { Sidebar } from "flowbite-react"
+import React from "react"
+import { Link, useLocation } from "react-router-dom"
+import { IoMdArrowRoundBack } from "react-icons/io"
+import { BiCarousel } from "react-icons/bi"
+import { MdOutlinePrivacyTip } from "react-icons/md"
+import { FiUsers } from "react-icons/fi"
+import { MdWorkspacePremium } from "react-icons/md"
+import { HiMiniClipboardDocumentCheck } from "react-icons/hi2"
 
 const ownTheme = {
   root: {
@@ -25,10 +27,10 @@ const ownTheme = {
       active: "text-white",
     },
   },
-};
+}
 
 const AdminSidebar = () => {
-  const location = useLocation();
+  const location = useLocation()
 
   const menuItems = [
     {
@@ -46,7 +48,17 @@ const AdminSidebar = () => {
       icon: MdWorkspacePremium,
       link: "/app/admin-portal/subscription-plan",
     },
-  ];
+    {
+      name: "Privacy Policy",
+      icon: MdOutlinePrivacyTip,
+      link: "/app/admin-portal/policy",
+    },
+    {
+      name: "Terms of Service",
+      icon: HiMiniClipboardDocumentCheck,
+      link: "/app/admin-portal/terms-of-service",
+    },
+  ]
 
   return (
     <Sidebar
@@ -56,7 +68,7 @@ const AdminSidebar = () => {
       <div className="relative h-full flex flex-col justify-between">
         <Sidebar.Items>
           <Sidebar.ItemGroup className="mt-0 border-none">
-            {menuItems.map((item) => (
+            {menuItems.map(item => (
               <Sidebar.Item
                 key={item.name}
                 className={`${
@@ -93,7 +105,7 @@ const AdminSidebar = () => {
         </div>
       </div>
     </Sidebar>
-  );
-};
+  )
+}
 
-export default AdminSidebar;
+export default AdminSidebar

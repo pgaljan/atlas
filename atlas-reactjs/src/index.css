@@ -52,3 +52,15 @@
 .header-container.structure-title::first-letter {
   text-transform: capitalize !important;
 }
+
+.tippy-box[data-theme~="custom"] {
+  background-color: #333;
+  color: #fff;
+  font-size: 11px;
+  padding: 4px 6px;
+  border-radius: 4px;
+  box-shadow: 0px 2px 8px rgba(0, 0, 0, 0.15);
+}
+.tippy-box[data-theme~="custom"][data-placement^="top"] > .tippy-arrow::before {
+  border-top-color: #333;
+}
