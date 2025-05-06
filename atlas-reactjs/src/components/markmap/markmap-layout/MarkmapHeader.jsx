@@ -22,6 +22,7 @@ import UserPopover from "../../modals/UserPopover";
 import Tooltip from "../../tooltip/Tooltip";
 import ExportModalStructure from "../../modals/ExportModalStructure";
 import { LuDatabaseBackup } from "react-icons/lu";
+import { fetchAppSettings } from "../../../redux/slices/app-settings";
 
 const MarkmapHeader = ({
   undo,
@@ -45,6 +46,7 @@ const MarkmapHeader = ({
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isExportModal, setIsExportModal] = useState(false);
+  const [appName, setAppName] = useState("ATLAS");
 
   // Feature flags
   const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
@@ -215,6 +217,24 @@ const MarkmapHeader = ({
     }
   };
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const resultAction = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(resultAction)) {
+          const settings = resultAction.payload;
+          if (settings) {
+            setAppName(settings.appName || "ATLAS");
+          }
+        }
+      } catch (error) {
+        console.error("Error loading app settings");
+      }
+    };
+
+    loadSettings();
+  }, [dispatch]);
+
   const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen);
   const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen);
 
@@ -223,7 +243,7 @@ const MarkmapHeader = ({
       <div className="flex items-center w-full justify-between">
         <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
           <Link to="/app/dashboard">
-            <h1 className="text-2xl font-bold text-[#660000]">ATLAS</h1>
+            <h1 className="text-2xl font-bold text-[#660000] uppercase">{appName}</h1>
           </Link>
           <input
             type="text"

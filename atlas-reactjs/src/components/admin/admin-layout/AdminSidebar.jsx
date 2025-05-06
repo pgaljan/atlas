@@ -7,6 +7,7 @@ import { MdOutlinePrivacyTip } from "react-icons/md"
 import { FiUsers } from "react-icons/fi"
 import { MdWorkspacePremium } from "react-icons/md"
 import { HiMiniClipboardDocumentCheck } from "react-icons/hi2"
+import { IoSettings } from "react-icons/io5";
 
 const ownTheme = {
   root: {
@@ -57,6 +58,11 @@ const AdminSidebar = () => {
       name: "Terms of Service",
       icon: HiMiniClipboardDocumentCheck,
       link: "/app/admin-portal/terms-of-service",
+    },
+    {
+      name: "Settings",
+      icon: IoSettings,
+      link: "/app/admin-portal/settings",
     },
   ]
 

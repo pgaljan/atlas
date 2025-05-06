@@ -10,6 +10,7 @@ import useFeatureFlag from "../../hooks/useFeatureFlag";
 import StructureModal from "../modals/StructureModal";
 import Carousel from "../carousels/TourCarousel";
 import Cookies from "js-cookie";
+import { fetchAppSettings } from "../../redux/slices/app-settings";
 import { fetchSubscription } from "../../redux/slices/subscriptions";
 import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
 import { useDispatch } from "react-redux";
@@ -41,6 +42,7 @@ export function SidebarPage({ onSubmit }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const [feedbackLink, setFeedbackLink] = useState("");
   const userId = Cookies.get("atlas_userId");
   const [showBanner, setShowBanner] = useState(false);
   const [catalogs, setCatalogs] = useState([]);
@@ -54,6 +56,26 @@ export function SidebarPage({ onSubmit }) {
       });
     }
   }, [dispatch, userId]);
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const resultAction = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(resultAction)) {
+          const settings = resultAction.payload;
+          if (settings?.feedbackLink) {
+            setFeedbackLink(settings.feedbackLink);
+          }
+        } else {
+          cogoToast.error("Failed to fetch app settings.");
+        }
+      } catch (error) {
+        cogoToast.error("Error loading app settings.");
+      }
+    };
+
+    loadSettings();
+  }, [dispatch]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -163,15 +185,20 @@ export function SidebarPage({ onSubmit }) {
           </Sidebar.Items>
 
           <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2 mb-4">
-            <Link
-              target="_blank"
-              rel="noopener noreferrer"
-              to="https://github.com/pgaljan/atlas/issues/new"
-              className="border-2 border-custom-main text-custom-main py-2 flex items-center justify-center rounded-md hover:bg-custom-main hover:text-white transition-colors"
-            >
-              <BiSolidMessageRoundedDots className="mr-2" />
-              <span>Feedback</span>
-            </Link>
+            {feedbackLink && (
+              <div className="pt-4">
+                <a
+                  href={feedbackLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="border-2 border-custom-main text-custom-main py-2 flex items-center justify-center rounded-md hover:bg-custom-main hover:text-white transition-colors"
+                  >
+                  <BiSolidMessageRoundedDots className="mr-2" />
+                  Feedback
+                </a>
+              </div>
+            )}
+
             <div className="pt-4">
               <Link
                 to="/app/upgrade-plans"

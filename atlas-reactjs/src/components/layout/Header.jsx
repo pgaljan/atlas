@@ -1,10 +1,11 @@
 import cogoToast from "@successtar/cogo-toast";
 import { Avatar, Dropdown, Navbar } from "flowbite-react";
 import Cookies from "js-cookie";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiSearch } from "react-icons/fi";
 import { useDispatch } from "react-redux";
 import { BiMailSend } from "react-icons/bi";
+import { fetchAppSettings } from "../../redux/slices/app-settings";
 import { useNavigate } from "react-router-dom";
 import { logoutUser } from "../../redux/slices/auth";
 import InviteModal from "../modals/InviteModal";
@@ -12,6 +13,8 @@ import InviteModal from "../modals/InviteModal";
 const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
+  const [appName, setAppName] = useState("ATLAS");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -33,12 +36,34 @@ const Header = () => {
     }
   };
 
+  useEffect(() => {
+    const loadSettings = async () => {
+      try {
+        const resultAction = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(resultAction)) {
+          const settings = resultAction.payload;
+          if (settings) {
+            setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
+            setAppName(settings.appName || "ATLAS");
+          }
+        }
+      } catch (error) {
+        console.error("Error loading app settings");
+      }
+    };
+
+    loadSettings();
+  }, [dispatch]);
+
   return (
     <header className="bg-gray-100 flex justify-between items-center">
       <Navbar fluid rounded className="w-full p-4">
         {/* Logo on the Left */}
-        <Navbar.Brand href="#">
-          <h1 className="text-2xl font-bold text-[#660000]">ATLAS</h1>
+        <Navbar.Brand href="#" className="flex items-center gap-2">
+          <img src={logoUrl} className="h-8 w-8" alt={appName} />
+          <span className="text-2xl font-bold text-[#660000] uppercase">
+            {appName}
+          </span>
         </Navbar.Brand>
 
         {/* Centered Search Bar */}

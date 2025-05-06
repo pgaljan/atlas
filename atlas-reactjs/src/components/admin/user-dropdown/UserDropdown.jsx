@@ -36,9 +36,10 @@ const UserDropdown = () => {
   const closeDropdown = () => {
     setIsOpen(false);
   };
+
   const user = {
-    name: "admin",
-    email: "randomuser@pimjo.com",
+    name: Cookies.get("atlas_admin_username") || "User",
+    email: Cookies.get("atlas_admin_email") || "unknown@example.com",
     image: "/assets/owner.jpg",
   };
   return (
@@ -85,9 +86,14 @@ const UserDropdown = () => {
             <FaRegUserCircle className="w-5 h-5 text-gray-500" />
             {user.name}
           </div>
-          <div className="flex items-center pb-2 gap-3 text-theme-xs text-gray-500">
+          <div
+            className="flex items-center pb-2 gap-3 text-theme-xs text-gray-500"
+            title={user.email}
+          >
             <HiOutlineMail className="w-6 h-6 text-gray-500" />
-            {user.email}
+            <span className="truncate max-w-48 overflow-hidden text-ellipsis block">
+              {user.email}
+            </span>
           </div>
         </div>
         <ul className="flex flex-col gap-1  border-b border-gray-200 ">

@@ -292,4 +292,30 @@ export class FileUploadService {
       throw new InternalServerErrorException('Failed to delete media.');
     }
   }
+
+  async uploadAnonymousFile(file: Express.Multer.File, fileUrl: string) {
+    const defaultAdmin = await this.prisma.user.findFirst({
+      where: { isAdmin: true },
+    });
+
+    if (!defaultAdmin) {
+      throw new Error('No default admin found for anonymous uploads.');
+    }
+
+    try {
+      return await this.prisma.attachment.create({
+        data: {
+          userId: defaultAdmin.id,
+          fileUrl,
+          fileType: file.mimetype,
+          data: {}, 
+        },
+      });
+    } catch (error) {
+      console.error('Error uploading anonymous file:', error.message);
+      throw new InternalServerErrorException(
+        'Failed to upload anonymous file.',
+      );
+    }
+  }
 }

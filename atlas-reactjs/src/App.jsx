@@ -6,6 +6,7 @@ import AdminPrivateRoute from "./routes/AdminPrivateRoute"
 import PrivateRoute from "./routes/PrivateRoute"
 import PublicRoute from "./routes/PublicRoute"
 import { fetchSubscription } from "./redux/slices/subscriptions"
+import Settings from "./containers/admin-portal/settings"
 
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"))
 const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"))
@@ -124,6 +125,7 @@ const adminRoutes = [
   { path: "/app/admin-portal/dashboard", element: <AdminDashboard /> },
   { path: "/app/admin-portal/policy", element: <PrivacyPolicy /> },
   { path: "/app/admin-portal/terms-of-service", element: <TermsofService /> },
+  { path: "/app/admin-portal/settings", element: <Settings/> },
 ]
 
 const App = () => {

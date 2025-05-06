@@ -19,9 +19,19 @@ const GenericModal = ({
     role: "",
     password: "",
   };
+  const defaultSettingData = {
+    name: "",
+    contact: "",
+    social: "",
+  };
 
   const [formData, setFormData] = useState(
-    initialData || (type === "user" ? defaultUserData : {})
+    initialData ||
+      (type === "user"
+        ? defaultUserData
+        : type === "setting"
+        ? defaultSettingData
+        : {})
   );
 
   // Local state to store roles and their loading/error status.
@@ -83,61 +93,90 @@ const GenericModal = ({
           Please provide the user details below:
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <InputField
-            label="Full Name"
-            name="fullName"
-            placeholder="Enter full name"
-            value={formData.fullName}
-            onChange={handleChange}
-          />
-          <InputField
-            label="Username"
-            name="username"
-            placeholder="Enter username"
-            value={formData.username}
-            onChange={handleChange}
-          />
-          <InputField
-            label="Email"
-            name="email"
-            type="email"
-            placeholder="Enter email address"
-            value={formData.email}
-            onChange={handleChange}
-          />
-          <div>
-            <label className="block text-gray-700 font-medium mb-2">Role</label>
-            {rolesLoading ? (
-              <p>Loading roles...</p>
-            ) : rolesError ? (
-              <p className="text-red-500">Failed to load roles</p>
-            ) : (
-              <Select
-                placeholder="Select Role"
-                options={roleOptions}
-                onChange={handleRoleChange}
-                value={
-                  formData.role
-                    ? roleOptions.find((option) =>
-                        typeof formData.role === "object"
-                          ? option.value === formData.role.id
-                          : option.value === formData.role ||
-                            option.label === formData.role
-                      )
-                    : null
-                }
+          {type === "user" ? (
+            <>
+              <InputField
+                label="Full Name"
+                name="fullName"
+                placeholder="Enter full name"
+                value={formData.fullName}
+                onChange={handleChange}
               />
-            )}
-          </div>
-          <InputField
-            label="Password"
-            name="password"
-            type="password"
-            placeholder="Enter password"
-            value={formData.password}
-            onChange={handleChange}
-          />
-
+              <InputField
+                label="Username"
+                name="username"
+                placeholder="Enter username"
+                value={formData.username}
+                onChange={handleChange}
+              />
+              <InputField
+                label="Email"
+                name="email"
+                type="email"
+                placeholder="Enter email address"
+                value={formData.email}
+                onChange={handleChange}
+              />
+              <div>
+                <label className="block text-gray-700 font-medium mb-2">
+                  Role
+                </label>
+                {rolesLoading ? (
+                  <p>Loading roles...</p>
+                ) : rolesError ? (
+                  <p className="text-red-500">Failed to load roles</p>
+                ) : (
+                  <Select
+                    placeholder="Select Role"
+                    options={roleOptions}
+                    onChange={handleRoleChange}
+                    value={
+                      formData.role
+                        ? roleOptions.find((option) =>
+                            typeof formData.role === "object"
+                              ? option.value === formData.role.id
+                              : option.value === formData.role ||
+                                option.label === formData.role
+                          )
+                        : null
+                    }
+                  />
+                )}
+              </div>
+              <InputField
+                label="Password"
+                name="password"
+                type="password"
+                placeholder="Enter password"
+                value={formData.password}
+                onChange={handleChange}
+              />
+            </>
+          ) : type === "setting" ? (
+            <>
+              <InputField
+                label="Name"
+                name="name"
+                placeholder="Enter name"
+                value={formData.name}
+                onChange={handleChange}
+              />
+              <InputField
+                label="Contact"
+                name="contact"
+                placeholder="Enter contact"
+                value={formData.contact}
+                onChange={handleChange}
+              />
+              <InputField
+                label="Social"
+                name="social"
+                placeholder="Enter social media"
+                value={formData.social}
+                onChange={handleChange}
+              />
+            </>
+          ) : null}
           <div className="flex justify-end gap-4 pt-12">
             <button
               type="button"

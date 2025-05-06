@@ -21,6 +21,7 @@ import { TeamMemberModule } from './team-member/team-member.module';
 import { UserModule } from './user/user.module';
 import { PolicyModule } from './policy/policy.module';
 import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module';
+import { AppSettingsModule } from './app-settings/app-settings.module';
 
 @Module({
   imports: [
@@ -46,6 +47,7 @@ import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module
     StructureCataloguesModule,
     PolicyModule,
     TermsOfServiceModule,
+    AppSettingsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

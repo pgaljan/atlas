@@ -45,9 +45,9 @@ const AdminLogin = () => {
 
       // Store the token in a cookie
       Cookies.set("atlas_admin_token", response.access_token);
-      Cookies.set("atlas_email", response.user.email, { expires: 1 });
-      Cookies.set("atlas_username", response.user.username, { expires: 1 });
-      Cookies.set("atlas_userId", response.user.id, { expires: 1 });
+      Cookies.set("atlas_admin_email", response.user.email, { expires: 1 });
+      Cookies.set("atlas_admin_username", response.user.username, { expires: 1 });
+      Cookies.set("atlas_admin_userId", response.user.id, { expires: 1 });
 
       cogoToast.success("Admin login successful!");
       navigate("/app/admin-portal/user-management");

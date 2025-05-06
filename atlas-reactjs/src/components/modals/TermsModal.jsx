@@ -1,11 +1,13 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
-const TermsModal = ({ loading, onAccept }) => (
+const TermsModal = ({ loading, onAccept, lastUpdated }) => (
   <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
     <div className="bg-white w-full max-w-md mx-4 p-8 rounded-2xl shadow-2xl animate-fade-in">
       <div className="mb-6">
-        <h2 className="text-2xl font-bold text-gray-800">Terms of Service Update</h2>
+        <h2 className="text-2xl font-bold text-gray-800">
+          Terms of Service Update
+        </h2>
         <p className="text-sm text-gray-500 mt-2">
           Please read and acknowledge our{" "}
           <a
@@ -18,6 +20,11 @@ const TermsModal = ({ loading, onAccept }) => (
           </a>{" "}
           before using the platform.
         </p>
+        {lastUpdated && (
+          <p className="text-xs text-gray-800 mt-1">
+            Last updated: {lastUpdated}
+          </p>
+        )}
       </div>
       <div className="flex justify-end space-x-4">
         <Link to="/app/terms-of-service">

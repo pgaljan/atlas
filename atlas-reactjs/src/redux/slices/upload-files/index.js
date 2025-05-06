@@ -72,6 +72,31 @@ export const fetchMediaByUserId = createAsyncThunk(
   }
 );
 
+// Async thunk for uploading an anonymous file
+export const uploadAnonymousFile = createAsyncThunk(
+  "file/uploadAnonymous",
+  async (file, { rejectWithValue }) => {
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await axiosInstance.post(
+        "/file/upload-anonymous",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Async thunk for updating media
 export const updateMedia = createAsyncThunk(
   "file/update",
@@ -137,7 +162,6 @@ const fileSlice = createSlice({
       })
       .addCase(uploadRawFile.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Assuming the raw upload returns a fileUrl and a record (if needed)
         if (action.payload.fileUrl) {
           state.fileUrl = action.payload.fileUrl;
         }
@@ -183,6 +207,21 @@ const fileSlice = createSlice({
         state.files = state.files.filter((file) => file.id !== action.payload);
       })
       .addCase(deleteFile.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      }) 
+      .addCase(uploadAnonymousFile.pending, (state) => {
+        state.status = "loading";
+        state.error = null;
+      })
+      .addCase(uploadAnonymousFile.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.uploadedFile = action.payload;
+        if (action.payload.fileUrl) {
+          state.fileUrl = action.payload.fileUrl;
+        }
+      })
+      .addCase(uploadAnonymousFile.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

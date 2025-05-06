@@ -17,6 +17,7 @@ const Backups = ({ onSubmit }) => {
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [loading, setLoading] = useState(true); // loading state added
 
   useEffect(() => {
     const fetchData = async () => {
@@ -25,12 +26,15 @@ const Backups = ({ onSubmit }) => {
           console.error("Workspace ID is not available in cookies.");
           return;
         }
+        setLoading(true); // start loading
         const result = await dispatch(
           fetchBackupsByWorkspaceId(workspaceId)
         ).unwrap();
         setBackups(result);
       } catch (err) {
         console.error("Error fetching backups:", err);
+      } finally {
+        setLoading(false); // end loading
       }
     };
 
@@ -72,7 +76,15 @@ const Backups = ({ onSubmit }) => {
   return (
     <Layout onSubmit={onSubmit}>
       <div className="p-2">
-        <GenericTable {...updatedBackupConfig} data={backups} />
+        {loading ? (
+          <div className="flex h-screen flex-col text-center p-6">
+            <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+            </div>
+          </div>
+        ) : (
+          <GenericTable {...updatedBackupConfig} data={backups} />
+        )}
       </div>
 
       {/* Delete Modal */}

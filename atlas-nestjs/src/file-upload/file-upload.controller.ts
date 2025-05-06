@@ -222,4 +222,48 @@ export class FileUploadController {
   async deleteMedia(@Param('id') id: string) {
     return await this.fileUploadService.deleteMedia(id);
   }
+
+  @Post('upload-anonymous')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: 'public/',
+        filename: (req, file, callback) => {
+          const uniqueName = uuidv4() + extname(file.originalname);
+          callback(null, uniqueName);
+        },
+      }),
+    }),
+  )
+  async uploadAnonymous(
+    @UploadedFile() file: Express.Multer.File,
+    @Request() req: Request,
+  ) {
+    if (!file) {
+      throw new BadRequestException('No file uploaded.');
+    }
+
+    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
+      (req.headers as any).host
+    }/api/public/${file.filename}`;
+    const filePath = join('public', file.filename);
+
+    try {
+      const record = await this.fileUploadService.uploadAnonymousFile(
+        file,
+        fileUrl,
+      );
+      return {
+        message: 'Anonymous file uploaded successfully.',
+        fileUrl,
+        filePath,
+        record,
+      };
+    } catch (error) {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+      }
+      throw error;
+    }
+  }
 }
