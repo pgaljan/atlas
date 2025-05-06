@@ -56,21 +56,6 @@ const Settings = () => {
       cogoToast.error("Upload failed.");
     }
   };
-
-  const handleFeedbackSubmit = async () => {
-    try {
-      setLoading(true);
-      await dispatch(
-        saveAppSettings({ logoUrl, feedbackLink, appName, supportEmail })
-      ).unwrap();
-      cogoToast.success("Feedback link saved successfully.");
-    } catch (err) {
-      cogoToast.error("Failed to save feedback link.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleSaveAllSettings = async () => {
     try {
       setLoading(true);
@@ -100,7 +85,7 @@ const Settings = () => {
             <img
               src={logoUrl}
               alt="App Logo"
-              className="w-24 h-24 rounded-full object-cover border"
+              className="w-24 h-24 rounded-full p-2 object-cover border"
             />
             <div>
               <p className="text-lg font-medium">Current Logo</p>
