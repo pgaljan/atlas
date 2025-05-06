@@ -11,11 +11,11 @@ import { uploadAnonymousFile } from "../../../redux/slices/upload-files";
 
 const Settings = () => {
   const dispatch = useDispatch();
-  const [logoUrl, setLogoUrl] = useState("/assets/userimg.jpeg");
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
   const [feedbackLink, setFeedbackLink] = useState("");
   const [appName, setAppName] = useState("");
   const [supportEmail, setSupportEmail] = useState("");
-  const [loading, setLoading] = useState(false); 
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -24,16 +24,14 @@ const Settings = () => {
         if (fetchAppSettings.fulfilled.match(resultAction)) {
           const settings = resultAction?.payload;
           if (settings) {
-            setLogoUrl(settings.logoUrl || "/assets/userimg.jpeg");
+            setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
             setAppName(settings.appName || "");
             setSupportEmail(settings.supportEmail || "");
             setFeedbackLink(settings.feedbackLink || "");
           }
-        } else {
-          cogoToast.error("Failed to fetch app settings.");
         }
       } catch (error) {
-        cogoToast.error("Error loading app settings.");
+        console.log(error);
       }
     };
 
