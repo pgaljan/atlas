@@ -393,6 +393,7 @@ const MarkmapEditor = ({ structureId }) => {
           onSuccess={() =>
             fetchStructure(structureId, dispatch, setTreeData, setIsLoading)
           }
+          treeData={treeData}
           showWbs={showWbs}
           structureId={structureId}
           setShowWbs={setShowWbs}

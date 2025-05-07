@@ -313,7 +313,7 @@ export default function useMarkmapInteractions({
                     .style("font-weight", "")
                     .style("color", "");
                 }, 5000);
-              }, 800);
+              }, 1000);
             } else {
               resetDraggedElement(this);
             }

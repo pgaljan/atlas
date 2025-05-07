@@ -9,6 +9,7 @@ lerna-debug.log*
 
 # Node modules
 node_modules/
+config.md
 
 # Build output
 dist/

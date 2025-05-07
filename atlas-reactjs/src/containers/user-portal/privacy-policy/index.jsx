@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
-import { fetchPrivacyPolicy } from "../../../redux/slices/privacy-policy";
+import { useDispatch } from "react-redux";
 import Layout from "../../../components/layout";
+import { fetchPrivacyPolicy } from "../../../redux/slices/privacy-policy";
 
 const PrivacyPolicy = () => {
   const dispatch = useDispatch();

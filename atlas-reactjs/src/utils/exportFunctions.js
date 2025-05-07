@@ -349,3 +349,165 @@ export const exportAsHtml = (treeData, showWbs, includeWbs) => {
   )}_${filenameTimestamp}_export.html`;
   link.click();
 };
+
+export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
+  if (!treeData || !treeData.children || treeData.children.length === 0) {
+    cogoToast.warn("No elements found to export.");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = now.toLocaleString();
+  const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
+  const structureTitle = treeData.content || "Combined_Markmap_Export";
+
+  let combinedContent = "";
+
+  const processNode = (node) => {
+    if (!node) return;
+
+    if (node.Record) {
+      const elementName = node.name || "Untitled";
+      const record = node.Record;
+      const recordContent =
+        (record.metadata && record.metadata.content) || "<p>No content</p>";
+      const recordTags = Array.isArray(record.tags)
+        ? record.tags.map((tag) => `${tag.key}: ${tag.value}`).join(", ")
+        : "";
+
+      const recordSection = `
+        <hr />
+        <h2>${elementName}</h2>
+        <p><em>Exported on: ${timestamp}</em></p>
+        <div>${recordContent}</div>
+        ${
+          includeTags && recordTags
+            ? `<p><strong>Tags:</strong> ${recordTags}</p>`
+            : ""
+        }
+      `;
+      combinedContent += recordSection;
+    }
+
+    if (node.children?.length) {
+      node.children.forEach((child) => processNode(child));
+    }
+  };
+
+  treeData.children.forEach((child) => processNode(child));
+
+  const fullDoc = `
+    <html xmlns:o="urn:schemas-microsoft-com:office:office"
+          xmlns:w="urn:schemas-microsoft-com:office:word"
+          xmlns="http://www.w3.org/TR/REC-html40">
+    <head>
+      <meta charset="utf-8">
+      <title>${structureTitle}</title>
+      <style>
+        body { font-family: Arial, sans-serif; }
+        h1, h2 { color: #333; }
+        p { font-size: 14px; }
+        hr { margin: 20px 0; }
+      </style>
+    </head>
+    <body>
+      <h1>${structureTitle}</h1>
+      <p><em>Full export generated on: ${timestamp}</em></p>
+      ${combinedContent}
+    </body>
+    </html>
+  `;
+
+  const blob = new Blob([fullDoc], { type: "application/msword" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${structureTitle.replace(
+    /\s+/g,
+    "_"
+  )}_${filenameTimestamp}.doc`;
+  link.click();
+};
+export const exportAsSinglePdf = async (
+  treeData,
+  showWbs,
+  includeWbs,
+  includeTags
+) => {
+  if (!treeData || !treeData.children || treeData.children.length === 0) {
+    cogoToast.warn("No elements found to export.");
+    return;
+  }
+
+  const now = new Date();
+  const timestamp = now.toLocaleString();
+  const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
+  const structureTitle = treeData?.content || "Markmap Export";
+
+  const stripHtml = (html) => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || "";
+  };
+
+  const doc = new jsPDF();
+
+  let pageIndex = 0;
+
+  const processNode = async (node) => {
+    if (!node) return;
+    const elementName = node.name || "Untitled";
+
+    if (node.Record) {
+      const record = node.Record;
+      const recordContent = record.metadata?.content || "No content";
+      const recordTags =
+        record.tags?.map((tag) => `${tag.key}: ${tag.value}`).join(", ") || "";
+
+      if (pageIndex > 0) doc.addPage();
+      pageIndex++;
+
+      doc.setFontSize(16);
+      doc.text(elementName, 10, 20);
+      doc.setFontSize(12);
+      doc.text(`Exported on: ${timestamp}`, 10, 30);
+
+      const tempDiv = document.createElement("div");
+      tempDiv.innerHTML = recordContent;
+      const images = tempDiv.getElementsByTagName("img");
+
+      let yOffset = 40;
+      for (let img of images) {
+        try {
+          const imageData = img.src;
+          const width = 80;
+          const height = 80;
+          doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
+          yOffset += height + 10;
+        } catch (error) {
+          console.error("Error embedding image:", error);
+        }
+      }
+
+      const plainText = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
+      const textLines = doc.splitTextToSize(plainText, 180);
+      doc.text(textLines, 10, yOffset);
+      yOffset += textLines.length * 10;
+
+      if (includeTags && recordTags) {
+        doc.text(`Tags: ${recordTags}`, 10, yOffset + 10);
+      }
+    }
+
+    if (node.children?.length) {
+      for (const child of node.children) {
+        await processNode(child);
+      }
+    }
+  };
+
+  for (const child of treeData.children) {
+    await processNode(child);
+  }
+
+  doc.save(`${structureTitle.replace(/\s+/g, "_")}_${filenameTimestamp}.pdf`);
+};

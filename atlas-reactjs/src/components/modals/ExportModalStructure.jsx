@@ -2,8 +2,19 @@ import React, { useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
 import { LuDatabaseBackup } from "react-icons/lu";
 import cogoToast from "@successtar/cogo-toast";
+import {
+  exportAsPdf,
+  exportAsSinglePdf,
+  exportAsDoc,
+  exportAllAsSingleDoc,
+} from "../../utils/exportFunctions";
 
-const ExportModalStructure = ({ isOpen, onClose, onExport }) => {
+const ExportModalStructure = ({
+  isOpen,
+  onClose,
+  treeData = [],
+  showWbs = false,
+}) => {
   if (!isOpen) return null;
 
   const FORMATS = ["DOC", "PDF", "HTML"];
@@ -19,25 +30,60 @@ const ExportModalStructure = ({ isOpen, onClose, onExport }) => {
     set(arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]);
 
   const handleExport = async () => {
+    if (!formats || !options) {
+      cogoToast.error("Please select formats and options.");
+      return;
+    }
+
+    console.log("formats:", formats);
+console.log("options:", options);
+
+
     if (
       formats.length === 1 &&
       formats[0] === "HTML" &&
-      options.includes("Include tags")
+      options?.includes("Include tags")
     ) {
       cogoToast.error("Tags are not allowed when exporting in HTML format.");
       return;
     }
+
     setIsExporting(true);
 
-    await onExport({
-      assembly,
-      formats,
-      includeWbs: options.includes("Include WBS"),
-      includeTags: options.includes("Include tags"),
-    });
+    try {
+      const exportFns = [];
 
-    setIsExporting(false);
-    onClose();
+      const includeWbs = options?.includes("Include WBS");
+      const includeTags = options?.includes("Include tags");
+
+      if (formats.includes("PDF")) {
+        exportFns.push(() =>
+          assembly === "Single"
+            ? exportAsSinglePdf(treeData, showWbs, includeWbs, includeTags)
+            : exportAsPdf(treeData, showWbs, includeWbs, includeTags)
+        );
+      }
+
+      if (formats.includes("DOC")) {
+        exportFns.push(() =>
+          assembly === "Single"
+            ? exportAllAsSingleDoc(treeData, showWbs, includeWbs, includeTags)
+            : exportAsDoc(treeData, showWbs, includeWbs, includeTags)
+        );
+      }
+
+      for (const fn of exportFns) {
+        await fn();
+      }
+
+      cogoToast.success("Export successful!");
+      onClose();
+    } catch (error) {
+      console.error("Export failed:", error);
+      cogoToast.error("Export failed. Please try again.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   return (
@@ -106,7 +152,8 @@ const ExportModalStructure = ({ isOpen, onClose, onExport }) => {
                 </label>
                 {opt === "Include tags" && (
                   <p className="text-sm text-gray-500 mt-2">
-                    <span className="text-red-500">*</span> HTML format does not support tags.
+                    <span className="text-red-500">*</span> HTML format does not
+                    support tags.
                   </p>
                 )}
               </div>
@@ -117,7 +164,7 @@ const ExportModalStructure = ({ isOpen, onClose, onExport }) => {
         <div className="flex justify-end pt-4">
           <button
             onClick={handleExport}
-            disabled={formats.length === 0}
+            disabled={formats.length === 0 || isExporting}
             className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LuDatabaseBackup size={20} className="mr-2" />

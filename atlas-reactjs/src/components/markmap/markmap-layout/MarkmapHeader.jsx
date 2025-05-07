@@ -35,6 +35,7 @@ const MarkmapHeader = ({
   structureId,
   onSuccess,
   onExportModal,
+  treeData,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -243,7 +244,9 @@ const MarkmapHeader = ({
       <div className="flex items-center w-full justify-between">
         <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
           <Link to="/app/dashboard">
-            <h1 className="text-2xl font-bold text-[#660000] uppercase">{appName}</h1>
+            <h1 className="text-2xl font-bold text-[#660000] uppercase">
+              {appName}
+            </h1>
           </Link>
           <input
             type="text"
@@ -436,6 +439,8 @@ const MarkmapHeader = ({
       {isExportModal && (
         <ExportModalStructure
           isOpen={isExportModal}
+          treeData={treeData}
+          showWbs={showWbs}
           onClose={() => setIsExportModal(false)}
           onExport={(opts) => {
             setIsExportModal(false);

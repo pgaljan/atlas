@@ -33,6 +33,7 @@ export const handleLogout = async () => {
     "atlas_email",
     "atlas_admin_token", 
     "workspaceId", 
+    
   ];
 
   keysToRemove.forEach((key) => Cookies.remove(key));
