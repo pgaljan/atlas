@@ -37,6 +37,12 @@ enum InvitationStatus {
   accepted
 }
 
+enum EditorType {
+  vscode
+  quilleditor
+  markeddown
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -237,12 +243,14 @@ model Element {
 }
 
 model Record {
-  id        String    @id @default(uuid())
-  metadata  Json
-  tags      Json?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  Element   Element[]
+  id         String     @id @default(uuid())
+  metadata   Json
+  tags       Json?
+  editorType EditorType @default(vscode)
+  recordSvg  Json?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  Element    Element[]
 }
 
 model ParsedContent {

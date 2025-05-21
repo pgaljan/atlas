@@ -66,6 +66,7 @@ export const treeToMarkmapData = (node, showWbs, includeWbs) => {
     elementId: node.id,
     parentId: node.parentId,
     recordId: node.recordId,
+    recordSvg: node.recordSvg || null, 
   };
 };
 

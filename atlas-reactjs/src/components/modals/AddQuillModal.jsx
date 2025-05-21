@@ -11,6 +11,8 @@ import {
   updateRecord,
 } from "../../redux/slices/records";
 import QuillEditor from "../editors/quill.editor";
+import VsCodeEditor from "../editors/vscode.editor";
+import DiscardModal from "../modals/DiscardModal";
 
 const AddQuillModal = ({
   structureId,
@@ -29,13 +31,23 @@ const AddQuillModal = ({
   const dispatch = useDispatch();
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
-  const [initialData, setInitialData] = useState({ metadata: "", tags: [] });
+  const [initialData, setInitialData] = useState({
+    quilleditor: "",
+    vscode: "",
+    tags: [],
+  });
   const [hasChanges, setHasChanges] = useState(false);
   const [formData, setFormData] = useState({
     metadata: "",
   });
   const [tags, setTags] = useState([]);
+  const [isVsCode, setIsVsCode] = useState(false);
   const canTags = useFeatureFlag("Record Tagging");
+  const [discardModalVisible, setDiscardModalVisible] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState(null);
+  const [quillContent, setQuillContent] = useState("");
+  const [vsCodeContent, setVsCodeContent] = useState("");
+  const [mermaidSvg, setMermaidSvg] = useState("");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
@@ -51,12 +63,25 @@ const AddQuillModal = ({
       try {
         const record = await dispatch(getRecordById(recordId)).unwrap();
         if (record) {
-          setFormData({ metadata: record.metadata.content });
-          setTags(record.tags);
+          // Load based on editorType
+          const quillData =
+            record.metadata.editorType === "quilleditor"
+              ? record.metadata.content
+              : "";
+          const vscodeData =
+            record.metadata.editorType === "vscode"
+              ? record.metadata.content
+              : "";
+          setQuillContent(quillData);
+          setVsCodeContent(vscodeData);
+          setTags(record.tags || []);
           setInitialData({
-            metadata: record.metadata.content,
-            tags: record.tags,
+            quilleditor: quillData,
+            vscode: vscodeData,
+            tags: record.tags || [],
           });
+          // Set current editor based on existing data
+          setIsVsCode(record.metadata.editorType === "vscode");
         }
       } catch (error) {
         cogoToast.error(`Failed to fetch record: ${error.message}`);
@@ -69,25 +94,30 @@ const AddQuillModal = ({
   }, [fetchRecordData]);
 
   useEffect(() => {
-    const metadataChanged = formData.metadata !== initialData.metadata;
+    const currentContent = isVsCode ? vsCodeContent : quillContent;
+    const initialContent = isVsCode
+      ? initialData.vscode
+      : initialData.quilleditor;
+    const metadataChanged = currentContent !== initialContent;
     const tagsChanged =
       JSON.stringify(tags) !== JSON.stringify(initialData.tags);
     setHasChanges(metadataChanged || tagsChanged);
-  }, [formData, tags, initialData]);
+  }, [quillContent, vsCodeContent, tags, initialData, isVsCode]);
 
   const handleEditorChange = (value) => {
-    setFormData((prev) => ({
-      ...prev,
-      metadata: value,
-    }));
+    if (isVsCode) {
+      setVsCodeContent(value);
+    } else {
+      setQuillContent(value);
+    }
   };
 
   const handleSave = async () => {
-    if (!formData.metadata?.trim()) {
+    const currentContent = isVsCode ? vsCodeContent : quillContent;
+    if (!currentContent?.trim()) {
       cogoToast.error("Metadata is required!");
       return;
     }
-
     if (
       tags.length > 0 &&
       tags.some((tag) => !tag.key.trim() || !tag.value.trim())
@@ -95,14 +125,22 @@ const AddQuillModal = ({
       cogoToast.error("Each tag must have both a key and a value.");
       return;
     }
-
-    const parsedMetadata = { content: formData.metadata };
-    const createRecordDto = { metadata: parsedMetadata, tags };
+    const editorType = isVsCode ? "vscode" : "quilleditor";
+    const parsedMetadata = { content: currentContent, editorType };
+    const createRecordDto = {
+      metadata: parsedMetadata,
+      tags,
+      recordSvg: isVsCode ? mermaidSvg : undefined,
+    };
 
     try {
       setIsLoading(true);
       if (actionType === "edit") {
-        const updateRecordDto = { metadata: parsedMetadata, tags };
+        const updateRecordDto = {
+          metadata: parsedMetadata,
+          tags,
+          recordSvg: isVsCode ? mermaidSvg : undefined,
+        };
         await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
         cogoToast.success("Record updated successfully!");
         await dispatch(getRecordById(recordId)).unwrap();
@@ -121,6 +159,31 @@ const AddQuillModal = ({
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleToggle = () => {
+    const currentContent = (isVsCode ? vsCodeContent : quillContent).trim();
+    const hasUnsavedData = currentContent || tags.length;
+
+    hasUnsavedData
+      ? (setPendingToggle(!isVsCode), setDiscardModalVisible(true))
+      : (setIsVsCode(!isVsCode),
+        setTags([]),
+        isVsCode ? setQuillContent("") : setVsCodeContent(""));
+  };
+
+  const confirmToggle = () => {
+    setQuillContent("");
+    setVsCodeContent("");
+    setTags([]);
+    setIsVsCode(pendingToggle);
+    setDiscardModalVisible(false);
+    setPendingToggle(null);
+  };
+
+  const cancelToggle = () => {
+    setDiscardModalVisible(false);
+    setPendingToggle(null);
   };
 
   const addTag = () => {
@@ -150,13 +213,15 @@ const AddQuillModal = ({
           top: position.y,
           transform: "translate(-50%, -50%)",
         }}
-        className="bg-white border border-gray-300 rounded-lg shadow-lg w-[850px] z-50"
+        className={`bg-white border border-gray-300 rounded-lg shadow-lg z-50 ${
+          isVsCode ? "w-[1300px]" : "w-[850px]"
+        }`}
       >
         {/* Header */}
         <div className="flex items-center justify-between bg-gray-100 px-4 py-2 rounded-t-lg border-b border-gray-300">
           <h2 className="text-xl font-semibold text-gray-800">{text} Record</h2>
           <button
-            className="text-gray-500 hover:text-gray-700"
+            className="text-gray-500 hover:text-gray-700 text-"
             onClick={onClose}
           >
             ✖
@@ -169,27 +234,69 @@ const AddQuillModal = ({
             {elementValue}
           </label>
           <div>
-            <QuillEditor
-              structureId={structureId}
-              content={formData.metadata}
-              onEditorChange={handleEditorChange}
-            />
+            {isVsCode ? (
+              <VsCodeEditor
+                content={vsCodeContent}
+                structureId={structureId}
+                onEditorChange={handleEditorChange}
+                recordId={recordId}
+                onSvgChange={setMermaidSvg}
+              />
+            ) : (
+              <QuillEditor
+                content={quillContent}
+                onEditorChange={handleEditorChange}
+                structureId={structureId}
+              />
+            )}
           </div>
           {/* Add Tags Button with Icon */}
-          <div className="mt-4 flex items-center justify-start">
-            <button
-              onClick={() => handleFeatureClick(canTags, addTag)}
-              className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-red-800 focus:outline-none flex items-center"
-            >
-              <BsTags className="h-5 w-5 mr-2" /> Add Tags
-            </button>
+          <div className="flex justify-between items-center mb-2">
+            <div className="flex items-center">
+              <button
+                onClick={() => handleFeatureClick(canTags, addTag)}
+                className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-red-800 focus:outline-none flex items-center"
+              >
+                <BsTags className="h-5 w-5 mr-2" /> Add Tags
+              </button>
+            </div>
+
+            <div className="flex items-center">
+              <span
+                className={`font-semibold pr-1 text-base ${
+                  isVsCode ? "text-custom-main pr-1" : "text-gray-700"
+                }`}
+              >
+                VS Code Editor
+              </span>
+
+              <label className="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={isVsCode}
+                  onChange={handleToggle}
+                  className="sr-only peer"
+                />
+                <div
+                  className={`w-12 h-6 rounded-full transition-all ${
+                    isVsCode
+                      ? "bg-custom-main border-none"
+                      : "bg-gray-200 border border-gray-300"
+                  }`}
+                ></div>
+                <div
+                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform ${
+                    isVsCode ? "" : "!bg-custom-main"
+                  }`}
+                ></div>
+              </label>
+            </div>
           </div>
 
           {/* Tags Section */}
           {tags?.length > 0 && (
             <div className="mt-4">
               <div className="max-h-40 overflow-y-auto pr-3">
-                {/* Adding padding-right to prevent overlap */}
                 {tags?.map((tag) => (
                   <div
                     key={tag.id}
@@ -270,6 +377,14 @@ const AddQuillModal = ({
           </button>
         </div>
       </div>
+      {discardModalVisible && (
+        <DiscardModal
+          isOpen={discardModalVisible}
+          title={"Editor Content?"}
+          onClose={cancelToggle}
+          onConfirm={confirmToggle}
+        />
+      )}
     </>
   );
 };

@@ -43,7 +43,9 @@ export class RecordService {
           ...createRecordDto,
           metadata: createRecordDto.metadata,
           tags: createRecordDto.tags ?? null,
+          recordSvg: createRecordDto.recordSvg ?? null,
           Element: { connect: { id: elementid } },
+          editorType: createRecordDto.editorType ?? undefined,
         },
       });
 
@@ -58,24 +60,46 @@ export class RecordService {
     }
   }
 
-  async updateRecord(recordid: string, updateRecordDto: UpdateRecordDto) {
-    const record = await this.prisma.record.findUnique({
-      where: { id: recordid },
+  async updateRecord(recordId: string, updateRecordDto: UpdateRecordDto) {
+    const existingRecord = await this.prisma.record.findUnique({
+      where: { id: recordId },
     });
-    if (!record) throw new NotFoundException('Record not found');
+
+    if (!existingRecord) {
+      throw new NotFoundException('Record not found');
+    }
+
+    const { metadata, tags, editorType, recordSvg } = updateRecordDto;
+
+    const updateData: any = {};
+
+    if (metadata !== undefined) {
+      updateData.metadata = metadata;
+    }
+
+    if (tags !== undefined) {
+      updateData.tags = tags;
+    }
+
+    if (editorType !== undefined) {
+      updateData.editorType = editorType;
+    }
+
+    if (recordSvg !== undefined) updateData.recordSvg = recordSvg;
 
     try {
       const updatedRecord = await this.prisma.record.update({
-        where: { id: recordid },
-        data: {
-          ...updateRecordDto,
-          metadata: updateRecordDto.metadata,
-        },
+        where: { id: recordId },
+        data: updateData,
       });
 
-      // Log the audit for update action
       await this.logAudit('UPDATE', 'Record', updatedRecord.id.toString(), {
-        updatedFields: updateRecordDto,
+        before: {
+          metadata: existingRecord.metadata,
+          tags: existingRecord.tags,
+          editorType: existingRecord.editorType,
+        },
+        after: updateData,
       });
 
       return updatedRecord;

@@ -7,6 +7,7 @@ import {
   assignWbsNumbers,
   treeToMarkmapData,
 } from "../utils/markmapHelpers";
+import { Canvg } from "canvg";
 
 export const sanitizeTreeData = (node) => {
   return {
@@ -23,6 +24,7 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
     cogoToast.warn("No elements found to export.");
     return;
   }
+
   const zip = new JSZip();
   const now = new Date();
   const timestamp = now.toLocaleString();
@@ -30,9 +32,10 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
   const structureTitle =
     treeData && treeData.content ? treeData.content : "Markmap Export";
 
-  const processNode = (node) => {
+  const processNode = async (node) => {
     if (!node) return;
     const elementName = node.name || "Untitled";
+
     if (node.Record) {
       const record = node.Record;
       const recordContent =
@@ -40,6 +43,44 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
       const recordTags = Array.isArray(record.tags)
         ? record.tags.map((tag) => `${tag.key}: ${tag.value}`).join(", ")
         : "";
+
+      let imageDataURL = "";
+
+      if (record.recordSvg) {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+
+        try {
+          const sanitizedSvg = record.recordSvg.replace(
+            /<br([^>]*)>/g,
+            "<br$1 />"
+          );
+
+          const svgEl = new DOMParser().parseFromString(
+            sanitizedSvg,
+            "image/svg+xml"
+          ).documentElement;
+          const viewBox = svgEl.getAttribute("viewBox");
+          if (viewBox) {
+            const [x, y, width, height] = viewBox.split(" ").map(Number);
+            canvas.width = width;
+            canvas.height = height;
+          } else {
+            canvas.width = 800;
+            canvas.height = 600;
+          }
+
+          await document.fonts.ready;
+          await new Promise((resolve) => setTimeout(resolve, 200));
+
+          const v = await Canvg.fromString(ctx, sanitizedSvg);
+          await v.render();
+          imageDataURL = canvas.toDataURL("image/png");
+        } catch (err) {
+          console.error("SVG render failed:", err);
+        }
+      }
+
       const docContent = `
 <html xmlns:o="urn:schemas-microsoft-com:office:office" 
       xmlns:w="urn:schemas-microsoft-com:office:word" 
@@ -51,6 +92,7 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
       body { font-family: Arial, sans-serif; }
       h1 { color: #333; }
       p { font-size: 14px; }
+      img { max-width: 100%; margin: 10px 0; }
     </style>
   </head>
   <body>
@@ -58,11 +100,15 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
     <p>Exported on: ${timestamp}</p>
     <div>${recordContent}</div>
     ${
+      imageDataURL
+        ? `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`
+        : ""
+    }
+    ${
       includeTags && recordTags
         ? `<p><strong>Tags:</strong> ${recordTags}</p>`
         : ""
     }
-
   </body>
 </html>
       `;
@@ -72,22 +118,28 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
       )}_${filenameTimestamp}.doc`;
       zip.file(fileName, docContent);
     }
+
     if (node.children && node.children.length > 0) {
-      node.children.forEach((child) => processNode(child));
+      for (const child of node.children) {
+        await processNode(child);
+      }
     }
   };
 
-  treeData.children.forEach((child) => processNode(child));
+  (async () => {
+    for (const child of treeData.children) {
+      await processNode(child);
+    }
 
-  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-  treeData.children.forEach((topLevelNode, index) => {
-    const color = colorScale(index);
-    assignNodeColors(topLevelNode, () => color);
-  });
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    treeData.children.forEach((topLevelNode, index) => {
+      const color = colorScale(index);
+      assignNodeColors(topLevelNode, () => color);
+    });
 
-  const markmapData = treeToMarkmapData(treeData, showWbs, includeWbs);
+    const markmapData = treeToMarkmapData(treeData, showWbs, includeWbs);
 
-  const htmlContent = `
+    const htmlContent = `
 <!DOCTYPE html>
 <html>
   <head>
@@ -119,26 +171,28 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
     </script>
   </body>
 </html>
-  `;
-  zip.file(
-    `${structureTitle.replace(/\s+/g, "_")}_${filenameTimestamp}_export.html`,
-    htmlContent
-  );
+    `;
 
-  zip
-    .generateAsync({ type: "blob" })
-    .then((content) => {
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(content);
-      link.download = `${structureTitle.replace(
-        /\s+/g,
-        "_"
-      )}_${filenameTimestamp}.zip`;
-      link.click();
-    })
-    .catch((error) => {
-      cogoToast.error("Failed to generate ZIP file.");
-    });
+    zip.file(
+      `${structureTitle.replace(/\s+/g, "_")}_${filenameTimestamp}_export.html`,
+      htmlContent
+    );
+
+    zip
+      .generateAsync({ type: "blob" })
+      .then((content) => {
+        const link = document.createElement("a");
+        link.href = URL.createObjectURL(content);
+        link.download = `${structureTitle.replace(
+          /\s+/g,
+          "_"
+        )}_${filenameTimestamp}.zip`;
+        link.click();
+      })
+      .catch((err) => {
+        cogoToast.error("Failed to generate ZIP file.");
+      });
+  })();
 };
 
 export const exportAsPdf = async (
@@ -192,6 +246,40 @@ export const exportAsPdf = async (
           yOffset += height + 10;
         } catch (error) {
           console.error("Error embedding image:", error);
+        }
+      }
+      if (record.recordSvg) {
+        try {
+          const width = 160;
+          const scaleFactor = 2;
+
+          const canvas = document.createElement("canvas");
+          canvas.width = width * scaleFactor;
+          canvas.height = width * scaleFactor;
+
+          const ctx = canvas.getContext("2d");
+
+          const sanitizedSvg = record.recordSvg.replace(
+            /<br([^>]*)>/g,
+            "<br$1 />"
+          );
+
+          const v = await Canvg.from(ctx, sanitizedSvg, {
+            ignoreAnimation: true,
+            ignoreClear: true,
+            scaleWidth: canvas.width,
+            scaleHeight: canvas.height,
+          });
+
+          await v.render();
+
+          const height = (canvas.height / canvas.width) * width;
+          const pngDataUrl = canvas.toDataURL("image/png");
+
+          doc.addImage(pngDataUrl, "PNG", 10, yOffset, width, height);
+          yOffset += height + 10;
+        } catch (error) {
+          console.error("SVG rendering failed:", error);
         }
       }
 
@@ -297,7 +385,7 @@ export const exportAsHtml = (treeData, showWbs, includeWbs) => {
     });
   }
 
-  const markmapData = treeToMarkmapData(treeWithWbs, showWbs);
+  const markmapData = treeToMarkmapData(treeWithWbs, showWbs, includeWbs);
 
   const structureTitle =
     treeData && treeData.content ? treeData.content : "Markmap Export";

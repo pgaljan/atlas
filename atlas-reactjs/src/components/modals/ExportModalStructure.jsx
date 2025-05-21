@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { RiCloseLine } from "react-icons/ri";
 import { LuDatabaseBackup } from "react-icons/lu";
 import cogoToast from "@successtar/cogo-toast";
@@ -7,6 +7,7 @@ import {
   exportAsSinglePdf,
   exportAsDoc,
   exportAllAsSingleDoc,
+  exportAsHtml,
 } from "../../utils/exportFunctions";
 
 const ExportModalStructure = ({
@@ -20,11 +21,29 @@ const ExportModalStructure = ({
   const FORMATS = ["DOC", "PDF", "HTML"];
   const OPTIONS = ["Include WBS", "Include tags"];
   const DocumentAssembly = ["Single", "Multiple"];
-
   const [assembly, setAssembly] = useState("Multiple");
   const [formats, setFormats] = useState([]);
   const [options, setOptions] = useState([]);
   const [isExporting, setIsExporting] = useState(false);
+  const [svgContent, setSvgContent] = useState({});
+
+  useEffect(() => {
+    const handleSvgPreviewUpdate = (event) => {
+      const { svg } = event.detail;
+      setSvgContent(svg);
+    };
+
+    window.addEventListener("svgPreviewUpdate", handleSvgPreviewUpdate);
+
+    const existingSvgEvent = window.svgPreview;
+    if (existingSvgEvent) {
+      setSvgContent(existingSvgEvent);
+    }
+
+    return () => {
+      window.removeEventListener("svgPreviewUpdate", handleSvgPreviewUpdate);
+    };
+  }, []);
 
   const toggle = (item, arr, set) =>
     set(arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]);
@@ -34,10 +53,6 @@ const ExportModalStructure = ({
       cogoToast.error("Please select formats and options.");
       return;
     }
-
-    console.log("formats:", formats);
-console.log("options:", options);
-
 
     if (
       formats.length === 1 &&
@@ -56,11 +71,26 @@ console.log("options:", options);
       const includeWbs = options?.includes("Include WBS");
       const includeTags = options?.includes("Include tags");
 
+      if (formats.includes("HTML")) {
+        exportFns.push(() => exportAsHtml(treeData, showWbs, includeWbs));
+      }
       if (formats.includes("PDF")) {
         exportFns.push(() =>
           assembly === "Single"
-            ? exportAsSinglePdf(treeData, showWbs, includeWbs, includeTags)
-            : exportAsPdf(treeData, showWbs, includeWbs, includeTags)
+            ? exportAsSinglePdf(
+                treeData,
+                showWbs,
+                includeWbs,
+                includeTags,
+                svgContent
+              )
+            : exportAsPdf(
+                treeData,
+                showWbs,
+                includeWbs,
+                includeTags,
+                svgContent
+              )
         );
       }
 

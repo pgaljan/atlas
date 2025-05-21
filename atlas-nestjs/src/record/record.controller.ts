@@ -33,7 +33,7 @@ export class RecordController {
     return { message: 'Record created successfully', recordId: newRecord.id };
   }
 
-  @Get('record/:recordId')
+  @Get('record/:recordId') 
   async findOne(@Param('recordId') recordId: string) {
     if (!recordId) {
       throw new BadRequestException('Invalid record ID');

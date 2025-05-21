@@ -44,12 +44,20 @@ const MarkmapEditor = ({ structureId }) => {
   const [filteredTree, setFilteredTree] = useState(null);
   const [loaderSearch, setLoaderSearch] = useState(false);
   const userId = Cookies.get("atlas_userId");
-  const [showBanner, setShowBanner] = useState(false);
+
   const [rightClickModal, setRightClickModal] = useState({
     visible: false,
     position: { x: 0, y: 0 },
   });
 
+  useEffect(() => {
+    const onSvg = (e) => {};
+    window.addEventListener("svgPreviewUpdate", onSvg);
+
+    return () => {
+      window.removeEventListener("svgPreviewUpdate", onSvg);
+    };
+  }, []);
   useEffect(() => {
     const handleAutoSave = async () => {
       if (svgRef.current) {
@@ -364,17 +372,17 @@ const MarkmapEditor = ({ structureId }) => {
       exportAsPdf(treeData, showWbs);
     }
   };
-  const handleExportModal = ({ formats, includeWbs, includeTags }) => {
+  const handleExportModal = ({ formats, showWbs, includeWbs, includeTags }) => {
     formats.forEach((fmt) => {
       switch (fmt) {
         case "HTML":
-          exportAsHtml(treeData, includeWbs, includeTags);
+          exportAsHtml(treeData, showWbs, includeWbs);
           break;
         case "PDF":
-          exportAsPdf(treeData, includeWbs, includeTags, includeTags);
+          exportAsPdf(treeData, showWbs, includeWbs, includeTags);
           break;
         case "DOC":
-          exportAsDoc(treeData, includeWbs, includeTags, includeTags);
+          exportAsDoc(treeData, showWbs, includeWbs, includeTags);
           break;
         default:
           break;
