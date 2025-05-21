@@ -1,5 +1,0 @@
--- AlterTable
-ALTER TABLE "AppSettings" ALTER COLUMN "appName" DROP NOT NULL,
-ALTER COLUMN "logoUrl" DROP NOT NULL,
-ALTER COLUMN "supportEmail" DROP NOT NULL,
-ALTER COLUMN "feedbackLink" DROP NOT NULL;
