@@ -1,5 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
 import { IoTrash } from "react-icons/io5";
 import { MdGroupAdd, MdOutlineDownloading } from "react-icons/md";
@@ -11,6 +11,8 @@ import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
 import useOutsideClick from "../../../hooks/useOutsideClick";
 import { registerUser } from "../../../redux/slices/auth";
+import { fetchPlans } from "../../../redux/slices/plans";
+import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
 import {
   deleteUser,
   exportUsers,
@@ -23,6 +25,7 @@ const index = () => {
   const [tableData, setTableData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
+  const [plans, setPlans] = useState([]);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Sort");
   const options = [
@@ -68,6 +71,11 @@ const index = () => {
     setIsDeleteModalOpen(false);
   };
 
+  const fetchPlansData = useCallback(async () => {
+    const data = await dispatch(fetchPlans()).unwrap();
+    setPlans(data);
+  }, [dispatch]);
+
   const fetchUsersData = async () => {
     setLoading(true);
     try {
@@ -84,6 +92,7 @@ const index = () => {
   };
 
   useEffect(() => {
+    fetchPlansData();
     fetchUsersData();
   }, [dispatch]);
 
@@ -91,6 +100,7 @@ const index = () => {
     "User",
     "Email",
     "Role",
+    "Tier",
     "Admin",
     "Status",
     "Invites",
@@ -170,7 +180,6 @@ const index = () => {
     }
   };
 
-  // For deleting a user
   const handleDeleteUser = async () => {
     try {
       await dispatch(
@@ -218,6 +227,26 @@ const index = () => {
       cogoToast.success("Invite count updated successfully!");
     } catch (error) {
       cogoToast.error(error.message || "Failed to update invites");
+    }
+  };
+
+  const handleTierChange = async (userId, selectedPlanName) => {
+    try {
+      const selectedPlan = plans.find((plan) => plan.name === selectedPlanName);
+
+      if (!selectedPlan) {
+        cogoToast.error("Selected plan not found");
+        return;
+      }
+
+      await dispatch(
+        updateSubscriptionPlan({ userId, planId: selectedPlan.id })
+      ).unwrap();
+
+      cogoToast.success("Subscription plan updated successfully!");
+      fetchUsersData();
+    } catch (error) {
+      cogoToast.error(error.message || "Failed to update subscription plan");
     }
   };
 
@@ -401,6 +430,23 @@ const index = () => {
                     <td className="px-4 py-3 capitalize text-gray-500">
                       {user.role?.name}
                     </td>
+                    <td className="px-4 py-3">
+                      <select
+                        value={user.subscription?.plan?.name || ""}
+                        onChange={(e) =>
+                          handleTierChange(user.id, e.target.value)
+                        }
+                        className="border px-2 py-1 rounded-md text-sm"
+                      >
+                        <option value="">None</option>
+                        {plans.map((plan) => (
+                          <option key={plan.id} value={plan.name}>
+                            {plan.name}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+
                     <td className="px-4 py-3">
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input

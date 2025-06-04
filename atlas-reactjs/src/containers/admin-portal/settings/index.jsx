@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
 import { FaUpload } from "react-icons/fa";
 import { useDispatch } from "react-redux";
-import cogoToast from "@successtar/cogo-toast";
 import AdminLayout from "../../../components/admin/admin-layout";
 import {
-  saveAppSettings,
   fetchAppSettings,
+  saveAppSettings,
 } from "../../../redux/slices/app-settings";
 import { uploadAnonymousFile } from "../../../redux/slices/upload-files";
 

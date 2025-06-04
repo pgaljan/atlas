@@ -14,7 +14,6 @@ import {
 const InvitedMembers = ({ onSubmit }) => {
   const dispatch = useDispatch();
   const workspaceId = Cookies.get("workspaceId");
-
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);

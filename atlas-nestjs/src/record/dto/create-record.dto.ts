@@ -1,9 +1,16 @@
-import { IsNotEmpty, IsOptional, IsEnum, IsObject, IsJSON } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsEnum,
+  IsObject,
+  IsJSON,
+} from 'class-validator';
 
 export enum EditorType {
   VSCODE = 'vscode',
   MARKEDDOWN = 'markeddown',
   QUILLEDITOR = 'quilleditor',
+  PLANTUML = 'plantuml',
 }
 
 export class CreateRecordDto {

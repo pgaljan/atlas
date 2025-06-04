@@ -8,11 +8,13 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { CreateElementDto } from './dto/create-element.dto';
 import { ReparentElementsDto } from './dto/reparent-elements.dto';
 import { UpdateElementDto } from './dto/update-element.dto';
 import { ElementService } from './element.service';
+import { UpdateIsExpandedDto } from './dto/update-is-expanded.dto';
 
 @Controller('element')
 export class ElementController {
@@ -92,7 +94,6 @@ export class ElementController {
       await this.elementService.reparentElements(reparentElementsDto);
       return { message: 'Elements reparented successfully' };
     } catch (error) {
-      console.log(error)
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
@@ -116,6 +117,25 @@ export class ElementController {
         throw error;
       }
       throw new BadRequestException('Error deleting element');
+    }
+  }
+
+  @Put('expand-state/:id')
+  async updateIsExpanded(
+    @Param('id') id: string,
+    @Body() dto: UpdateIsExpandedDto,
+  ) {
+    try {
+      await this.elementService.updateIsExpandedOnly(id, dto.isExpanded);
+      return { message: 'Expand state updated successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Error updating expand state');
     }
   }
 }

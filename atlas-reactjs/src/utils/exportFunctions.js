@@ -7,7 +7,8 @@ import {
   assignWbsNumbers,
   treeToMarkmapData,
 } from "../utils/markmapHelpers";
-import { Canvg } from "canvg";
+import { toPng } from "html-to-image";
+import { extractTextForPdfPreview } from "../utils/exportFunctionHelpers";
 
 export const sanitizeTreeData = (node) => {
   return {
@@ -38,46 +39,52 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
 
     if (node.Record) {
       const record = node.Record;
+      const editorType = record.metadata?.editorType || "";
       const recordContent =
-        (record.metadata && record.metadata.content) || "<p>No content</p>";
+        editorType === "quilleditor"
+          ? (record.metadata && record.metadata.content) || "<p>No content</p>"
+          : "";
       const recordTags = Array.isArray(record.tags)
         ? record.tags.map((tag) => `${tag.key}: ${tag.value}`).join(", ")
         : "";
 
-      let imageDataURL = "";
+      let svgContent = "";
 
       if (record.recordSvg) {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
+        if (editorType === "markeddown") {
+          svgContent = `<div>${record.recordSvg}</div>`;
+        } else {
+          const tempContainer = document.createElement("div");
+          Object.assign(tempContainer.style, {
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            width: "100px",
+          });
+          tempContainer.innerHTML = record.recordSvg;
+          document.body.appendChild(tempContainer);
 
-        try {
-          const sanitizedSvg = record.recordSvg.replace(
-            /<br([^>]*)>/g,
-            "<br$1 />"
-          );
+          const svgElement = tempContainer.querySelector("svg");
 
-          const svgEl = new DOMParser().parseFromString(
-            sanitizedSvg,
-            "image/svg+xml"
-          ).documentElement;
-          const viewBox = svgEl.getAttribute("viewBox");
-          if (viewBox) {
-            const [x, y, width, height] = viewBox.split(" ").map(Number);
-            canvas.width = width;
-            canvas.height = height;
-          } else {
-            canvas.width = 800;
-            canvas.height = 600;
+          if (svgElement) {
+            if (!svgElement.getAttribute("viewBox")) {
+              const width = svgElement.getAttribute("width") || 100;
+              const height = svgElement.getAttribute("height") || 100;
+              svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            }
+
+            try {
+              const imageDataURL = await toPng(svgElement, {
+                pixelRatio: 5,
+                cacheBust: true,
+              });
+              svgContent = `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`;
+            } catch (err) {
+              console.error("Error converting SVG with html-to-image:", err);
+            }
           }
 
-          await document.fonts.ready;
-          await new Promise((resolve) => setTimeout(resolve, 200));
-
-          const v = await Canvg.fromString(ctx, sanitizedSvg);
-          await v.render();
-          imageDataURL = canvas.toDataURL("image/png");
-        } catch (err) {
-          console.error("SVG render failed:", err);
+          document.body.removeChild(tempContainer);
         }
       }
 
@@ -97,13 +104,9 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
   </head>
   <body>
     <h1>${elementName}</h1>
-    <p>Exported on: ${timestamp}</p>
+  <!--  <p>Exported on: ${timestamp}</p> -->
     <div>${recordContent}</div>
-    ${
-      imageDataURL
-        ? `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`
-        : ""
-    }
+  ${svgContent}
     ${
       includeTags && recordTags
         ? `<p><strong>Tags:</strong> ${recordTags}</p>`
@@ -221,74 +224,242 @@ export const exportAsPdf = async (
   const processNode = async (node) => {
     if (!node) return;
     const elementName = node.name || "Untitled";
+
     if (node.Record) {
       const record = node.Record;
       const recordContent = record.metadata?.content || "No content";
+      const editorType = record.metadata?.editorType || "";
       const recordTags =
         record.tags?.map((tag) => `${tag.key}: ${tag.value}`).join(", ") || "";
+
       const doc = new jsPDF();
+      const PAGE_HEIGHT = doc.internal.pageSize.height;
+      const PAGE_MARGIN = 10;
+      const MAX_Y = PAGE_HEIGHT - PAGE_MARGIN;
+      let yOffset = 40;
+
       doc.setFontSize(16);
       doc.text(`${elementName}`, 10, 20);
       doc.setFontSize(12);
-      doc.text(`Exported on: ${timestamp}`, 10, 30);
 
       const tempDiv = document.createElement("div");
       tempDiv.innerHTML = recordContent;
       const images = tempDiv.getElementsByTagName("img");
 
-      let yOffset = 40;
       for (let img of images) {
         try {
           const imageData = img.src;
           const width = 80;
           const height = 80;
+
+          if (yOffset + height > MAX_Y) {
+            doc.addPage();
+            yOffset = PAGE_MARGIN;
+          }
+
           doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
           yOffset += height + 10;
         } catch (error) {
           console.error("Error embedding image:", error);
         }
       }
-      if (record.recordSvg) {
+
+      if (record.recordSvg && editorType !== "markeddown") {
         try {
-          const width = 160;
-          const scaleFactor = 2;
-
-          const canvas = document.createElement("canvas");
-          canvas.width = width * scaleFactor;
-          canvas.height = width * scaleFactor;
-
-          const ctx = canvas.getContext("2d");
-
-          const sanitizedSvg = record.recordSvg.replace(
-            /<br([^>]*)>/g,
-            "<br$1 />"
-          );
-
-          const v = await Canvg.from(ctx, sanitizedSvg, {
-            ignoreAnimation: true,
-            ignoreClear: true,
-            scaleWidth: canvas.width,
-            scaleHeight: canvas.height,
+          const tempContainer = document.createElement("div");
+          Object.assign(tempContainer.style, {
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            width: "800px",
           });
+          document.body.appendChild(tempContainer);
 
-          await v.render();
+          tempContainer.innerHTML = record.recordSvg;
+          const svgElement = tempContainer.querySelector("svg");
 
-          const height = (canvas.height / canvas.width) * width;
-          const pngDataUrl = canvas.toDataURL("image/png");
+          if (svgElement) {
+            if (!svgElement.getAttribute("viewBox")) {
+              const width = svgElement.getAttribute("width") || 800;
+              const height = svgElement.getAttribute("height") || 600;
+              svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            }
 
-          doc.addImage(pngDataUrl, "PNG", 10, yOffset, width, height);
-          yOffset += height + 10;
+            const dataUrl = await toPng(svgElement, {
+              pixelRatio: 5,
+              cacheBust: true,
+            });
+
+            const img = new Image();
+            img.src = dataUrl;
+
+            await new Promise((resolve) => {
+              img.onload = () => {
+                const targetWidth = 160;
+                const aspectRatio = img.height / img.width;
+                const targetHeight = targetWidth * aspectRatio;
+
+                if (yOffset + targetHeight > MAX_Y) {
+                  doc.addPage();
+                  yOffset = PAGE_MARGIN;
+                }
+
+                doc.addImage(
+                  dataUrl,
+                  "PNG",
+                  10,
+                  yOffset,
+                  targetWidth,
+                  targetHeight
+                );
+                yOffset += targetHeight + 10;
+
+                resolve();
+              };
+            });
+          }
+
+          document.body.removeChild(tempContainer);
         } catch (error) {
-          console.error("SVG rendering failed:", error);
+          console.error("Error converting SVG with html-to-image:", error);
         }
       }
 
-      const plainContent = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
-      const textLines = doc.splitTextToSize(plainContent, 180);
-      doc.text(textLines, 10, yOffset);
+      if (record.recordSvg && editorType === "markeddown") {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = record.recordSvg;
 
+        const structuredLines = extractTextForPdfPreview(tempDiv);
+        const baseX = 10;
+        const indentX = 10;
+
+        for (const line of structuredLines) {
+          const {
+            type,
+            text,
+            src,
+            width = 50,
+            height = 30,
+            bold = false,
+            italic = false,
+            mono = false,
+            size = 12,
+            color = "#000000",
+            underline = false,
+            link = null,
+            indentLevel = 0,
+            isHeading = false,
+            content = null,
+          } = line;
+
+          const xPos = baseX + indentX * indentLevel;
+
+          if (type === "image" && src) {
+            if (yOffset + height > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+            doc.addImage(src, "JPEG", xPos, yOffset, width, height);
+            yOffset += height + 5;
+            continue;
+          }
+
+          if (type === "paragraph" && Array.isArray(content)) {
+            let fullText = "";
+            content.forEach((part) => {
+              let styled = part.text;
+              if (part.bold) styled = styled;
+              if (part.italic) styled = styled;
+              fullText += styled + " ";
+            });
+            doc.setFontSize(size);
+            doc.setFont("helvetica", bold ? "bold" : "normal");
+            doc.setTextColor(color);
+            const lines = doc.splitTextToSize(fullText.trim(), 180 - xPos);
+            lines.forEach((lineText) => {
+              if (yOffset > 280) {
+                doc.addPage();
+                yOffset = 20;
+              }
+              doc.text(lineText, xPos, yOffset);
+              yOffset += size + 1;
+            });
+            continue;
+          }
+
+          if (!text) {
+            yOffset += 4;
+            continue;
+          }
+
+          doc.setFontSize(size);
+          if (mono) {
+            doc.setFont("courier", italic ? "italic" : "normal");
+          } else {
+            if (bold && italic) doc.setFont("helvetica", "bolditalic");
+            else if (bold) doc.setFont("helvetica", "bold");
+            else if (italic) doc.setFont("helvetica", "italic");
+            else doc.setFont("helvetica", "normal");
+          }
+
+          const lines = doc.splitTextToSize(text, 180 - xPos);
+          for (const lineText of lines) {
+            if (yOffset > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+
+            if (link) {
+              doc.setTextColor("#0000EE");
+              doc.textWithLink(lineText, xPos, yOffset, { url: link });
+              if (underline) {
+                const textWidth = doc.getTextWidth(lineText);
+                doc.setDrawColor("#0000EE");
+                doc.setLineWidth(0.3);
+                doc.line(xPos, yOffset + 1, xPos + textWidth, yOffset + 1);
+              }
+              doc.setTextColor(color);
+            } else {
+              doc.setTextColor(color);
+              doc.text(lineText, xPos, yOffset);
+            }
+
+            yOffset += isHeading ? size : size + 1;
+          }
+        }
+      }
+
+      if (
+        editorType !== "markeddown" &&
+        editorType !== "plantuml" &&
+        editorType !== "vscode"
+      ) {
+        const plainContent = stripHtml(
+          recordContent.replace(/<img[^>]*>/g, "")
+        );
+        const lineHeight = 10;
+        const maxLineWidth = 180;
+
+        const textLines = doc.splitTextToSize(plainContent, maxLineWidth);
+
+        for (let i = 0; i < textLines.length; i++) {
+          if (yOffset + lineHeight > MAX_Y) {
+            doc.addPage();
+            yOffset = PAGE_MARGIN;
+          }
+          doc.text(textLines[i], 10, yOffset);
+          yOffset += lineHeight;
+        }
+      }
+
+      // Include tags if requested
       if (includeTags && recordTags) {
-        doc.text(`Tags: ${recordTags}`, 10, yOffset + textLines.length * 10);
+        const lineHeight = 10;
+        if (yOffset + lineHeight > MAX_Y) {
+          doc.addPage();
+          yOffset = PAGE_MARGIN;
+        }
+        doc.text(`Tags: ${recordTags}`, 10, yOffset);
       }
 
       const pdfBlob = doc.output("blob");
@@ -410,7 +581,7 @@ export const exportAsHtml = (treeData, showWbs, includeWbs) => {
   </head>
   <body>
     <h1>${structureTitle}</h1>
-    <p>Exported on: ${timestamp}</p>
+   <!-- <p>Exported on: ${timestamp}</p> -->
     <svg id="mindmap"></svg>
     <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.8/dist/browser/index.js"></script>
@@ -438,7 +609,7 @@ export const exportAsHtml = (treeData, showWbs, includeWbs) => {
   link.click();
 };
 
-export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
+export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
   if (!treeData || !treeData.children || treeData.children.length === 0) {
     cogoToast.warn("No elements found to export.");
     return;
@@ -451,23 +622,68 @@ export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
 
   let combinedContent = "";
 
-  const processNode = (node) => {
+  const processNode = async (node) => {
     if (!node) return;
 
     if (node.Record) {
       const elementName = node.name || "Untitled";
       const record = node.Record;
+      const editorType = record.metadata?.editorType || "";
       const recordContent =
-        (record.metadata && record.metadata.content) || "<p>No content</p>";
+        editorType === "quilleditor"
+          ? (record.metadata && record.metadata.content) || "<p>No content</p>"
+          : "";
       const recordTags = Array.isArray(record.tags)
         ? record.tags.map((tag) => `${tag.key}: ${tag.value}`).join(", ")
         : "";
 
+      let svgContent = "";
+
+      if (record.recordSvg) {
+        if (editorType === "markeddown") {
+          svgContent = `<div>${record.recordSvg}</div>`;
+        } else {
+          const tempContainer = document.createElement("div");
+          Object.assign(tempContainer.style, {
+            position: "absolute",
+            left: "-9999px",
+            top: "-9999px",
+            width: "100px",
+          });
+          tempContainer.innerHTML = record.recordSvg;
+          document.body.appendChild(tempContainer);
+
+          const svgElement = tempContainer.querySelector("svg");
+
+          if (svgElement) {
+            if (!svgElement.getAttribute("viewBox")) {
+              const width = svgElement.getAttribute("width") || 100;
+              const height = svgElement.getAttribute("height") || 100;
+              svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+            }
+
+            try {
+              const imageDataURL = await toPng(svgElement, {
+                pixelRatio: 5,
+                cacheBust: true,
+              });
+              svgContent = `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`;
+            } catch (err) {
+              console.error("Error converting SVG with html-to-image:", err);
+            }
+          }
+
+          document.body.removeChild(tempContainer);
+        }
+      }
+
       const recordSection = `
         <hr />
         <h2>${elementName}</h2>
-        <p><em>Exported on: ${timestamp}</em></p>
+       <!-- <p><em>Exported on: ${timestamp}</em></p> -->
         <div>${recordContent}</div>
+        ${svgContent}
+
         ${
           includeTags && recordTags
             ? `<p><strong>Tags:</strong> ${recordTags}</p>`
@@ -476,13 +692,16 @@ export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
       `;
       combinedContent += recordSection;
     }
-
     if (node.children?.length) {
-      node.children.forEach((child) => processNode(child));
+      for (const child of node.children) {
+        await processNode(child);
+      }
     }
   };
 
-  treeData.children.forEach((child) => processNode(child));
+  for (const child of treeData.children) {
+    await processNode(child);
+  }
 
   const fullDoc = `
     <html xmlns:o="urn:schemas-microsoft-com:office:office"
@@ -500,7 +719,7 @@ export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
     </head>
     <body>
       <h1>${structureTitle}</h1>
-      <p><em>Full export generated on: ${timestamp}</em></p>
+    <!--  <p><em>Full export generated on: ${timestamp}</em></p> -->
       ${combinedContent}
     </body>
     </html>
@@ -515,6 +734,7 @@ export const exportAllAsSingleDoc = (treeData, includeTags = false) => {
   )}_${filenameTimestamp}.doc`;
   link.click();
 };
+
 export const exportAsSinglePdf = async (
   treeData,
   showWbs,
@@ -538,8 +758,29 @@ export const exportAsSinglePdf = async (
   };
 
   const doc = new jsPDF();
+  const pageHeight = doc.internal.pageSize.getHeight();
+  let yOffset = 20;
 
-  let pageIndex = 0;
+  const addTextWithOverflow = (textLines) => {
+    const lineHeight = 10;
+    for (let line of textLines) {
+      if (yOffset + lineHeight > pageHeight - 10) {
+        doc.addPage();
+        yOffset = 20;
+      }
+      doc.text(line, 10, yOffset);
+      yOffset += lineHeight;
+    }
+  };
+
+  const addImageWithOverflow = (imageData, width, height) => {
+    if (yOffset + height > pageHeight - 10) {
+      doc.addPage();
+      yOffset = 20;
+    }
+    doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
+    yOffset += height + 10;
+  };
 
   const processNode = async (node) => {
     if (!node) return;
@@ -547,42 +788,185 @@ export const exportAsSinglePdf = async (
 
     if (node.Record) {
       const record = node.Record;
-      const recordContent = record.metadata?.content || "No content";
+      const editorType = record.metadata?.editorType;
+      const isRawContentOnly = ["markeddown", "vscode", "plantuml"].includes(
+        editorType
+      );
+      const recordContent = isRawContentOnly
+        ? null
+        : record.metadata?.content || "No content";
       const recordTags =
         record.tags?.map((tag) => `${tag.key}: ${tag.value}`).join(", ") || "";
 
-      if (pageIndex > 0) doc.addPage();
-      pageIndex++;
+      if (yOffset > 20) {
+        doc.addPage();
+        yOffset = 20;
+      }
 
       doc.setFontSize(16);
-      doc.text(elementName, 10, 20);
+      doc.text(elementName, 10, yOffset);
+      yOffset += 10;
+
       doc.setFontSize(12);
-      doc.text(`Exported on: ${timestamp}`, 10, 30);
 
-      const tempDiv = document.createElement("div");
-      tempDiv.innerHTML = recordContent;
-      const images = tempDiv.getElementsByTagName("img");
+      if (record.recordSvg && editorType !== "markeddown") {
+        const tempContainer = document.createElement("div");
+        Object.assign(tempContainer.style, {
+          position: "absolute",
+          left: "-9999px",
+          top: "-9999px",
+          width: "800px",
+        });
+        tempContainer.innerHTML = record.recordSvg;
+        document.body.appendChild(tempContainer);
 
-      let yOffset = 40;
-      for (let img of images) {
-        try {
-          const imageData = img.src;
-          const width = 80;
-          const height = 80;
-          doc.addImage(imageData, "JPEG", 10, yOffset, width, height);
-          yOffset += height + 10;
-        } catch (error) {
-          console.error("Error embedding image:", error);
+        const svgElement = tempContainer.querySelector("svg");
+
+        if (svgElement) {
+          if (!svgElement.getAttribute("viewBox")) {
+            const width = svgElement.getAttribute("width") || 800;
+            const height = svgElement.getAttribute("height") || 600;
+            svgElement.setAttribute("viewBox", `0 0 ${width} ${height}`);
+          }
+
+          try {
+            const imageDataURL = await toPng(svgElement, {
+              pixelRatio: 5,
+              cacheBust: true,
+            });
+            addImageWithOverflow(imageDataURL, 100, 100);
+          } catch (err) {
+            console.error("Error converting SVG with html-to-image:", err);
+          }
+        }
+
+        document.body.removeChild(tempContainer);
+      }
+
+      if (record.recordSvg && editorType === "markeddown") {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = record.recordSvg;
+
+        const structuredLines = extractTextForPdfPreview(tempDiv);
+        const baseX = 10;
+        const indentX = 10;
+
+        for (const line of structuredLines) {
+          const {
+            type,
+            text,
+            src,
+            width = 50,
+            height = 30,
+            bold = false,
+            italic = false,
+            mono = false,
+            size = 12,
+            color = "#000000",
+            underline = false,
+            link = null,
+            indentLevel = 0,
+            isHeading = false,
+            content = null,
+          } = line;
+
+          const xPos = baseX + indentX * indentLevel;
+
+          if (type === "image" && src) {
+            if (yOffset + height > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+            doc.addImage(src, "JPEG", xPos, yOffset, width, height);
+            yOffset += height + 5;
+            continue;
+          }
+
+          if (type === "paragraph" && Array.isArray(content)) {
+            let fullText = "";
+            content.forEach((part) => {
+              let styled = part.text;
+              if (part.bold) styled = styled;
+              if (part.italic) styled = styled;
+              fullText += styled + " ";
+            });
+            doc.setFontSize(size);
+            doc.setFont("helvetica", bold ? "bold" : "normal");
+            doc.setTextColor(color);
+            const lines = doc.splitTextToSize(fullText.trim(), 180 - xPos);
+            lines.forEach((lineText) => {
+              if (yOffset > 280) {
+                doc.addPage();
+                yOffset = 20;
+              }
+              doc.text(lineText, xPos, yOffset);
+              yOffset += size + 1;
+            });
+            continue;
+          }
+
+          if (!text) {
+            yOffset += 4;
+            continue;
+          }
+
+          doc.setFontSize(size);
+          if (mono) {
+            doc.setFont("courier", italic ? "italic" : "normal");
+          } else {
+            if (bold && italic) doc.setFont("helvetica", "bolditalic");
+            else if (bold) doc.setFont("helvetica", "bold");
+            else if (italic) doc.setFont("helvetica", "italic");
+            else doc.setFont("helvetica", "normal");
+          }
+
+          const lines = doc.splitTextToSize(text, 180 - xPos);
+          for (const lineText of lines) {
+            if (yOffset > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+
+            if (link) {
+              doc.setTextColor("#0000EE");
+              doc.textWithLink(lineText, xPos, yOffset, { url: link });
+              if (underline) {
+                const textWidth = doc.getTextWidth(lineText);
+                doc.setDrawColor("#0000EE");
+                doc.setLineWidth(0.3);
+                doc.line(xPos, yOffset + 1, xPos + textWidth, yOffset + 1);
+              }
+              doc.setTextColor(color);
+            } else {
+              doc.setTextColor(color);
+              doc.text(lineText, xPos, yOffset);
+            }
+
+            yOffset += isHeading ? size : size + 1;
+          }
         }
       }
 
-      const plainText = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
-      const textLines = doc.splitTextToSize(plainText, 180);
-      doc.text(textLines, 10, yOffset);
-      yOffset += textLines.length * 10;
+      if (recordContent) {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = recordContent;
+
+        const images = tempDiv.getElementsByTagName("img");
+        for (let img of images) {
+          try {
+            addImageWithOverflow(img.src, 80, 80);
+          } catch (error) {
+            console.error("Error embedding image:", error);
+          }
+        }
+
+        const plainText = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
+        const textLines = doc.splitTextToSize(plainText, 180);
+        addTextWithOverflow(textLines);
+      }
 
       if (includeTags && recordTags) {
-        doc.text(`Tags: ${recordTags}`, 10, yOffset + 10);
+        addTextWithOverflow([`Tags: ${recordTags}`]);
       }
     }
 

@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsInt, IsOptional, IsString } from 'class-validator';
 
 export class UpdateElementDto {
@@ -8,6 +9,10 @@ export class UpdateElementDto {
   @IsString()
   name?: string;
 
+  @IsInt()
+  @IsOptional()
+  parentId?: string;
+
   @IsOptional()
   @IsInt()
   recordId?: string;
@@ -15,6 +20,10 @@ export class UpdateElementDto {
   @IsOptional()
   @IsInt()
   wbsLevel?: number;
+
+  @IsOptional()
+  @Type(() => Boolean)  
+  isExpanded?: boolean;
 
   @IsOptional()
   @IsString()

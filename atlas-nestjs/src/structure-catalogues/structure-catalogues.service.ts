@@ -76,42 +76,44 @@ export class StructureCataloguesService {
     }
   }
 
-  async updateCatalog(id: string, updateDto: UpdateStructureCatalogDto) {
+  async reorderCatalogs(catalogs: { id: string; order: number }[]) {
+    const updatePromises = catalogs.map((catalog) =>
+      this.prisma.structureCatalog.update({
+        where: { id: catalog.id },
+        data: { order: catalog.order },
+      }),
+    );
+    return Promise.all(updatePromises);
+  }
+
+  async updateCatalog(id: string, dto: UpdateStructureCatalogDto) {
     const catalog = await this.prisma.structureCatalog.findUnique({
       where: { id },
+    });
+    if (!catalog) throw new NotFoundException(`Catalog ${id} not found`);
+
+    const { userTier, ...data } = dto;
+
+    if (userTier !== undefined) {
+      return this.prisma.$transaction(async (tx) => {
+        await tx.catalogTier.deleteMany({ where: { catalogId: id } });
+        return tx.structureCatalog.update({
+          where: { id },
+          data: {
+            ...data,
+            userTier: { create: userTier.map((tier) => ({ tier })) },
+          },
+          include: { userTier: true },
+        });
+      });
+    }
+
+    // Otherwise, just update the catalog itself
+    return this.prisma.structureCatalog.update({
+      where: { id },
+      data,
       include: { userTier: true },
     });
-
-    if (!catalog) {
-      throw new NotFoundException(`StructureCatalog with ID ${id} not found`);
-    }
-
-    const { userTier, ...catalogData } = updateDto;
-
-    try {
-      return await this.prisma
-        .$transaction([
-          this.prisma.catalogTier.deleteMany({
-            where: { catalogId: id },
-          }),
-          this.prisma.structureCatalog.update({
-            where: { id },
-            data: {
-              ...catalogData,
-              userTier: {
-                create: (userTier ?? []).map((tier) => ({
-                  tier,
-                })),
-              },
-            },
-            include: { userTier: true },
-          }),
-        ])
-        .then(([, updatedCatalog]) => updatedCatalog);
-    } catch (error) {
-      console.error('Update Error:', error);
-      throw new BadRequestException('Error updating structure catalog');
-    }
   }
 
   async deleteCatalog(id: string) {
@@ -139,5 +141,19 @@ export class StructureCataloguesService {
       console.error(error);
       throw new BadRequestException('Error deleting structure catalog');
     }
+  }
+
+  async updateCatalogOrder(id: string, order: number) {
+    const existing = await this.prisma.structureCatalog.findUnique({
+      where: { id },
+    });
+    if (!existing) {
+      throw new NotFoundException(`StructureCatalog with ID ${id} not found`);
+    }
+
+    return this.prisma.structureCatalog.update({
+      where: { id },
+      data: { order },
+    });
   }
 }

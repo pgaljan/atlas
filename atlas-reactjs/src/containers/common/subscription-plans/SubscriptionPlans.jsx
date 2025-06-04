@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
 import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
-import { fetchPlans } from "../../../redux/slices/plans";
 import Icons from "../../../constants/icons";
+import { fetchPlans } from "../../../redux/slices/plans";
 import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
 
 // Helper to render checkmark and cross
@@ -56,15 +56,11 @@ const SubscriptionPlans = () => {
       });
   };
 
-  const planOrder = ["Personal", "Educator", "Analyst", "Business"];
-
   // Filter to only active plans
   const activePlans = plans.filter((plan) => plan.status === "active");
 
   // Sort the active plans based on the defined order
-  const sortedPlans = [...activePlans].sort(
-    (a, b) => planOrder.indexOf(a?.name) - planOrder.indexOf(b?.name)
-  );
+  const sortedPlans = [...activePlans].sort((a, b) => a.order - b.order);
 
   return (
     <div className="bg-custom-background-white">

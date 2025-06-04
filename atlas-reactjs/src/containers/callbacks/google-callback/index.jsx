@@ -1,8 +1,7 @@
-import React from "react";
 import cogoToast from "@successtar/cogo-toast";
 import CryptoJS from "crypto-js";
 import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { fetchSubscription } from "../../../redux/slices/subscriptions";

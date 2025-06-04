@@ -20,6 +20,22 @@ export const fetchCatalogs = createAsyncThunk(
   }
 );
 
+// Reorder catalogs thunk
+export const reorderCatalogs = createAsyncThunk(
+  "catalogs/reorderCatalogs",
+  async (catalogs, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(
+        "/structure-catalogs/reorder",
+        catalogs
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Fetch catalog by ID
 export const fetchCatalogById = createAsyncThunk(
   "catalogs/fetchCatalogById",
@@ -91,6 +107,20 @@ export const deleteCatalog = createAsyncThunk(
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const updateCatalogOrder = createAsyncThunk(
+  "catalogs/updateCatalogOrder",
+  async ({ id, order }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.put(`/structure-catalogs/${id}/order`, {
+        order,
+      });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
     }
   }
 );
@@ -195,6 +225,31 @@ const catalogsSlice = createSlice({
         state.catalogs = state.catalogs.filter((c) => c.id !== action.meta.arg);
       })
       .addCase(deleteCatalog.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(reorderCatalogs.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(reorderCatalogs.fulfilled, (state, action) => {
+        state.status = "succeeded";
+      })
+      .addCase(reorderCatalogs.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateCatalogOrder.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateCatalogOrder.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const updated = action.payload;
+        const idx = state.catalogs.findIndex((c) => c.id === updated.id);
+        if (idx !== -1) {
+          state.catalogs[idx] = updated;
+        }
+      })
+      .addCase(updateCatalogOrder.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

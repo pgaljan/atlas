@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from "react";
+import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
 import QuillEditor from "../../../components/editors/quill.editor";
-import { useDispatch } from "react-redux";
 import {
-  saveOrUpdateTermsOfService,
   fetchTermsOfService,
+  saveOrUpdateTermsOfService,
 } from "../../../redux/slices/terms-of-service";
-import cogoToast from "@successtar/cogo-toast";
 
 const AdminTermsService = () => {
   const [termsText, setTermsText] = useState("");

@@ -1,4 +1,4 @@
-import { IsOptional, IsIn } from 'class-validator';
+import { IsOptional, IsIn, IsInt } from 'class-validator';
 
 export class UpdatePlanDto {
   @IsOptional()
@@ -9,6 +9,9 @@ export class UpdatePlanDto {
 
   @IsOptional()
   price?: number;
+
+  @IsInt()
+  order: number;
 
   @IsOptional()
   features?: Record<string, any>;

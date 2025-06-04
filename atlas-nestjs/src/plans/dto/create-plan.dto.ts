@@ -1,4 +1,4 @@
-import { IsString, IsDecimal, IsOptional, IsIn } from 'class-validator';
+import { IsString, IsDecimal, IsOptional, IsIn, IsInt } from 'class-validator';
 
 export class CreatePlanDto {
   @IsString()
@@ -9,6 +9,9 @@ export class CreatePlanDto {
 
   @IsDecimal()
   price: number;
+
+  @IsInt()
+  order: number;
 
   features: Record<string, any>;
 

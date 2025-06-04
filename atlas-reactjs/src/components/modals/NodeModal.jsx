@@ -38,6 +38,7 @@ const NodeModal = ({
   onSuccess,
   elementId,
   structureName: initialStructureName,
+  color,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -270,18 +271,22 @@ const NodeModal = ({
                     )
                   }
                   aria-label="Import Structure"
-                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                    color ? `focus:ring-[${color}]` : ""
+                  }`}
                 >
-                  <PiTreeStructureFill size={24} className="text-custom-main" />
+                  <PiTreeStructureFill size={24} style={{ color }} />
                 </button>
               </Tooltip>
               <Tooltip label="Edit Structure">
                 <button
                   onClick={() => setEditStructureModalVisible(true)}
                   aria-label="Edit Structure"
-                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                    color ? `focus:ring-[${color}]` : ""
+                  }`}
                 >
-                  <RiEditCircleFill size={24} className="text-custom-main" />
+                  <RiEditCircleFill size={24} style={{ color }} />
                 </button>
               </Tooltip>
             </>
@@ -295,9 +300,11 @@ const NodeModal = ({
                   )
                 }
                 aria-label="Add Record"
-                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                  color ? `focus:ring-[${color}]` : ""
+                }`}
               >
-                <RiPlayListAddFill size={24} className="text-custom-main" />
+                <RiPlayListAddFill size={24} style={{ color }} />
               </button>
             </Tooltip>
           )}
@@ -308,18 +315,22 @@ const NodeModal = ({
                 <button
                   onClick={() => handleViewEditRecord("edit")}
                   aria-label="View Record"
-                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                    color ? `focus:ring-[${color}]` : ""
+                  }`}
                 >
-                  <GiBrassEye size={24} className="text-custom-main" />
+                  <GiBrassEye size={24} style={{ color }} />
                 </button>
               </Tooltip>
               <Tooltip label="Delete Record">
                 <button
                   onClick={() => handleDeleteButtonClick(recordId)}
                   aria-label="Delete Record"
-                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                    color ? `focus:ring-[${color}]` : ""
+                  }`}
                 >
-                  <IoIosRemoveCircle size={24} className="text-custom-main" />
+                  <IoIosRemoveCircle size={24} style={{ color }} />
                 </button>
               </Tooltip>
             </>
@@ -328,9 +339,9 @@ const NodeModal = ({
             <Tooltip label="Edit Link">
               <button
                 aria-label="Edit Link"
-                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${color ? `focus:ring-[${color}]` : ""}`}
               >
-                <BiLink size={24} className="text-custom-main" />
+                <BiLink size={24} style={{ color }} />
               </button>
             </Tooltip>
           )} */}
@@ -338,26 +349,30 @@ const NodeModal = ({
           <Tooltip label="Add Element">
             <button
               aria-label="Add Element"
-              className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+              className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                color ? `focus:ring-[${color}]` : ""
+              }`}
               onClick={() => {
                 setChildModalVisible(true);
                 setIsEdit(false);
               }}
             >
-              <FaCirclePlus size={24} className="text-custom-main" />
+              <FaCirclePlus size={24} style={{ color }} />
             </button>
           </Tooltip>
           {wbs !== "1" && (
             <Tooltip label="Edit Element">
               <button
                 aria-label="Edit Element"
-                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                  color ? `focus:ring-[${color}]` : ""
+                }`}
                 onClick={() => {
                   setChildModalVisible(true);
                   setIsEdit(true);
                 }}
               >
-                <FaEdit size={24} className="text-custom-main" />
+                <FaEdit size={24} style={{ color }} />
               </button>
             </Tooltip>
           )}
@@ -365,10 +380,12 @@ const NodeModal = ({
             <Tooltip label="Delete Element">
               <button
                 aria-label="Delete Element"
-                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
+                  color ? `focus:ring-[${color}]` : ""
+                }`}
                 onClick={() => handleDeleteButtonClick(null)}
               >
-                <IoTrash size={24} className="text-custom-main" />
+                <IoTrash size={24} style={{ color }} />
               </button>
             </Tooltip>
           )}

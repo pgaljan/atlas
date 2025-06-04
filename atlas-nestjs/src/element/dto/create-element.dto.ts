@@ -26,6 +26,10 @@ export class CreateElementDto {
   recordId?: string;
 
   @IsOptional()
+  @Type(() => Boolean)
+  isExpanded?: boolean;
+
+  @IsOptional()
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => CreateElementDto)

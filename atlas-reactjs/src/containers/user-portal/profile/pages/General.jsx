@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react"
-import { useDispatch } from "react-redux"
-import Cookies from "js-cookie"
-import InputField from "../../../../components/input-field/InputField"
-import { updateUser, fetchUser } from "../../../../redux/slices/users"
 import cogoToast from "@successtar/cogo-toast"
+import Cookies from "js-cookie"
+import React, { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import InputField from "../../../../components/input-field/InputField"
 import ImportModal from "../../../../components/modals/ImportModal"
+import { fetchUser, updateUser } from "../../../../redux/slices/users"
 
 const General = () => {
   const dispatch = useDispatch()

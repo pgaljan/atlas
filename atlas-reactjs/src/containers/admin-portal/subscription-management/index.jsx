@@ -1,9 +1,10 @@
 import cogoToast from "@successtar/cogo-toast";
 import React, { useCallback, useEffect, useState } from "react";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { FaRocket } from "react-icons/fa";
 import { IoTrash } from "react-icons/io5";
 import { MdAddTask } from "react-icons/md";
-import { TbEditCircle } from "react-icons/tb";
+import { TbDragDrop, TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
 import AddSubscriptionModal from "../../../components/admin/modals/AddSubcriptionModal";
@@ -11,10 +12,11 @@ import EditSubscriptionModal from "../../../components/admin/modals/EditSubscrip
 import DeleteModal from "../../../components/modals/DeleteModal";
 import Tooltip from "../../../components/tooltip/Tooltip";
 import {
+  createPlan,
   deletePlan,
   fetchPlans,
+  reorderPlans,
   updatePlan,
-  createPlan,
 } from "../../../redux/slices/plans";
 
 const index = () => {
@@ -135,6 +137,28 @@ const index = () => {
     }
   };
 
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+
+    const reorderedData = Array.from(tableData);
+    const [movedItem] = reorderedData.splice(result.source.index, 1);
+    reorderedData.splice(result.destination.index, 0, movedItem);
+
+    setTableData(reorderedData);
+
+    try {
+      const reorderedPayload = reorderedData.map((plan, index) => ({
+        id: plan.id,
+        order: index,
+      }));
+
+      await dispatch(reorderPlans(reorderedPayload)).unwrap();
+      cogoToast.success("Plans reordered successfully!");
+    } catch (error) {
+      cogoToast.error("Failed to reorder plans.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen flex-col text-center p-6">
@@ -189,67 +213,104 @@ const index = () => {
               </button>
             </div>
           </div>
-          <table className="p-10 w-full">
-            <thead className="border-b border-gray-100">
-              <tr>
-                {headers.map((header, index) => (
-                  <th
-                    key={index}
-                    className="px-5 py-3 text-left border-b text-black-100"
-                  >
-                    {header}
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <table className="p-10 w-full">
+              <thead className="border-b border-gray-100">
+                <tr>
+                  <th className="px-4 py-3 text-left text-black-100"></th>
+                  <th className="px-5 py-3 text-left text-black-100">
+                    Plan Name
                   </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {tableData.map((plan) => (
-                <tr key={plan.id} className="border-b border-gray-100">
-                  <td className="px-5 py-4 text-gray-500">{plan.name}</td>
-                  <td className="px-5 py-4 text-gray-500">
-                    {plan.description}
-                  </td>
-                  <td className="px-4 py-3 text-gray-500">$ {plan.price}.00</td>
-                  <td className="px-4 py-3">
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={plan.status === "active"}
-                        onChange={() => toggleUserStatus(plan.id)}
-                        className="sr-only peer"
-                      />
-                      <div
-                        className={`w-12 h-6 rounded-full transition-all ${
-                          plan.status === "active"
-                            ? "bg-custom-main"
-                            : "bg-gray-300"
-                        }`}
-                      ></div>
-                      <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
-                    </label>
-                  </td>
-                  <td className="px-2 py-2 flex">
-                    <Tooltip label="Edit">
-                      <button
-                        className="p-2 text-black rounded transition"
-                        onClick={() => openModal("edit", plan)}
-                      >
-                        <TbEditCircle className="w-6 h-6" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip label="Delete">
-                      <button
-                        className="p-2 text-red-500 rounded transition"
-                        onClick={() => openDeleteModal(plan)}
-                      >
-                        <IoTrash className="w-5 h-5" />
-                      </button>
-                    </Tooltip>
-                  </td>
+                  <th className="px-5 py-3 text-left text-black-100">
+                    Description
+                  </th>
+                  <th className="px-4 py-3 text-left text-black-100">Price</th>
+                  <th className="px-4 py-3 text-left text-black-100">Status</th>
+                  <th className="px-2 py-3 text-left text-black-100">
+                    Actions
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <Droppable droppableId="plans">
+                {(provided) => (
+                  <tbody
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="divide-y divide-gray-100"
+                  >
+                    {tableData.map((plan, index) => (
+                      <Draggable
+                        key={plan.id}
+                        draggableId={plan.id.toString()}
+                        index={index}
+                      >
+                        {(provided) => (
+                          <tr
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            className="hover:bg-gray-50 transition"
+                          >
+                            <td
+                              className="px-4 py-3 cursor-grab"
+                              {...provided.dragHandleProps}
+                            >
+                              <TbDragDrop />
+                            </td>
+                            <td className="px-5 py-4 text-gray-500">
+                              {plan.name}
+                            </td>
+                            <td className="px-5 py-4 text-gray-500">
+                              {plan.description}
+                            </td>
+                            <td className="px-4 py-3 text-gray-500">
+                              $ {plan.price}.00
+                            </td>
+                            <td className="px-4 py-3">
+                              <label className="relative inline-flex items-center cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  checked={plan.status === "active"}
+                                  onChange={() => toggleUserStatus(plan.id)}
+                                  className="sr-only peer"
+                                />
+                                <div
+                                  className={`w-12 h-6 rounded-full transition-all ${
+                                    plan.status === "active"
+                                      ? "bg-custom-main"
+                                      : "bg-gray-300"
+                                  }`}
+                                ></div>
+                                <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
+                              </label>
+                            </td>
+                            <td className="px-2 py-2 flex">
+                              <Tooltip label="Edit">
+                                <button
+                                  className="p-2 text-black rounded transition"
+                                  onClick={() => openModal("edit", plan)}
+                                >
+                                  <TbEditCircle className="w-6 h-6" />
+                                </button>
+                              </Tooltip>
+                              <Tooltip label="Delete">
+                                <button
+                                  className="p-2 text-red-500 rounded transition"
+                                  onClick={() => openDeleteModal(plan)}
+                                >
+                                  <IoTrash className="w-5 h-5" />
+                                </button>
+                              </Tooltip>
+                            </td>
+                          </tr>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </tbody>
+                )}
+              </Droppable>
+            </table>
+          </DragDropContext>
 
           <AddSubscriptionModal
             isOpen={addModalOpen}

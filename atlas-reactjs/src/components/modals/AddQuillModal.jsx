@@ -11,8 +11,12 @@ import {
   updateRecord,
 } from "../../redux/slices/records";
 import QuillEditor from "../editors/quill.editor";
-import VsCodeEditor from "../editors/vscode.editor";
 import DiscardModal from "../modals/DiscardModal";
+import PlantUMLRenderer from "../plantUml/PlantUmlRenderer";
+import MarkJsRenderer from "../markedJs/MarkedJsRenderer";
+import MermaidRenderer from "../marmeid/MermaidRenderer";
+import marked from "../markedJs/MarkedHelper"; 
+import DOMPurify from "dompurify";
 
 const AddQuillModal = ({
   structureId,
@@ -37,17 +41,18 @@ const AddQuillModal = ({
     tags: [],
   });
   const [hasChanges, setHasChanges] = useState(false);
-  const [formData, setFormData] = useState({
-    metadata: "",
-  });
   const [tags, setTags] = useState([]);
-  const [isVsCode, setIsVsCode] = useState(false);
   const canTags = useFeatureFlag("Record Tagging");
   const [discardModalVisible, setDiscardModalVisible] = useState(false);
-  const [pendingToggle, setPendingToggle] = useState(null);
+  const [pendingDiscard, setPendingDiscard] = useState(null);
   const [quillContent, setQuillContent] = useState("");
-  const [vsCodeContent, setVsCodeContent] = useState("");
+  const [mermaidCodeContent, setMermaidCodeContent] = useState("");
   const [mermaidSvg, setMermaidSvg] = useState("");
+  const [plantUmlSvg, setPlantUmlSvg] = useState("");
+  const [markedJsContent, setMarkedJsContent] = useState("");
+  const [plantUmlContent, setPlantUmlContent] = useState("");
+  const [editor, setEditor] = useState("quilleditor");
+  const [renderer, setRenderer] = useState("mermaid");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
@@ -57,31 +62,49 @@ const AddQuillModal = ({
     }
   };
 
-  // Custom function to fetch record data
   const fetchRecordData = useCallback(async () => {
     if (actionType === "edit" && recordId) {
       try {
         const record = await dispatch(getRecordById(recordId)).unwrap();
         if (record) {
-          // Load based on editorType
-          const quillData =
-            record.metadata.editorType === "quilleditor"
-              ? record.metadata.content
-              : "";
-          const vscodeData =
-            record.metadata.editorType === "vscode"
-              ? record.metadata.content
-              : "";
-          setQuillContent(quillData);
-          setVsCodeContent(vscodeData);
+          const { content, editorType } = record.metadata;
+
+          // Set content state
+          setQuillContent(editorType === "quilleditor" ? content : "");
+          setMermaidCodeContent(editorType === "vscode" ? content : "");
+          setMarkedJsContent(editorType === "markeddown" ? content : "");
+          setPlantUmlContent(editorType === "plantuml" ? content : "");
+
+          // Set tag and initial data
           setTags(record.tags || []);
           setInitialData({
-            quilleditor: quillData,
-            vscode: vscodeData,
+            quilleditor: editorType === "quilleditor" ? content : "",
+            vscode: editorType === "vscode" ? content : "",
+            markedjs: editorType === "markeddown" ? content : "",
+            plantuml: editorType === "plantuml" ? content : "",
             tags: record.tags || [],
           });
-          // Set current editor based on existing data
-          setIsVsCode(record.metadata.editorType === "vscode");
+
+          if (editorType === "quilleditor") {
+            setEditor("quilleditor");
+            setRenderer("");
+          } else if (
+            editorType === "vscode" ||
+            editorType === "markeddown" ||
+            editorType === "plantuml"
+          ) {
+            setEditor("vscode");
+            if (editorType === "markeddown") {
+              setRenderer("markeddown");
+            } else if (editorType === "plantuml") {
+              setRenderer("plantuml");
+            } else {
+              setRenderer("mermaid");
+            }
+          } else {
+            setEditor("quilleditor");
+            setRenderer("");
+          }
         }
       } catch (error) {
         cogoToast.error(`Failed to fetch record: ${error.message}`);
@@ -94,30 +117,127 @@ const AddQuillModal = ({
   }, [fetchRecordData]);
 
   useEffect(() => {
-    const currentContent = isVsCode ? vsCodeContent : quillContent;
-    const initialContent = isVsCode
-      ? initialData.vscode
-      : initialData.quilleditor;
+    let currentContent = "";
+    let initialContent = "";
+
+    if (editor === "quilleditor") {
+      currentContent = quillContent;
+      initialContent = initialData.quilleditor || "";
+    } else if (renderer === "mermaid") {
+      currentContent = mermaidCodeContent;
+      initialContent = initialData.vscode || "";
+    } else if (renderer === "plantuml") {
+      currentContent = plantUmlContent;
+      initialContent = initialData.plantuml || "";
+    } else {
+      currentContent = markedJsContent;
+      initialContent = initialData.markeddown || "";
+    }
+
+    if (!currentContent) {
+      setHasChanges(false);
+      return;
+    }
+
     const metadataChanged = currentContent !== initialContent;
     const tagsChanged =
       JSON.stringify(tags) !== JSON.stringify(initialData.tags);
-    setHasChanges(metadataChanged || tagsChanged);
-  }, [quillContent, vsCodeContent, tags, initialData, isVsCode]);
 
-  const handleEditorChange = (value) => {
-    if (isVsCode) {
-      setVsCodeContent(value);
+    setHasChanges(metadataChanged || tagsChanged);
+  }, [
+    quillContent,
+    mermaidCodeContent,
+    markedJsContent,
+    plantUmlContent,
+    tags,
+    initialData,
+    editor,
+    renderer,
+  ]);
+
+  const getMarkedPreviewHtml = (markdown) => {
+    const rawHtml = marked.parse(markdown || "");
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml);
+    return sanitizedHtml;
+  };
+
+  const handleEditorChange = (newEditor) => {
+    const hasContentOrTags =
+      quillContent.trim() ||
+      mermaidCodeContent.trim() ||
+      markedJsContent.trim() ||
+      plantUmlContent.trim() ||
+      tags.length > 0;
+
+    if (hasContentOrTags) {
+      setPendingDiscard({ type: "main", value: newEditor });
+      setDiscardModalVisible(true);
     } else {
-      setQuillContent(value);
+      setEditor(newEditor);
+      resetEditorStates();
     }
   };
 
+  const handleRendererChange = (newRenderer) => {
+    const hasContentOrTags =
+      mermaidCodeContent.trim() ||
+      markedJsContent.trim() ||
+      plantUmlContent.trim() ||
+      tags.length > 0;
+
+    if (hasContentOrTags) {
+      setPendingDiscard({ type: "sub", value: newRenderer });
+      setDiscardModalVisible(true);
+    } else {
+      setRenderer(newRenderer);
+      resetEditorStates();
+    }
+  };
+
+  const resetEditorStates = () => {
+    setQuillContent("");
+    setMermaidCodeContent("");
+    setMarkedJsContent("");
+    setPlantUmlContent("");
+    setTags([]);
+  };
+
+  const confirmDiscard = () => {
+    resetEditorStates();
+    if (pendingDiscard?.type === "main") {
+      setEditor(pendingDiscard.value);
+      if (pendingDiscard.value === "vscode") setRenderer("mermaid");
+    } else if (pendingDiscard?.type === "sub") {
+      setRenderer(pendingDiscard.value);
+    }
+    setDiscardModalVisible(false);
+    setPendingDiscard(null);
+  };
+
   const handleSave = async () => {
-    const currentContent = isVsCode ? vsCodeContent : quillContent;
+    const editorType =
+      editor === "quilleditor"
+        ? "quilleditor"
+        : renderer === "mermaid"
+        ? "vscode"
+        : renderer === "plantuml"
+        ? "plantuml"
+        : "markeddown";
+
+    const currentContent =
+      editor === "quilleditor"
+        ? quillContent
+        : renderer === "mermaid"
+        ? mermaidCodeContent
+        : renderer === "plantuml"
+        ? plantUmlContent
+        : markedJsContent;
+
     if (!currentContent?.trim()) {
       cogoToast.error("Metadata is required!");
       return;
     }
+
     if (
       tags.length > 0 &&
       tags.some((tag) => !tag.key.trim() || !tag.value.trim())
@@ -125,21 +245,40 @@ const AddQuillModal = ({
       cogoToast.error("Each tag must have both a key and a value.");
       return;
     }
-    const editorType = isVsCode ? "vscode" : "quilleditor";
+
     const parsedMetadata = { content: currentContent, editorType };
+    const previewContent =
+      editorType === "markeddown"
+        ? getMarkedPreviewHtml(markedJsContent)
+        : currentContent;
     const createRecordDto = {
       metadata: parsedMetadata,
       tags,
-      recordSvg: isVsCode ? mermaidSvg : undefined,
+      recordSvg:
+        renderer === "mermaid"
+          ? mermaidSvg
+          : renderer === "plantuml"
+          ? plantUmlSvg
+          : renderer === "markeddown"
+          ? previewContent
+          : undefined,
     };
 
     try {
       setIsLoading(true);
+
       if (actionType === "edit") {
         const updateRecordDto = {
           metadata: parsedMetadata,
           tags,
-          recordSvg: isVsCode ? mermaidSvg : undefined,
+          recordSvg:
+            renderer === "mermaid"
+              ? mermaidSvg
+              : renderer === "plantuml"
+              ? plantUmlSvg
+              : renderer === "markeddown"
+              ? previewContent
+              : undefined,
         };
         await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
         cogoToast.success("Record updated successfully!");
@@ -151,6 +290,7 @@ const AddQuillModal = ({
         await dispatch(getRecordById(response.recordId)).unwrap();
         cogoToast.success("Record added successfully!");
       }
+
       onClose();
       onSuccess();
       fetchData();
@@ -161,29 +301,9 @@ const AddQuillModal = ({
     }
   };
 
-  const handleToggle = () => {
-    const currentContent = (isVsCode ? vsCodeContent : quillContent).trim();
-    const hasUnsavedData = currentContent || tags.length;
-
-    hasUnsavedData
-      ? (setPendingToggle(!isVsCode), setDiscardModalVisible(true))
-      : (setIsVsCode(!isVsCode),
-        setTags([]),
-        isVsCode ? setQuillContent("") : setVsCodeContent(""));
-  };
-
-  const confirmToggle = () => {
-    setQuillContent("");
-    setVsCodeContent("");
-    setTags([]);
-    setIsVsCode(pendingToggle);
+  const cancelDiscard = () => {
     setDiscardModalVisible(false);
-    setPendingToggle(null);
-  };
-
-  const cancelToggle = () => {
-    setDiscardModalVisible(false);
-    setPendingToggle(null);
+    setPendingDiscard(null);
   };
 
   const addTag = () => {
@@ -214,7 +334,7 @@ const AddQuillModal = ({
           transform: "translate(-50%, -50%)",
         }}
         className={`bg-white border border-gray-300 rounded-lg shadow-lg z-50 ${
-          isVsCode ? "w-[1300px]" : "w-[850px]"
+          editor === "vscode" ? "w-[1300px]" : "w-[950px]"
         }`}
       >
         {/* Header */}
@@ -230,23 +350,74 @@ const AddQuillModal = ({
 
         {/* Body */}
         <div className="p-4 space-y-4 overflow-y-auto">
-          <label className="block text-sm font-medium text-gray-700">
-            {elementValue}
-          </label>
+          <div className="flex justify-between items-center">
+            <label className="text-xl font-medium text-gray-700">
+              {elementValue}
+            </label>
+
+            <div className="flex gap-3 items-center">
+              <label className="flex items-center text-gray-700 text-sm">
+                <span className="mr-2 text-gray-600 font-medium text-base whitespace-nowrap">
+                  Select Editor:
+                </span>
+                <select
+                  value={editor}
+                  onChange={(e) => handleEditorChange(e.target.value)}
+                  className="border border-gray-300 rounded px-2 py-1"
+                >
+                  <option value="quilleditor">Quill</option>
+                  <option value="vscode">VSCode</option>
+                </select>
+              </label>
+
+              {editor === "vscode" && (
+                <label className="flex items-center text-gray-700 text-sm">
+                  <span className="mr-2 text-gray-600 font-medium text-base whitespace-nowrap">
+                    Select Renderer:
+                  </span>
+                  <select
+                    value={renderer}
+                    onChange={(e) => handleRendererChange(e.target.value)}
+                    className="border border-gray-300 rounded px-2 py-1"
+                  >
+                    <option value="mermaid">Mermaid</option>
+                    <option value="plantuml">PlantUML</option>
+                    <option value="markeddown">MarkedJS</option>
+                  </select>
+                </label>
+              )}
+            </div>
+          </div>
+
           <div>
-            {isVsCode ? (
-              <VsCodeEditor
-                content={vsCodeContent}
-                structureId={structureId}
-                onEditorChange={handleEditorChange}
-                recordId={recordId}
-                onSvgChange={setMermaidSvg}
-              />
-            ) : (
+            {editor === "quilleditor" && (
               <QuillEditor
                 content={quillContent}
-                onEditorChange={handleEditorChange}
-                structureId={structureId}
+                onEditorChange={setQuillContent}
+                editorClassName={"h-[400px] mb-[50px]"}
+              />
+            )}
+
+            {editor === "vscode" && renderer === "mermaid" && (
+              <MermaidRenderer
+                content={mermaidCodeContent}
+                onEditorChange={setMermaidCodeContent}
+                onSvgChange={setMermaidSvg}
+              />
+            )}
+
+            {editor === "vscode" && renderer === "plantuml" && (
+              <PlantUMLRenderer
+                content={plantUmlContent}
+                onEditorChange={setPlantUmlContent}
+                onSvgChange={setPlantUmlSvg}
+              />
+            )}
+
+            {editor === "vscode" && renderer === "markeddown" && (
+              <MarkJsRenderer
+                content={markedJsContent}
+                onEditorChange={setMarkedJsContent}
               />
             )}
           </div>
@@ -260,43 +431,12 @@ const AddQuillModal = ({
                 <BsTags className="h-5 w-5 mr-2" /> Add Tags
               </button>
             </div>
-
-            <div className="flex items-center">
-              <span
-                className={`font-semibold pr-1 text-base ${
-                  isVsCode ? "text-custom-main pr-1" : "text-gray-700"
-                }`}
-              >
-                VS Code Editor
-              </span>
-
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isVsCode}
-                  onChange={handleToggle}
-                  className="sr-only peer"
-                />
-                <div
-                  className={`w-12 h-6 rounded-full transition-all ${
-                    isVsCode
-                      ? "bg-custom-main border-none"
-                      : "bg-gray-200 border border-gray-300"
-                  }`}
-                ></div>
-                <div
-                  className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform ${
-                    isVsCode ? "" : "!bg-custom-main"
-                  }`}
-                ></div>
-              </label>
-            </div>
           </div>
 
           {/* Tags Section */}
           {tags?.length > 0 && (
             <div className="mt-4">
-              <div className="max-h-40 overflow-y-auto pr-3">
+              <div className="max-h-28 overflow-y-auto pr-3">
                 {tags?.map((tag) => (
                   <div
                     key={tag.id}
@@ -381,8 +521,8 @@ const AddQuillModal = ({
         <DiscardModal
           isOpen={discardModalVisible}
           title={"Editor Content?"}
-          onClose={cancelToggle}
-          onConfirm={confirmToggle}
+          onClose={cancelDiscard}
+          onConfirm={confirmDiscard}
         />
       )}
     </>

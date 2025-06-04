@@ -96,6 +96,20 @@ export const reparentElements = createAsyncThunk(
   }
 );
 
+export const updateExpandState = createAsyncThunk(
+  "element/updateExpandState",
+  async ({ id, isExpanded }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/element/expand-state/${id}`, {
+        isExpanded,
+      });
+      return { id, isExpanded };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Element slice
 const elementSlice = createSlice({
   name: "element",
@@ -185,6 +199,14 @@ const elementSlice = createSlice({
       .addCase(reparentElements.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
+      })
+      .addCase(updateExpandState.fulfilled, (state, action) => {
+        const index = state.elements.findIndex(
+          (element) => element.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.elements[index].isExpanded = action.payload.isExpanded;
+        }
       });
   },
 });

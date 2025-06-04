@@ -20,6 +20,7 @@ export class CreateElementDto {
   parentId?: number;
   name: string;
   recordId?: number;
+  isExpanded?: boolean;
 }
 
 export class AddChildElementDto {

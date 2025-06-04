@@ -1,10 +1,10 @@
-import React, {
-  useRef,
-  useMemo,
-  useEffect,
-} from "react";
-import mermaid from "mermaid";
 import debounce from "lodash.debounce";
+import mermaid from "mermaid";
+import React, {
+  useEffect,
+  useMemo,
+  useRef,
+} from "react";
 
 mermaid.initialize({ startOnLoad: false });
 

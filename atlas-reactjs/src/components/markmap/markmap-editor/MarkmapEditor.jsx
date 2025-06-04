@@ -259,7 +259,6 @@ const MarkmapEditor = ({ structureId }) => {
 
     try {
       const data = await dispatch(getStructure(structureId)).unwrap();
-
       const treeWithWbs = assignWbsNumbers({
         content: data.name,
         children: data.elements,
@@ -372,6 +371,7 @@ const MarkmapEditor = ({ structureId }) => {
       exportAsPdf(treeData, showWbs);
     }
   };
+  
   const handleExportModal = ({ formats, showWbs, includeWbs, includeTags }) => {
     formats.forEach((fmt) => {
       switch (fmt) {
@@ -433,6 +433,7 @@ const MarkmapEditor = ({ structureId }) => {
           structureId={structureId}
           parentId={modalData.elementId}
           elementId={modalData.elementId}
+          color={"#660000"}
           recordId={modalData.recordId}
           structureName={modalData.structureName}
           onClose={() => setModalData(null)}

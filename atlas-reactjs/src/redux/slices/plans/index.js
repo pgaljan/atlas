@@ -20,6 +20,22 @@ export const fetchPlans = createAsyncThunk(
   }
 );
 
+// Async thunk for reordering plans
+export const reorderPlans = createAsyncThunk(
+  "plans/reorderPlans",
+  async (reorderedPlans, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.patch(
+        "/plans/reorder",
+        reorderedPlans
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Async thunk for fetching a single plan by ID
 export const fetchPlanById = createAsyncThunk(
   "plans/fetchPlanById",
@@ -157,6 +173,17 @@ const plansSlice = createSlice({
         state.plans = state.plans.filter((plan) => plan.id !== action.meta.arg);
       })
       .addCase(deletePlan.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(reorderPlans.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(reorderPlans.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.plans = action.payload;
+      })
+      .addCase(reorderPlans.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

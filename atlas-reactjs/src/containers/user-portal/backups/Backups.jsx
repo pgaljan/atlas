@@ -17,7 +17,7 @@ const Backups = ({ onSubmit }) => {
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [loading, setLoading] = useState(true); // loading state added
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {

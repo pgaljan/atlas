@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import Layout from "../../../components/layout";
 import HeaderTab from "../../../components/header-tab/HeaderTab";
+import Layout from "../../../components/layout";
 import General from "./pages/General";
 import Password from "./pages/Password";
 import Services from "./pages/Services&Sessions";

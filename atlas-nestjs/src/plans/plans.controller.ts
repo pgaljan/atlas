@@ -43,6 +43,15 @@ export class PlanController {
     }
   }
 
+  @Patch('reorder')
+  async reorderPlans(@Body() plans: { id: string; order: number }[]) {
+    try {
+      return await this.planService.reorderPlans(plans);
+    } catch (error) {
+      throw new BadRequestException('Error reordering plans');
+    }
+  }
+
   // Create a new plan
   @Post('create')
   async createPlan(@Body() createPlanDto: CreatePlanDto) {

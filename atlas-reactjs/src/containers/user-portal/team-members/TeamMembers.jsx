@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from "react";
-import { useDispatch } from "react-redux";
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import GenericTable from "../../../components/generic-table/GenericTable";
+import InputField from "../../../components/input-field/InputField";
 import Layout from "../../../components/layout";
 import DeleteModal from "../../../components/modals/DeleteModal";
 import ModalComponent from "../../../components/modals/Modal";
 import { teamMembersConfig } from "../../../constants/index";
-import InputField from "../../../components/input-field/InputField";
 import { fetchTeamMembers } from "../../../redux/slices/team-memebers";
 
 const TeamMembersPage = ({ onSubmit }) => {

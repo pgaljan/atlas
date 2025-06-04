@@ -3,6 +3,7 @@ import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useState } from "react";
 import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi";
 import { FaUserPlus } from "react-icons/fa";
+import { LuDatabaseBackup } from "react-icons/lu";
 import { RiDownloadCloud2Line } from "react-icons/ri";
 import { TbWorldUpload } from "react-icons/tb";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
@@ -10,19 +11,19 @@ import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
 import useFeatureFlag from "../../../hooks/useFeatureFlag";
+import { fetchAppSettings } from "../../../redux/slices/app-settings";
 import { createBackup } from "../../../redux/slices/backups";
 import { restoreBackup } from "../../../redux/slices/restore-backups";
 import {
   getStructure,
   updateStructure,
 } from "../../../redux/slices/structures";
+import ExportModalStructure from "../../modals/ExportModalStructure";
 import ImportModal from "../../modals/ImportModal";
 import ShareModal from "../../modals/ShareModal";
 import UserPopover from "../../modals/UserPopover";
 import Tooltip from "../../tooltip/Tooltip";
-import ExportModalStructure from "../../modals/ExportModalStructure";
-import { LuDatabaseBackup } from "react-icons/lu";
-import { fetchAppSettings } from "../../../redux/slices/app-settings";
+import { useLocation } from "react-router-dom";
 
 const MarkmapHeader = ({
   undo,
@@ -48,6 +49,11 @@ const MarkmapHeader = ({
   const [searchValue, setSearchValue] = useState("");
   const [isExportModal, setIsExportModal] = useState(false);
   const [appName, setAppName] = useState("ATLAS");
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const isSyncfusionRenderer = searchParams
+    .get("renderer")
+    .includes("syncfusion");
 
   // Feature flags
   const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
@@ -288,6 +294,7 @@ const MarkmapHeader = ({
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Import Backups"
+              disabled={isSyncfusionRenderer}
               onClick={() =>
                 handleFeatureClick(canRestoreBackup, toggleImportModal)
               }
@@ -307,7 +314,7 @@ const MarkmapHeader = ({
               </button>
             ) : (
               <button
-                disabled={isLoading}
+                disabled={isLoading || isSyncfusionRenderer}
                 onClick={() =>
                   handleFeatureClick(canRestoreBackup, handleCreateBackup)
                 }
@@ -345,6 +352,7 @@ const MarkmapHeader = ({
               type="text"
               value={searchValue}
               onChange={handleSearchChange}
+              disabled={isSyncfusionRenderer}
               onKeyDown={handleKeyPress}
               placeholder="Search: By level or text"
               className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10 "
@@ -407,6 +415,7 @@ const MarkmapHeader = ({
           <button
             className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
             onClick={() => setIsExportModal(true)}
+            disabled={isSyncfusionRenderer}
           >
             <LuDatabaseBackup size={20} className="mr-2" />
             Export
@@ -415,6 +424,7 @@ const MarkmapHeader = ({
           <Link to={"/app/coming-soon"}>
             <button
               className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
+              disabled={isSyncfusionRenderer}
               // onClick={() => setIsShareModalOpen(true)}
             >
               <FaUserPlus size={20} className="mr-2" />

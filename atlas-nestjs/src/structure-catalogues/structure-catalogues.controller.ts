@@ -8,10 +8,11 @@ import {
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
 import { StructureCataloguesService } from './structure-catalogues.service';
-import { CreateStructureCatalogDto } from './dto/create-structure-catalog.dto';
 import { UpdateStructureCatalogDto } from './dto/update-structure-catalog.dto';
+import { UpdateStructureCatalogOrderDto } from './dto/update-structure-catalog-order.dto';
 
 @Controller('structure-catalogs')
 export class StructureCataloguesController {
@@ -68,6 +69,28 @@ export class StructureCataloguesController {
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new BadRequestException('Error updating structure catalog');
+    }
+  }
+
+  @Patch('reorder')
+  async reorderCatalogs(@Body() catalogs: { id: string; order: number }[]) {
+    try {
+      return await this.catalogService.reorderCatalogs(catalogs);
+    } catch (error) {
+      throw new BadRequestException('Error reordering structure catalogs');
+    }
+  }
+
+  @Put(':id/order')
+  async updateCatalogOrder(
+    @Param('id') id: string,
+    @Body() dto: UpdateStructureCatalogOrderDto,
+  ) {
+    try {
+      return await this.catalogService.updateCatalogOrder(id, dto.order);
+    } catch (error) {
+      if (error instanceof NotFoundException) throw error;
+      throw new BadRequestException('Error updating catalog order');
     }
   }
 

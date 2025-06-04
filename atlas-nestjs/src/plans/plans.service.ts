@@ -20,6 +20,16 @@ export class PlanService {
     }
   }
 
+  async reorderPlans(plans: { id: string; order: number }[]) {
+    const updatePromises = plans.map((plan) =>
+      this.prisma.plan.update({
+        where: { id: plan.id },
+        data: { order: plan.order },
+      }),
+    );
+    return Promise.all(updatePromises);
+  }
+
   // Fetch plan by ID
   async getPlanById(id: string) {
     const plan = await this.prisma.plan.findUnique({

@@ -1,9 +1,9 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDispatch } from "react-redux";
-import { Link, useNavigate, useLocation } from "react-router-dom";
-import { registerUser } from "../../../redux/slices/auth";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
+import { registerUser } from "../../../redux/slices/auth";
 
 const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
   const handleOAuthLogin = async () => {

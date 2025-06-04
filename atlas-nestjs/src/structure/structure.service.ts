@@ -12,13 +12,22 @@ export class StructureService {
   constructor(private readonly prisma: PrismaService) {}
 
   private formatElements(elements: any[]): any[] {
-    return elements.map((element) => ({
-      type: element.type,
-      wbsLevel: element.wbsLevel,
-      children: element.children
-        ? { create: this.formatElements(element.children) }
-        : undefined,
-    }));
+    return elements.map((element) => {
+      const childrenPayload = element.children
+        ? this.formatElements(element.children)
+        : undefined;
+
+      return {
+        id: element.id,
+        name: element.name,
+        recordId: element.recordId,
+        parentId: element.parentId,
+        orderIndex: element.orderIndex ?? 0,
+        isExpanded:
+          element.isExpanded !== undefined ? element.isExpanded : true,
+        children: childrenPayload ? { create: childrenPayload } : undefined,
+      };
+    });
   }
 
   async createStructure(createStructureDto: CreateStructureDto) {
@@ -211,6 +220,7 @@ export class StructureService {
           visibility: visibility || undefined,
           imageUrl: imageUrl || undefined,
           updatedAt: new Date(),
+          
           elements: elements
             ? {
                 deleteMany: {},
@@ -224,6 +234,7 @@ export class StructureService {
               }
             : undefined,
         },
+        
       });
 
       // Log the update in the AuditLog including imageUrl snapshot info

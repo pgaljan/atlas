@@ -1,13 +1,12 @@
 import { Sidebar } from "flowbite-react"
 import React from "react"
-import { Link, useLocation } from "react-router-dom"
-import { IoMdArrowRoundBack } from "react-icons/io"
 import { BiCarousel } from "react-icons/bi"
-import { MdOutlinePrivacyTip } from "react-icons/md"
 import { FiUsers } from "react-icons/fi"
-import { MdWorkspacePremium } from "react-icons/md"
 import { HiMiniClipboardDocumentCheck } from "react-icons/hi2"
-import { IoSettings } from "react-icons/io5";
+import { IoMdArrowRoundBack } from "react-icons/io"
+import { IoSettings } from "react-icons/io5"
+import { MdOutlinePrivacyTip, MdWorkspacePremium } from "react-icons/md"
+import { Link, useLocation } from "react-router-dom"
 
 const ownTheme = {
   root: {

@@ -1,8 +1,8 @@
 import React from "react";
-import useModal from "../../../hooks/useModal";
-import Modal from "../../modals/AdminModal";
-import InputField from "../../input-field/InputField";
 import { TbEditCircle } from "react-icons/tb";
+import useModal from "../../../hooks/useModal";
+import InputField from "../../input-field/InputField";
+import Modal from "../../modals/AdminModal";
 
 const UserInfoCard = () => {
   const { isOpen, openModal, closeModal } = useModal();

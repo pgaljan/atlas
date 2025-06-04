@@ -1,14 +1,14 @@
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import Layout from "../../../components/layout";
 import Icons from "../../../constants/icons";
 import { fetchPlans } from "../../../redux/slices/plans";
-import Cookies from "js-cookie";
 import {
   fetchSubscription,
   updateSubscriptionPlan,
 } from "../../../redux/slices/subscriptions";
-import cogoToast from "@successtar/cogo-toast";
 
 const UpgradePlans = () => {
   const dispatch = useDispatch();
@@ -47,9 +47,7 @@ const UpgradePlans = () => {
   const activePlans = plans.filter((plan) => plan.status === "active");
 
   // Sort the active plans based on the defined order
-  const sortedPlans = [...activePlans].sort(
-    (a, b) => planOrder.indexOf(a?.name) - planOrder.indexOf(b?.name)
-  );
+  const sortedPlans = [...activePlans].sort((a, b) => a.order - b.order);
 
   return (
     <Layout>

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from "react";
-import InputField from "../../input-field/InputField";
-import Select from "react-select";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
+import Select from "react-select";
 import { fetchRoles } from "../../../redux/slices/roles";
+import InputField from "../../input-field/InputField";
 
 const GenericModal = ({
   isOpen,

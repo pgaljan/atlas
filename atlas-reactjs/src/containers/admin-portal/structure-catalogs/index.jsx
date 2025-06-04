@@ -1,10 +1,10 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useState } from "react";
-import { BiCarousel } from "react-icons/bi";
+import { DragDropContext, Draggable, Droppable } from "react-beautiful-dnd";
 import { IoTrash } from "react-icons/io5";
 import { MdAddTask } from "react-icons/md";
-import { TbEditCircle } from "react-icons/tb";
+import { TbDragDrop, TbEditCircle } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
 import CatalogModal from "../../../components/admin/modals/CatalogModal";
@@ -15,7 +15,9 @@ import {
   createCatalog,
   deleteCatalog,
   fetchCatalogs,
+  reorderCatalogs,
   updateCatalog,
+  updateCatalogOrder,
 } from "../../../redux/slices/structure-catalog";
 
 const StructureCatalog = () => {
@@ -29,6 +31,7 @@ const StructureCatalog = () => {
   const [file, setFile] = useState(null);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [description, setDescription] = useState("");
+  const [orderInputs, setOrderInputs] = useState({});
   const [plans, setPlans] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState(null);
@@ -95,7 +98,7 @@ const StructureCatalog = () => {
     }
   };
 
-  // Handle editing catalog using the updateCatalog API
+  // Handle editing catalog
   const handleEditCatalog = async () => {
     if (!editedCatalog) return;
 
@@ -124,24 +127,23 @@ const StructureCatalog = () => {
     }
   };
 
+  // Delete modal
   const openDeleteModal = (catalog) => {
     setSelectedCatalog(catalog);
     setDeleteModalOpen(true);
   };
-
   const closeDeleteModal = () => {
     setSelectedCatalog(null);
     setDeleteModalOpen(false);
   };
-
   const confirmDelete = () => {
     if (selectedCatalog) {
       dispatch(deleteCatalog(selectedCatalog.id))
         .unwrap()
-        .then(() => {
+        .then(async () => {
           cogoToast.success("Catalog deleted successfully!");
           closeDeleteModal();
-          fetchCatalogData();
+          await fetchCatalogData();
         })
         .catch((error) => {
           if (error?.status === 400) {
@@ -153,7 +155,7 @@ const StructureCatalog = () => {
     }
   };
 
-  // Reset form fields
+  // Reset form
   const resetForm = () => {
     setCatalogName("");
     setDescription("");
@@ -163,26 +165,40 @@ const StructureCatalog = () => {
     setThumbnailUrl(null);
   };
 
-  // Open add modal
-  const openAddModal = () => {
-    resetForm();
-    setAddModalOpen(true);
+  // Drag & Drop Reordering
+  const handleDragEnd = async (result) => { 
+    if (!result.destination) return;
+
+    const updatedCatalogs = Array.from(catalogs);
+    const [moved] = updatedCatalogs.splice(result.source.index, 1);
+    updatedCatalogs.splice(result.destination.index, 0, moved);
+    setCatalogs(updatedCatalogs);
+
+    try {
+      const payload = updatedCatalogs.map((cat, idx) => ({
+        id: cat.id,
+        order: idx,
+      }));
+      await dispatch(reorderCatalogs(payload)).unwrap();
+      cogoToast.success("Catalogs reordered successfully!");
+    } catch (error) {
+      cogoToast.error("Failed to reorder catalogs.");
+    }
   };
 
-  // Open edit modal: pre-fill the form with existing Catalog data
-  const openEditModal = (catalog) => {
-    setEditedCatalog(catalog);
-    setCatalogName(catalog.name);
-    setDescription(catalog.description || "");
-    setSelectedUserTier(
-      Array.isArray(catalog.userTier)
-        ? catalog.userTier.map((t) => (typeof t === "string" ? t : t.tier))
-        : []
-    );
+  const handleOrderChange = async (catalogId, newOrder) => {
+    const sanitized = parseInt(newOrder, 10);
+    if (isNaN(sanitized) || sanitized < 0) return;
 
-    setFile(catalog.fileUrl);
-    setThumbnailUrl(catalog.thumbnailUrl);
-    setEditModalOpen(true);
+    try {
+      await dispatch(
+        updateCatalogOrder({ id: catalogId, order: sanitized })
+      ).unwrap();
+      cogoToast.success("Catalog order updated successfully!");
+      fetchCatalogData();
+    } catch (err) {
+      cogoToast.error("Failed to update catalog order.");
+    }
   };
 
   if (loading) {
@@ -195,48 +211,6 @@ const StructureCatalog = () => {
     );
   }
 
-  if (catalogs.length === 0) {
-    return (
-      <AdminLayout>
-        <div className="flex h-screen flex-col items-center justify-center text-center p-6">
-          <div className="flex items-center justify-center bg-white text-custom-main rounded-full w-28 h-28 mb-4">
-            <BiCarousel className="text-5xl text-custom-main" />
-          </div>
-          <h2 className="text-2xl font-bold text-custom-text-grey mb-2">
-            No Catalog found
-          </h2>
-          <p className="text-lg text-custom-text-grey mb-4">
-            There are no Catalog to display. Please upload a new one.
-          </p>
-          <button
-            className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
-            onClick={openAddModal}
-          >
-            <MdAddTask size={20} />
-            Upload Catalog
-          </button>
-        </div>
-        <CatalogModal
-          isOpen={addModalOpen}
-          onClose={() => setAddModalOpen(false)}
-          onSubmit={handleAddCatalog}
-          title="Add Catalog"
-          CatalogName={CatalogName}
-          setCatalogName={setCatalogName}
-          description={description}
-          setDescription={setDescription}
-          thumbnailUrl={thumbnailUrl}
-          setThumbnailUrl={setThumbnailUrl}
-          selectedUserTier={selectedUserTier}
-          setSelectedUserTier={setSelectedUserTier}
-          userTiers={plans.map((plan) => plan.name)}
-          file={file}
-          setFile={setFile}
-        />
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
       <div className="p-4">
@@ -245,76 +219,139 @@ const StructureCatalog = () => {
             <h2 className="text-3xl font-semibold text-gray-800">
               Structures Catalog
             </h2>
-            <div className="flex items-center gap-3">
-              <button
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-                onClick={openAddModal}
-              >
-                <MdAddTask size={20} />
-                Upload Catalog
-              </button>
-            </div>
+            <button
+              className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
+              onClick={() => {
+                resetForm();
+                setAddModalOpen(true);
+              }}
+            >
+              <MdAddTask size={20} />
+              Upload Catalog
+            </button>
           </div>
-          <table className="p-10 w-full">
-            <thead className="border-b border-gray-100">
-              <tr>
-                <th className="px-5 py-3 text-left">Catalog Name</th>
-                <th className="px-5 py-3 text-left">Description</th>
-                <th className="px-5 py-3 text-left">User Tier</th>
-                <th className="px-5 py-3 text-left">Thumbnail</th>
-                <th className="px-5 py-3 text-left">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {catalogs.map((catalog) => (
-                <tr key={catalog.id} className="border-b border-gray-100">
-                  <td className="px-5 py-4 text-gray-500 capitalize">
-                    {catalog.name}
-                  </td>
-                  <td className="px-5 py-4 text-gray-500">
-                    {catalog?.description
-                      ? catalog.description.length > 45
-                        ? `${catalog.description.substring(0, 45)}.....`
-                        : catalog.description
-                      : "N/A"}
-                  </td>
-                  <td className="px-5 py-4 text-gray-500">
-                    {catalog.userTier.map((t) => t.tier).join(", ")}
-                  </td>
 
-                  <td className="px-5 py-4">
-                    {catalog.fileUrl ? (
-                      <img
-                        src={catalog.thumbnailUrl}
-                        alt="Catalog Image"
-                        className="h-12 w-12 object-cover rounded"
-                      />
-                    ) : (
-                      <span className="text-gray-500">No Image</span>
-                    )}
-                  </td>
-                  <td className="px-5 py-4 flex gap-3">
-                    <Tooltip label="Edit">
-                      <button
-                        className="p-2 text-black rounded transition"
-                        onClick={() => openEditModal(catalog)}
-                      >
-                        <TbEditCircle className="w-5 h-5" />
-                      </button>
-                    </Tooltip>
-                    <Tooltip label="Delete">
-                      <button
-                        className="p-2 text-red-500 rounded transition"
-                        onClick={() => openDeleteModal(catalog)}
-                      >
-                        <IoTrash className="w-5 h-5" />
-                      </button>
-                    </Tooltip>
-                  </td>
+          <DragDropContext onDragEnd={handleDragEnd}>
+            <table className="w-full">
+              <thead className="border-b border-gray-100">
+                <tr>
+                  <th className="px-5 py-3"></th>
+                  <th className="px-5 py-3 text-left">Catalog Name</th>
+                  <th className="px-5 py-3 text-left">Description</th>
+                  <th className="px-5 py-3 text-left">User Tier</th>
+                  <th className="px-5 py-3 text-left">Thumbnail</th>
+                  <th className="px-5 py-3 text-left">Order</th>
+                  <th className="px-5 py-3 text-left">Actions</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <Droppable droppableId="catalogs">
+                {(provided) => (
+                  <tbody
+                    {...provided.droppableProps}
+                    ref={provided.innerRef}
+                    className="divide-y divide-gray-100"
+                  >
+                    {catalogs.map((catalog, index) => (
+                      <Draggable
+                        key={catalog.id}
+                        draggableId={catalog.id}
+                        index={index}
+                      >
+                        {(prov) => (
+                          <tr
+                            ref={prov.innerRef}
+                            {...prov.draggableProps}
+                            className="hover:bg-gray-50 transition"
+                          >
+                            <td
+                              className="px-4 py-3 cursor-grab"
+                              {...prov.dragHandleProps}
+                            >
+                              <TbDragDrop />
+                            </td>
+                            <td className="px-5 py-4 text-gray-500 capitalize">
+                              {catalog.name}
+                            </td>
+                            <td className="px-5 py-4 text-gray-500">
+                              {catalog.description
+                                ? catalog.description.length > 45
+                                  ? `${catalog.description.substring(0, 45)}...`
+                                  : catalog.description
+                                : "N/A"}
+                            </td>
+                            <td className="px-5 py-4 text-gray-500">
+                              {catalog.userTier.map((t) => t.tier).join(", ")}
+                            </td>
+                            <td className="px-5 py-4">
+                              {catalog.thumbnailUrl ? (
+                                <img
+                                  src={catalog.thumbnailUrl}
+                                  alt="Thumbnail"
+                                  className="h-12 w-12 object-cover rounded"
+                                />
+                              ) : (
+                                <span className="text-gray-500">No Image</span>
+                              )}
+                            </td>
+                            <td className="px-5 py-4">
+                              <input
+                                type="number"
+                                className="w-16 border rounded px-2 py-1 text-center"
+                                value={orderInputs[catalog.id] ?? index}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  setOrderInputs((prev) => ({
+                                    ...prev,
+                                    [catalog.id]: value,
+                                  }));
+                                }}
+                                onBlur={() =>
+                                  handleOrderChange(
+                                    catalog.id,
+                                    orderInputs[catalog.id] ?? index
+                                  )
+                                }
+                              />
+                            </td>
+
+                            <td className="px-5 py-4 flex gap-3">
+                              <Tooltip label="Edit">
+                                <button
+                                  className="p-2 text-black rounded transition"
+                                  onClick={() => {
+                                    setEditedCatalog(catalog);
+                                    setCatalogName(catalog.name);
+                                    setDescription(catalog.description || "");
+                                    setSelectedUserTier(
+                                      catalog.userTier.map((u) => u.tier)
+                                    );
+                                    setFile(catalog.fileUrl);
+                                    setThumbnailUrl(catalog.thumbnailUrl);
+                                    setEditModalOpen(true);
+                                  }}
+                                >
+                                  <TbEditCircle className="w-5 h-5" />
+                                </button>
+                              </Tooltip>
+                              <Tooltip label="Delete">
+                                <button
+                                  className="p-2 text-red-500 rounded transition"
+                                  onClick={() => openDeleteModal(catalog)}
+                                >
+                                  <IoTrash className="w-5 h-5" />
+                                </button>
+                              </Tooltip>
+                            </td>
+                          </tr>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </tbody>
+                )}
+              </Droppable>
+            </table>
+          </DragDropContext>
 
           <CatalogModal
             isOpen={addModalOpen}
@@ -334,7 +371,6 @@ const StructureCatalog = () => {
             setFile={setFile}
           />
 
-          {/* Edit Modal */}
           <CatalogModal
             isOpen={editModalOpen}
             onClose={() => setEditModalOpen(false)}
@@ -353,14 +389,15 @@ const StructureCatalog = () => {
             setSelectedUserTier={setSelectedUserTier}
             userTiers={plans.map((plan) => plan.name)}
           />
+
+          <DeleteModal
+            isOpen={deleteModalOpen}
+            onClose={closeDeleteModal}
+            onConfirm={confirmDelete}
+            title={selectedCatalog?.name}
+          />
         </div>
       </div>
-      <DeleteModal
-        isOpen={deleteModalOpen}
-        onClose={closeDeleteModal}
-        onConfirm={confirmDelete}
-        title={selectedCatalog?.name}
-      />
     </AdminLayout>
   );
 };

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import InputField from "../../input-field/InputField";
 import Select from "react-select";
+import InputField from "../../input-field/InputField";
 
 const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
   const [formData, setFormData] = useState({

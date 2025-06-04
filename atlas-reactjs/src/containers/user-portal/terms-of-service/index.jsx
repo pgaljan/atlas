@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
 import ReactQuill from "react-quill";
 import "react-quill/dist/quill.bubble.css";
-import { fetchTermsOfService } from "../../../redux/slices/terms-of-service";
+import { useDispatch } from "react-redux";
 import Layout from "../../../components/layout";
+import { fetchTermsOfService } from "../../../redux/slices/terms-of-service";
 
 const TermsOfService = () => {
   const dispatch = useDispatch();
