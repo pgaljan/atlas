@@ -212,10 +212,11 @@ const Syncfusion = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsDiagramReady(true);
-    }, 300);
-
+    }, 300); 
+  
     return () => clearTimeout(timer);
   }, [diagramKey]);
+  
 
   const nodesMap = useMemo(
     () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
@@ -274,16 +275,6 @@ const Syncfusion = () => {
   const handleNodeUpdate = async () => {
     await fetchStructure();
   };
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (diagramRef.current?.nodes?.length > 0) {
-        setIsDiagramReady(true);
-      }
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [diagramKey]);
 
   const onNodeDrop = useCallback(
     async (args) => {
@@ -387,15 +378,14 @@ const Syncfusion = () => {
                   shape: "Plus",
                   width: 12,
                   height: 12,
-                  visible: isDiagramReady && hasAnyChildren && isCollapsed,
+                  visible: hasAnyChildren && isCollapsed,
                 },
                 collapseIcon: {
                   shape: "Minus",
                   width: 12,
                   height: 12,
-                  visible: isDiagramReady && hasAnyChildren && isExpanded,
+                  visible: hasAnyChildren,
                 },
-
                 cornerRadius: 6,
                 shadow: { angle: 45, distance: 5, opacity: 0.1 },
               };
