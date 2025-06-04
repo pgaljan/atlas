@@ -91,15 +91,14 @@ const Syncfusion = () => {
         let flatNodes = [];
 
         for (let element of elements) {
-          const isExpanded = element.isExpanded ?? true;
-          const isVisible = parentExpanded && isExpanded;
+          const shouldRenderChildren = parentExpanded && element.isExpanded;
 
           flatNodes.push({
             id: element.id,
             name: element.name || "Unnamed",
             parent: parentId,
-            isExpanded,
-            visible: isVisible,
+            isExpanded: element.isExpanded ?? true,
+            visible: parentExpanded,
             recordId: element?.recordId || null,
           });
 
@@ -117,7 +116,7 @@ const Syncfusion = () => {
               ...flattenElements(
                 element.children,
                 element.id,
-                isVisible && isExpanded
+                shouldRenderChildren
               )
             );
           }
@@ -212,11 +211,10 @@ const Syncfusion = () => {
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsDiagramReady(true);
-    }, 300); 
-  
+    }, 300);
+
     return () => clearTimeout(timer);
   }, [diagramKey]);
-  
 
   const nodesMap = useMemo(
     () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
@@ -340,11 +338,9 @@ const Syncfusion = () => {
           nodes={nodesData
             .filter((n) => n.visible)
             .map((node) => {
-              const hasAnyChildren = nodesData.some(
-                (n) => n.parent === node.id
-              );
-              const isCollapsed = node.isExpanded === false;
-              const isExpanded = node.isExpanded === true;
+              const children = nodesData.filter((n) => n.parent === node.id);
+              const hasAnyChildren = children.length > 0;
+              const hasVisibleChildren = children.some((c) => c.visible);
 
               const wbsPrefix = showWbs
                 ? `${generateWBSNumber(node.id, nodesData)} - `
@@ -361,8 +357,6 @@ const Syncfusion = () => {
                     style: {
                       color: "#333",
                       fontSize: 20,
-                      // bold: true,
-                      // textDecoration: "underline",
                     },
                   },
                 ],
@@ -378,13 +372,13 @@ const Syncfusion = () => {
                   shape: "Plus",
                   width: 12,
                   height: 12,
-                  visible: hasAnyChildren && isCollapsed,
+                  visible: hasAnyChildren && !hasVisibleChildren,
                 },
                 collapseIcon: {
                   shape: "Minus",
                   width: 12,
                   height: 12,
-                  visible: hasAnyChildren,
+                  visible: hasAnyChildren && hasVisibleChildren,
                 },
                 cornerRadius: 6,
                 shadow: { angle: 45, distance: 5, opacity: 0.1 },
