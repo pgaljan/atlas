@@ -30,6 +30,33 @@ export class ElementService {
     });
   }
 
+  private async deleteChildrenRecursive(parentId: string, userId?: string) {
+    const children = await this.prisma.element.findMany({
+      where: { parentId },
+    });
+
+    for (const child of children) {
+      // Recursively delete this child’s children first
+      await this.deleteChildrenRecursive(child.id, userId);
+
+      // Then delete this child
+      await this.prisma.element.delete({
+        where: { id: child.id },
+      });
+
+      await this.logAudit(
+        'DELETE',
+        'Element',
+        child.id,
+        {
+          deletedAt: new Date(),
+          reason: `Cascade delete due to parent ${parentId}`,
+        },
+        userId,
+      );
+    }
+  }
+
   // Helper to find the next “orderIndex” for a given structure + parent
   private async getNextOrderIndex(
     structureId: string,
@@ -351,31 +378,35 @@ export class ElementService {
     const element = await this.getElement(id);
 
     try {
+      // 1. Recursively delete all children
+      await this.deleteChildrenRecursive(id, userId);
+
+      // 2. Delete the parent element itself
       const deletedElement = await this.prisma.element.delete({
         where: { id },
       });
 
-      // Update the parent Structure’s updatedAt
+      // 3. Update structure timestamp
       await this.prisma.structure.update({
         where: { id: deletedElement.structureId },
         data: { updatedAt: new Date() },
       });
 
-      // Audit log for deletion
+      // 4. Audit log
       await this.logAudit(
         'DELETE',
         'Element',
         deletedElement.id,
         {
           deletedAt: new Date(),
-          reason: 'Deletion initiated by user',
+          reason: 'Element and its children were deleted',
         },
         userId,
       );
 
       return deletedElement;
     } catch (error) {
-      throw new BadRequestException('Error deleting element');
+      throw new BadRequestException('Error deleting element and its children');
     }
   }
 
