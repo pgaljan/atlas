@@ -7,7 +7,7 @@ import React, {
 } from "react";
 import plantumlEncoder from "plantuml-encoder";
 import { CustomLoader } from "../customLoader/CustomLoader";
-import VsCodeEditor from "../editors/VsCode.editor";
+import VsCodeEditor from "../editors/vscode-editor";
 
 const PlantUMLRenderer = ({ content, onEditorChange, onSvgChange }) => {
   const [umlText, setUmlText] = useState(content || "");

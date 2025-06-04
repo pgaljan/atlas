@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import Mermaid from "./marmaidHelper";
 import { CustomLoader } from "../customLoader/CustomLoader";
-import VsCodeEditor from "../editors/VsCode.editor";
+import VsCodeEditor from "../editors/vscode-editor";
 
 const MermaidRenderer = ({ content, onEditorChange, onSvgChange }) => {
   const svgRef = useRef(null);
