@@ -4,7 +4,7 @@ import DOMPurify from "dompurify";
 import Editor from "@monaco-editor/react";
 import { CustomLoader } from "../customLoader/CustomLoader";
 import { quickReferenceMarkdown } from "../../constants";
-import VsCodeEditor from "../editors/VsCode.editor";
+import VsCodeEditor from "../editors/vscode-editor";
 
 // const referenceOptions = [
 //   { value: "markdown", label: "Preview" },
