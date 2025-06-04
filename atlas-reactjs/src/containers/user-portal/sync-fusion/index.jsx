@@ -66,6 +66,7 @@ const Syncfusion = () => {
   const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
   const [isLoading, setIsLoading] = useState(true);
   const [diagramKey, setDiagramKey] = useState(0);
+  const [isDiagramReady, setIsDiagramReady] = useState(false);
 
   const fetchStructure = async () => {
     setIsLoading(true);
@@ -192,6 +193,7 @@ const Syncfusion = () => {
       }
     };
   };
+
   const handleSetShowWbs = (value) => {
     const fn = setShowWbsFactory(value);
     fn();
@@ -206,6 +208,14 @@ const Syncfusion = () => {
       fetchStructure();
     }
   }, [dispatch, structureId]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsDiagramReady(true);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [diagramKey]);
 
   const nodesMap = useMemo(
     () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
@@ -264,6 +274,16 @@ const Syncfusion = () => {
   const handleNodeUpdate = async () => {
     await fetchStructure();
   };
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (diagramRef.current?.nodes?.length > 0) {
+        setIsDiagramReady(true);
+      }
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [diagramKey]);
 
   const onNodeDrop = useCallback(
     async (args) => {
@@ -367,14 +387,15 @@ const Syncfusion = () => {
                   shape: "Plus",
                   width: 12,
                   height: 12,
-                  visible: hasAnyChildren && isCollapsed,
+                  visible: isDiagramReady && hasAnyChildren && isCollapsed,
                 },
                 collapseIcon: {
                   shape: "Minus",
                   width: 12,
                   height: 12,
-                  visible: hasAnyChildren,
+                  visible: isDiagramReady && hasAnyChildren && isExpanded,
                 },
+
                 cornerRadius: 6,
                 shadow: { angle: 45, distance: 5, opacity: 0.1 },
               };
