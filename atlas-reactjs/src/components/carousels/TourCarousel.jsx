@@ -62,8 +62,6 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     }
   };
 
-  console.log(sortedData)
-
   const hasData = sortedData.length > 0;
 
   if (!hasData) return null;
