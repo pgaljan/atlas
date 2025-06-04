@@ -20,8 +20,6 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
   const [structureId, setStructureId] = useState(null);
   const [showRendererModal, setShowRendererModal] = useState(false);
 
-  const hasData = useMemo(() => data.length > 0, [data]);
-
   const handleUseTemplate = async () => {
     const currentItem = data[currentIndex];
     const fileUrl = currentItem?.fileUrl;
@@ -51,6 +49,10 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     }
   };
 
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+  }, [data]);
+
   const handleRendererSelect = (renderer) => {
     setShowRendererModal(false);
 
@@ -59,6 +61,8 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
       navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`);
     }
   };
+
+  const hasData = sortedData.length > 0;
 
   if (!hasData) return null;
 
