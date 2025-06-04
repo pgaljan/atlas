@@ -50,7 +50,7 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
   };
 
   const sortedData = useMemo(() => {
-    return [...data].sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+    return [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [data]);
 
   const handleRendererSelect = (renderer) => {
@@ -61,6 +61,8 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
       navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`);
     }
   };
+
+  console.log(sortedData)
 
   const hasData = sortedData.length > 0;
 
