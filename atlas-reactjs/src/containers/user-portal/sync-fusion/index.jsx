@@ -106,6 +106,7 @@ const Syncfusion = () => {
             recordId: element?.recordId || null,
           });
 
+
           if (Array.isArray(element.children) && element.children.length > 0) {
             flatNodes.push(
               ...flattenElements(
@@ -351,6 +352,7 @@ const Syncfusion = () => {
     });
     return nodes;
   };
+
   useEffect(() => {
     document.fonts?.ready?.then(() => {
       setDiagramKey((prev) => prev + 1);
@@ -390,11 +392,11 @@ const Syncfusion = () => {
               const children = nodesData.filter((n) => n.parent === node.id);
               const hasAnyChildren = children.length > 0;
               const hasVisibleChildren = children.some((c) => c.visible);
-              console.log(hasVisibleChildren);
 
               const wbsPrefix = showWbs
                 ? `${generateWBSNumber(node.id, nodesData)} - `
                 : "";
+
               const labelText = `${wbsPrefix}${node.name}`;
 
               const estimatedWidth = Math.max(getTextWidth(labelText), 60);
@@ -421,7 +423,7 @@ const Syncfusion = () => {
                 constraints:
                   NodeConstraints.Default | NodeConstraints.AllowDrop,
                 expandIcon: {
-                  shape: "Plus",
+                  shape: "Minus",
                   width: 12,
                   height: 12,
                   horizontalAlignment: "Right",
@@ -429,7 +431,7 @@ const Syncfusion = () => {
                   visible: hasAnyChildren && !hasVisibleChildren,
                 },
                 collapseIcon: {
-                  shape: "Minus",
+                  shape: "Plus",
                   width: 12,
                   height: 12,
                   horizontalAlignment: "Right",
@@ -446,31 +448,29 @@ const Syncfusion = () => {
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
           selectionChange={onSelectionChange}
-          expandStateChange={async (args) => {
-            const isExpanded = args.state;
-            const nodeId = args?.element?.id;
+          // expandStateChange={async (args) => {
+          //   const isExpanded = args.state;
+          //   const nodeId = args?.element?.id;
 
-            if (!nodeId) return;
+          //   if (!nodeId) return;
 
-            try {
-              if (nodeId === structureId) {
-                // Only the root node (structure itself)
-                await dispatch(
-                  updateStructureExpandState({ id: nodeId, isExpanded })
-                ).unwrap();
-              } else {
-                // All other nodes (elements)
-                await dispatch(
-                  updateExpandState({ id: nodeId, isExpanded })
-                ).unwrap();
-              }
-            } catch (error) {
-              cogoToast.error(
-                `Failed to update expand state for node ${nodeId}`
-              );
-              console.error("Expand state update failed:", error);
-            }
-          }}
+          //   try {
+          //     if (nodeId === structureId) {
+          //       await dispatch(
+          //         updateStructureExpandState({ id: nodeId, isExpanded })
+          //       ).unwrap();
+          //     } else {
+          //       await dispatch(
+          //         updateExpandState({ id: nodeId, isExpanded })
+          //       ).unwrap();
+          //     }
+          //   } catch (error) {
+          //     cogoToast.error(
+          //       `Failed to update expand state for node ${nodeId}`
+          //     );
+          //     console.error("Expand state update failed:", error);
+          //   }
+          // }}
           getNodeDefaults={(node) => node}
         >
           <Inject services={[DataBinding, HierarchicalTree, UndoRedo]} />
