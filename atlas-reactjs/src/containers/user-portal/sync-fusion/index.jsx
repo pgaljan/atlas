@@ -40,8 +40,8 @@ import {
 
 const getNodeLevel = (id, nodesMap, level = 0) => {
   const node = nodesMap[id];
-  if (!node?.parent || !nodesMap[node.parent]) return level;
-  return getNodeLevel(node.parent, nodesMap, level + 1);
+  if (!node?.parent || !nodesMap[node?.parent]) return level;
+  return getNodeLevel(node?.parent, nodesMap, level + 1);
 };
 
 const getTextWidth = (text, font = "20px Arial") => {
@@ -319,14 +319,14 @@ const Syncfusion = () => {
     if (!node) return null;
 
     const matchesLevel =
-      level !== null && getNodeLevel(node.id, nodesMap) === level;
+      level !== null && getNodeLevel(node?.id, nodesMap) === level;
     const lowerSearch = searchTerm?.toLowerCase();
     const matchesText = lowerSearch
-      ? node.name?.toLowerCase().includes(lowerSearch)
+      ? node?.name?.toLowerCase().includes(lowerSearch)
       : false;
 
     const children = Object.values(nodesMap).filter(
-      (n) => n.parent === node.id
+      (n) => n.parent === node?.id
     );
     const filteredChildren = children
       .map((child) => filterTreeByCriteria(child, nodesMap, level, searchTerm))
@@ -448,13 +448,11 @@ const Syncfusion = () => {
             const isParent = children.length > 0;
 
             try {
-              if (isParent && !isExpanded) {
-                // Hit updateStructureExpandState when collapsing a parent node
+              if (isParent) {
                 await dispatch(
                   updateStructureExpandState({ id: nodeId, isExpanded })
                 ).unwrap();
               } else {
-                // Default for all others
                 await dispatch(
                   updateExpandState({ id: nodeId, isExpanded })
                 ).unwrap();
