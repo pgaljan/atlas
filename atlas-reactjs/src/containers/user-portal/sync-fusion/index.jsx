@@ -29,6 +29,7 @@ import {
 import {
   getStructure,
   updateStructure,
+  updateStructureExpandState,
 } from "../../../redux/slices/structures";
 import {
   createConnectors,
@@ -66,7 +67,8 @@ const Syncfusion = () => {
   const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
   const [isLoading, setIsLoading] = useState(true);
   const [diagramKey, setDiagramKey] = useState(0);
-  const [isDiagramReady, setIsDiagramReady] = useState(false);
+  const [filteredNodes, setFilteredNodes] = useState(null);
+  const [searchLoading, setSearchLoading] = useState(false);
 
   const fetchStructure = async () => {
     setIsLoading(true);
@@ -76,10 +78,10 @@ const Syncfusion = () => {
       setShowWbsState(structure.markmapShowWbs);
 
       const rootNode = {
-        id: structure.id,
-        name: structure.name || "Main",
+        id: structure?.id,
+        name: structure?.name || "Main",
         parent: null,
-        isExpanded: true,
+        isExpanded: structure?.isExpanded ?? true,
         visible: true,
       };
 
@@ -94,10 +96,10 @@ const Syncfusion = () => {
           const shouldRenderChildren = parentExpanded && element.isExpanded;
 
           flatNodes.push({
-            id: element.id,
-            name: element.name || "Unnamed",
+            id: element?.id,
+            name: element?.name || "Unnamed",
             parent: parentId,
-            isExpanded: element.isExpanded ?? true,
+            isExpanded: element?.isExpanded ?? true,
             visible: parentExpanded,
             recordId: element?.recordId || null,
           });
@@ -125,7 +127,11 @@ const Syncfusion = () => {
         return flatNodes;
       };
 
-      const nodes = flattenElements(structure.elements, structure.id, true);
+      const nodes = flattenElements(
+        structure.elements,
+        structure.id,
+        structure?.isExpanded ?? true
+      );
       const fullNodes = [rootNode, ...nodes];
       const visibleNodes = fullNodes.filter((n) => n.visible);
       const connectors = createConnectors(visibleNodes);
@@ -207,14 +213,6 @@ const Syncfusion = () => {
       fetchStructure();
     }
   }, [dispatch, structureId]);
-
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsDiagramReady(true);
-    }, 300);
-
-    return () => clearTimeout(timer);
-  }, [diagramKey]);
 
   const nodesMap = useMemo(
     () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
@@ -317,6 +315,50 @@ const Syncfusion = () => {
     [dispatch, nodesData, structureId]
   );
 
+  const filterTreeByCriteria = (node, nodesMap, level, searchTerm) => {
+    if (!node) return null;
+
+    const matchesLevel =
+      level !== null && getNodeLevel(node.id, nodesMap) === level;
+    const lowerSearch = searchTerm?.toLowerCase();
+    const matchesText = lowerSearch
+      ? node.name?.toLowerCase().includes(lowerSearch)
+      : false;
+
+    const children = Object.values(nodesMap).filter(
+      (n) => n.parent === node.id
+    );
+    const filteredChildren = children
+      .map((child) => filterTreeByCriteria(child, nodesMap, level, searchTerm))
+      .filter(Boolean);
+
+    return matchesLevel || matchesText || filteredChildren.length
+      ? { ...node, children: filteredChildren }
+      : null;
+  };
+
+  const handleSearch = (level, searchTerm) => {
+    setSearchLoading(true);
+    const root = nodesMap[structureId];
+    const result =
+      level === null && !searchTerm?.trim()
+        ? null
+        : filterTreeByCriteria(root, nodesMap, level, searchTerm) ||
+          "no-results";
+
+    setSearchLoading(false);
+    setFilteredNodes(result);
+  };
+
+  const flattenFilteredTree = (node) => {
+    if (!node) return [];
+    const nodes = [{ ...node, visible: true }];
+    (node.children || []).forEach((child) => {
+      nodes.push(...flattenFilteredTree(child));
+    });
+    return nodes;
+  };
+
   return (
     <>
       <div className="flex flex-col h-full bg-gray-50">
@@ -326,6 +368,7 @@ const Syncfusion = () => {
             structureId={structureId}
             showWbs={showWbs}
             setShowWbs={handleSetShowWbs}
+            onSearch={handleSearch}
           />
         </div>
 
@@ -335,7 +378,12 @@ const Syncfusion = () => {
           ref={diagramRef}
           width="100%"
           height="1000px"
-          nodes={nodesData
+          nodes={(filteredNodes === "no-results"
+            ? []
+            : filteredNodes
+            ? flattenFilteredTree(filteredNodes)
+            : nodesData
+          )
             .filter((n) => n.visible)
             .map((node) => {
               const children = nodesData.filter((n) => n.parent === node.id);
@@ -396,10 +444,21 @@ const Syncfusion = () => {
 
             if (!nodeId) return;
 
+            const children = nodesData.filter((n) => n.parent === nodeId);
+            const isParent = children.length > 0;
+
             try {
-              await dispatch(
-                updateExpandState({ id: nodeId, isExpanded })
-              ).unwrap();
+              if (isParent && !isExpanded) {
+                // Hit updateStructureExpandState when collapsing a parent node
+                await dispatch(
+                  updateStructureExpandState({ id: nodeId, isExpanded })
+                ).unwrap();
+              } else {
+                // Default for all others
+                await dispatch(
+                  updateExpandState({ id: nodeId, isExpanded })
+                ).unwrap();
+              }
             } catch (error) {
               cogoToast.error(
                 `Failed to update expand state for node ${nodeId}`
@@ -427,11 +486,7 @@ const Syncfusion = () => {
           gap: "8px",
         }}
       >
-        <ZoomToolbar
-          onZoomIn={handleZoomIn}
-          onZoomOut={handleZoomOut}
-          // onReset={handleResetZoom}
-        />
+        <ZoomToolbar onZoomIn={handleZoomIn} onZoomOut={handleZoomOut} />
       </div>
 
       {isModalOpen && selectedNode && (
@@ -440,19 +495,25 @@ const Syncfusion = () => {
           onClose={closeModal}
           color={"#660000"}
           structureId={structureId}
-          recordId={nodesMap[selectedNode.id]?.recordId}
+          recordId={nodesMap[selectedNode?.id]?.recordId}
           parentId={
-            nodesMap[selectedNode.id]?.id === structureId
+            nodesMap[selectedNode?.id]?.id === structureId
               ? null
-              : nodesMap[selectedNode.id]?.id
+              : nodesMap[selectedNode?.id]?.id
           }
-          elementId={selectedNode.id}
-          wbs={generateWBSNumber(selectedNode.id, nodesData)}
+          elementId={selectedNode?.id}
+          wbs={generateWBSNumber(selectedNode?.id, nodesData)}
           structureName={nodesMap[structureId]?.name || "Structure"}
           onSuccess={() => {
             handleNodeUpdate();
           }}
         />
+      )}
+
+      {filteredNodes === "no-results" && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-500 z-50 bg-white bg-opacity-75">
+          No elements found.
+        </div>
       )}
 
       {isLoading && (

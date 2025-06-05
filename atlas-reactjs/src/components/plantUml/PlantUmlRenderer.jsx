@@ -12,7 +12,7 @@ import VsCodeEditor from "../editors/vscode-editor";
 const PlantUMLRenderer = ({ content, onEditorChange, onSvgChange }) => {
   const [umlText, setUmlText] = useState(content || "");
   const [isEditorLoading, setIsEditorLoading] = useState(true);
-  const [rawSvg, setRawSvg] = useState(""); 
+  const [rawSvg, setRawSvg] = useState("");
   const svgContainerRef = useRef(null);
   const editorRef = useRef(null);
 

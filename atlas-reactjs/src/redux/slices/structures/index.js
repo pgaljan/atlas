@@ -29,7 +29,9 @@ export const getStructuresByWorkspaceId = createAsyncThunk(
   "structures/getStructuresByWorkspaceId",
   async (workspaceId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/structure/workspace/${workspaceId}`);
+      const response = await axiosInstance.get(
+        `/structure/workspace/${workspaceId}`
+      );
       return response.data.structures;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -121,6 +123,23 @@ export const deleteBatchStructures = createAsyncThunk(
       });
       return ids;
     } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for updating structure's expand state
+export const updateStructureExpandState = createAsyncThunk(
+  "structures/updateStructureExpandState",
+  async ({ id, isExpanded }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(
+        `/structure/expand-state/${id}`,
+        { isExpanded }
+      );
+      return { id, isExpanded };
+    } catch (error) {
+      console.log(error)
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -238,6 +257,20 @@ const structureSlice = createSlice({
         );
       })
       .addCase(deleteBatchStructures.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateStructureExpandState.fulfilled, (state, action) => {
+        const { id, isExpanded } = action.payload;
+        const target = state.structures.find((s) => s.id === id);
+        if (target) {
+          target.isExpanded = isExpanded;
+        }
+      })
+      .addCase(updateStructureExpandState.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateStructureExpandState.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

@@ -5,11 +5,14 @@ import {
   Get,
   HttpException,
   HttpStatus,
+  InternalServerErrorException,
+  NotFoundException,
   Param,
   Patch,
   Post,
+  Put,
 } from '@nestjs/common';
-import { CreateStructureDto } from './dto';
+import { CreateStructureDto, UpdateIsExpandedDto } from './dto';
 import { StructureService } from './structure.service';
 
 @Controller('structure')
@@ -91,7 +94,6 @@ export class StructureController {
     }
   }
 
-  // Batch operations
   @Post('batch-create')
   async createBatchStructures(@Body() structures: CreateStructureDto[]) {
     try {
@@ -130,6 +132,25 @@ export class StructureController {
         `Failed to batch delete structures: ${error.message}`,
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Put('expand-state/:id')
+  async updateStructureExpandState(
+    @Param('id') id: string,
+    @Body() dto: UpdateIsExpandedDto,
+  ) {
+    try {
+      await this.structureService.updateIsExpandedOnly(id, dto.isExpanded);
+      return { message: 'Expand state updated successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException('Error updating expand state');
     }
   }
 }

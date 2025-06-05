@@ -220,7 +220,7 @@ export class StructureService {
           visibility: visibility || undefined,
           imageUrl: imageUrl || undefined,
           updatedAt: new Date(),
-          
+
           elements: elements
             ? {
                 deleteMany: {},
@@ -234,7 +234,6 @@ export class StructureService {
               }
             : undefined,
         },
-        
       });
 
       // Log the update in the AuditLog including imageUrl snapshot info
@@ -382,6 +381,44 @@ export class StructureService {
       throw new InternalServerErrorException(
         `Failed to batch delete structures: ${error.message}`,
       );
+    }
+  }
+
+  async updateIsExpandedOnly(id: string, isExpanded: boolean, userId?: string) {
+    const structure = await this.prisma.structure.findUnique({
+      where: { id },
+    });
+
+    if (!structure) {
+      throw new NotFoundException(`Structure with id ${id} not found`);
+    }
+
+    try {
+      const updatedStructure = await this.prisma.structure.update({
+        where: { id },
+        data: {
+          isExpanded,
+          updatedAt: new Date(),
+        },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'UPDATE',
+          element: 'Structure',
+          elementId: updatedStructure.id.toString(),
+          details: {
+            previousData: { isExpanded: structure.isExpanded },
+            updatedData: { isExpanded },
+          },
+          userId,
+        },
+      });
+
+      return updatedStructure;
+    } catch (error) {
+      console.error(error);
+      throw new InternalServerErrorException('Error updating expand state');
     }
   }
 }

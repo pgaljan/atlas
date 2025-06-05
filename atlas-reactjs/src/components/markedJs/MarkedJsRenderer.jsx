@@ -21,7 +21,7 @@ const MarkJsRenderer = ({ content, onEditorChange }) => {
   const rawHtml = useMemo(() => marked.parse(content || ""), [content]);
   const sanitizedHtml = useMemo(() => DOMPurify.sanitize(rawHtml), [rawHtml]);
 
-    const handleChange = (value) => {
+  const handleChange = (value) => {
     const htmlPreview = DOMPurify.sanitize(marked.parse(value || ""));
     onEditorChange(value || "", htmlPreview);
   };

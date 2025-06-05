@@ -51,6 +51,7 @@ export const createConnectors = (nodes) => {
         id: `conn_${n.id}`,
         sourceID: n.parent,
         targetID: n.id,
+        // visibility: nodesMap[n.id]?.visible ? undefined : "Hidden",
         type: "Bezier",
         style: { strokeColor: stroke, strokeWidth: 3 },
         sourceDecorator: { shape: "None" },

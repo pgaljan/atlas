@@ -1,4 +1,5 @@
 import { Visibility } from '@prisma/client';
+import { IsBoolean } from 'class-validator';
 
 export class CreateStructureDto {
   id: string;
@@ -31,4 +32,8 @@ export class AddChildElementDto {
 export class CreateStructureMapDto {
   name: string;
   description: string;
+}
+export class UpdateIsExpandedDto {
+  @IsBoolean()
+  isExpanded: boolean;
 }
