@@ -69,3 +69,7 @@
 body > div:nth-child(5) {
   display: none !important;
 }
+.e-diagram .e-annotation {
+  overflow: visible !important;
+  white-space: nowrap !important;
+}

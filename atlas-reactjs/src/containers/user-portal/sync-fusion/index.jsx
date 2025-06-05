@@ -44,7 +44,7 @@ const getNodeLevel = (id, nodesMap, level = 0) => {
   return getNodeLevel(node?.parent, nodesMap, level + 1);
 };
 
-const getTextWidth = (text, font = "20px Arial") => {
+const getTextWidth = (text, font = "20px 'Segoe UI', Arial, sans-serif") => {
   if (typeof document === "undefined") return 160;
   const canvas = document.createElement("canvas");
   const context = canvas.getContext("2d");
@@ -85,6 +85,8 @@ const Syncfusion = () => {
         visible: true,
       };
 
+      console.log(rootNode);
+
       const flattenElements = (
         elements,
         parentId = null,
@@ -103,15 +105,6 @@ const Syncfusion = () => {
             visible: parentExpanded,
             recordId: element?.recordId || null,
           });
-
-          // console.table(
-          //   flatNodes.map((n) => ({
-          //     id: n.id,
-          //     name: n.name,
-          //     isExpanded: n.isExpanded,
-          //     visible: n.visible,
-          //   }))
-          // );
 
           if (Array.isArray(element.children) && element.children.length > 0) {
             flatNodes.push(
@@ -358,6 +351,11 @@ const Syncfusion = () => {
     });
     return nodes;
   };
+  useEffect(() => {
+    document.fonts?.ready?.then(() => {
+      setDiagramKey((prev) => prev + 1);
+    });
+  }, []);
 
   return (
     <>
@@ -384,30 +382,36 @@ const Syncfusion = () => {
             ? flattenFilteredTree(filteredNodes)
             : nodesData
           )
-            .filter((n) => n.visible)
+            .filter(
+              (n) =>
+                n.visible || nodesData.some((child) => child.parent === n.id)
+            )
             .map((node) => {
               const children = nodesData.filter((n) => n.parent === node.id);
               const hasAnyChildren = children.length > 0;
               const hasVisibleChildren = children.some((c) => c.visible);
+              console.log(hasVisibleChildren);
 
               const wbsPrefix = showWbs
                 ? `${generateWBSNumber(node.id, nodesData)} - `
                 : "";
               const labelText = `${wbsPrefix}${node.name}`;
 
-              const estimatedWidth = getTextWidth(labelText);
+              const estimatedWidth = Math.max(getTextWidth(labelText), 60);
 
               return {
                 id: node.id,
-                annotations: [
-                  {
-                    content: labelText,
-                    style: {
-                      color: "#333",
-                      fontSize: 20,
-                    },
-                  },
-                ],
+                annotations: node.visible
+                  ? [
+                      {
+                        content: labelText,
+                        style: {
+                          color: "#333",
+                          fontSize: 20,
+                        },
+                      },
+                    ]
+                  : [],
                 width: estimatedWidth,
                 height: 60,
                 style: {
@@ -420,12 +424,16 @@ const Syncfusion = () => {
                   shape: "Plus",
                   width: 12,
                   height: 12,
+                  horizontalAlignment: "Right",
+                  verticalAlignment: "Center",
                   visible: hasAnyChildren && !hasVisibleChildren,
                 },
                 collapseIcon: {
                   shape: "Minus",
                   width: 12,
                   height: 12,
+                  horizontalAlignment: "Right",
+                  verticalAlignment: "Center",
                   visible: hasAnyChildren && hasVisibleChildren,
                 },
                 cornerRadius: 6,
