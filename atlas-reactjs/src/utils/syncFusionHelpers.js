@@ -20,12 +20,12 @@ const LEVEL_COLORS = [
 ];
 
 const getTopLevelAncestor = (nodes, nodeId) => {
-  let current = nodes.find((n) => n.id === nodeId);
+  let current = nodes.find((n) => n?.id === nodeId);
   let last = current;
-  while (current && current.parent) {
+  while (current && current?.parent) {
     last = current;
-    current = nodes.find((n) => n.id === current.parent);
-    if (current?.parent === "1") return current.id;
+    current = nodes?.find((n) => n.id === current?.parent);
+    if (current?.parent === "1") return current?.id;
   }
   return last.id;
 };
@@ -63,19 +63,19 @@ export const createConnectors = (nodes) => {
 export const isDescendant = (nodeId, potentialParentId, nodes) => {
   let currentNode = nodes.find((n) => n.id === potentialParentId);
   while (currentNode) {
-    if (currentNode.parent === nodeId) return true;
-    currentNode = nodes.find((n) => n.id === currentNode.parent);
+    if (currentNode?.parent === nodeId) return true;
+    currentNode = nodes?.find((n) => n?.id === currentNode?.parent);
   }
   return false;
 };
 
 export const generateWBSNumber = (nodeId, nodes) => {
   const node = nodes.find((n) => n.id === nodeId);
-  const parentNode = node.parent
-    ? nodes.find((n) => n.id === node.parent)
+  const parentNode = node?.parent
+    ? nodes.find((n) => n?.id === node?.parent)
     : null;
   if (!parentNode) return "1";
-  const siblings = nodes.filter((n) => n.parent === node.parent);
-  const index = siblings.findIndex((n) => n.id === nodeId) + 1;
-  return `${generateWBSNumber(parentNode.id, nodes)}.${index}`;
+  const siblings = nodes?.filter((n) => n?.parent === node?.parent);
+  const index = siblings?.findIndex((n) => n?.id === nodeId) + 1;
+  return `${generateWBSNumber(parentNode?.id, nodes)}.${index}`;
 };

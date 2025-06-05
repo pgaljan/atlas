@@ -262,6 +262,7 @@ const MarkmapEditor = ({ structureId }) => {
       const treeWithWbs = assignWbsNumbers({
         content: data.name,
         children: data.elements,
+        isExpanded: data.isExpanded,
         structureId: data.id,
       });
       setShowWbsState(data.markmapShowWbs);
@@ -371,7 +372,7 @@ const MarkmapEditor = ({ structureId }) => {
       exportAsPdf(treeData, showWbs);
     }
   };
-  
+
   const handleExportModal = ({ formats, showWbs, includeWbs, includeTags }) => {
     formats.forEach((fmt) => {
       switch (fmt) {

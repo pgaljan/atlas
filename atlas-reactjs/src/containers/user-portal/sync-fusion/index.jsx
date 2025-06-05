@@ -444,15 +444,14 @@ const Syncfusion = () => {
 
             if (!nodeId) return;
 
-            const children = nodesData.filter((n) => n.parent === nodeId);
-            const isParent = children.length > 0;
-
             try {
-              if (isParent) {
+              if (nodeId === structureId) {
+                // Only the root node (structure itself)
                 await dispatch(
                   updateStructureExpandState({ id: nodeId, isExpanded })
                 ).unwrap();
               } else {
+                // All other nodes (elements)
                 await dispatch(
                   updateExpandState({ id: nodeId, isExpanded })
                 ).unwrap();
