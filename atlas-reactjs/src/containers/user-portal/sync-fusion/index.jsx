@@ -377,9 +377,10 @@ const Syncfusion = () => {
     setNoResults(null);
     setHighlightedNodeId(null);
 
-    const isLevelOnlySearch = level !== null && !searchTerm?.trim();
+    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase();
+    const isLevelOnlySearch = level !== null && !cleanSearchTerm;
 
-    if (!isLevelOnlySearch && !searchTerm?.trim()) {
+    if (!isLevelOnlySearch && !cleanSearchTerm) {
       const visibleIds = new Set();
 
       const markVisible = (nodeId) => {
@@ -418,13 +419,13 @@ const Syncfusion = () => {
 
     // STEP 1: Find matching node IDs
     const matchingNodes = nodesData.filter((n) => {
-      const isLevelMatch = level !== null && searchTerm?.trim() === "";
       const levelMatch = level === null || n.level === level;
-      const nameMatch = searchTerm
-        ? n.name?.toLowerCase().includes(searchTerm.toLowerCase())
+      const nameMatch = cleanSearchTerm
+        ? n.name?.toLowerCase().includes(cleanSearchTerm)
         : false;
 
-      const matches = isLevelMatch ? levelMatch : nameMatch && levelMatch;
+      // If it's level-only search, ignore nameMatch completely
+      const matches = isLevelOnlySearch ? levelMatch : nameMatch && levelMatch;
 
       return matches && isNodeVisibleByExpandState(n.id);
     });
@@ -510,113 +511,106 @@ const Syncfusion = () => {
               color: "white",
             },
           }}
-          nodes={nodesData
-            .filter((n) => {
-              const hasVisibleChild = nodesData.some(
-                (child) => child.parent === n.id && child.visible
-              );
-              return n.visible || hasVisibleChild || n.id === structureId;
-            })
-            .map((node) => {
-              const children = nodesData.filter((n) => n.parent === node.id);
-              const hasAnyChildren = children.length > 0;
-              const hasVisibleChildren = children.some((c) => c.visible);
+          nodes={nodesData.map((node) => {
+            const children = nodesData.filter((n) => n.parent === node.id);
+            const hasAnyChildren = children.length > 0;
+            const hasVisibleChildren = children.some((c) => c.visible);
 
-              const wbsPrefix = showWbs
-                ? `${generateWBSNumber(node.id, nodesData, wbsStart)} - `
-                : "";
-              const hasDragIcon = node.id !== structureId;
+            const wbsPrefix = showWbs
+              ? `${generateWBSNumber(node.id, nodesData, wbsStart)} - `
+              : "";
+            const hasDragIcon = node.id !== structureId;
 
-              const labelFontSize = 20;
-              const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
-              const labelText = `${wbsPrefix}${node.name}`;
-              const labelTextWidth = getTextWidth(labelText, labelFont);
+            const labelFontSize = 20;
+            const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
+            const labelText = `${wbsPrefix}${node.name}`;
+            const labelTextWidth = getTextWidth(labelText, labelFont);
 
-              const dragIconWidth = 20;
-              const gap = 10;
-              const padding = 5;
+            const dragIconWidth = 20;
+            const gap = 10;
+            const padding = 5;
 
-              const estimatedWidth = hasDragIcon
-                ? dragIconWidth + gap + labelTextWidth + padding
-                : labelTextWidth + padding;
+            const estimatedWidth = hasDragIcon
+              ? dragIconWidth + gap + labelTextWidth + padding
+              : labelTextWidth + padding;
 
-              const labelOffsetX = hasDragIcon
-                ? (dragIconWidth + gap) / estimatedWidth
-                : padding / estimatedWidth;
-              const shouldHighlight =
-                highlightedNodeId === node.id && !!currentSearchTerm;
+            const labelOffsetX = hasDragIcon
+              ? (dragIconWidth + gap) / estimatedWidth
+              : padding / estimatedWidth;
+            const shouldHighlight =
+              highlightedNodeId === node.id && !!currentSearchTerm;
 
-              return {
-                id: node.id,
-                annotations: node.visible
-                  ? [
-                      ...(hasDragIcon
-                        ? [
-                            {
-                              id: `drag-handle-${node.id}`,
-                              content: "⠿",
-                              offset: { x: 0, y: 0.5 },
-                              horizontalAlignment: "Left",
-                              verticalAlignment: "Center",
-                              margin: { left: 8 },
-                              style: {
-                                color: "#333333",
-                                fontSize: 20,
-                              },
+            return {
+              id: node.id,
+              annotations: node.visible
+                ? [
+                    ...(hasDragIcon
+                      ? [
+                          {
+                            id: `drag-handle-${node.id}`,
+                            content: "⠿",
+                            offset: { x: 0, y: 0.5 },
+                            horizontalAlignment: "Left",
+                            verticalAlignment: "Center",
+                            margin: { left: 8 },
+                            style: {
+                              color: "#333333",
+                              fontSize: 20,
                             },
-                          ]
-                        : []),
-                      {
-                        id: `label-${node.id}`,
-                        content: labelText,
-                        offset: {
-                          x: labelOffsetX,
-                          y: 0.5,
-                        },
-                        horizontalAlignment: "Left",
-                        verticalAlignment: "Center",
-                        margin: { left: 0, right: 0 },
-                        width: labelTextWidth,
-                        style: {
-                          color: shouldHighlight ? "#fff" : "#000000",
-                          fontSize: labelFontSize,
-                          whiteSpace: "Normal",
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                        },
+                          },
+                        ]
+                      : []),
+                    {
+                      id: `label-${node.id}`,
+                      content: labelText,
+                      offset: {
+                        x: labelOffsetX,
+                        y: 0.5,
                       },
-                    ]
-                  : [],
+                      horizontalAlignment: "Left",
+                      verticalAlignment: "Center",
+                      margin: { left: 0, right: 0 },
+                      width: labelTextWidth,
+                      style: {
+                        color: shouldHighlight ? "#fff" : "#000000",
+                        fontSize: labelFontSize,
+                        whiteSpace: "Normal",
+                        textOverflow: "ellipsis",
+                        overflow: "hidden",
+                      },
+                    },
+                  ]
+                : [],
 
-                width: estimatedWidth,
-                height: 40,
-                style: {
-                  fill: shouldHighlight ? "#660000" : "#f8f8f8",
-                  strokeColor: "#ccc",
-                  strokeWidth: 1,
-                },
-                constraints:
-                  NodeConstraints.Default | NodeConstraints.AllowDrop,
-                expandIcon: {
-                  shape: "Minus",
-                  width: 12,
-                  height: 12,
-                  horizontalAlignment: "Right",
-                  verticalAlignment: "Center",
-                  visible: hasAnyChildren && !hasVisibleChildren,
-                },
-                collapseIcon: {
-                  shape: "Plus",
-                  width: 12,
-                  height: 12,
-                  horizontalAlignment: "Right",
-                  verticalAlignment: "Center",
-                  visible: hasAnyChildren && hasVisibleChildren,
-                },
-                cornerRadius: 6,
-                shadow: { angle: 45, distance: 5, opacity: 0.1 },
-              };
-            })}
+              width: estimatedWidth,
+              height: 40,
+              style: {
+                fill: shouldHighlight ? "#660000" : "#f8f8f8",
+                strokeColor: "#ccc",
+                strokeWidth: 1,
+              },
+              constraints: NodeConstraints.Default | NodeConstraints.AllowDrop,
+              visible: node.visible,
+              expandIcon: {
+                shape: "Minus",
+                width: 12,
+                height: 12,
+                horizontalAlignment: "Right",
+                verticalAlignment: "Center",
+                visible: hasAnyChildren && !hasVisibleChildren,
+              },
+              collapseIcon: {
+                shape: "Plus",
+                width: 12,
+                height: 12,
+                horizontalAlignment: "Right",
+                verticalAlignment: "Center",
+                visible: hasAnyChildren && hasVisibleChildren,
+              },
+              cornerRadius: 6,
+              shadow: { angle: 45, distance: 5, opacity: 0.1 },
+            };
+          })}
           connectors={connectorsData}
           layout={LAYOUT_CONFIG}
           drop={onNodeDrop}
