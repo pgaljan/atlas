@@ -64,6 +64,7 @@ const Syncfusion = () => {
   const [nodesData, setNodesData] = useState([]);
   const [connectorsData, setConnectorsData] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
+  const [currentSearchTerm, setCurrentSearchTerm] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
   const [isLoading, setIsLoading] = useState(true);
@@ -360,8 +361,19 @@ const Syncfusion = () => {
     return null;
   };
 
+  const isNodeVisibleByExpandState = (nodeId) => {
+    let current = nodesMap[nodeId];
+    while (current?.parent) {
+      const parent = nodesMap[current.parent];
+      if (!parent?.isExpanded) return false;
+      current = parent;
+    }
+    return true;
+  };
+
   const handleSearch = (level, searchTerm) => {
     setSearchLoading(true);
+    setCurrentSearchTerm(searchTerm);
     setFilteredNodes(null);
     setHighlightedNodeId(null);
 
@@ -412,7 +424,9 @@ const Syncfusion = () => {
         ? n.name?.toLowerCase().includes(searchTerm.toLowerCase())
         : false;
 
-      return isLevelMatch ? levelMatch : nameMatch && levelMatch;
+      const matches = isLevelMatch ? levelMatch : nameMatch && levelMatch;
+
+      return matches && isNodeVisibleByExpandState(n.id);
     });
 
     if (!matchingNodes.length) {
@@ -528,6 +542,8 @@ const Syncfusion = () => {
               const labelOffsetX = hasDragIcon
                 ? (dragIconWidth + gap) / estimatedWidth
                 : padding / estimatedWidth;
+              const shouldHighlight =
+                highlightedNodeId === node.id && !!currentSearchTerm;
 
               return {
                 id: node.id,
@@ -561,8 +577,7 @@ const Syncfusion = () => {
                         margin: { left: 0, right: 0 },
                         width: labelTextWidth,
                         style: {
-                          color:
-                            highlightedNodeId === node.id ? "#ffffff" : "#333",
+                          color: shouldHighlight ? "#fff" : "#000000",
                           fontSize: labelFontSize,
                           whiteSpace: "Normal",
                           textOverflow: "ellipsis",
@@ -575,7 +590,7 @@ const Syncfusion = () => {
                 width: estimatedWidth,
                 height: 40,
                 style: {
-                  fill: highlightedNodeId === node.id ? "#660000" : "#f8f8f8",
+                  fill: shouldHighlight ? "#660000" : "#f8f8f8",
                   strokeColor: "#ccc",
                   strokeWidth: 1,
                 },
@@ -607,29 +622,29 @@ const Syncfusion = () => {
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
           selectionChange={onSelectionChange}
-          // expandStateChange={async (args) => {
-          //   const isExpanded = args.state;
-          //   const nodeId = args?.element?.id;
+          expandStateChange={async (args) => {
+            const isExpanded = args.state;
+            const nodeId = args?.element?.id;
 
-          //   if (!nodeId) return;
+            if (!nodeId) return;
 
-          //   try {
-          //     if (nodeId === structureId) {
-          //       await dispatch(
-          //         updateStructureExpandState({ id: nodeId, isExpanded })
-          //       ).unwrap();
-          //     } else {
-          //       await dispatch(
-          //         updateExpandState({ id: nodeId, isExpanded })
-          //       ).unwrap();
-          //     }
-          //   } catch (error) {
-          //     cogoToast.error(
-          //       `Failed to update expand state for node ${nodeId}`
-          //     );
-          //     console.error("Expand state update failed:", error);
-          //   }
-          // }}
+            try {
+              if (nodeId === structureId) {
+                await dispatch(
+                  updateStructureExpandState({ id: nodeId, isExpanded })
+                ).unwrap();
+              } else {
+                await dispatch(
+                  updateExpandState({ id: nodeId, isExpanded })
+                ).unwrap();
+              }
+            } catch (error) {
+              cogoToast.error(
+                `Failed to update expand state for node ${nodeId}`
+              );
+              console.error("Expand state update failed:", error);
+            }
+          }}
           getNodeDefaults={(node) => node}
         >
           <Inject services={[DataBinding, HierarchicalTree, UndoRedo]} />
