@@ -69,7 +69,7 @@ const Syncfusion = () => {
   const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
   const [isLoading, setIsLoading] = useState(true);
   const [diagramKey, setDiagramKey] = useState(0);
-  const [filteredNodes, setFilteredNodes] = useState(null);
+  const [noResults, setNoResults] = useState(false);
   const [treeData, setTreeData] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
@@ -374,7 +374,7 @@ const Syncfusion = () => {
   const handleSearch = (level, searchTerm) => {
     setSearchLoading(true);
     setCurrentSearchTerm(searchTerm);
-    setFilteredNodes(null);
+    setNoResults(null);
     setHighlightedNodeId(null);
 
     const isLevelOnlySearch = level !== null && !searchTerm?.trim();
@@ -430,7 +430,8 @@ const Syncfusion = () => {
     });
 
     if (!matchingNodes.length) {
-      setFilteredNodes("no-results");
+      setNoResults(true);
+      setDiagramKey((prev) => prev + 1);
       setSearchLoading(false);
       return;
     }
@@ -689,7 +690,7 @@ const Syncfusion = () => {
         />
       )}
 
-      {filteredNodes === "no-results" && !isLoading && (
+      {noResults && !isLoading && (
         <div className="absolute top-[15%] left-[37%] transform -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded z-50">
           No matching elements found.
         </div>
