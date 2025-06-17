@@ -617,29 +617,29 @@ const Syncfusion = () => {
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
           selectionChange={onSelectionChange}
-          // expandStateChange={async (args) => {
-          //   const isExpanded = args.state;
-          //   const nodeId = args?.element?.id;
+          expandStateChange={async (args) => {
+            const isExpanded = args.state;
+            const nodeId = args?.element?.id;
 
-          //   if (!nodeId) return;
+            if (!nodeId) return;
 
-          //   try {
-          //     if (nodeId === structureId) {
-          //       await dispatch(
-          //         updateStructureExpandState({ id: nodeId, isExpanded })
-          //       ).unwrap();
-          //     } else {
-          //       await dispatch(
-          //         updateExpandState({ id: nodeId, isExpanded })
-          //       ).unwrap();
-          //     }
-          //   } catch (error) {
-          //     cogoToast.error(
-          //       `Failed to update expand state for node ${nodeId}`
-          //     );
-          //     console.error("Expand state update failed:", error);
-          //   }
-          // }}
+            // try {
+            //   if (nodeId === structureId) {
+            //     await dispatch(
+            //       updateStructureExpandState({ id: nodeId, isExpanded })
+            //     ).unwrap();
+            //   } else {
+            //     await dispatch(
+            //       updateExpandState({ id: nodeId, isExpanded })
+            //     ).unwrap();
+            //   }
+            // } catch (error) {
+            //   cogoToast.error(
+            //     `Failed to update expand state for node ${nodeId}`
+            //   );
+            //   console.error("Expand state update failed:", error);
+            // }
+          }}
           getNodeDefaults={(node) => node}
         >
           <Inject services={[DataBinding, HierarchicalTree, UndoRedo]} />
