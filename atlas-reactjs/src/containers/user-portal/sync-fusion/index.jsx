@@ -57,9 +57,10 @@ const Syncfusion = () => {
   const dispatch = useDispatch();
   const diagramRef = useRef(null);
   const dragInProgress = useRef(false);
-
   const { structureId } = useParams();
+  const [highlightedNodeId, setHighlightedNodeId] = useState(null);
   const [showWbs, setShowWbsState] = useState(false);
+  const [wbsStart, setWbsStart] = useState(1);
   const [nodesData, setNodesData] = useState([]);
   const [connectorsData, setConnectorsData] = useState([]);
   const [selectedNode, setSelectedNode] = useState(null);
@@ -68,14 +69,21 @@ const Syncfusion = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [diagramKey, setDiagramKey] = useState(0);
   const [filteredNodes, setFilteredNodes] = useState(null);
+  const [treeData, setTreeData] = useState(null);
   const [searchLoading, setSearchLoading] = useState(false);
 
   const fetchStructure = async () => {
     setIsLoading(true);
     try {
       const structure = await dispatch(getStructure(structureId)).unwrap();
-
+      const startValue = structure?.wbsStart || 1;
+      setWbsStart(startValue);
       setShowWbsState(structure.markmapShowWbs);
+
+      setTreeData({
+        content: structure?.name || "Main",
+        children: structure?.elements || [],
+      });
 
       const rootNode = {
         id: structure?.id,
@@ -83,9 +91,8 @@ const Syncfusion = () => {
         parent: null,
         isExpanded: structure?.isExpanded ?? true,
         visible: true,
+        level: 0,
       };
-
-      console.log(rootNode);
 
       const flattenElements = (
         elements,
@@ -96,6 +103,7 @@ const Syncfusion = () => {
 
         for (let element of elements) {
           const shouldRenderChildren = parentExpanded && element.isExpanded;
+          const level = parentId ? getNodeLevel(parentId, nodesMap) + 1 : 0;
 
           flatNodes.push({
             id: element?.id,
@@ -104,8 +112,8 @@ const Syncfusion = () => {
             isExpanded: element?.isExpanded ?? true,
             visible: parentExpanded,
             recordId: element?.recordId || null,
+            level,
           });
-
 
           if (Array.isArray(element.children) && element.children.length > 0) {
             flatNodes.push(
@@ -128,7 +136,13 @@ const Syncfusion = () => {
       );
       const fullNodes = [rootNode, ...nodes];
       const visibleNodes = fullNodes.filter((n) => n.visible);
-      const connectors = createConnectors(visibleNodes);
+      const visibleNodeIds = new Set(
+        fullNodes.filter((n) => n.visible).map((n) => n.id)
+      );
+      const connectors = createConnectors(fullNodes).filter(
+        (conn) =>
+          visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
+      );
 
       setNodesData(fullNodes);
       setConnectorsData(connectors);
@@ -257,6 +271,7 @@ const Syncfusion = () => {
     if (!diagramRef.current) return;
     diagramRef.current.zoomTo({ type: "ZoomIn", zoomFactor: 0.2 });
   };
+
   const handleZoomOut = () => {
     if (!diagramRef.current) return;
     diagramRef.current.zoomTo({ type: "ZoomOut", zoomFactor: 0.2 });
@@ -271,77 +286,171 @@ const Syncfusion = () => {
       const diagram = diagramRef.current;
       if (!diagram) return;
 
-      const draggedNodeId = args.element.id;
-      const targetNodeId = args.target.id;
+      const draggedNodeId = args.element?.id;
+      const targetNodeId = args.target?.id;
 
-      if (dragInProgress.current) return;
+      if (dragInProgress.current || !draggedNodeId || !targetNodeId) return;
 
-      if (
-        draggedNodeId !== targetNodeId &&
-        !isDescendant(draggedNodeId, targetNodeId, nodesData)
-      ) {
-        dragInProgress.current = true;
+      if (draggedNodeId === targetNodeId) return;
 
-        const reparentingRequest = {
-          sourceElementId: targetNodeId,
-          targetElementId: draggedNodeId,
-          attributes: {
-            structureId: structureId,
-          },
-        };
+      const isTargetRoot = targetNodeId === structureId;
+      const isDroppingOnDescendant = isDescendant(
+        draggedNodeId,
+        targetNodeId,
+        nodesData
+      );
 
-        try {
-          await dispatch(
-            reparentElements({ reparentingRequests: [reparentingRequest] })
-          ).unwrap();
+      if (isDroppingOnDescendant) {
+        cogoToast.error("Cannot reparent to a descendant node.");
+        return;
+      }
 
-          await fetchStructure();
-          cogoToast.success("Element reparented successfully.");
-        } catch (error) {
-          cogoToast.error("Failed to reparent element.");
-        } finally {
-          setTimeout(() => {
-            dragInProgress.current = false;
-          }, 300);
-        }
+      dragInProgress.current = true;
+
+      const reparentingRequest = {
+        sourceElementId: isTargetRoot ? null : targetNodeId,
+        targetElementId: draggedNodeId,
+        attributes: {
+          structureId,
+        },
+      };
+
+      try {
+        await dispatch(
+          reparentElements({ reparentingRequests: [reparentingRequest] })
+        ).unwrap();
+
+        await fetchStructure();
+        cogoToast.success("Element reparented successfully.");
+      } catch (error) {
+        cogoToast.error("Failed to reparent element.");
+      } finally {
+        setTimeout(() => {
+          dragInProgress.current = false;
+        }, 300);
       }
     },
     [dispatch, nodesData, structureId]
   );
 
-  const filterTreeByCriteria = (node, nodesMap, level, searchTerm) => {
+  const filterTreeByCriteria = (node, level, searchTerm, currentLevel = 0) => {
     if (!node) return null;
 
-    const matchesLevel =
-      level !== null && getNodeLevel(node?.id, nodesMap) === level;
     const lowerSearch = searchTerm?.toLowerCase();
+    const matchesLevel = level !== null && currentLevel === level;
     const matchesText = lowerSearch
       ? node?.name?.toLowerCase().includes(lowerSearch)
       : false;
 
-    const children = Object.values(nodesMap).filter(
-      (n) => n.parent === node?.id
-    );
-    const filteredChildren = children
-      .map((child) => filterTreeByCriteria(child, nodesMap, level, searchTerm))
+    const filteredChildren = (node.children || [])
+      .map((child) =>
+        filterTreeByCriteria(child, level, searchTerm, currentLevel + 1)
+      )
       .filter(Boolean);
 
-    return matchesLevel || matchesText || filteredChildren.length
-      ? { ...node, children: filteredChildren }
-      : null;
+    if (matchesLevel || matchesText || filteredChildren.length > 0) {
+      if (matchesText && !highlightedNodeId) setHighlightedNodeId(node.id);
+      return {
+        ...node,
+        visible: true,
+        children: filteredChildren,
+      };
+    }
+
+    return null;
   };
 
   const handleSearch = (level, searchTerm) => {
     setSearchLoading(true);
-    const root = nodesMap[structureId];
-    const result =
-      level === null && !searchTerm?.trim()
-        ? null
-        : filterTreeByCriteria(root, nodesMap, level, searchTerm) ||
-          "no-results";
+    setFilteredNodes(null);
+    setHighlightedNodeId(null);
 
-    setSearchLoading(false);
-    setFilteredNodes(result);
+    const isLevelOnlySearch = level !== null && !searchTerm?.trim();
+
+    if (!isLevelOnlySearch && !searchTerm?.trim()) {
+      const visibleIds = new Set();
+
+      const markVisible = (nodeId) => {
+        const node = nodesMap[nodeId];
+        if (!node) return;
+
+        visibleIds.add(nodeId);
+        if (node.isExpanded) {
+          nodesData
+            .filter((n) => n.parent === nodeId)
+            .forEach((child) => markVisible(child.id));
+        }
+      };
+
+      markVisible(structureId);
+
+      const resetNodes = nodesData.map((n) => ({
+        ...n,
+        visible: visibleIds.has(n.id),
+      }));
+
+      setNodesData(resetNodes);
+
+      const visibleNodes = resetNodes.filter((n) => n.visible);
+      const connectors = createConnectors(visibleNodes).filter(
+        (conn) =>
+          visibleNodes.some((n) => n.id === conn.sourceID) &&
+          visibleNodes.some((n) => n.id === conn.targetID)
+      );
+      setConnectorsData(connectors);
+
+      setSearchLoading(false);
+      setDiagramKey((prev) => prev + 1);
+      return;
+    }
+
+    // STEP 1: Find matching node IDs
+    const matchingNodes = nodesData.filter((n) => {
+      const isLevelMatch = level !== null && searchTerm?.trim() === "";
+      const levelMatch = level === null || n.level === level;
+      const nameMatch = searchTerm
+        ? n.name?.toLowerCase().includes(searchTerm.toLowerCase())
+        : false;
+
+      return isLevelMatch ? levelMatch : nameMatch && levelMatch;
+    });
+
+    if (!matchingNodes.length) {
+      setFilteredNodes("no-results");
+      setSearchLoading(false);
+      return;
+    }
+
+    const visibleIds = new Set();
+
+    const includeParents = (nodeId) => {
+      visibleIds.add(nodeId);
+      const parentId = nodesMap[nodeId]?.parent;
+      if (parentId) includeParents(parentId);
+    };
+
+    for (const match of matchingNodes) {
+      includeParents(match.id);
+    }
+
+    setHighlightedNodeId(matchingNodes[0].id);
+
+    // STEP 3: Update node visibility
+    const updated = nodesData.map((n) => ({
+      ...n,
+      visible: visibleIds.has(n.id),
+    }));
+    setNodesData(updated);
+
+    const visibleNodes = updated.filter((n) => n.visible);
+    const connectors = createConnectors(visibleNodes).filter(
+      (conn) =>
+        visibleNodes.some((n) => n.id === conn.sourceID) &&
+        visibleNodes.some((n) => n.id === conn.targetID)
+    );
+    setDiagramKey((prev) => prev + 1);
+
+    setConnectorsData(connectors);
   };
 
   const flattenFilteredTree = (node) => {
@@ -367,6 +476,9 @@ const Syncfusion = () => {
             onSuccess={fetchStructure}
             structureId={structureId}
             showWbs={showWbs}
+            wbsStart={wbsStart}
+            setWbsStart={setWbsStart}
+            treeData={treeData}
             setShowWbs={handleSetShowWbs}
             onSearch={handleSearch}
           />
@@ -378,47 +490,94 @@ const Syncfusion = () => {
           ref={diagramRef}
           width="100%"
           height="1000px"
-          nodes={(filteredNodes === "no-results"
-            ? []
-            : filteredNodes
-            ? flattenFilteredTree(filteredNodes)
-            : nodesData
-          )
-            .filter(
-              (n) =>
-                n.visible || nodesData.some((child) => child.parent === n.id)
-            )
+          pageSettings={{
+            background: {
+              color: "white",
+            },
+          }}
+          nodes={nodesData
+            .filter((n) => {
+              const hasVisibleChild = nodesData.some(
+                (child) => child.parent === n.id && child.visible
+              );
+              return n.visible || hasVisibleChild || n.id === structureId;
+            })
             .map((node) => {
               const children = nodesData.filter((n) => n.parent === node.id);
               const hasAnyChildren = children.length > 0;
               const hasVisibleChildren = children.some((c) => c.visible);
 
               const wbsPrefix = showWbs
-                ? `${generateWBSNumber(node.id, nodesData)} - `
+                ? `${generateWBSNumber(node.id, nodesData, wbsStart)} - `
                 : "";
+              const hasDragIcon = node.id !== structureId;
 
+              const labelFontSize = 20;
+              const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
               const labelText = `${wbsPrefix}${node.name}`;
+              const labelTextWidth = getTextWidth(labelText, labelFont);
 
-              const estimatedWidth = Math.max(getTextWidth(labelText), 60);
+              const dragIconWidth = 20;
+              const gap = 10;
+              const padding = 5;
+
+              const estimatedWidth = hasDragIcon
+                ? dragIconWidth + gap + labelTextWidth + padding
+                : labelTextWidth + padding;
+
+              const labelOffsetX = hasDragIcon
+                ? (dragIconWidth + gap) / estimatedWidth
+                : padding / estimatedWidth;
 
               return {
                 id: node.id,
                 annotations: node.visible
                   ? [
+                      ...(hasDragIcon
+                        ? [
+                            {
+                              id: `drag-handle-${node.id}`,
+                              content: "⠿",
+                              offset: { x: 0, y: 0.5 },
+                              horizontalAlignment: "Left",
+                              verticalAlignment: "Center",
+                              margin: { left: 8 },
+                              style: {
+                                color: "#333333",
+                                fontSize: 20,
+                              },
+                            },
+                          ]
+                        : []),
                       {
+                        id: `label-${node.id}`,
                         content: labelText,
+                        offset: {
+                          x: labelOffsetX,
+                          y: 0.5,
+                        },
+                        horizontalAlignment: "Left",
+                        verticalAlignment: "Center",
+                        margin: { left: 0, right: 0 },
+                        width: labelTextWidth,
                         style: {
-                          color: "#333",
-                          fontSize: 20,
+                          color:
+                            highlightedNodeId === node.id ? "#ffffff" : "#333",
+                          fontSize: labelFontSize,
+                          whiteSpace: "Normal",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
                         },
                       },
                     ]
                   : [],
+
                 width: estimatedWidth,
-                height: 60,
+                height: 40,
                 style: {
-                  fill: "transparent",
-                  strokeColor: "transparent",
+                  fill: highlightedNodeId === node.id ? "#660000" : "#f8f8f8",
+                  strokeColor: "#ccc",
+                  strokeWidth: 1,
                 },
                 constraints:
                   NodeConstraints.Default | NodeConstraints.AllowDrop,
@@ -507,7 +666,7 @@ const Syncfusion = () => {
               : nodesMap[selectedNode?.id]?.id
           }
           elementId={selectedNode?.id}
-          wbs={generateWBSNumber(selectedNode?.id, nodesData)}
+          wbs={generateWBSNumber(selectedNode?.id, nodesData, wbsStart)}
           structureName={nodesMap[structureId]?.name || "Structure"}
           onSuccess={() => {
             handleNodeUpdate();
@@ -515,9 +674,9 @@ const Syncfusion = () => {
         />
       )}
 
-      {filteredNodes === "no-results" && (
-        <div className="absolute inset-0 flex items-center justify-center text-gray-500 z-50 bg-white bg-opacity-75">
-          No elements found.
+      {filteredNodes === "no-results" && !isLoading && (
+        <div className="absolute top-[15%] left-[37%] transform -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded z-50">
+          No matching elements found.
         </div>
       )}
 

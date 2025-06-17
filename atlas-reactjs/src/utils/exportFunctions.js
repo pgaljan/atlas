@@ -1,14 +1,14 @@
 import cogoToast from "@successtar/cogo-toast";
+import * as d3 from "d3";
+import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import JSZip from "jszip";
-import * as d3 from "d3";
+import { extractTextForPdfPreview } from "../utils/exportFunctionHelpers";
 import {
   assignNodeColors,
   assignWbsNumbers,
   treeToMarkmapData,
 } from "../utils/markmapHelpers";
-import { toPng } from "html-to-image";
-import { extractTextForPdfPreview } from "../utils/exportFunctionHelpers";
 
 export const sanitizeTreeData = (node) => {
   return {
@@ -20,7 +20,14 @@ export const sanitizeTreeData = (node) => {
   };
 };
 
-export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
+export const exportAsDoc = (
+  treeData,
+  showWbs,
+  includeWbs,
+  includeTags,
+  colorStrategy,
+  isMarkmap = false
+) => {
   if (!treeData || !treeData.children || treeData.children.length === 0) {
     cogoToast.warn("No elements found to export.");
     return;
@@ -135,11 +142,21 @@ export const exportAsDoc = (treeData, showWbs, includeWbs, includeTags) => {
     }
 
     const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-    treeData.children.forEach((topLevelNode, index) => {
-      const color = colorScale(index);
-      assignNodeColors(topLevelNode, () => color);
-    });
+    const defaultStrategy = (index) => colorScale(index);
 
+    if (isMarkmap) {
+      treeData.children.forEach((topLevelNode, index) => {
+        const color = defaultStrategy(index);
+        assignNodeColors(topLevelNode, () => color);
+      });
+    } else {
+      if (typeof colorStrategy === "function") {
+        treeData.children.forEach((topLevelNode, index) => {
+          const color = colorStrategy(index);
+          assignNodeColors(topLevelNode, () => color);
+        });
+      }
+    }
     const markmapData = treeToMarkmapData(treeData, showWbs, includeWbs);
 
     const htmlContent = `
@@ -202,7 +219,9 @@ export const exportAsPdf = async (
   treeData,
   showWbs,
   includeWbs,
-  includeTags
+  includeTags,
+  colorStrategy,
+  isMarkmap = false
 ) => {
   if (!treeData || !treeData.children || treeData.children.length === 0) {
     cogoToast.warn("No elements found to export.");
@@ -210,7 +229,6 @@ export const exportAsPdf = async (
   }
   const zip = new JSZip();
   const now = new Date();
-  const timestamp = now.toLocaleString();
   const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
   const structureTitle =
     treeData && treeData.content ? treeData.content : "Markmap Export";
@@ -452,7 +470,6 @@ export const exportAsPdf = async (
         }
       }
 
-      // Include tags if requested
       if (includeTags && recordTags) {
         const lineHeight = 10;
         if (yOffset + lineHeight > MAX_Y) {
@@ -479,10 +496,23 @@ export const exportAsPdf = async (
   }
 
   const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-  treeData.children.forEach((topLevelNode, index) => {
-    const color = colorScale(index);
-    assignNodeColors(topLevelNode, () => color);
-  });
+  const defaultStrategy = (index) => colorScale(index);
+
+  if (isMarkmap) {
+    // Apply default color strategy ONLY for markmap
+    treeData.children.forEach((topLevelNode, index) => {
+      const color = defaultStrategy(index);
+      assignNodeColors(topLevelNode, () => color);
+    });
+  } else {
+    // Apply provided color strategy for Syncfusion
+    if (typeof colorStrategy === "function") {
+      treeData.children.forEach((topLevelNode, index) => {
+        const color = colorStrategy(index);
+        assignNodeColors(topLevelNode, () => color);
+      });
+    }
+  }
 
   const markmapData = treeToMarkmapData(treeData, showWbs, includeWbs);
 
@@ -537,76 +567,6 @@ export const exportAsPdf = async (
     .catch((error) => {
       cogoToast.error("Failed to generate ZIP file.");
     });
-};
-
-export const exportAsHtml = (treeData, showWbs, includeWbs) => {
-  if (!treeData) {
-    cogoToast.warn("No tree data found to export.");
-    return;
-  }
-
-  const treeWithWbs =
-    showWbs || includeWbs ? assignWbsNumbers(treeData) : treeData;
-
-  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
-  if (treeWithWbs.children && treeWithWbs.children.length > 0) {
-    treeWithWbs.children.forEach((topLevelNode, index) => {
-      const color = colorScale(index);
-      assignNodeColors(topLevelNode, () => color);
-    });
-  }
-
-  const markmapData = treeToMarkmapData(treeWithWbs, showWbs, includeWbs);
-
-  const structureTitle =
-    treeData && treeData.content ? treeData.content : "Markmap Export";
-  const now = new Date();
-  const timestamp = now.toLocaleString();
-  const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
-
-  const htmlContent = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>${structureTitle}</title>
-    <style>
-      * { margin: 0; padding: 0; }
-      #mindmap { display: block; width: 100vw; height: 100vh; }
-    </style>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/style.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.18/dist/katex.min.css" />
-  </head>
-  <body>
-    <h1>${structureTitle}</h1>
-   <!-- <p>Exported on: ${timestamp}</p> -->
-    <svg id="mindmap"></svg>
-    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.8/dist/browser/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/index.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
-    <script>
-      window.onload = function () {
-        const data = ${JSON.stringify(markmapData, null, 2)};
-        const markmapInstance = window.markmap.Markmap.create("#mindmap", {
-          color: node => node.color || "#1f77b4"
-        }, data);
-      };
-    </script>
-  </body>
-</html>
-  `;
-
-  const blob = new Blob([htmlContent], { type: "text/html" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `${structureTitle.replace(
-    /\s+/g,
-    "_"
-  )}_${filenameTimestamp}_export.html`;
-  link.click();
 };
 
 export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
@@ -747,7 +707,6 @@ export const exportAsSinglePdf = async (
   }
 
   const now = new Date();
-  const timestamp = now.toLocaleString();
   const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
   const structureTitle = treeData?.content || "Markmap Export";
 
@@ -982,4 +941,85 @@ export const exportAsSinglePdf = async (
   }
 
   doc.save(`${structureTitle.replace(/\s+/g, "_")}_${filenameTimestamp}.pdf`);
+};
+
+export const exportAsHtml = (
+  treeData,
+  showWbs,
+  includeWbs,
+  colorStrategy,
+  isMarkmap = false
+) => {
+  if (!treeData) {
+    cogoToast.warn("No tree data found to export.");
+    return;
+  }
+
+  const treeWithWbs =
+    showWbs || includeWbs ? assignWbsNumbers(treeData) : treeData;
+
+  const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+  const defaultStrategy = (index) => colorScale(index);
+
+  const colorSource = treeWithWbs?.children || [];
+
+  if (isMarkmap) {
+    colorSource.forEach((topLevelNode, index) => {
+      const color = defaultStrategy(index);
+      assignNodeColors(topLevelNode, () => color);
+    });
+  } else if (typeof colorStrategy === "function") {
+    colorSource.forEach((topLevelNode, index) => {
+      const color = colorStrategy(index);
+      assignNodeColors(topLevelNode, () => color);
+    });
+  }
+
+  const markmapData = treeToMarkmapData(treeWithWbs, showWbs, includeWbs);
+  const structureTitle = treeData?.content || "Markmap Export";
+  const now = new Date();
+  const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
+
+  const htmlContent = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>${structureTitle}</title>
+    <style>
+      * { margin: 0; padding: 0; }
+      #mindmap { display: block; width: 100vw; height: 100vh; }
+    </style>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/style.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.18/dist/katex.min.css" />
+  </head>
+  <body>
+    <h1>${structureTitle}</h1>
+    <svg id="mindmap"></svg>
+    <script src="https://cdn.jsdelivr.net/npm/d3@7.9.0/dist/d3.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-view@0.18.8/dist/browser/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.18.8/dist/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/webfontloader@1.6.28/webfontloader.js" defer></script>
+    <script>
+      window.onload = function () {
+        const data = ${JSON.stringify(markmapData, null, 2)};
+        const markmapInstance = window.markmap.Markmap.create("#mindmap", {
+          color: node => node.color || "#1f77b4"
+        }, data);
+      };
+    </script>
+  </body>
+</html>
+  `;
+
+  const blob = new Blob([htmlContent], { type: "text/html" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = `${structureTitle.replace(
+    /\s+/g,
+    "_"
+  )}_${filenameTimestamp}_export.html`;
+  link.click();
 };

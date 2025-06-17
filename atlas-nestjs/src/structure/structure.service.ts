@@ -421,4 +421,43 @@ export class StructureService {
       throw new InternalServerErrorException('Error updating expand state');
     }
   }
+
+  async updateWbsStart(structureId: string, wbsStart: number) {
+    const structure = await this.prisma.structure.findUnique({
+      where: { id: structureId },
+    });
+
+    if (!structure) {
+      throw new NotFoundException(`Structure with id ${structureId} not found`);
+    }
+
+    try {
+      const updatedStructure = await this.prisma.structure.update({
+        where: { id: structureId },
+        data: {
+          wbsStart,
+          updatedAt: new Date(),
+        },
+      });
+
+      await this.prisma.auditLog.create({
+        data: {
+          action: 'UPDATE',
+          element: 'Structure',
+          elementId: structureId,
+          details: {
+            previousData: { wbsStart: structure.wbsStart },
+            updatedData: { wbsStart },
+          },
+          userId: structure.ownerId,
+        },
+      });
+
+      return updatedStructure;
+    } catch (error) {
+      throw new InternalServerErrorException(
+        `Failed to update WBS Start: ${error.message}`,
+      );
+    }
+  }
 }

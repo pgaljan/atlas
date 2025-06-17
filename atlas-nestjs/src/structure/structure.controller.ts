@@ -153,4 +153,26 @@ export class StructureController {
       throw new InternalServerErrorException('Error updating expand state');
     }
   }
+
+  @Put('wbs-start/:id')
+  async updateWbsStart(
+    @Param('id') id: string,
+    @Body() body: { wbsStart: number },
+  ) {
+    try {
+      const updated = await this.structureService.updateWbsStart(
+        id,
+        body.wbsStart,
+      );
+      return {
+        message: 'WBS Start updated successfully',
+        structure: updated,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to update WBS Start: ${error.message}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
 }

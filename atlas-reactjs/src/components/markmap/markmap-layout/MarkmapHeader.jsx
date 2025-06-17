@@ -1,11 +1,15 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { BiRedo, BiSearch, BiUndo, BiUser } from "react-icons/bi";
 import { FaUserPlus } from "react-icons/fa";
 import { LuDatabaseBackup } from "react-icons/lu";
 import { RiDownloadCloud2Line } from "react-icons/ri";
-import { TbWorldUpload } from "react-icons/tb";
+import {
+  TbLayoutSidebarLeftCollapse,
+  TbLayoutSidebarLeftExpand,
+  TbWorldUpload,
+} from "react-icons/tb";
 import { VscGitPullRequestCreate } from "react-icons/vsc";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
@@ -17,13 +21,14 @@ import { restoreBackup } from "../../../redux/slices/restore-backups";
 import {
   getStructure,
   updateStructure,
+  updateWbsStart,
 } from "../../../redux/slices/structures";
 import ExportModalStructure from "../../modals/ExportModalStructure";
 import ImportModal from "../../modals/ImportModal";
 import ShareModal from "../../modals/ShareModal";
 import UserPopover from "../../modals/UserPopover";
 import Tooltip from "../../tooltip/Tooltip";
-import { useLocation } from "react-router-dom";
+import WbsModeModal from "../../modals/WbsModeModal";
 
 const MarkmapHeader = ({
   undo,
@@ -37,23 +42,24 @@ const MarkmapHeader = ({
   onSuccess,
   onExportModal,
   treeData,
+  wbsStart,
+  setWbsStart,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const wbsStartDebounceTimer = useRef(null);
   const [isUserPopoverVisible, setIsUserPopoverVisible] = useState(false);
   const [title, setTitle] = useState("");
+  const [isWbsModalOpen, setIsWbsModalOpen] = useState(false);
+  const [wbsMode, setWbsMode] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaveDisabled, setIsSaveDisabled] = useState(true);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [isImportModalOpen, setIsImportModalOpen] = useState(false);
   const [searchValue, setSearchValue] = useState("");
   const [isExportModal, setIsExportModal] = useState(false);
+  const [isHeaderVisible, setIsHeaderVisible] = useState(false);
   const [appName, setAppName] = useState("ATLAS");
-  const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const isSyncfusionRenderer = searchParams
-    .get("renderer")
-    .includes("syncfusion");
 
   // Feature flags
   const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
@@ -242,27 +248,144 @@ const MarkmapHeader = ({
     loadSettings();
   }, [dispatch]);
 
+  useEffect(() => {
+    if (structureId) {
+      const savedState = localStorage.getItem(`markMap_header_${structureId}`);
+      setIsHeaderVisible(savedState === "true");
+    }
+  }, [structureId]);
+
+  const toggleSidebar = () => {
+    const newState = !isHeaderVisible;
+    setIsHeaderVisible(newState);
+    if (structureId) {
+      localStorage.setItem(
+        `markMap_header_${structureId}`,
+        newState.toString()
+      );
+    }
+  };
+
   const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen);
   const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen);
 
-  return (
-    <div className="absolute top-4 left-0 w-full flex items-center px-4 py-2 z-50">
-      <div className="flex items-center w-full justify-between">
-        <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
-          <Link to="/app/dashboard">
-            <h1 className="text-2xl font-bold text-[#660000] uppercase">
-              {appName}
-            </h1>
-          </Link>
-          <input
-            type="text"
-            value={title}
-            onChange={handleTitleChange}
-            onKeyDown={handleTitleKeyDown}
-            className="structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all "
-          />
+  useEffect(() => {
+    const mode = localStorage.getItem(`wbs_mode_${structureId}`);
+    if (mode) setWbsMode(mode);
+  }, [structureId]);
 
-          {/* <Tooltip label="Undo">
+  const handleWbsToggle = async (checked) => {
+    if (checked) {
+      setIsWbsModalOpen(true);
+    } else {
+      try {
+        await dispatch(
+          updateStructure({
+            id: structureId,
+            updateData: { showWbs: false },
+          })
+        );
+        setShowWbs(false);
+      } catch (err) {
+        cogoToast.error("Failed to disable WBS view.");
+      }
+    }
+  };
+
+  const handleWbsModeSelect = async (mode) => {
+    setIsWbsModalOpen(false);
+    setWbsMode(mode);
+    localStorage.setItem(`wbs_mode_${structureId}`, mode);
+
+    try {
+      // Enable WBS in backend
+      await dispatch(
+        updateStructure({
+          id: structureId,
+          updateData: { showWbs: true },
+        })
+      );
+      setShowWbs(true);
+      if (mode === "auto") {
+        await dispatch(updateWbsStart({ id: structureId, wbsStart: 1 }));
+        onSuccess?.();
+        cogoToast.success("WBS set to auto start from 1.");
+      }
+    } catch (err) {
+      cogoToast.error("Failed to enable WBS.");
+    }
+  };
+
+  const handleWbsStartChange = (e) => {
+    const newValue = parseInt(e.target.value || "1", 10);
+    setWbsStart(newValue);
+
+    // Clear the existing timeout
+    if (wbsStartDebounceTimer.current) {
+      clearTimeout(wbsStartDebounceTimer.current);
+    }
+
+    // Debounce the dispatch
+    wbsStartDebounceTimer.current = setTimeout(async () => {
+      try {
+        await dispatch(updateWbsStart({ id: structureId, wbsStart: newValue }));
+        onSuccess();
+        cogoToast.success("WBS Start value updated!");
+      } catch (error) {
+        cogoToast.error("Failed to update WBS Start.");
+      }
+    }, 800);
+  };
+
+  useEffect(() => {
+    return () => {
+      if (wbsStartDebounceTimer.current) {
+        clearTimeout(wbsStartDebounceTimer.current);
+      }
+    };
+  }, []);
+
+  return (
+    <>
+      <div
+        className="absolute top-10 left-2    bg-slate-200 rounded-lg cursor-pointer"
+        onClick={toggleSidebar}
+      >
+        <Tooltip label="Toolbar">
+          <button className="flex items-center justify-center w-10 h-10">
+            {isHeaderVisible ? (
+              <TbLayoutSidebarLeftCollapse
+                size={32}
+                className="text-custom-main"
+              />
+            ) : (
+              <TbLayoutSidebarLeftExpand
+                size={32}
+                className="text-custom-main"
+              />
+            )}
+          </button>
+        </Tooltip>
+      </div>
+      {isHeaderVisible && (
+        <div className="absolute top-4 left-14 right-0 flex items-center pr-3  py-2 z-50">
+          {/* All your existing header content here */}
+          <div className="flex items-center w-full justify-between">
+            <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
+              <Link to="/app/dashboard">
+                <h1 className="text-2xl font-bold text-[#660000] uppercase">
+                  {appName}
+                </h1>
+              </Link>
+              <input
+                type="text"
+                value={title}
+                onChange={handleTitleChange}
+                onKeyDown={handleTitleKeyDown}
+                className="structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all "
+              />
+
+              {/* <Tooltip label="Undo">
             <button
               className="p-2 hover:bg-gray-100 rounded-full"
               aria-label="Undo"
@@ -290,149 +413,168 @@ const MarkmapHeader = ({
             </button>
           </Tooltip> */}
 
-          <Tooltip label="Import Backups">
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Import Backups"
-              disabled={isSyncfusionRenderer}
-              onClick={() =>
-                handleFeatureClick(canRestoreBackup, toggleImportModal)
-              }
-            >
-              <VscGitPullRequestCreate size={24} className="text-custom-main" />
-            </button>
-          </Tooltip>
+              <Tooltip label="Import Backups">
+                <button
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                  aria-label="Import Backups"
+                  onClick={() =>
+                    handleFeatureClick(canRestoreBackup, toggleImportModal)
+                  }
+                >
+                  <VscGitPullRequestCreate
+                    size={24}
+                    className="text-custom-main"
+                  />
+                </button>
+              </Tooltip>
 
-          <Tooltip label="Create Backup">
-            {isLoading ? (
-              <button
-                disabled={true}
-                className="p-2 hover:bg-gray-100 rounded-full"
-                aria-label="Create Backup"
-              >
-                <Icons.LoadingIcon />
-              </button>
-            ) : (
-              <button
-                disabled={isLoading || isSyncfusionRenderer}
-                onClick={() =>
-                  handleFeatureClick(canRestoreBackup, handleCreateBackup)
-                }
-                className="p-2 hover:bg-gray-100 rounded-full"
-                aria-label="Create Backup"
-              >
-                <RiDownloadCloud2Line size={26} className="text-custom-main" />
-              </button>
-            )}
-          </Tooltip>
+              <Tooltip label="Create Backup">
+                {isLoading ? (
+                  <button
+                    disabled={true}
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                    aria-label="Create Backup"
+                  >
+                    <Icons.LoadingIcon />
+                  </button>
+                ) : (
+                  <button
+                    disabled={isLoading}
+                    onClick={() =>
+                      handleFeatureClick(canRestoreBackup, handleCreateBackup)
+                    }
+                    className="p-2 hover:bg-gray-100 rounded-full"
+                    aria-label="Create Backup"
+                  >
+                    <RiDownloadCloud2Line
+                      size={26}
+                      className="text-custom-main"
+                    />
+                  </button>
+                )}
+              </Tooltip>
 
-          <Tooltip label="Save">
-            <button
-              disabled={isSaveDisabled}
-              className={`p-3 rounded-full ${
-                isSaveDisabled
-                  ? "text-gray-400 cursor-not-allowed"
-                  : "hover:bg-gray-100 text-custom-main cursor-pointer"
-              }`}
-              aria-label="Save"
-            >
-              <TbWorldUpload
-                size={24}
-                className={`${
-                  isSaveDisabled
-                    ? "text-gray-400 cursor-not-allowed"
-                    : "text-custom-main"
-                }`}
-              />
-            </button>
-          </Tooltip>
+              <Tooltip label="Save">
+                <button
+                  disabled={isSaveDisabled}
+                  className={`p-3 rounded-full ${
+                    isSaveDisabled
+                      ? "text-gray-400 cursor-not-allowed"
+                      : "hover:bg-gray-100 text-custom-main cursor-pointer"
+                  }`}
+                  aria-label="Save"
+                >
+                  <TbWorldUpload
+                    size={24}
+                    className={`${
+                      isSaveDisabled
+                        ? "text-gray-400 cursor-not-allowed"
+                        : "text-custom-main"
+                    }`}
+                  />
+                </button>
+              </Tooltip>
 
-          <div className="relative flex items-center">
-            <input
-              type="text"
-              value={searchValue}
-              onChange={handleSearchChange}
-              disabled={isSyncfusionRenderer}
-              onKeyDown={handleKeyPress}
-              placeholder="Search: By level or text"
-              className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10 "
-            />
+              <div className="relative flex items-center">
+                <input
+                  type="text"
+                  value={searchValue}
+                  onChange={handleSearchChange}
+                  onKeyDown={handleKeyPress}
+                  placeholder="Search: By level or text"
+                  className="bg-white border border-gray-300 focus:border-custom-main focus:border-2 focus:outline-none rounded-l-md p-2 w-64 sm:w-60 shadow-lg pl-10 "
+                />
 
-            <BiSearch size={24} className="absolute left-2 text-gray-500" />
-          </div>
-        </div>
+                <BiSearch size={24} className="absolute left-2 text-gray-500" />
+              </div>
+            </div>
 
-        <div className="flex items-center space-x-3 shadow-lg p-2 bg-slate-200 rounded-lg">
-          <div className="flex items-center space-x-2">
-            <span
-              className={`text-sm font-medium ${
-                showWbs ? "text-custom-main" : "text-gray-700"
-              }`}
-            >
-              Show WBS
-            </span>
+            <div className="flex items-center space-x-3 shadow-lg p-2 bg-slate-200 rounded-lg">
+              <div className="flex items-center space-x-2">
+                <span
+                  className={`text-sm font-medium ${
+                    showWbs ? "text-custom-main" : "text-gray-700"
+                  }`}
+                >
+                  Show WBS
+                </span>
 
-            <label
-              className="relative inline-flex items-center cursor-pointer"
-              htmlFor="show-wbs-toggle"
-            >
-              <input
-                id="show-wbs-toggle"
-                type="checkbox"
-                checked={showWbs}
-                onChange={(e) =>
-                  handleFeatureClick(canDynamicWbs, () =>
-                    setShowWbs(e.target.checked)
-                  )
-                }
-                className="sr-only peer"
-              />
-              <div
-                className={`w-12 h-6 rounded-full transition-all ${
-                  showWbs
-                    ? "bg-custom-main border-none"
-                    : "bg-white border border-gray-300"
-                }`}
-              ></div>
-              <div
-                className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform
+                <label
+                  className="relative inline-flex items-center cursor-pointer"
+                  htmlFor="show-wbs-toggle"
+                >
+                  <input
+                    id="show-wbs-toggle"
+                    type="checkbox"
+                    checked={showWbs}
+                    onChange={(e) =>
+                      handleFeatureClick(canDynamicWbs, () =>
+                        handleWbsToggle(e.target.checked)
+                      )
+                    }
+                    className="sr-only peer"
+                  />
+                  <div
+                    className={`w-12 h-6 rounded-full transition-all ${
+                      showWbs
+                        ? "bg-custom-main border-none"
+                        : "bg-white border border-gray-300"
+                    }`}
+                  ></div>
+                  <div
+                    className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 peer-checked:border-custom-main transition-transform
       ${showWbs ? "" : "!bg-custom-main"}
     `}
-              ></div>
-            </label>
+                  ></div>
+                </label>
+
+                {showWbs && wbsMode === "manual" && (
+                  <>
+                    <label htmlFor="#" className="text-custom-main">
+                      WBS Start #
+                    </label>
+                    <input
+                      type="number"
+                      value={wbsStart}
+                      onChange={handleWbsStartChange}
+                      placeholder="#"
+                      className="w-full max-w-[60px] border border-gray-300 rounded pl-3 py-1 focus:ring-2 focus:ring-custom-main outline-none"
+                    />
+                  </>
+                )}
+              </div>
+
+              <Tooltip label="Profile">
+                <button
+                  className="p-2 hover:bg-gray-100 rounded-full"
+                  aria-label="Profile"
+                  // onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
+                >
+                  <BiUser size={24} className="text-custom-main" />
+                </button>
+              </Tooltip>
+
+              <button
+                className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
+                onClick={() => setIsExportModal(true)}
+              >
+                <LuDatabaseBackup size={20} className="mr-2" />
+                Export
+              </button>
+
+              <Link to={"/app/coming-soon"}>
+                <button
+                  className="flex items-center bg-custom-main/70 cursor-not-allowed text-white px-4 py-2 rounded-lg"
+                  // onClick={() => setIsShareModalOpen(true)}
+                >
+                  <FaUserPlus size={20} className="mr-2" />
+                  Share
+                </button>
+              </Link>
+            </div>
           </div>
-
-          <Tooltip label="Profile">
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Profile"
-              // onClick={() => setIsUserPopoverVisible(!isUserPopoverVisible)}
-            >
-              <BiUser size={24} className="text-custom-main" />
-            </button>
-          </Tooltip>
-
-          <button
-            className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
-            onClick={() => setIsExportModal(true)}
-            disabled={isSyncfusionRenderer}
-          >
-            <LuDatabaseBackup size={20} className="mr-2" />
-            Export
-          </button>
-
-          <Link to={"/app/coming-soon"}>
-            <button
-              className="flex items-center bg-custom-main text-white px-4 py-2 rounded-lg"
-              disabled={isSyncfusionRenderer}
-              // onClick={() => setIsShareModalOpen(true)}
-            >
-              <FaUserPlus size={20} className="mr-2" />
-              Share
-            </button>
-          </Link>
         </div>
-      </div>
+      )}
       {isUserPopoverVisible && <UserPopover />}
       <ShareModal isOpen={isShareModalOpen} onClose={toggleShareModal} />
       <ImportModal
@@ -458,7 +600,14 @@ const MarkmapHeader = ({
           }}
         />
       )}
-    </div>
+      {isWbsModalOpen && (
+        <WbsModeModal
+          isOpen={isWbsModalOpen}
+          onClose={() => setIsWbsModalOpen(false)}
+          onSelect={handleWbsModeSelect}
+        />
+      )}
+    </>
   );
 };
 

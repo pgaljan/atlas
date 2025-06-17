@@ -1,14 +1,32 @@
-import React, { useEffect, useState } from "react";
-import { RiCloseLine } from "react-icons/ri";
-import { LuDatabaseBackup } from "react-icons/lu";
 import cogoToast from "@successtar/cogo-toast";
+import * as d3 from "d3";
+import React, { useEffect, useState } from "react";
+import { LuDatabaseBackup } from "react-icons/lu";
+import { RiCloseLine } from "react-icons/ri";
 import {
+  exportAllAsSingleDoc,
+  exportAsDoc,
+  exportAsHtml,
   exportAsPdf,
   exportAsSinglePdf,
-  exportAsDoc,
-  exportAllAsSingleDoc,
-  exportAsHtml,
 } from "../../utils/exportFunctions";
+import { assignNodeColors } from "../../utils/markmapHelpers";
+
+const FORMATS = ["DOC", "PDF", "HTML"];
+const OPTIONS = ["Include WBS", "Include tags"];
+const DOCUMENT_ASSEMBLY = ["Single", "Multiple"];
+const LEVEL_COLORS = [
+  "#FF6B6B",
+  "#FFD93D",
+  "#6BCB77",
+  "#4D96FF",
+  "#F28500",
+  "#9D4EDD",
+  "#00C2D1",
+  "#FF7DFF",
+  "#72EFDD",
+  "#1ABC9C",
+];
 
 const ExportModalStructure = ({
   isOpen,
@@ -18,9 +36,6 @@ const ExportModalStructure = ({
 }) => {
   if (!isOpen) return null;
 
-  const FORMATS = ["DOC", "PDF", "HTML"];
-  const OPTIONS = ["Include WBS", "Include tags"];
-  const DocumentAssembly = ["Single", "Multiple"];
   const [assembly, setAssembly] = useState("Multiple");
   const [formats, setFormats] = useState([]);
   const [options, setOptions] = useState([]);
@@ -28,37 +43,26 @@ const ExportModalStructure = ({
   const [svgContent, setSvgContent] = useState({});
 
   useEffect(() => {
-    const handleSvgPreviewUpdate = (event) => {
-      const { svg } = event.detail;
-      setSvgContent(svg);
-    };
-
+    const handleSvgPreviewUpdate = ({ detail: { svg } }) => setSvgContent(svg);
     window.addEventListener("svgPreviewUpdate", handleSvgPreviewUpdate);
 
-    const existingSvgEvent = window.svgPreview;
-    if (existingSvgEvent) {
-      setSvgContent(existingSvgEvent);
-    }
+    if (window.svgPreview) setSvgContent(window.svgPreview);
 
-    return () => {
+    return () =>
       window.removeEventListener("svgPreviewUpdate", handleSvgPreviewUpdate);
-    };
   }, []);
 
-  const toggle = (item, arr, set) =>
-    set(arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]);
+  const toggle = (item, arr, setter) => {
+    setter(arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]);
+  };
 
   const handleExport = async () => {
-    if (!formats || !options) {
+    if (!formats.length || !options) {
       cogoToast.error("Please select formats and options.");
       return;
     }
 
-    if (
-      formats.length === 1 &&
-      formats[0] === "HTML" &&
-      options?.includes("Include tags")
-    ) {
+    if (formats.includes("HTML") && options.includes("Include tags")) {
       cogoToast.error("Tags are not allowed when exporting in HTML format.");
       return;
     }
@@ -66,45 +70,85 @@ const ExportModalStructure = ({
     setIsExporting(true);
 
     try {
-      const exportFns = [];
+      const includeWbs = options.includes("Include WBS");
+      const includeTags = options.includes("Include tags");
+      const isSyncfusion = window.location.href.includes("renderer=syncfusion");
 
-      const includeWbs = options?.includes("Include WBS");
-      const includeTags = options?.includes("Include tags");
+      const isMarkmap = !isSyncfusion;
 
-      if (formats.includes("HTML")) {
-        exportFns.push(() => exportAsHtml(treeData, showWbs, includeWbs));
-      }
-      if (formats.includes("PDF")) {
-        exportFns.push(() =>
-          assembly === "Single"
-            ? exportAsSinglePdf(
-                treeData,
-                showWbs,
-                includeWbs,
-                includeTags,
-                svgContent
-              )
-            : exportAsPdf(
-                treeData,
-                showWbs,
-                includeWbs,
-                includeTags,
-                svgContent
-              )
-        );
+      const colorStrategy = (index) => {
+        if (isMarkmap) {
+          const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+          return colorScale(index);
+        }
+        return LEVEL_COLORS[index % LEVEL_COLORS.length];
+      };
+
+      if (isMarkmap && treeData?.children?.length > 0) {
+        treeData.children.forEach((topLevelNode, index) => {
+          const color = colorStrategy(index);
+          assignNodeColors(topLevelNode, () => color);
+        });
       }
 
-      if (formats.includes("DOC")) {
-        exportFns.push(() =>
-          assembly === "Single"
-            ? exportAllAsSingleDoc(treeData, showWbs, includeWbs, includeTags)
-            : exportAsDoc(treeData, showWbs, includeWbs, includeTags)
-        );
-      }
+      const exportFns = formats.map((format) => {
+        if (format === "HTML") {
+          return () =>
+            exportAsHtml(
+              treeData,
+              showWbs,
+              includeWbs,
+              colorStrategy,
+              isMarkmap
+            );
+        }
 
-      for (const fn of exportFns) {
-        await fn();
-      }
+        if (format === "PDF") {
+          return () =>
+            assembly === "Single"
+              ? exportAsSinglePdf(
+                  treeData,
+                  showWbs,
+                  includeWbs,
+                  includeTags,
+                  svgContent,
+                  colorStrategy
+                )
+              : exportAsPdf(
+                  treeData,
+                  showWbs,
+                  includeWbs,
+                  includeTags,
+                  colorStrategy,
+                  isMarkmap,
+                  svgContent
+                );
+        }
+
+        if (format === "DOC") {
+          return () =>
+            assembly === "Single"
+              ? exportAllAsSingleDoc(
+                  treeData,
+                  showWbs,
+                  includeWbs,
+                  includeTags,
+                  colorStrategy
+                )
+              : exportAsDoc(
+                  treeData,
+                  showWbs,
+                  includeWbs,
+                  includeTags,
+                  colorStrategy,
+                  isMarkmap
+                );
+        }
+
+        return null;
+      });
+
+      for (const fn of exportFns.filter(Boolean)) await fn();
 
       cogoToast.success("Export successful!");
       onClose();
@@ -130,19 +174,19 @@ const ExportModalStructure = ({
           <div className="border-b pb-6">
             <p className="font-medium">Document Assembly</p>
             <div className="flex gap-6 mt-2">
-              {DocumentAssembly.map((v) => (
+              {DOCUMENT_ASSEMBLY.map((type) => (
                 <label
-                  key={v}
+                  key={type}
                   className="flex items-center gap-2 text-gray-700"
                 >
                   <input
                     type="radio"
                     name="assembly"
-                    checked={assembly === v}
-                    onChange={() => setAssembly(v)}
+                    checked={assembly === type}
+                    onChange={() => setAssembly(type)}
                     className="h-4 w-4 accent-custom-main"
                   />
-                  {v} Record
+                  {type} Record
                 </label>
               ))}
             </div>
@@ -151,18 +195,18 @@ const ExportModalStructure = ({
           <div className="border-b pb-6">
             <p className="font-medium">Document Format</p>
             <div className="flex flex-wrap gap-4 mt-2">
-              {FORMATS.map((fmt) => (
+              {FORMATS.map((format) => (
                 <label
-                  key={fmt}
+                  key={format}
                   className="flex items-center gap-2 text-gray-700"
                 >
                   <input
                     type="checkbox"
-                    checked={formats.includes(fmt)}
-                    onChange={() => toggle(fmt, formats, setFormats)}
+                    checked={formats.includes(format)}
+                    onChange={() => toggle(format, formats, setFormats)}
                     className="h-4 w-4 accent-custom-main"
                   />
-                  {fmt}
+                  {format}
                 </label>
               ))}
             </div>

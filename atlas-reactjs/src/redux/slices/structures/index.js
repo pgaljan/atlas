@@ -139,7 +139,22 @@ export const updateStructureExpandState = createAsyncThunk(
       );
       return { id, isExpanded };
     } catch (error) {
-      console.log(error)
+      console.log(error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for updating WBS Start
+export const updateWbsStart = createAsyncThunk(
+  "structures/updateWbsStart",
+  async ({ id, wbsStart }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/structure/wbs-start/${id}`, {
+        wbsStart,
+      });
+      return response.data.structure;
+    } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
   }
@@ -271,6 +286,20 @@ const structureSlice = createSlice({
         state.status = "loading";
       })
       .addCase(updateStructureExpandState.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(updateWbsStart.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(updateWbsStart.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        const updated = action.payload;
+        state.structures = state.structures.map((structure) =>
+          structure.id === updated.id ? updated : structure
+        );
+      })
+      .addCase(updateWbsStart.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

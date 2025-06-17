@@ -6,6 +6,7 @@ import "react-quill/dist/quill.snow.css";
 import "tippy.js/dist/tippy.css";
 import "./CustomImageBlot";
 import "./CustomVideoBlot";
+import cogoToast from "@successtar/cogo-toast";
 
 if (!Quill.imports["modules/imageResize"]) {
   Quill.register("modules/imageResize", ImageResize);
@@ -101,17 +102,17 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
   const modules = {
     toolbar: {
       container: [
-        [{ font: [] }],
-        [{ header: [1, 2, 3, 4, 5, 6, false] }],
+        // [{ font: [] }],
+        // [{ header: [1, 2, 3, 4, 5, 6, false] }],
         ["bold", "italic", "underline", "strike", "blockquote", "code-block"],
         [{ color: [] }, { background: [] }],
-        [
-          { list: "ordered" },
-          { list: "bullet" },
-          { indent: "-1" },
-          { indent: "+1" },
-        ],
-        [{ align: [] }],
+        // [
+        //   { list: "ordered" },
+        //   { list: "bullet" },
+        //   { indent: "-1" },
+        //   { indent: "+1" },
+        // ],
+        // [{ align: [] }],
         ["link", "image"],
       ],
       handlers: {
@@ -122,6 +123,18 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
     imageResize: {
       parchment: Quill.import("parchment"),
     },
+  };
+
+  const handlePaste = (e) => {
+    const clipboardItems = e.clipboardData.items;
+    for (let i = 0; i < clipboardItems.length; i++) {
+      const item = clipboardItems[i];
+      if (item.type.indexOf("image") !== -1) {
+        e.preventDefault();
+        cogoToast.warn("Please use the toolbar to insert images.");
+        return;
+      }
+    }
   };
 
   const formats = [
@@ -191,7 +204,7 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
   }, []);
 
   return (
-    <div className="mx-auto">
+    <div className="mx-auto" onPaste={handlePaste}>
       <ReactQuill
         ref={editorRef}
         value={content}
@@ -200,6 +213,7 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
         modules={modules}
         formats={formats}
         className={editorClassName || "h-[300px] mb-[50px]"}
+        placeholder="Write something here..."
       />
     </div>
   );

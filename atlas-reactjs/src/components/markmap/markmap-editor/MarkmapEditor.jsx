@@ -1,5 +1,4 @@
 import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch } from "react-redux";
 import useUndo from "use-undo";
@@ -34,6 +33,7 @@ const MarkmapEditor = ({ structureId }) => {
     useUndo(null);
   const treeData = treeDataState.present;
   const [showWbs, setShowWbsState] = useState();
+  const [wbsStart, setWbsStart] = useState(1);
   const [isLoading, setIsLoading] = useState(true);
   const [draggedNode, setDraggedNode] = useState(null);
   const [modalData, setModalData] = useState(null);
@@ -43,7 +43,6 @@ const MarkmapEditor = ({ structureId }) => {
   const [shouldFitView, setShouldFitView] = useState(true);
   const [filteredTree, setFilteredTree] = useState(null);
   const [loaderSearch, setLoaderSearch] = useState(false);
-  const userId = Cookies.get("atlas_userId");
 
   const [rightClickModal, setRightClickModal] = useState({
     visible: false,
@@ -115,7 +114,12 @@ const MarkmapEditor = ({ structureId }) => {
     if (treeData) {
       try {
         const parsedTreeData = JSON.parse(savedTreeData);
-        const treeWithWbs = assignWbsNumbers(parsedTreeData);
+        const treeWithWbs = assignWbsNumbers(
+          parsedTreeData,
+          null,
+          null,
+          wbsStart
+        );
         return updateNodeLevels(treeWithWbs);
       } catch (error) {
         console.error("Failed to parse saved tree data:", error);
@@ -170,7 +174,9 @@ const MarkmapEditor = ({ structureId }) => {
         }
       );
 
-      const treeWithWbsAndLevels = updateNodeLevels(assignWbsNumbers(newTree));
+      const treeWithWbsAndLevels = updateNodeLevels(
+        assignWbsNumbers(newTree, null, null, wbsStart)
+      );
       setTreeData(treeWithWbsAndLevels);
     } catch (error) {
       cogoToast.error("Failed to reparent element.");
@@ -259,12 +265,22 @@ const MarkmapEditor = ({ structureId }) => {
 
     try {
       const data = await dispatch(getStructure(structureId)).unwrap();
-      const treeWithWbs = assignWbsNumbers({
-        content: data.name,
-        children: data.elements,
-        isExpanded: data.isExpanded,
-        structureId: data.id,
-      });
+
+      const startValue = data?.wbsStart || 1;
+      setWbsStart(startValue);
+
+      const treeWithWbs = assignWbsNumbers(
+        {
+          content: data.name,
+          children: data.elements,
+          isExpanded: data.isExpanded,
+          structureId: data.id,
+        },
+        undefined,
+        undefined,
+        startValue
+      );
+
       setShowWbsState(data.markmapShowWbs);
       const treeWithLevels = updateNodeLevels(treeWithWbs);
 
@@ -332,7 +348,7 @@ const MarkmapEditor = ({ structureId }) => {
 
     const updatedTree = addNode(treeData);
     const treeWithWbsAndLevels = updateNodeLevels(
-      assignWbsNumbers(updatedTree)
+      assignWbsNumbers(updatedTree, null, null, wbsStart)
     );
     setTreeData(treeWithWbsAndLevels);
   };
@@ -349,7 +365,7 @@ const MarkmapEditor = ({ structureId }) => {
 
     const updatedTree = removeNode(treeData);
     const treeWithWbsAndLevels = updateNodeLevels(
-      assignWbsNumbers(updatedTree)
+      assignWbsNumbers(updatedTree, null, null, wbsStart)
     );
     setTreeData(treeWithWbsAndLevels);
   };
@@ -404,6 +420,8 @@ const MarkmapEditor = ({ structureId }) => {
           }
           treeData={treeData}
           showWbs={showWbs}
+          wbsStart={wbsStart}
+          setWbsStart={setWbsStart}
           structureId={structureId}
           setShowWbs={setShowWbs}
           undo={undo}

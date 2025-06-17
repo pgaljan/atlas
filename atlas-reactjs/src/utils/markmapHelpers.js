@@ -3,11 +3,13 @@ import * as d3 from "d3";
 export const assignWbsNumbers = (
   node,
   prefix = null,
-  parentStructureId = null
+  parentStructureId = null,
+  wbsStart = 1
 ) => {
   if (!node) return null;
 
-  const currentWbs = node.wbs ? node.wbs : prefix ? prefix : "1";
+  const currentWbs = node.wbs ? node.wbs : prefix ? prefix : `${wbsStart}`;
+
   const wbsNode = {
     ...node,
     originalContent: node.originalContent || node.content,
@@ -15,7 +17,6 @@ export const assignWbsNumbers = (
     structureId: node.structureId || parentStructureId,
   };
 
-  // If node has children, sort them based on orderIndex (if present) before processing
   if (node.children && node.children.length > 0) {
     const sortedChildren = node.children.slice().sort((a, b) => {
       if (a.orderIndex != null && b.orderIndex != null) {
@@ -28,7 +29,8 @@ export const assignWbsNumbers = (
       assignWbsNumbers(
         child,
         child.wbs ? child.wbs : `${currentWbs}.${index + 1}`,
-        wbsNode.structureId
+        wbsNode.structureId,
+        wbsStart
       )
     );
   }
@@ -66,7 +68,7 @@ export const treeToMarkmapData = (node, showWbs, includeWbs) => {
     elementId: node.id,
     parentId: node.parentId,
     recordId: node.recordId,
-    recordSvg: node.recordSvg || null, 
+    recordSvg: node.recordSvg || null,
   };
 };
 

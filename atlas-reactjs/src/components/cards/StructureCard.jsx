@@ -114,7 +114,8 @@ const StructureCard = () => {
             <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
           </div>
         </div>
-      ) : structures.length === 0 ? (
+      ) 
+      : structures.length === 0 ? (
         <div className="flex h-screen flex-col text-center p-6">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
@@ -126,23 +127,24 @@ const StructureCard = () => {
             <p className="text-lg text-custom-text-grey">
               Start creating your first structure!
             </p>
-            <button
+            {/* <button
               onClick={toggleImportModal}
               disabled={isImporting}
               className="flex items-center mt-4 gap-2 px-4 py-2 border-2 bg-transparent hover:bg-custom-main hover:text-white border-custom-main text-custom-main rounded-lg hover:bg-custom-dark transition"
             >
               <VscGitPullRequestCreate size={20} />
               {isImporting ? "Importing..." : "Import backups"}
-            </button>
+            </button> */}
           </div>
         </div>
-      ) : (
+      ) 
+      : (
         <div className="p-4 rounded-[18px] bg-custom-background-white h-auto shadow-md">
           <div className="flex justify-between w-full items-center mb-3">
             <div>
               <h2 className="text-[24px] font-bold text-black">Dashboard</h2>
             </div>
-            <div className="flex items-center gap-3">
+            {/* <div className="flex items-center gap-3">
               <button
                 onClick={handleExport}
                 disabled={isExporting}
@@ -159,7 +161,7 @@ const StructureCard = () => {
                 <VscGitPullRequestCreate size={20} />
                 {isImporting ? "Importing..." : "Import"}
               </button>
-            </div>
+            </div> */}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {structures.map((structure) => (

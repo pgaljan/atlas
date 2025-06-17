@@ -1,9 +1,11 @@
 export const LAYOUT_CONFIG = {
   type: "HierarchicalTree",
   orientation: "LeftToRight",
-  horizontalSpacing: 20,
-  verticalSpacing: 60,
-  enableCollapseExpand: true,
+  horizontalAlignment: "Center",
+  verticalAlignment: "Center",
+  horizontalSpacing: 30,
+  verticalSpacing: 40,
+  margin: { left: 20, top: 20 },
 };
 
 const LEVEL_COLORS = [
@@ -69,13 +71,13 @@ export const isDescendant = (nodeId, potentialParentId, nodes) => {
   return false;
 };
 
-export const generateWBSNumber = (nodeId, nodes) => {
+export const generateWBSNumber = (nodeId, nodes, wbsStart = 1) => {
   const node = nodes.find((n) => n.id === nodeId);
   const parentNode = node?.parent
     ? nodes.find((n) => n?.id === node?.parent)
     : null;
-  if (!parentNode) return "1";
+  if (!parentNode) return `${wbsStart}`;
   const siblings = nodes?.filter((n) => n?.parent === node?.parent);
   const index = siblings?.findIndex((n) => n?.id === nodeId) + 1;
-  return `${generateWBSNumber(parentNode?.id, nodes)}.${index}`;
+  return `${generateWBSNumber(parentNode?.id, nodes, wbsStart)}.${index}`;
 };
