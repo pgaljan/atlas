@@ -110,6 +110,20 @@ export const updateExpandState = createAsyncThunk(
   }
 );
 
+export const updateElementOrderIndex = createAsyncThunk(
+  "element/updateOrderIndex",
+  async ({ id, orderIndex }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.put(`/element/order-index/${id}`, {
+        orderIndex,
+      });
+      return { id, orderIndex };
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Element slice
 const elementSlice = createSlice({
   name: "element",
@@ -194,7 +208,6 @@ const elementSlice = createSlice({
       })
       .addCase(reparentElements.fulfilled, (state, action) => {
         state.status = "succeeded";
-        // Optionally update local elements based on reparenting logic
       })
       .addCase(reparentElements.rejected, (state, action) => {
         state.status = "failed";
@@ -206,6 +219,14 @@ const elementSlice = createSlice({
         );
         if (index !== -1) {
           state.elements[index].isExpanded = action.payload.isExpanded;
+        }
+      })
+      .addCase(updateElementOrderIndex.fulfilled, (state, action) => {
+        const index = state.elements.findIndex(
+          (el) => el.id === action.payload.id
+        );
+        if (index !== -1) {
+          state.elements[index].orderIndex = action.payload.orderIndex;
         }
       });
   },

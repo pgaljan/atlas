@@ -66,7 +66,6 @@ export class RestoreService {
     currentUserId: string,
   ) {
     try {
-      // Retrieve user to get a valid workspaceId.
       const user = await this.prisma.user.findUnique({
         where: { id: currentUserId },
       });
@@ -88,7 +87,6 @@ export class RestoreService {
       const decryptedBuffer = this.decrypt(encFile.getData());
       const workbook = xlsx.read(decryptedBuffer, { type: 'buffer' });
 
-      // Extract sheets.
       const structuresSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Structures'],
       );
@@ -108,7 +106,6 @@ export class RestoreService {
         );
       }
 
-      // Retrieve the backup structure.
       let foundBackupStructure = structuresSheet.find(
         (s) => s.id === providedStructureId,
       );
@@ -117,7 +114,6 @@ export class RestoreService {
       if (!foundBackupStructure) {
         backupStructure = structuresSheet[0];
         originalBackupStructureId = backupStructure.id;
-        // Overwrite ID to restore into the provided structure.
         backupStructure = {
           ...backupStructure,
           id: providedStructureId,
@@ -128,7 +124,6 @@ export class RestoreService {
         originalBackupStructureId = backupStructure.id;
       }
 
-      // Determine target structure id.
       let targetStructureId: string;
       if (backupStructure.ownerId === currentUserId) {
         targetStructureId = providedStructureId;
@@ -143,7 +138,6 @@ export class RestoreService {
         };
       }
 
-      // Restore the structure.
       await this.prisma.structure.upsert({
         where: { id: targetStructureId },
         update: {
@@ -169,28 +163,23 @@ export class RestoreService {
         },
       });
 
-      // ---------- Elements Restoration in Two Passes ----------
-      // Phase 1: Upsert each element without setting elementLinkId, also map original -> new id.
+      // ------------------ ELEMENT RESTORE ------------------
       const elementIdMapping = new Map<string, string>();
+
+      // Phase 1: Upsert elements with parentId and elementLinkId = null
       for (const elementData of elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
       )) {
-        // If parentId is not in the set of elements, set it to null.
-        // (The parent-child updates will be handled in a later phase.)
-        if (
-          elementData.parentId &&
-          !elementsSheet.some((el) => el.id === elementData.parentId)
-        ) {
-          elementData.parentId = null;
-        }
-        // Overwrite structureId to target structure.
-        elementData.structureId = targetStructureId;
-        // Temporarily force elementLinkId to null to avoid FK issues.
+        const originalParentId = elementData.parentId || null;
         const originalElementLinkId = elementData.elementLinkId || null;
+
+        elementData.structureId = targetStructureId;
+        elementData.parentId = null;
         elementData.elementLinkId = null;
 
-        // Optionally, generate a new id for the element (or use the original)
-        // Here, we'll assume we keep the original id.
+        elementData._originalParentId = originalParentId;
+        elementData._originalElementLinkId = originalElementLinkId;
+
         elementIdMapping.set(elementData.id, elementData.id);
 
         await this.prisma.element.upsert({
@@ -199,8 +188,7 @@ export class RestoreService {
             name: elementData.name,
             structureId: elementData.structureId,
             recordId: elementData.recordId,
-            parentId: elementData.parentId,
-            // Do NOT set elementLinkId in the upsert
+            parentId: null,
             orderIndex: elementData.orderIndex,
           },
           create: {
@@ -208,36 +196,39 @@ export class RestoreService {
             name: elementData.name,
             structureId: elementData.structureId,
             recordId: elementData.recordId,
-            parentId: elementData.parentId,
-            // Exclude elementLinkId on create; it will be updated in phase 2.
+            parentId: null,
             orderIndex: elementData.orderIndex,
           },
         });
-
-        // Store the original elementLinkId for use in phase 2.
-        elementData._originalElementLinkId = originalElementLinkId;
       }
 
-      // Phase 2: Update elementLinkId based on the stored mapping.
+      // Phase 2: Update parentId now that all elements exist
       for (const elementData of elementsSheet.filter(
-        (e) => e.structureId === targetStructureId,
+        (e) => e.structureId === originalBackupStructureId,
       )) {
-        // If there is an original elementLinkId, try mapping it.
-        const originalLinkId = elementData._originalElementLinkId;
-        if (originalLinkId) {
-          const newLinkId = elementIdMapping.get(originalLinkId) || null;
-          // Only update if the newLinkId is found.
-          if (newLinkId) {
-            await this.prisma.element.update({
-              where: { id: elementData.id },
-              data: { elementLinkId: newLinkId },
-            });
-          }
+        const parentId = elementData._originalParentId;
+        if (parentId && elementIdMapping.has(parentId)) {
+          await this.prisma.element.update({
+            where: { id: elementData.id },
+            data: { parentId },
+          });
         }
       }
-      // ---------- End Elements Restoration ----------
 
-      // Restore records (structure-agnostic)
+      // Phase 3: Update elementLinkId now that all elements exist
+      for (const elementData of elementsSheet.filter(
+        (e) => e.structureId === originalBackupStructureId,
+      )) {
+        const linkId = elementData._originalElementLinkId;
+        if (linkId && elementIdMapping.has(linkId)) {
+          await this.prisma.element.update({
+            where: { id: elementData.id },
+            data: { elementLinkId: linkId },
+          });
+        }
+      }
+
+      // ------------------ RECORDS ------------------
       for (const recordData of recordsSheet) {
         const metadata = recordData.metadata || '{}';
         const tags = recordData.tags || '[]';
@@ -254,7 +245,7 @@ export class RestoreService {
         });
       }
 
-      // Restore Structure Maps.
+      // ------------------ STRUCTURE MAPS ------------------
       const filteredMaps = structureMapsSheet.filter(
         (m) => m.structureId === originalBackupStructureId,
       );
@@ -284,6 +275,7 @@ export class RestoreService {
 
       return { message: 'Backup restored successfully' };
     } catch (error) {
+      console.error(error);
       throw new InternalServerErrorException(
         'Failed to restore backup: ' + error.message,
       );

@@ -15,6 +15,7 @@ import { ReparentElementsDto } from './dto/reparent-elements.dto';
 import { UpdateElementDto } from './dto/update-element.dto';
 import { ElementService } from './element.service';
 import { UpdateIsExpandedDto } from './dto/update-is-expanded.dto';
+import { UpdateOrderIndexDto } from './dto/update-order-index.dto';
 
 @Controller('element')
 export class ElementController {
@@ -136,6 +137,25 @@ export class ElementController {
         throw error;
       }
       throw new BadRequestException('Error updating expand state');
+    }
+  }
+
+  @Put('order-index/:id')
+  async updateOrderIndex(
+    @Param('id') id: string,
+    @Body() dto: UpdateOrderIndexDto,
+  ) {
+    try {
+      await this.elementService.updateOrderIndex(id, dto.orderIndex);
+      return { message: 'Order index updated successfully' };
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException
+      ) {
+        throw error;
+      }
+      throw new BadRequestException('Error updating order index');
     }
   }
 }

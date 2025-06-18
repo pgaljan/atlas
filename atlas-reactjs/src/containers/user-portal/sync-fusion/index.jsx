@@ -1,5 +1,5 @@
-import cogoToast from "@successtar/cogo-toast";
-import "@syncfusion/ej2-icons/styles/material.css";
+import cogoToast from "@successtar/cogo-toast"
+import "@syncfusion/ej2-icons/styles/material.css"
 import {
   DataBinding,
   DiagramComponent,
@@ -8,83 +8,119 @@ import {
   Inject,
   NodeConstraints,
   UndoRedo,
-} from "@syncfusion/ej2-react-diagrams";
-import "@syncfusion/ej2-react-navigations/styles/material.css";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
-import MarkmapHeader from "../../../components/markmap/markmap-layout/MarkmapHeader";
-import NodeModal from "../../../components/modals/NodeModal";
-import ZoomToolbar from "../../../components/syncfusion/Toolbar";
+} from "@syncfusion/ej2-react-diagrams"
+import "@syncfusion/ej2-react-navigations/styles/material.css"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useDispatch } from "react-redux"
+import { useParams } from "react-router-dom"
+import MarkmapHeader from "../../../components/markmap/markmap-layout/MarkmapHeader"
+import NodeModal from "../../../components/modals/NodeModal"
+import ZoomToolbar from "../../../components/syncfusion/Toolbar"
 import {
   reparentElements,
+  updateElementOrderIndex,
   updateExpandState,
-} from "../../../redux/slices/elements";
+} from "../../../redux/slices/elements"
 import {
   getStructure,
   updateStructure,
   updateStructureExpandState,
-} from "../../../redux/slices/structures";
+} from "../../../redux/slices/structures"
 import {
   createConnectors,
   generateWBSNumber,
   isDescendant,
   LAYOUT_CONFIG,
-} from "../../../utils/syncFusionHelpers";
+} from "../../../utils/syncFusionHelpers"
+import ConfirmationModal from "./ConfirmationModal"
 
 const getNodeLevel = (id, nodesMap, level = 0) => {
-  const node = nodesMap[id];
-  if (!node?.parent || !nodesMap[node?.parent]) return level;
-  return getNodeLevel(node?.parent, nodesMap, level + 1);
-};
+  const node = nodesMap[id]
+  if (!node?.parent || !nodesMap[node?.parent]) return level
+  return getNodeLevel(node?.parent, nodesMap, level + 1)
+}
 
 const getTextWidth = (text, font = "20px 'Segoe UI', Arial, sans-serif") => {
-  if (typeof document === "undefined") return 160;
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  context.font = font;
-  const metrics = context.measureText(text);
-  return metrics.width + 14;
-};
+  if (typeof document === "undefined") return 160
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d")
+  context.font = font
+  const metrics = context.measureText(text)
+  return metrics.width + 14
+}
+
+const sortNodesByHierarchy = (rootId, allNodes) => {
+  const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]))
+  const childrenMap = {}
+
+  for (const node of allNodes) {
+    if (node.parent) {
+      if (!childrenMap[node.parent]) {
+        childrenMap[node.parent] = []
+      }
+      childrenMap[node.parent].push(node)
+    }
+  }
+
+  const sorted = []
+
+  const traverse = nodeId => {
+    const node = nodeMap[nodeId]
+    if (!node) return
+    sorted.push(node)
+
+    const children = childrenMap[nodeId] || []
+    const orderedChildren = [...children].sort((a, b) => {
+      if (a.orderIndex == null) return 1
+      if (b.orderIndex == null) return -1
+      return a.orderIndex - b.orderIndex
+    })
+
+    for (const child of orderedChildren) {
+      traverse(child.id)
+    }
+  }
+
+  traverse(rootId)
+  return sorted
+}
 
 const Syncfusion = () => {
-  const dispatch = useDispatch();
-  const diagramRef = useRef(null);
-  const dragInProgress = useRef(false);
-  const { structureId } = useParams();
-  const [highlightedNodeId, setHighlightedNodeId] = useState(null);
-  const [showWbs, setShowWbsState] = useState(false);
-  const [wbsStart, setWbsStart] = useState(1);
-  const [nodesData, setNodesData] = useState([]);
-  const [connectorsData, setConnectorsData] = useState([]);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [currentSearchTerm, setCurrentSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
-  const [isLoading, setIsLoading] = useState(true);
-  const [diagramKey, setDiagramKey] = useState(0);
-  const [noResults, setNoResults] = useState(false);
-  const [treeData, setTreeData] = useState(null);
-  const [searchLoading, setSearchLoading] = useState(false);
-
+  const dispatch = useDispatch()
+  const diagramRef = useRef(null)
+  const dragInProgress = useRef(false)
+  const { structureId } = useParams()
+  const [highlightedNodeId, setHighlightedNodeId] = useState(null)
+  const [showWbs, setShowWbsState] = useState(false)
+  const [wbsStart, setWbsStart] = useState(1)
+  const [nodesData, setNodesData] = useState([])
+  const [connectorsData, setConnectorsData] = useState([])
+  const [selectedNode, setSelectedNode] = useState(null)
+  const [currentSearchTerm, setCurrentSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [diagramKey, setDiagramKey] = useState(0)
+  const [noResults, setNoResults] = useState(false)
+  const [treeData, setTreeData] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
+  const [modalState, setModalState] = useState({
+    isOpen: false,
+    draggedNode: null,
+    targetNode: null,
+  })
   const fetchStructure = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const structure = await dispatch(getStructure(structureId)).unwrap();
-      const startValue = structure?.wbsStart || 1;
-      setWbsStart(startValue);
-      setShowWbsState(structure.markmapShowWbs);
+      const structure = await dispatch(getStructure(structureId)).unwrap()
+      const startValue = structure?.wbsStart || 1
+      setWbsStart(startValue)
+      setShowWbsState(structure.markmapShowWbs)
 
       setTreeData({
         content: structure?.name || "Main",
         children: structure?.elements || [],
-      });
+      })
 
       const rootNode = {
         id: structure?.id,
@@ -93,18 +129,24 @@ const Syncfusion = () => {
         isExpanded: structure?.isExpanded ?? true,
         visible: true,
         level: 0,
-      };
+        orderIndex: null,
+      }
 
       const flattenElements = (
         elements,
         parentId = null,
-        parentExpanded = true
+        parentExpanded = true,
+        level = 0
       ) => {
-        let flatNodes = [];
+        let flatNodes = []
 
-        for (let element of elements) {
-          const shouldRenderChildren = parentExpanded && element.isExpanded;
-          const level = parentId ? getNodeLevel(parentId, nodesMap) + 1 : 0;
+        // Sort current level's elements by orderIndex
+        const sortedElements = [...elements].sort(
+          (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
+        )
+
+        for (let element of sortedElements) {
+          const shouldRenderChildren = parentExpanded && element.isExpanded
 
           flatNodes.push({
             id: element?.id,
@@ -114,375 +156,425 @@ const Syncfusion = () => {
             visible: parentExpanded,
             recordId: element?.recordId || null,
             level,
-          });
+            orderIndex: element?.orderIndex ?? 0,
+          })
 
           if (Array.isArray(element.children) && element.children.length > 0) {
             flatNodes.push(
               ...flattenElements(
                 element.children,
                 element.id,
-                shouldRenderChildren
+                shouldRenderChildren,
+                level + 1
               )
-            );
+            )
           }
         }
 
-        return flatNodes;
-      };
+        return flatNodes
+      }
 
       const nodes = flattenElements(
         structure.elements,
         structure.id,
-        structure?.isExpanded ?? true
-      );
-      const fullNodes = [rootNode, ...nodes];
-      const visibleNodes = fullNodes.filter((n) => n.visible);
-      const visibleNodeIds = new Set(
-        fullNodes.filter((n) => n.visible).map((n) => n.id)
-      );
-      const connectors = createConnectors(fullNodes).filter(
-        (conn) =>
-          visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
-      );
+        structure?.isExpanded ?? true,
+        1,
+        structure.orderIndex
+      )
 
-      setNodesData(fullNodes);
-      setConnectorsData(connectors);
-      setDiagramKey((prev) => prev + 1);
+      const fullNodes = [rootNode, ...nodes]
+      const visibleNodeIds = new Set(
+        fullNodes.filter(n => n.visible).map(n => n.id)
+      )
+      const connectors = createConnectors(fullNodes).filter(
+        conn =>
+          visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
+      )
+
+      // setNodesData(fullNodes);
+      const sortedFullNodes = sortNodesByHierarchy(structure?.id, fullNodes)
+      setNodesData(sortedFullNodes)
+
+      setConnectorsData(connectors)
+      setDiagramKey(prev => prev + 1)
     } catch (err) {
-      cogoToast.error("Failed to load structure");
+      cogoToast.error("Failed to load structure")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const diagramElement = document.getElementById("orgDiagram");
+    const handleClickOutside = event => {
+      const diagramElement = document.getElementById("orgDiagram")
       if (
         diagramElement &&
         !diagramElement.contains(event.target) &&
         diagramRef.current
       ) {
-        diagramRef.current.clearSelection();
+        diagramRef.current.clearSelection()
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
-  const handleDiagramClick = (args) => {
-    const diagram = diagramRef.current;
-    if (!diagram) return;
+  const handleDiagramClick = args => {
+    const diagram = diagramRef.current
+    if (!diagram) return
 
-    const clickedObj = args?.actualObject;
+    const clickedObj = args?.actualObject
 
-    const isNode = clickedObj?.shape !== undefined;
-    const isConnector = clickedObj?.type === "Straight" || clickedObj?.segments;
+    const isNode = clickedObj?.shape !== undefined
+    const isConnector = clickedObj?.type === "Straight" || clickedObj?.segments
 
     if (!isNode && !isConnector) {
-      diagram.clearSelection();
-      setSelectedNode(null);
-      setIsModalOpen(false);
+      diagram.clearSelection()
+      setSelectedNode(null)
+      setIsModalOpen(false)
     }
-  };
+  }
 
-  const setShowWbsFactory = (value) => {
+  const setShowWbsFactory = value => {
     return async () => {
       try {
-        setShowWbsState(value);
+        setShowWbsState(value)
         await dispatch(
           updateStructure({
             id: structureId,
             updateData: { markmapShowWbs: value },
           })
-        ).unwrap();
-        setDiagramKey((prev) => prev + 1);
-        await fetchStructure();
+        ).unwrap()
+        setDiagramKey(prev => prev + 1)
+        await fetchStructure()
       } catch (error) {
-        cogoToast.error("Failed to toggle WBS visibility.");
+        cogoToast.error("Failed to toggle WBS visibility.")
       }
-    };
-  };
+    }
+  }
 
-  const handleSetShowWbs = (value) => {
-    const fn = setShowWbsFactory(value);
-    fn();
-  };
+  const handleSetShowWbs = value => {
+    const fn = setShowWbsFactory(value)
+    fn()
+  }
 
   useEffect(() => {
-    setDiagramKey((prev) => prev + 1);
-  }, [nodesData]);
+    setDiagramKey(prev => prev + 1)
+  }, [nodesData])
 
   useEffect(() => {
     if (structureId) {
-      fetchStructure();
+      fetchStructure()
     }
-  }, [dispatch, structureId]);
+  }, [dispatch, structureId])
 
   const nodesMap = useMemo(
-    () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
+    () => Object.fromEntries(nodesData.map(n => [n.id, n])),
     [nodesData]
-  );
+  )
 
-  const onSelectionChange = (args) => {
-    const selected = args?.newValue?.[0];
-    if (!selected) return;
+  const onSelectionChange = args => {
+    const selected = args?.newValue?.[0]
+    if (!selected) return
 
-    setSelectedNode(selected);
-    setIsModalOpen(true);
+    setSelectedNode(selected)
+    setIsModalOpen(true)
 
-    const diagram = diagramRef.current;
-    if (!diagram) return;
+    const diagram = diagramRef.current
+    if (!diagram) return
 
-    const node = diagram.nodes.find((n) => n.id === selected.id);
-    if (!node) return;
+    const node = diagram.nodes.find(n => n.id === selected.id)
+    if (!node) return
 
-    const { offsetX, offsetY } = node;
-    const zoom = diagram.scrollSettings.currentZoom || 1;
-    const scrollX = diagram.scrollSettings.horizontalOffset || 0;
-    const scrollY = diagram.scrollSettings.verticalOffset || 0;
+    const { offsetX, offsetY } = node
+    const zoom = diagram.scrollSettings.currentZoom || 1
+    const scrollX = diagram.scrollSettings.horizontalOffset || 0
+    const scrollY = diagram.scrollSettings.verticalOffset || 0
 
-    const diagramContainer = document.getElementById("orgDiagram");
-    const containerRect = diagramContainer.getBoundingClientRect();
+    const diagramContainer = document.getElementById("orgDiagram")
+    const containerRect = diagramContainer.getBoundingClientRect()
 
-    const x = containerRect.left + (offsetX - scrollX) * zoom;
-    const y = containerRect.top + (offsetY - scrollY) * zoom;
+    const x = containerRect.left + (offsetX - scrollX) * zoom
+    const y = containerRect.top + (offsetY - scrollY) * zoom
 
-    const modalWidth = 300;
-    const modalHeight = 200;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
+    const modalWidth = 300
+    const modalHeight = 200
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
 
-    const clampedX = Math.min(Math.max(x, 0), screenWidth - modalWidth);
-    const clampedY = Math.min(Math.max(y, 0), screenHeight - modalHeight);
+    const clampedX = Math.min(Math.max(x, 0), screenWidth - modalWidth)
+    const clampedY = Math.min(Math.max(y, 0), screenHeight - modalHeight)
 
-    setModalPosition({ x: clampedX, y: clampedY });
-  };
+    setModalPosition({ x: clampedX, y: clampedY })
+  }
 
   const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedNode(null);
-  };
+    setIsModalOpen(false)
+    setSelectedNode(null)
+  }
 
   const handleZoomIn = () => {
-    if (!diagramRef.current) return;
-    diagramRef.current.zoomTo({ type: "ZoomIn", zoomFactor: 0.2 });
-  };
+    if (!diagramRef.current) return
+    diagramRef.current.zoomTo({ type: "ZoomIn", zoomFactor: 0.2 })
+  }
 
   const handleZoomOut = () => {
-    if (!diagramRef.current) return;
-    diagramRef.current.zoomTo({ type: "ZoomOut", zoomFactor: 0.2 });
-  };
+    if (!diagramRef.current) return
+    diagramRef.current.zoomTo({ type: "ZoomOut", zoomFactor: 0.2 })
+  }
 
   const handleNodeUpdate = async () => {
-    await fetchStructure();
-  };
+    await fetchStructure()
+  }
 
   const onNodeDrop = useCallback(
-    async (args) => {
-      const diagram = diagramRef.current;
-      if (!diagram) return;
+    async args => {
+      const diagram = diagramRef.current
+      if (!diagram) return
 
-      const draggedNodeId = args.element?.id;
-      const targetNodeId = args.target?.id;
+      const draggedNodeId = args.element?.id
+      const targetNodeId = args.target?.id || structureId
 
-      if (dragInProgress.current || !draggedNodeId || !targetNodeId) return;
+      if (
+        dragInProgress.current ||
+        !draggedNodeId ||
+        draggedNodeId === targetNodeId
+      )
+        return
 
-      if (draggedNodeId === targetNodeId) return;
-
-      const isTargetRoot = targetNodeId === structureId;
       const isDroppingOnDescendant = isDescendant(
         draggedNodeId,
         targetNodeId,
         nodesData
-      );
-
+      )
       if (isDroppingOnDescendant) {
-        cogoToast.error("Cannot reparent to a descendant node.");
-        return;
+        cogoToast.error("Cannot reparent to a descendant node.")
+        return
       }
 
-      dragInProgress.current = true;
+      const draggedNode = nodesMap[draggedNodeId]
+      const targetNode = nodesMap[targetNodeId]
 
-      const reparentingRequest = {
-        sourceElementId: isTargetRoot ? null : targetNodeId,
-        targetElementId: draggedNodeId,
-        attributes: {
-          structureId,
-        },
-      };
+      const currentParent = draggedNode?.parent ?? null
+      const targetParent = targetNode?.parent ?? null
 
-      try {
-        await dispatch(
-          reparentElements({ reparentingRequests: [reparentingRequest] })
-        ).unwrap();
+      const isSameParent = currentParent === targetParent
 
-        await fetchStructure();
-        cogoToast.success("Element reparented successfully.");
-      } catch (error) {
-        cogoToast.error("Failed to reparent element.");
-      } finally {
-        setTimeout(() => {
-          dragInProgress.current = false;
-        }, 300);
+      const dropY = args.event?.clientY
+      const targetNodeDiagram = diagram.nodes.find(n => n.id === targetNodeId)
+
+      dragInProgress.current = true
+
+      // CASE 1: Same Parent — TRIGGER CUSTOM MODAL
+      if (isSameParent) {
+        // ✅ Trigger your modal instead of automatic reorder
+        setModalState({
+          isOpen: true,
+          draggedNode,
+          targetNode,
+        })
+      }
+
+      // ➤ CASE 2: Different Parent — TRIGGER CUSTOM MODAL
+      // CASE 2: Different Parent — Silent reparent (NO MODAL)
+      else {
+        try {
+          await dispatch(
+            reparentElements({
+              reparentingRequests: [
+                {
+                  sourceElementId: targetNode.id,
+                  targetElementId: draggedNode.id,
+                  attributes: { structureId },
+                },
+              ],
+            })
+          )
+          cogoToast.success("Node reparented successfully.")
+          await fetchStructure()
+        } catch (error) {
+          cogoToast.error("Failed to reparent node.")
+        } finally {
+          dragInProgress.current = false
+        }
       }
     },
-    [dispatch, nodesData, structureId]
-  );
+    [dispatch, nodesData, structureId, nodesMap]
+  )
 
   const filterTreeByCriteria = (node, level, searchTerm, currentLevel = 0) => {
-    if (!node) return null;
+    if (!node) return null
 
-    const lowerSearch = searchTerm?.toLowerCase();
-    const matchesLevel = level !== null && currentLevel === level;
+    const lowerSearch = searchTerm?.toLowerCase()
+    const matchesLevel = level !== null && currentLevel === level
     const matchesText = lowerSearch
       ? node?.name?.toLowerCase().includes(lowerSearch)
-      : false;
+      : false
 
     const filteredChildren = (node.children || [])
-      .map((child) =>
+      .map(child =>
         filterTreeByCriteria(child, level, searchTerm, currentLevel + 1)
       )
-      .filter(Boolean);
+      .filter(Boolean)
 
     if (matchesLevel || matchesText || filteredChildren.length > 0) {
-      if (matchesText && !highlightedNodeId) setHighlightedNodeId(node.id);
+      if (matchesText && !highlightedNodeId) setHighlightedNodeId(node.id)
       return {
         ...node,
         visible: true,
         children: filteredChildren,
-      };
+      }
     }
 
-    return null;
-  };
+    return null
+  }
 
-  const isNodeVisibleByExpandState = (nodeId) => {
-    let current = nodesMap[nodeId];
+  const isNodeVisibleByExpandState = nodeId => {
+    let current = nodesMap[nodeId]
     while (current?.parent) {
-      const parent = nodesMap[current.parent];
-      if (!parent?.isExpanded) return false;
-      current = parent;
+      const parent = nodesMap[current.parent]
+      if (!parent?.isExpanded) return false
+      current = parent
     }
-    return true;
-  };
+    return true
+  }
 
   const handleSearch = (level, searchTerm) => {
-    setSearchLoading(true);
-    setCurrentSearchTerm(searchTerm);
-    setNoResults(null);
-    setHighlightedNodeId(null);
+    setSearchLoading(true)
+    setCurrentSearchTerm(searchTerm)
+    setNoResults(null)
+    setHighlightedNodeId(null)
 
-    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase();
-    const isLevelOnlySearch = level !== null && !cleanSearchTerm;
+    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase()
+    const isLevelOnlySearch = level !== null && !cleanSearchTerm
 
     if (!isLevelOnlySearch && !cleanSearchTerm) {
-      const visibleIds = new Set();
+      const visibleIds = new Set()
 
-      const markVisible = (nodeId) => {
-        const node = nodesMap[nodeId];
-        if (!node) return;
+      const markVisible = nodeId => {
+        const node = nodesMap[nodeId]
+        if (!node) return
 
-        visibleIds.add(nodeId);
+        visibleIds.add(nodeId)
         if (node.isExpanded) {
           nodesData
-            .filter((n) => n.parent === nodeId)
-            .forEach((child) => markVisible(child.id));
+            .filter(n => n.parent === nodeId)
+            .forEach(child => markVisible(child.id))
         }
-      };
+      }
 
-      markVisible(structureId);
+      markVisible(structureId)
 
-      const resetNodes = nodesData.map((n) => ({
+      const resetNodes = nodesData.map(n => ({
         ...n,
         visible: visibleIds.has(n.id),
-      }));
+      }))
 
-      setNodesData(resetNodes);
+      setNodesData(resetNodes)
 
-      const visibleNodes = resetNodes.filter((n) => n.visible);
+      const visibleNodes = resetNodes.filter(n => n.visible)
       const connectors = createConnectors(visibleNodes).filter(
-        (conn) =>
-          visibleNodes.some((n) => n.id === conn.sourceID) &&
-          visibleNodes.some((n) => n.id === conn.targetID)
-      );
-      setConnectorsData(connectors);
+        conn =>
+          visibleNodes.some(n => n.id === conn.sourceID) &&
+          visibleNodes.some(n => n.id === conn.targetID)
+      )
+      setConnectorsData(connectors)
 
-      setSearchLoading(false);
-      setDiagramKey((prev) => prev + 1);
-      return;
+      setSearchLoading(false)
+      setDiagramKey(prev => prev + 1)
+      return
     }
 
     // STEP 1: Find matching node IDs
-    const matchingNodes = nodesData.filter((n) => {
-      const levelMatch = level === null || n.level === level;
+    const matchingNodes = nodesData.filter(n => {
+      const levelMatch = level === null || n.level === level
       const nameMatch = cleanSearchTerm
         ? n.name?.toLowerCase().includes(cleanSearchTerm)
-        : false;
+        : false
 
       // If it's level-only search, ignore nameMatch completely
-      const matches = isLevelOnlySearch ? levelMatch : nameMatch && levelMatch;
+      const matches = isLevelOnlySearch ? levelMatch : nameMatch && levelMatch
 
-      return matches && isNodeVisibleByExpandState(n.id);
-    });
+      return matches && isNodeVisibleByExpandState(n.id)
+    })
 
     if (!matchingNodes.length) {
-      setNoResults(true);
-      setDiagramKey((prev) => prev + 1);
-      setSearchLoading(false);
-      return;
+      setNoResults(true)
+      setDiagramKey(prev => prev + 1)
+      setSearchLoading(false)
+      return
     }
 
-    const visibleIds = new Set();
+    const visibleIds = new Set()
 
-    const includeParents = (nodeId) => {
-      visibleIds.add(nodeId);
-      const parentId = nodesMap[nodeId]?.parent;
-      if (parentId) includeParents(parentId);
-    };
+    const includeParents = nodeId => {
+      visibleIds.add(nodeId)
+      const parentId = nodesMap[nodeId]?.parent
+      if (parentId) includeParents(parentId)
+    }
 
     for (const match of matchingNodes) {
-      includeParents(match.id);
+      includeParents(match.id)
     }
 
-    setHighlightedNodeId(matchingNodes[0].id);
+    setHighlightedNodeId(matchingNodes[0].id)
+
+    // Scroll to center the highlighted node
+    setTimeout(() => {
+      const diagram = diagramRef.current
+      if (!diagram) return
+
+      const node = diagram.nodes.find(n => n.id === matchingNodes[0].id)
+      if (!node) return
+
+      const zoom = diagram.scrollSettings.currentZoom || 1
+      const diagramWidth = diagram.element.clientWidth
+      const diagramHeight = diagram.element.clientHeight
+
+      const scrollX =
+        node.offsetX * zoom - diagramWidth / 2 + (node.width * zoom) / 2
+      const scrollY =
+        node.offsetY * zoom - diagramHeight / 2 + (node.height * zoom) / 2
+
+      diagram.scrollTo(scrollX, scrollY)
+    }, 300)
 
     // STEP 3: Update node visibility
-    const updated = nodesData.map((n) => ({
+    const updated = nodesData.map(n => ({
       ...n,
       visible: visibleIds.has(n.id),
-    }));
-    setNodesData(updated);
+    }))
+    setNodesData(updated)
 
-    const visibleNodes = updated.filter((n) => n.visible);
+    const visibleNodes = updated.filter(n => n.visible)
     const connectors = createConnectors(visibleNodes).filter(
-      (conn) =>
-        visibleNodes.some((n) => n.id === conn.sourceID) &&
-        visibleNodes.some((n) => n.id === conn.targetID)
-    );
-    setDiagramKey((prev) => prev + 1);
+      conn =>
+        visibleNodes.some(n => n.id === conn.sourceID) &&
+        visibleNodes.some(n => n.id === conn.targetID)
+    )
+    setDiagramKey(prev => prev + 1)
 
-    setConnectorsData(connectors);
-  };
+    setConnectorsData(connectors)
+  }
 
-  const flattenFilteredTree = (node) => {
-    if (!node) return [];
-    const nodes = [{ ...node, visible: true }];
-    (node.children || []).forEach((child) => {
-      nodes.push(...flattenFilteredTree(child));
-    });
-    return nodes;
-  };
+  const flattenFilteredTree = node => {
+    if (!node) return []
+    const nodes = [{ ...node, visible: true }]
+    ;(node.children || []).forEach(child => {
+      nodes.push(...flattenFilteredTree(child))
+    })
+    return nodes
+  }
 
   useEffect(() => {
     document.fonts?.ready?.then(() => {
-      setDiagramKey((prev) => prev + 1);
-    });
-  }, []);
+      setDiagramKey(prev => prev + 1)
+    })
+  }, [])
 
   return (
     <>
@@ -511,34 +603,34 @@ const Syncfusion = () => {
               color: "white",
             },
           }}
-          nodes={nodesData.map((node) => {
-            const children = nodesData.filter((n) => n.parent === node.id);
-            const hasAnyChildren = children.length > 0;
-            const hasVisibleChildren = children.some((c) => c.visible);
+          nodes={nodesData.map(node => {
+            const children = nodesData.filter(n => n.parent === node.id)
+            const hasAnyChildren = children.length > 0
+            const hasVisibleChildren = children.some(c => c.visible)
 
             const wbsPrefix = showWbs
               ? `${generateWBSNumber(node.id, nodesData, wbsStart)} - `
-              : "";
-            const hasDragIcon = node.id !== structureId;
+              : ""
+            const hasDragIcon = node.id !== structureId
 
-            const labelFontSize = 20;
-            const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
-            const labelText = `${wbsPrefix}${node.name}`;
-            const labelTextWidth = getTextWidth(labelText, labelFont);
+            const labelFontSize = 20
+            const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`
+            const labelText = `${wbsPrefix}${node.name}`
+            const labelTextWidth = getTextWidth(labelText, labelFont)
 
-            const dragIconWidth = 20;
-            const gap = 10;
-            const padding = 5;
+            const dragIconWidth = 20
+            const gap = 10
+            const padding = 5
 
             const estimatedWidth = hasDragIcon
               ? dragIconWidth + gap + labelTextWidth + padding
-              : labelTextWidth + padding;
+              : labelTextWidth + padding
 
             const labelOffsetX = hasDragIcon
               ? (dragIconWidth + gap) / estimatedWidth
-              : padding / estimatedWidth;
+              : padding / estimatedWidth
             const shouldHighlight =
-              highlightedNodeId === node.id && !!currentSearchTerm;
+              highlightedNodeId === node.id && !!currentSearchTerm
 
             return {
               id: node.id,
@@ -609,7 +701,7 @@ const Syncfusion = () => {
               },
               cornerRadius: 6,
               shadow: { angle: 45, distance: 5, opacity: 0.1 },
-            };
+            }
           })}
           connectors={connectorsData}
           layout={LAYOUT_CONFIG}
@@ -617,30 +709,30 @@ const Syncfusion = () => {
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
           selectionChange={onSelectionChange}
-          expandStateChange={async (args) => {
-            const isExpanded = args.state;
-            const nodeId = args?.element?.id;
+          expandStateChange={async args => {
+            const isExpanded = args.state
+            const nodeId = args?.element?.id
 
-            if (!nodeId) return;
+            if (!nodeId) return
 
             // try {
             //   if (nodeId === structureId) {
             //     await dispatch(
             //       updateStructureExpandState({ id: nodeId, isExpanded })
-            //     ).unwrap();
+            //     ).unwrap()
             //   } else {
             //     await dispatch(
             //       updateExpandState({ id: nodeId, isExpanded })
-            //     ).unwrap();
+            //     ).unwrap()
             //   }
             // } catch (error) {
             //   cogoToast.error(
             //     `Failed to update expand state for node ${nodeId}`
-            //   );
-            //   console.error("Expand state update failed:", error);
+            //   )
+            //   console.error("Expand state update failed:", error)
             // }
           }}
-          getNodeDefaults={(node) => node}
+          getNodeDefaults={node => node}
         >
           <Inject services={[DataBinding, HierarchicalTree, UndoRedo]} />
         </DiagramComponent>
@@ -679,10 +771,65 @@ const Syncfusion = () => {
           wbs={generateWBSNumber(selectedNode?.id, nodesData, wbsStart)}
           structureName={nodesMap[structureId]?.name || "Structure"}
           onSuccess={() => {
-            handleNodeUpdate();
+            handleNodeUpdate()
           }}
         />
       )}
+      <ConfirmationModal
+        isOpen={modalState.isOpen}
+        title="Move Node"
+        content={`Do you want to reparent "${modalState.draggedNode?.name}" under "${modalState.targetNode?.name}"?`}
+        onReparent={async () => {
+          await dispatch(
+            reparentElements({
+              reparentingRequests: [
+                {
+                  sourceElementId: modalState.targetNode.id,
+                  targetElementId: modalState.draggedNode.id,
+                  attributes: { structureId },
+                },
+              ],
+            })
+          )
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          cogoToast.success("Node reparented successfully.")
+          await fetchStructure()
+          dragInProgress.current = false
+        }}
+        onReorder={async () => {
+          const siblings = nodesData
+            .filter(n => n.parent === modalState.targetNode.parent)
+            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
+
+          let insertIndex = siblings.findIndex(
+            n => n.id === modalState.targetNode.id
+          )
+          if (insertIndex === -1) insertIndex = siblings.length
+
+          const reordered = siblings.filter(
+            n => n.id !== modalState.draggedNode.id
+          )
+          reordered.splice(insertIndex, 0, modalState.draggedNode)
+
+          for (let i = 0; i < reordered.length; i++) {
+            const node = reordered[i]
+            if (node.orderIndex !== i) {
+              await dispatch(
+                updateElementOrderIndex({ id: node.id, orderIndex: i })
+              ).unwrap()
+            }
+          }
+
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          cogoToast.success("Node reordered successfully.")
+          await fetchStructure()
+          dragInProgress.current = false
+        }}
+        onClose={() => {
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          dragInProgress.current = false
+        }}
+      />
 
       {noResults && !isLoading && (
         <div className="absolute top-[15%] left-[37%] transform -translate-x-1/2 bg-yellow-100 border border-yellow-400 text-yellow-700 px-4 py-2 rounded z-50">
@@ -696,7 +843,7 @@ const Syncfusion = () => {
         </div>
       )}
     </>
-  );
-};
+  )
+}
 
-export default Syncfusion;
+export default Syncfusion

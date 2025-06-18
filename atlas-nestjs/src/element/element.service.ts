@@ -444,4 +444,38 @@ export class ElementService {
       throw new BadRequestException('Error updating expand state');
     }
   }
+  async updateOrderIndex(id: string, orderIndex: number, userId?: string) {
+    const element = await this.getElement(id);
+
+    try {
+      const updated = await this.prisma.element.update({
+        where: { id },
+        data: {
+          orderIndex,
+          updatedAt: new Date(),
+        },
+      });
+
+      await this.prisma.structure.update({
+        where: { id: updated.structureId },
+        data: { updatedAt: new Date() },
+      });
+
+      await this.logAudit(
+        'UPDATE',
+        'Element',
+        updated.id,
+        {
+          previousOrderIndex: element.orderIndex,
+          newOrderIndex: orderIndex,
+        },
+        userId,
+      );
+
+      return updated;
+    } catch (error) {
+      console.error(error);
+      throw new BadRequestException('Error updating order index');
+    }
+  }
 }
