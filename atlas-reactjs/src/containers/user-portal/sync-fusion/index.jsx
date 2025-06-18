@@ -444,122 +444,124 @@ const Syncfusion = () => {
   }
 
   const handleSearch = (level, searchTerm) => {
-    setSearchLoading(true)
-    setCurrentSearchTerm(searchTerm)
-    setNoResults(null)
-    setHighlightedNodeId(null)
-
-    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase()
-    const isLevelOnlySearch = level !== null && !cleanSearchTerm
-
+    setSearchLoading(true);
+    setCurrentSearchTerm(searchTerm);
+    setNoResults(null);
+    setHighlightedNodeId(null);
+  
+    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase();
+    const isLevelOnlySearch = level !== null && !cleanSearchTerm;
+  
     if (!isLevelOnlySearch && !cleanSearchTerm) {
-      const visibleIds = new Set()
-
-      const markVisible = nodeId => {
-        const node = nodesMap[nodeId]
-        if (!node) return
-
-        visibleIds.add(nodeId)
+      const visibleIds = new Set();
+  
+      const markVisible = (nodeId) => {
+        const node = nodesMap[nodeId];
+        if (!node) return;
+  
+        visibleIds.add(nodeId);
         if (node.isExpanded) {
           nodesData
-            .filter(n => n.parent === nodeId)
-            .forEach(child => markVisible(child.id))
+            .filter((n) => n.parent === nodeId)
+            .forEach((child) => markVisible(child.id));
         }
-      }
-
-      markVisible(structureId)
-
-      const resetNodes = nodesData.map(n => ({
+      };
+  
+      markVisible(structureId);
+  
+      const resetNodes = nodesData.map((n) => ({
         ...n,
         visible: visibleIds.has(n.id),
-      }))
-
-      setNodesData(resetNodes)
-
-      const visibleNodes = resetNodes.filter(n => n.visible)
+      }));
+  
+      setNodesData(resetNodes);
+  
+      const visibleNodes = resetNodes.filter((n) => n.visible);
       const connectors = createConnectors(visibleNodes).filter(
-        conn =>
-          visibleNodes.some(n => n.id === conn.sourceID) &&
-          visibleNodes.some(n => n.id === conn.targetID)
-      )
-      setConnectorsData(connectors)
-
-      setSearchLoading(false)
-      setDiagramKey(prev => prev + 1)
-      return
+        (conn) =>
+          visibleNodes.some((n) => n.id === conn.sourceID) &&
+          visibleNodes.some((n) => n.id === conn.targetID)
+      );
+      setConnectorsData(connectors);
+  
+      setSearchLoading(false);
+      setDiagramKey((prev) => prev + 1);
+      return;
     }
-
+  
     // STEP 1: Find matching node IDs
-    const matchingNodes = nodesData.filter(n => {
-      const levelMatch = level === null || n.level === level
+    const matchingNodes = nodesData.filter((n) => {
+      const levelMatch = level === null || n.level === level;
       const nameMatch = cleanSearchTerm
         ? n.name?.toLowerCase().includes(cleanSearchTerm)
-        : false
-
+        : false;
+  
       // If it's level-only search, ignore nameMatch completely
-      const matches = isLevelOnlySearch ? levelMatch : nameMatch && levelMatch
-
-      return matches && isNodeVisibleByExpandState(n.id)
-    })
-
+      const matches = isLevelOnlySearch ? levelMatch : nameMatch && levelMatch;
+  
+      return matches && isNodeVisibleByExpandState(n.id);
+    });
+  
     if (!matchingNodes.length) {
-      setNoResults(true)
-      setDiagramKey(prev => prev + 1)
-      setSearchLoading(false)
-      return
+      setNoResults(true);
+      setDiagramKey((prev) => prev + 1);
+      setSearchLoading(false);
+      return;
     }
-
-    const visibleIds = new Set()
-
-    const includeParents = nodeId => {
-      visibleIds.add(nodeId)
-      const parentId = nodesMap[nodeId]?.parent
-      if (parentId) includeParents(parentId)
-    }
-
+  
+    const visibleIds = new Set();
+  
+    const includeParents = (nodeId) => {
+      visibleIds.add(nodeId);
+      const parentId = nodesMap[nodeId]?.parent;
+      if (parentId) includeParents(parentId);
+    };
+  
     for (const match of matchingNodes) {
-      includeParents(match.id)
+      includeParents(match.id);
     }
-
-    setHighlightedNodeId(matchingNodes[0].id)
-
+  
+    setHighlightedNodeId(matchingNodes[0].id);
+  
     // Scroll to center the highlighted node
     setTimeout(() => {
-      const diagram = diagramRef.current
-      if (!diagram) return
-
-      const node = diagram.nodes.find(n => n.id === matchingNodes[0].id)
-      if (!node) return
-
-      const zoom = diagram.scrollSettings.currentZoom || 1
-      const diagramWidth = diagram.element.clientWidth
-      const diagramHeight = diagram.element.clientHeight
-
+      const diagram = diagramRef.current;
+      if (!diagram) return;
+  
+      const node = diagram.nodes.find((n) => n.id === matchingNodes[0].id);
+      if (!node) return;
+  
+      const zoom = diagram.scrollSettings.currentZoom || 1;
+      const diagramWidth = diagram.element.clientWidth;
+      const diagramHeight = diagram.element.clientHeight;
+  
       const scrollX =
-        node.offsetX * zoom - diagramWidth / 2 + (node.width * zoom) / 2
+        node.offsetX * zoom - diagramWidth / 2 + (node.width * zoom) / 2;
       const scrollY =
-        node.offsetY * zoom - diagramHeight / 2 + (node.height * zoom) / 2
-
-      diagram.scrollTo(scrollX, scrollY)
-    }, 300)
-
+        node.offsetY * zoom - diagramHeight / 2 + (node.height * zoom) / 2;
+  
+      diagram.scrollTo(scrollX, scrollY);
+      diagram.bringIntoView(node.wrapper.bounds); // Bring node into view
+    }, 300); // Delay to allow DOM + layout to update first
+  
     // STEP 3: Update node visibility
-    const updated = nodesData.map(n => ({
+    const updated = nodesData.map((n) => ({
       ...n,
       visible: visibleIds.has(n.id),
-    }))
-    setNodesData(updated)
-
-    const visibleNodes = updated.filter(n => n.visible)
+    }));
+    setNodesData(updated);
+  
+    const visibleNodes = updated.filter((n) => n.visible);
     const connectors = createConnectors(visibleNodes).filter(
-      conn =>
-        visibleNodes.some(n => n.id === conn.sourceID) &&
-        visibleNodes.some(n => n.id === conn.targetID)
-    )
-    setDiagramKey(prev => prev + 1)
-
-    setConnectorsData(connectors)
-  }
+      (conn) =>
+        visibleNodes.some((n) => n.id === conn.sourceID) &&
+        visibleNodes.some((n) => n.id === conn.targetID)
+    );
+    setDiagramKey((prev) => prev + 1);
+  
+    setConnectorsData(connectors);
+  };
+  
 
   const flattenFilteredTree = node => {
     if (!node) return []
