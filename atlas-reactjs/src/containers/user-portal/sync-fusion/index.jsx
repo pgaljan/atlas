@@ -229,7 +229,6 @@ const Syncfusion = () => {
       const containerElement = diagramRef.current?.element;
       const svgElement = containerElement?.querySelector("svg");
 
-      console.log(svgElement);
       if (svgElement) {
         await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch);
       }

@@ -71,6 +71,7 @@ const ExportModalStructure = ({
 
     try {
       const includeWbs = options.includes("Include WBS");
+      console.log(includeWbs);
       const includeTags = options.includes("Include tags");
       const isSyncfusion = window.location.href.includes("renderer=syncfusion");
 
@@ -92,14 +93,12 @@ const ExportModalStructure = ({
       }
 
       const exportFns = formats.map((format) => {
-        const clonedTreeData = JSON.parse(JSON.stringify(treeData)); 
-
         if (format === "HTML") {
           return () =>
             exportAsHtml(
-              clonedTreeData,
+              treeData,
               showWbs,
-              options.includes("Include WBS"),
+              includeWbs,
               colorStrategy,
               isMarkmap
             );
@@ -109,18 +108,16 @@ const ExportModalStructure = ({
           return () =>
             assembly === "Single"
               ? exportAsSinglePdf(
-                  clonedTreeData,
-                  showWbs,
-                  options.includes("Include WBS"),
-                  options.includes("Include tags"),
+                  treeData,
+                  includeWbs,
+                  includeTags,
                   svgContent,
                   colorStrategy
                 )
               : exportAsPdf(
-                  clonedTreeData,
-                  showWbs,
-                  options.includes("Include WBS"),
-                  options.includes("Include tags"),
+                  treeData,
+                  includeWbs,
+                  includeTags,
                   colorStrategy,
                   isMarkmap,
                   svgContent
@@ -131,19 +128,19 @@ const ExportModalStructure = ({
           return () =>
             assembly === "Single"
               ? exportAllAsSingleDoc(
-                  clonedTreeData,
+                  treeData,
                   showWbs,
-                  options.includes("Include WBS"),
-                  options.includes("Include tags"),
+                  includeWbs,
+                  includeTags,
                   colorStrategy
                 )
-              : exportAsDoc(
-                  clonedTreeData,
-                  showWbs,
-                  options.includes("Include WBS"),
-                  options.includes("Include tags"),
+              : exportAsPdf(
+                  treeData,
+                  includeWbs,
+                  includeTags,
                   colorStrategy,
-                  isMarkmap
+                  isMarkmap,
+                  svgContent
                 );
         }
 

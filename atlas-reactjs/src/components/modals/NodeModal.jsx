@@ -469,7 +469,7 @@ const NodeModal = ({
               />
             </div>
 
-            {/* <div className="mb-4">
+            <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Element Type
               </label>
@@ -550,9 +550,9 @@ const NodeModal = ({
                   </select>
                 </div>
               </>
-            )} */}
+            )}
 
-            {/* {elementType === "gate" && (
+            {elementType === "gate" && (
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Gate Type
@@ -577,7 +577,7 @@ const NodeModal = ({
                   <option value="sequence-enforce">Sequence Enforce</option>
                 </select>
               </div>
-            )} */}
+            )}
           </>
         </ModalComponent>
       )}

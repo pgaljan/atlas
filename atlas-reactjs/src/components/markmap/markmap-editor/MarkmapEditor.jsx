@@ -381,13 +381,18 @@ const MarkmapEditor = ({ structureId }) => {
     return cleanedNode;
   };
 
+  const colorStrategy = (index) => {
+    const colorScale = d3.scaleOrdinal(d3.schemeCategory10);
+    return colorScale(index);
+  };
+
   const handleExportOption = (option) => {
     if (option === "exportHtml") {
-      exportAsHtml(treeData, showWbs);
+      exportAsHtml(treeData, showWbs, showWbs, colorStrategy, true);
     } else if (option === "exportDoc") {
-      exportAsDoc(treeData, showWbs);
+      exportAsDoc(treeData, showWbs, showWbs, false, colorStrategy, true);
     } else if (option === "exportPdf") {
-      exportAsPdf(treeData, showWbs);
+      exportAsPdf(treeData, showWbs, showWbs, false, colorStrategy, true);
     }
   };
 
@@ -395,19 +400,27 @@ const MarkmapEditor = ({ structureId }) => {
     formats.forEach((fmt) => {
       switch (fmt) {
         case "HTML":
-          exportAsHtml(treeData, showWbs, includeWbs);
+          exportAsHtml(treeData, showWbs, includeWbs, colorStrategy, true);
           break;
         case "PDF":
-          exportAsPdf(treeData, showWbs, includeWbs, includeTags);
+          exportAsPdf(treeData, includeWbs, includeTags, colorStrategy, true);
           break;
         case "DOC":
-          exportAsDoc(treeData, showWbs, includeWbs, includeTags);
+          exportAsDoc(
+            treeData,
+            showWbs,
+            includeWbs,
+            includeTags,
+            colorStrategy,
+            true
+          );
           break;
         default:
           break;
       }
     });
   };
+
   return (
     <div
       className="flex flex-col h-full p-0 bg-gray-100"
