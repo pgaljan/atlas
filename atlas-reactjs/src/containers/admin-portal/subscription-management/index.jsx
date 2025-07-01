@@ -325,7 +325,7 @@ const index = () => {
             onSubmit={handleEditPlan}
             onSuccess={fetchPlansData}
             plan={selectedPlan}
-            title="Edit Subscription Plan"
+            title={selectedPlan?.name}
           />
           <DeleteModal
             isOpen={deleteModalOpen}

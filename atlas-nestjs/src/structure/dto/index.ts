@@ -1,5 +1,5 @@
-import { Visibility } from '@prisma/client';
-import { IsBoolean } from 'class-validator';
+import { StructureType, Visibility } from '@prisma/client';
+import { IsBoolean, IsEnum, IsOptional } from 'class-validator';
 
 export class CreateStructureDto {
   id: string;
@@ -14,6 +14,10 @@ export class CreateStructureDto {
   elements?: CreateElementDto[];
   maps?: CreateStructureMapDto[];
   userId: any;
+
+  @IsOptional()
+  @IsEnum(StructureType)
+  type?: StructureType;
 }
 
 export class CreateElementDto {

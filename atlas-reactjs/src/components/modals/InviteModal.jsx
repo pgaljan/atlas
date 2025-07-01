@@ -188,7 +188,7 @@ const InviteModal = ({ onClose }) => {
           <button
             className={`text-white px-4 py-2 rounded-md ${
               selectedEmails.length > 0
-                ? "bg-custom-main hover:bg-red-800"
+                ? "bg-custom-main hover:bg-custom-secondary"
                 : "bg-gray-400 cursor-not-allowed"
             }`}
             onClick={handleSendInvites}

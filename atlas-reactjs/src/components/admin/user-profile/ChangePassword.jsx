@@ -34,7 +34,7 @@ const ChangePasswordCard = () => {
           <h4 className="text-xl font-bold text-gray-800">Change Password</h4>
           <button
             onClick={openChangePasswordModal}
-            className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-custom-main px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-red-800"
+            className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-custom-main px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-custom-secondary"
           >
             <TbEditCircle className="w-5 h-4" /> Edit
           </button>
@@ -44,7 +44,7 @@ const ChangePasswordCard = () => {
           <h4 className="text-xl font-bold text-red-600">Delete Account</h4>
           <button
             onClick={openDeleteAccountModal}
-            className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-red-800"
+            className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-red-600 px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-custom-secondary"
           >
             <IoTrash className="w-5 h-4" /> Delete
           </button>
@@ -95,7 +95,7 @@ const ChangePasswordCard = () => {
               <button
                 type="button"
                 onClick={handleSave}
-                className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-red-800"
+                className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-custom-secondary"
               >
                 Save Changes
               </button>
@@ -128,7 +128,7 @@ const ChangePasswordCard = () => {
             <button
               type="button"
               onClick={closeDeleteAccountModal}
-              className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-red-800"
+              className="px-4 py-2 text-base font-medium text-white rounded-md bg-custom-main hover:bg-custom-secondary"
             >
               Delete Account
             </button>

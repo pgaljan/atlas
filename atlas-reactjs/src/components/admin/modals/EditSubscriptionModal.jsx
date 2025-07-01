@@ -44,7 +44,9 @@ const EditSubscriptionModal = ({ isOpen, onClose, onSubmit, plan, title }) => {
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-end z-50">
       <div className="bg-white rounded-3xl shadow-lg p-6 w-[400px] h-full overflow-auto relative">
-        <h2 className="mb-2 text-3xl font-bold text-gray-800">{title}</h2>
+        <h2 className="mb-2 text-3xl font-bold text-gray-800">
+          Update {title}
+        </h2>
         <h3 className="text-base text-gray-500 mb-6">
           Modify the details of the subscription plan.
         </h3>
@@ -115,7 +117,7 @@ const EditSubscriptionModal = ({ isOpen, onClose, onSubmit, plan, title }) => {
             </button>
             <button
               type="submit"
-              className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-red-800 transition"
+              className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-custom-secondary transition"
             >
               Save Changes
             </button>

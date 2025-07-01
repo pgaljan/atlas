@@ -6,7 +6,8 @@ export default {
     extend: {
       colors: {
         custom: {
-          main: "#660000",
+          main: "var(--primary-color)",
+          secondary: "var(--secondary-color)",
           text: {
             DEFAULT: "#393939",
             white: "#FDFCFC",
@@ -15,7 +16,7 @@ export default {
           },
           background: {
             white: "#FFFFFF",
-          },    
+          },
           navbar: {
             DEFAULT: "#222222",
             active: "#000000",
@@ -99,5 +100,5 @@ export default {
       },
     },
   },
- plugins: [require('@tailwindcss/typography')],
+  plugins: [require("@tailwindcss/typography")],
 };

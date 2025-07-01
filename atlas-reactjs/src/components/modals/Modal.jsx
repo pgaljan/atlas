@@ -36,7 +36,6 @@ const ModalComponent = ({
           <div className="flex justify-between items-center py-3 px-4 border-b">
             <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
 
-
             <button
               className="text-gray-500 hover:text-gray-700"
               onClick={onClose}
@@ -93,7 +92,7 @@ const ModalComponent = ({
             ${
               disabled
                 ? "bg-custom-main cursor-not-allowed opacity-50"
-                : "bg-custom-main hover:bg-red-800"
+                : "bg-custom-main hover:bg-custom-secondary"
             }
           `}
                   >

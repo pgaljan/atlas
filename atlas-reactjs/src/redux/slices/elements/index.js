@@ -56,9 +56,10 @@ export const updateElement = createAsyncThunk(
   "element/update",
   async ({ id, updateElementData }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.patch(`/element/update/${id}`, {
-        name: updateElementData,
-      });
+      const response = await axiosInstance.patch(
+        `/element/update/${id}`,
+        updateElementData
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);

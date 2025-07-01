@@ -1,12 +1,12 @@
-import { Sidebar } from "flowbite-react"
-import React from "react"
-import { BiCarousel } from "react-icons/bi"
-import { FiUsers } from "react-icons/fi"
-import { HiMiniClipboardDocumentCheck } from "react-icons/hi2"
-import { IoMdArrowRoundBack } from "react-icons/io"
-import { IoSettings } from "react-icons/io5"
-import { MdOutlinePrivacyTip, MdWorkspacePremium } from "react-icons/md"
-import { Link, useLocation } from "react-router-dom"
+import { Sidebar } from "flowbite-react";
+import React from "react";
+import { BiCarousel } from "react-icons/bi";
+import { FiUsers } from "react-icons/fi";
+import { HiMiniClipboardDocumentCheck } from "react-icons/hi2";
+import { IoMdArrowRoundBack } from "react-icons/io";
+import { IoSettings } from "react-icons/io5";
+import { MdOutlinePrivacyTip, MdWorkspacePremium } from "react-icons/md";
+import { Link, useLocation } from "react-router-dom";
 
 const ownTheme = {
   root: {
@@ -19,18 +19,18 @@ const ownTheme = {
       "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 pt-2 pb-4 px-3 border-t-0",
   },
   item: {
-    base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-[#660000] transition duration-75",
-    active: "bg-[#660000] text-white",
-    hover: "hover:bg-[#660000] hover:text-white group",
+    base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-custom-main transition duration-75",
+    active: "bg-custom-main text-white",
+    hover: "hover:bg-custom-main hover:text-white group",
     icon: {
-      base: "h-6 w-6 flex-shrink-0 text-[#660000] transition duration-75 group-hover:text-white",
+      base: "h-6 w-6 flex-shrink-0 text-custom-main transition duration-75 group-hover:text-white",
       active: "text-white",
     },
   },
-}
+};
 
 const AdminSidebar = () => {
-  const location = useLocation()
+  const location = useLocation();
 
   const menuItems = [
     {
@@ -63,7 +63,7 @@ const AdminSidebar = () => {
       icon: IoSettings,
       link: "/app/admin-portal/settings",
     },
-  ]
+  ];
 
   return (
     <Sidebar
@@ -73,7 +73,7 @@ const AdminSidebar = () => {
       <div className="relative h-full flex flex-col justify-between">
         <Sidebar.Items>
           <Sidebar.ItemGroup className="mt-0 border-none">
-            {menuItems.map(item => (
+            {menuItems.map((item) => (
               <Sidebar.Item
                 key={item.name}
                 className={`${
@@ -110,7 +110,7 @@ const AdminSidebar = () => {
         </div>
       </div>
     </Sidebar>
-  )
-}
+  );
+};
 
-export default AdminSidebar
+export default AdminSidebar;

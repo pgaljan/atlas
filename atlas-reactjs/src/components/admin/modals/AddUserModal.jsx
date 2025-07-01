@@ -84,7 +84,7 @@ const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
             </button>
             <button
               type="submit"
-              className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-red-800"
+              className="py-2 px-4 rounded-md bg-custom-main text-white hover:bg-custom-secondary"
             >
               Save {title}
             </button>

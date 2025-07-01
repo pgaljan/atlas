@@ -20,8 +20,14 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
   const [structureId, setStructureId] = useState(null);
   const [showRendererModal, setShowRendererModal] = useState(false);
 
+  const sortedData = useMemo(() => {
+    return [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+  }, [data]);
+
+  console.log(sortedData)
+
   const handleUseTemplate = async () => {
-    const currentItem = data[currentIndex];
+    const currentItem = sortedData[currentIndex];
     const fileUrl = currentItem?.fileUrl;
 
     if (!fileUrl) {
@@ -49,13 +55,8 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     }
   };
 
-  const sortedData = useMemo(() => {
-    return [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
-  }, [data]);
-
   const handleRendererSelect = (renderer) => {
     setShowRendererModal(false);
-
     if (structureId && username) {
       (onUseTemplate || onClose)?.();
       navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`);
@@ -63,7 +64,6 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
   };
 
   const hasData = sortedData.length > 0;
-
   if (!hasData) return null;
 
   return (
@@ -82,7 +82,8 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
           <div className="w-full h-[300px] md:h-[400px] bg-gray-200">
             <img
               src={
-                data[currentIndex]?.thumbnailUrl || data[currentIndex]?.fileUrl
+                sortedData[currentIndex]?.thumbnailUrl ||
+                sortedData[currentIndex]?.fileUrl
               }
               alt="Banner"
               className="w-full h-full object-cover"
@@ -92,10 +93,10 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
           {/* Info */}
           <div className="px-4 py-2 bg-white">
             <h2 className="text-lg md:text-xl font-semibold text-gray-800">
-              {data[currentIndex]?.name}
+              {sortedData[currentIndex]?.name}
             </h2>
             <p className="text-sm md:text-[14px] font-semibold text-gray-800">
-              {data[currentIndex]?.description}
+              {sortedData[currentIndex]?.description}
             </p>
           </div>
 
@@ -117,7 +118,7 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
             {/* Pagination */}
             <div className="flex flex-col items-center gap-2">
               <div className="flex gap-2">
-                {data.map((_, idx) => (
+                {sortedData.map((_, idx) => (
                   <div
                     key={idx}
                     className={cn(
@@ -127,7 +128,7 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
                   />
                 ))}
               </div>
-              {data.length > 1 && (
+              {sortedData.length > 1 && (
                 <div className="flex gap-2">
                   <button
                     onClick={() =>
@@ -145,12 +146,12 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
                   <button
                     onClick={() =>
                       setCurrentIndex((i) =>
-                        i === data.length - 1 ? i : i + 1
+                        i === sortedData.length - 1 ? i : i + 1
                       )
                     }
-                    disabled={currentIndex === data.length - 1}
+                    disabled={currentIndex === sortedData.length - 1}
                     className={
-                      currentIndex === data.length - 1
+                      currentIndex === sortedData.length - 1
                         ? "text-gray-400 cursor-not-allowed text-2xl"
                         : "text-gray-700 hover:text-amber-500 text-2xl"
                     }

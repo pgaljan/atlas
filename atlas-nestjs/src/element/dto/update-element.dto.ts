@@ -1,28 +1,44 @@
 import { Type } from 'class-transformer';
-import { IsInt, IsOptional, IsString } from 'class-validator';
+import { IsOptional, IsString, IsIn } from 'class-validator';
 
 export class UpdateElementDto {
-  @IsInt()
+  @IsString()
   id: string;
 
   @IsOptional()
   @IsString()
   name?: string;
 
-  @IsInt()
   @IsOptional()
+  @IsString()
   parentId?: string;
 
   @IsOptional()
-  @IsInt()
+  @IsString()
   recordId?: string;
 
   @IsOptional()
-  @IsInt()
-  wbsLevel?: number;
+  @IsString()
+  type?: string;
 
   @IsOptional()
-  @Type(() => Boolean)  
+  @IsString()
+  eventType?: string;
+
+  @IsOptional()
+  @IsString()
+  gateType?: string;
+
+  @IsOptional()
+  @IsString()
+  eventCode?: string;
+
+  @IsOptional()
+  @IsIn(['P', 'A'])
+  status?: string;
+
+  @IsOptional()
+  @Type(() => Boolean)
   isExpanded?: boolean;
 
   @IsOptional()

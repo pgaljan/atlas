@@ -276,7 +276,7 @@ const MarkmapHeader = ({
 
   const handleWbsToggle = async (checked) => {
     if (checked) {
-      setIsWbsModalOpen(true);
+      handleWbsModeSelect("manual");
     } else {
       try {
         await dispatch(
@@ -293,12 +293,10 @@ const MarkmapHeader = ({
   };
 
   const handleWbsModeSelect = async (mode) => {
-    setIsWbsModalOpen(false);
     setWbsMode(mode);
     localStorage.setItem(`wbs_mode_${structureId}`, mode);
 
     try {
-      // Enable WBS in backend
       await dispatch(
         updateStructure({
           id: structureId,
@@ -306,10 +304,24 @@ const MarkmapHeader = ({
         })
       );
       setShowWbs(true);
-      if (mode === "auto") {
-        await dispatch(updateWbsStart({ id: structureId, wbsStart: 1 }));
+
+      if (mode === "manual") {
+        // Get latest structure data
+        const data = await dispatch(getStructure(structureId)).unwrap();
+        const currentWbsStart = data?.wbsStart;
+
+        const startValue =
+          typeof currentWbsStart === "number" ? currentWbsStart : 1;
+        setWbsStart(startValue);
+
+        if (currentWbsStart === null || currentWbsStart === undefined) {
+          await dispatch(updateWbsStart({ id: structureId, wbsStart: 1 }));
+        }
+
         onSuccess?.();
-        cogoToast.success("WBS set to auto start from 1.");
+        cogoToast.success(
+          `Manual WBS mode enabled (starting at ${startValue}).`
+        );
       }
     } catch (err) {
       cogoToast.error("Failed to enable WBS.");
@@ -373,7 +385,7 @@ const MarkmapHeader = ({
           <div className="flex items-center w-full justify-between">
             <div className="header-container flex items-center space-x-3 p-3 rounded-lg bg-slate-200">
               <Link to="/app/dashboard">
-                <h1 className="text-2xl font-bold text-[#660000] uppercase">
+                <h1 className="text-2xl font-bold text-custom-main uppercase">
                   {appName}
                 </h1>
               </Link>
@@ -564,7 +576,7 @@ const MarkmapHeader = ({
 
               <Link to={"/app/coming-soon"}>
                 <button
-                  className="flex items-center bg-custom-main/70 cursor-not-allowed text-white px-4 py-2 rounded-lg"
+                  className="flex items-center bg-custom-main opacity-70 cursor-not-allowed text-white px-4 py-2 rounded-lg"
                   // onClick={() => setIsShareModalOpen(true)}
                 >
                   <FaUserPlus size={20} className="mr-2" />

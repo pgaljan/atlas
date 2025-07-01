@@ -14,7 +14,7 @@ const Header = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
-  const [appName, setAppName] = useState("ATLAS");
+  const [appName, setAppName] = useState("loading ...");
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -61,7 +61,7 @@ const Header = () => {
         {/* Logo on the Left */}
         <Navbar.Brand href="#" className="flex items-center gap-2">
           <img src={logoUrl} className="h-8 w-8" alt={appName} />
-          <span className="text-2xl font-bold text-[#660000] uppercase">
+          <span className="text-2xl font-bold text-custom-main uppercase">
             {appName}
           </span>
         </Navbar.Brand>

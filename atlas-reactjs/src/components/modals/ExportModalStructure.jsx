@@ -92,12 +92,14 @@ const ExportModalStructure = ({
       }
 
       const exportFns = formats.map((format) => {
+        const clonedTreeData = JSON.parse(JSON.stringify(treeData)); 
+
         if (format === "HTML") {
           return () =>
             exportAsHtml(
-              treeData,
+              clonedTreeData,
               showWbs,
-              includeWbs,
+              options.includes("Include WBS"),
               colorStrategy,
               isMarkmap
             );
@@ -107,18 +109,18 @@ const ExportModalStructure = ({
           return () =>
             assembly === "Single"
               ? exportAsSinglePdf(
-                  treeData,
+                  clonedTreeData,
                   showWbs,
-                  includeWbs,
-                  includeTags,
+                  options.includes("Include WBS"),
+                  options.includes("Include tags"),
                   svgContent,
                   colorStrategy
                 )
               : exportAsPdf(
-                  treeData,
+                  clonedTreeData,
                   showWbs,
-                  includeWbs,
-                  includeTags,
+                  options.includes("Include WBS"),
+                  options.includes("Include tags"),
                   colorStrategy,
                   isMarkmap,
                   svgContent
@@ -129,17 +131,17 @@ const ExportModalStructure = ({
           return () =>
             assembly === "Single"
               ? exportAllAsSingleDoc(
-                  treeData,
+                  clonedTreeData,
                   showWbs,
-                  includeWbs,
-                  includeTags,
+                  options.includes("Include WBS"),
+                  options.includes("Include tags"),
                   colorStrategy
                 )
               : exportAsDoc(
-                  treeData,
+                  clonedTreeData,
                   showWbs,
-                  includeWbs,
-                  includeTags,
+                  options.includes("Include WBS"),
+                  options.includes("Include tags"),
                   colorStrategy,
                   isMarkmap
                 );

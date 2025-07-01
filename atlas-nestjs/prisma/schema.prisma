@@ -44,6 +44,11 @@ enum EditorType {
   plantuml
 }
 
+enum StructureType {
+  default
+  faultTree
+}
+
 model Workspace {
   id        String   @id @default(uuid())
   name      String
@@ -213,6 +218,7 @@ model Structure {
   updatedAt      DateTime        @updatedAt
   deletedAt      DateTime?
   visibility     Visibility      @default(private)
+  type           StructureType   @default(default)
   elements       Element[]
   parsedData     ParsedContent[]
   renderers      Renderer[]
@@ -226,25 +232,32 @@ model Structure {
 }
 
 model Element {
-  id            String         @id @default(uuid())
+  id            String    @id @default(uuid())
   structureId   String
   recordId      String?
   parentId      String?
   name          String?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
   deletedAt     DateTime?
   elementLinkId String?
-  isExpanded    Boolean?       @default(true)
-  orderIndex    Int            @default(0)
-  ElementLink   ElementLink?   @relation(fields: [elementLinkId], references: [id])
-  parent        Element?       @relation("ParentChild", fields: [parentId], references: [id])
-  children      Element[]      @relation("ParentChild")
-  structure     Structure      @relation(fields: [structureId], references: [id], onDelete: Cascade)
-  Record        Record?        @relation(fields: [recordId], references: [id])
-  sourceLinks   ElementLink[]  @relation("SourceElement")
-  targetLinks   ElementLink[]  @relation("TargetElement")
-  StructureMap  StructureMap[] @relation("MapElements")
+  isExpanded    Boolean?  @default(true)
+  orderIndex    Int       @default(0)
+
+  type      String?
+  eventType String?
+  gateType  String?
+  eventCode String?
+  status    String?
+
+  ElementLink  ElementLink?   @relation(fields: [elementLinkId], references: [id])
+  parent       Element?       @relation("ParentChild", fields: [parentId], references: [id])
+  children     Element[]      @relation("ParentChild")
+  structure    Structure      @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  Record       Record?        @relation(fields: [recordId], references: [id])
+  sourceLinks  ElementLink[]  @relation("SourceElement")
+  targetLinks  ElementLink[]  @relation("TargetElement")
+  StructureMap StructureMap[] @relation("MapElements")
 }
 
 model Record {
@@ -428,11 +441,13 @@ model TermsOfService {
 }
 
 model AppSettings {
-  id           String   @id @default(uuid())
-  appName      String?
-  logoUrl      String?
-  supportEmail String?
-  feedbackLink String?
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
+  id             String   @id @default(uuid())
+  appName        String?
+  logoUrl        String?
+  supportEmail   String?
+  feedbackLink   String?
+  primaryColor   String?
+  secondaryColor String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }

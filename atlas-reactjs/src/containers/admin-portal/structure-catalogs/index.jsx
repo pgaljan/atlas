@@ -50,7 +50,10 @@ const StructureCatalog = () => {
     try {
       setLoading(true);
       const data = await dispatch(fetchCatalogs()).unwrap();
-      setCatalogs(data);
+
+      // Sort by order field
+      const sorted = [...data].sort((a, b) => a.order - b.order);
+      setCatalogs(sorted);
     } catch (error) {
       console.error("Failed to fetch catalogs:", error);
     } finally {
@@ -166,21 +169,26 @@ const StructureCatalog = () => {
   };
 
   // Drag & Drop Reordering
-  const handleDragEnd = async (result) => { 
+  const handleDragEnd = async (result) => {
     if (!result.destination) return;
 
     const updatedCatalogs = Array.from(catalogs);
     const [moved] = updatedCatalogs.splice(result.source.index, 1);
     updatedCatalogs.splice(result.destination.index, 0, moved);
-    setCatalogs(updatedCatalogs);
+
+    // Update the local order values
+    const reordered = updatedCatalogs.map((item, index) => ({
+      ...item,
+      order: index,
+    }));
+
+    setCatalogs(reordered);
 
     try {
-      const payload = updatedCatalogs.map((cat, idx) => ({
-        id: cat.id,
-        order: idx,
-      }));
+      const payload = reordered.map(({ id, order }) => ({ id, order }));
       await dispatch(reorderCatalogs(payload)).unwrap();
       cogoToast.success("Catalogs reordered successfully!");
+      fetchCatalogData();
     } catch (error) {
       cogoToast.error("Failed to reorder catalogs.");
     }
@@ -240,7 +248,7 @@ const StructureCatalog = () => {
                   <th className="px-5 py-3 text-left">Description</th>
                   <th className="px-5 py-3 text-left">User Tier</th>
                   <th className="px-5 py-3 text-left">Thumbnail</th>
-                  <th className="px-5 py-3 text-left">Order</th>
+                  {/* <th className="px-5 py-3 text-left">Order</th> */}
                   <th className="px-5 py-3 text-left">Actions</th>
                 </tr>
               </thead>
@@ -293,7 +301,7 @@ const StructureCatalog = () => {
                                 <span className="text-gray-500">No Image</span>
                               )}
                             </td>
-                            <td className="px-5 py-4">
+                            {/* <td className="px-5 py-4">
                               <input
                                 type="number"
                                 className="w-16 border rounded px-2 py-1 text-center"
@@ -312,7 +320,7 @@ const StructureCatalog = () => {
                                   )
                                 }
                               />
-                            </td>
+                            </td> */}
 
                             <td className="px-5 py-4 flex gap-3">
                               <Tooltip label="Edit">
@@ -375,7 +383,7 @@ const StructureCatalog = () => {
             isOpen={editModalOpen}
             onClose={() => setEditModalOpen(false)}
             onSubmit={handleEditCatalog}
-            title="Edit Catalog"
+            title={`Update ${CatalogName}`}
             CatalogName={CatalogName}
             setCatalogName={setCatalogName}
             description={description}

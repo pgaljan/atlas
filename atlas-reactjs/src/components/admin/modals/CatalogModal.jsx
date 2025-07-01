@@ -64,7 +64,7 @@ const CatalogModal = ({
     if (!selectedFile) return;
 
     // enforce zip
-    if (!selectedFile.name.toLowerCase().endsWith(".zip")) {
+    if (!selectedFile?.name?.toLowerCase()?.endsWith(".zip")) {
       setErrors((prev) => ({ ...prev, file: "Only .zip files are allowed" }));
       return;
     }

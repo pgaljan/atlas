@@ -15,7 +15,7 @@ import DiscardModal from "../modals/DiscardModal";
 import PlantUMLRenderer from "../plantUml/PlantUmlRenderer";
 import MarkJsRenderer from "../markedJs/MarkedJsRenderer";
 import MermaidRenderer from "../marmeid/MermaidRenderer";
-import marked from "../markedJs/MarkedHelper"; 
+import marked from "../markedJs/MarkedHelper";
 import DOMPurify from "dompurify";
 
 const AddQuillModal = ({
@@ -166,8 +166,8 @@ const AddQuillModal = ({
       quillContent.trim() ||
       mermaidCodeContent.trim() ||
       markedJsContent.trim() ||
-      plantUmlContent.trim() ||
-      tags.length > 0;
+      plantUmlContent.trim();
+    // tags.length > 0
 
     if (hasContentOrTags) {
       setPendingDiscard({ type: "main", value: newEditor });
@@ -182,8 +182,8 @@ const AddQuillModal = ({
     const hasContentOrTags =
       mermaidCodeContent.trim() ||
       markedJsContent.trim() ||
-      plantUmlContent.trim() ||
-      tags.length > 0;
+      plantUmlContent.trim();
+    // tags.length > 0
 
     if (hasContentOrTags) {
       setPendingDiscard({ type: "sub", value: newRenderer });
@@ -199,7 +199,7 @@ const AddQuillModal = ({
     setMermaidCodeContent("");
     setMarkedJsContent("");
     setPlantUmlContent("");
-    setTags([]);
+    // setTags([]);
   };
 
   const confirmDiscard = () => {
@@ -426,7 +426,7 @@ const AddQuillModal = ({
             <div className="flex items-center">
               <button
                 onClick={() => handleFeatureClick(canTags, addTag)}
-                className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-red-800 focus:outline-none flex items-center"
+                className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-custom-secondary focus:outline-none flex items-center"
               >
                 <BsTags className="h-5 w-5 mr-2" /> Add Tags
               </button>
@@ -509,7 +509,7 @@ const AddQuillModal = ({
             disabled={!hasChanges || isLoading}
             className={`py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg ${
               hasChanges
-                ? "bg-custom-main text-white hover:bg-red-800"
+                ? "bg-custom-main text-white hover:bg-custom-secondary"
                 : "bg-gray-300 text-gray-500 cursor-not-allowed"
             }`}
           >

@@ -31,8 +31,15 @@ export class StructureService {
   }
 
   async createStructure(createStructureDto: CreateStructureDto) {
-    const { name, description, visibility, ownerId, elements, workspaceId } =
-      createStructureDto;
+    const {
+      name,
+      description,
+      visibility,
+      ownerId,
+      elements,
+      workspaceId,
+      type = 'default',
+    } = createStructureDto;
 
     try {
       // Check if a structure with the same name already exists
@@ -95,6 +102,7 @@ export class StructureService {
           description,
           visibility: visibility || Visibility.private,
           ownerId,
+          type,
           workspaceId,
           elements: {
             create: elements ? this.formatElements(elements) : [],
@@ -197,6 +205,7 @@ export class StructureService {
         imageUrl,
         elements,
         maps,
+        type,
         markmapShowWbs,
       } = updateData;
 
@@ -220,7 +229,7 @@ export class StructureService {
           visibility: visibility || undefined,
           imageUrl: imageUrl || undefined,
           updatedAt: new Date(),
-
+          type: type || undefined,
           elements: elements
             ? {
                 deleteMany: {},

@@ -18,7 +18,7 @@ const WbsModeModal = ({ isOpen, onClose, onSelect }) => {
             exit={{ scale: 0.85 }}
             onClick={(e) => e.stopPropagation()}
           >
-            <h3 className="text-xl font-bold mb-2 text-[#660000]">
+            <h3 className="text-xl font-bold mb-2 text-custom-main">
               Select WBS Mode
             </h3>
             <p className="text-sm text-gray-600 mb-5">
@@ -27,7 +27,7 @@ const WbsModeModal = ({ isOpen, onClose, onSelect }) => {
             <div className="flex justify-center gap-4">
               <button
                 onClick={() => onSelect("manual")}
-                className="px-4 py-2 rounded-xl bg-custom-main text-white font-semibold text-sm transition hover:bg-red-800"
+                className="px-4 py-2 rounded-xl bg-custom-main text-white font-semibold text-sm transition hover:bg-custom-secondary"
               >
                 Manual
               </button>

@@ -28,11 +28,11 @@ const ownTheme = {
       "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 py-4 px-3 dark:bg-gray-800",
   },
   item: {
-    base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-[#660000] transition duration-75",
-    active: "bg-[#660000] text-white",
-    hover: "hover:bg-[#660000] hover:text-white group",
+    base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-custom-main transition duration-75",
+    active: "bg-custom-main text-white",
+    hover: "hover:bg-custom-main hover:text-white group",
     icon: {
-      base: "h-6 w-6 flex-shrink-0 text-[#660000] transition duration-75 group-hover:text-white",
+      base: "h-6 w-6 flex-shrink-0 text-custom-main transition duration-75 group-hover:text-white",
       active: "text-white",
     },
   },
@@ -65,6 +65,8 @@ export function SidebarPage({ onSubmit }) {
           const settings = resultAction.payload;
           if (settings?.feedbackLink) {
             setFeedbackLink(settings.feedbackLink);
+            localStorage.setItem("appName", settings.appName);
+            localStorage.setItem("primaryColor", settings.primaryColor);
           }
         } else {
           cogoToast.error("Failed to fetch app settings.");
@@ -192,7 +194,7 @@ export function SidebarPage({ onSubmit }) {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="border-2 border-custom-main text-custom-main py-2 flex items-center justify-center rounded-md hover:bg-custom-main hover:text-white transition-colors"
-                  >
+                >
                   <BiSolidMessageRoundedDots className="mr-2" />
                   Feedback
                 </a>

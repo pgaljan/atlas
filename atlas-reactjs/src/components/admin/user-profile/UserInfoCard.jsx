@@ -75,7 +75,7 @@ const UserInfoCard = () => {
 
         <button
           onClick={openModal}
-          className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-custom-main px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-red-800"
+          className="flex w-auto lg:w-auto items-center justify-center gap-1 rounded-lg  bg-custom-main px-3 py-2 text-sm font-medium text-white shadow-theme-xs hover:bg-custom-secondary"
         >
           <TbEditCircle className="w-5 h-4" />
           Edit
@@ -140,7 +140,7 @@ const UserInfoCard = () => {
               <button
                 type="button"
                 onClick={handleSave}
-                className="px-4 py-2 text-base font-medium text-white  rounded-md bg-custom-main hover:bg-red-800"
+                className="px-4 py-2 text-base font-medium text-white  rounded-md bg-custom-main hover:bg-custom-secondary"
               >
                 Save Changes
               </button>

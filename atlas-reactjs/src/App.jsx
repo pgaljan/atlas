@@ -5,6 +5,8 @@ import AdminPrivateRoute from "./routes/AdminPrivateRoute";
 import PrivateRoute from "./routes/PrivateRoute";
 import PublicRoute from "./routes/PublicRoute";
 import { registerLicense } from "@syncfusion/ej2-base";
+import { fetchAppSettings } from "./redux/slices/app-settings";
+import { useDispatch } from "react-redux";
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
 const ComingSoon = lazy(() => import("./components/comming-soon/CommingSoon"));
@@ -130,9 +132,37 @@ const adminRoutes = [
 ];
 
 const App = () => {
+  const dispatch = useDispatch();
   const location = useLocation();
   const navigate = useNavigate();
   const [isModalVisible, setIsModalVisible] = useState(false);
+
+  useEffect(() => {
+    const loadAndSetColors = async () => {
+      try {
+        const resultAction = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(resultAction)) {
+          const settings = resultAction.payload;
+          if (settings?.primaryColor) {
+            document.documentElement.style.setProperty(
+              "--primary-color",
+              settings.primaryColor
+            );
+          }
+          if (settings?.secondaryColor) {
+            document.documentElement.style.setProperty(
+              "--secondary-color",
+              settings.secondaryColor
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Failed to load theme colors:", error);
+      }
+    };
+
+    loadAndSetColors();
+  }, [dispatch]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

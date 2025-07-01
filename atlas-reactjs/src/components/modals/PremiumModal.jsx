@@ -1,6 +1,6 @@
-import React from "react"
-import Icons from "../../constants/icons"
-import { Link } from "react-router-dom"
+import React from "react";
+import Icons from "../../constants/icons";
+import { Link } from "react-router-dom";
 
 const PremiumModal = ({ closeModal }) => {
   return (
@@ -38,7 +38,7 @@ const PremiumModal = ({ closeModal }) => {
           {/* Upgrade Button */}
           <Link
             to="/app/upgrade-plans"
-            className="bg-custom-main text-white hover:bg-red-800 text-lg px-8 py-3 rounded-full"
+            className="bg-custom-main text-white hover:bg-custom-secondary text-lg px-8 py-3 rounded-full"
           >
             Upgrade Now
           </Link>
@@ -56,7 +56,7 @@ const PremiumModal = ({ closeModal }) => {
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default PremiumModal
+export default PremiumModal;

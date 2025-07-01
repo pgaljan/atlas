@@ -1,5 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { FaUpload } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
@@ -15,26 +15,32 @@ const Settings = () => {
   const [feedbackLink, setFeedbackLink] = useState("");
   const [appName, setAppName] = useState("");
   const [supportEmail, setSupportEmail] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#660000");
+  const [secondaryColor, setSecondaryColor] = useState("#006666");
   const [loading, setLoading] = useState(false);
+  const colorInputRef = useRef(null);
+  const secondaryColorInputRef = useRef(null);
+
+  const loadSettings = async () => {
+    try {
+      const resultAction = await dispatch(fetchAppSettings());
+      if (fetchAppSettings.fulfilled.match(resultAction)) {
+        const settings = resultAction?.payload;
+        if (settings) {
+          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
+          setAppName(settings.appName || "");
+          setSupportEmail(settings.supportEmail || "");
+          setFeedbackLink(settings.feedbackLink || "");
+          setPrimaryColor(settings.primaryColor || "#660000");
+          setSecondaryColor(settings.secondaryColor || "#006666");
+        }
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
 
   useEffect(() => {
-    const loadSettings = async () => {
-      try {
-        const resultAction = await dispatch(fetchAppSettings());
-        if (fetchAppSettings.fulfilled.match(resultAction)) {
-          const settings = resultAction?.payload;
-          if (settings) {
-            setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
-            setAppName(settings.appName || "");
-            setSupportEmail(settings.supportEmail || "");
-            setFeedbackLink(settings.feedbackLink || "");
-          }
-        }
-      } catch (error) {
-        console.log(error);
-      }
-    };
-
     loadSettings();
   }, [dispatch]);
 
@@ -56,18 +62,31 @@ const Settings = () => {
       cogoToast.error("Upload failed.");
     }
   };
+
   const handleSaveAllSettings = async () => {
     try {
       setLoading(true);
       await dispatch(
-        saveAppSettings({ logoUrl, feedbackLink, appName, supportEmail })
+        saveAppSettings({
+          logoUrl,
+          feedbackLink,
+          appName,
+          supportEmail,
+          primaryColor,
+          secondaryColor,
+        })
       ).unwrap();
       cogoToast.success("App settings saved successfully.");
+      loadSettings();
     } catch (err) {
       cogoToast.error("Failed to save app settings.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const openColorPicker = () => {
+    colorInputRef.current?.click();
   };
 
   return (
@@ -93,7 +112,7 @@ const Settings = () => {
             </div>
           </div>
 
-          <label className="cursor-pointer flex items-center gap-2 rounded-lg bg-custom-main px-4 py-2 text-sm font-medium text-white shadow hover:bg-red-800 transition">
+          <label className="cursor-pointer flex items-center gap-2 rounded-lg bg-custom-main px-4 py-2 text-sm font-medium text-white shadow hover:bg-custom-secondary transition">
             <FaUpload className="w-4 h-4" />
             Upload New
             <input
@@ -130,19 +149,70 @@ const Settings = () => {
         </section>
 
         {/* Feedback Link */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200">
+        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
           <h3 className="text-xl font-semibold mb-4">Feedback Link</h3>
-          <div className="flex flex-col sm:flex-row items-stretch gap-3">
+          <input
+            type="url"
+            value={feedbackLink}
+            onChange={(e) => setFeedbackLink(e.target.value)}
+            placeholder="https://example.com/feedback"
+            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+          />
+        </section>
+
+        {/* Primary Color */}
+        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+          <h3 className="text-xl font-semibold mb-4">Primary Color</h3>
+          <div className="relative">
             <input
-              id="feedbackLink"
-              type="url"
-              value={feedbackLink}
-              onChange={(e) => setFeedbackLink(e.target.value)}
-              placeholder="https://example.com/feedback"
-              className="flex-1 p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+              type="text"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+            />
+            <div
+              className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
+              style={{ backgroundColor: primaryColor }}
+              onClick={openColorPicker}
+              title="Pick a color"
+            />
+            <input
+              ref={colorInputRef}
+              type="color"
+              value={primaryColor}
+              onChange={(e) => setPrimaryColor(e.target.value)}
+              className="hidden"
             />
           </div>
         </section>
+
+        {/* Secondary Color */}
+        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+          <h3 className="text-xl font-semibold mb-4">Secondary Color</h3>
+          <div className="relative">
+            <input
+              type="text"
+              value={secondaryColor}
+              onChange={(e) => setSecondaryColor(e.target.value)}
+              className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+            />
+            <div
+              className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
+              style={{ backgroundColor: secondaryColor }}
+              onClick={() => secondaryColorInputRef.current?.click()}
+              title="Pick a color"
+            />
+            <input
+              ref={secondaryColorInputRef}
+              type="color"
+              value={secondaryColor}
+              onChange={(e) => setSecondaryColor(e.target.value)}
+              className="hidden"
+            />
+          </div>
+        </section>
+
+        {/* Save Button */}
         <div className="mt-6 flex justify-end">
           <button
             onClick={handleSaveAllSettings}
@@ -150,7 +220,7 @@ const Settings = () => {
             className={`px-6 py-2 rounded-lg text-white text-sm font-semibold transition ${
               loading
                 ? "bg-gray-400 cursor-not-allowed"
-                : "bg-custom-main hover:bg-red-800"
+                : "bg-custom-main hover:bg-custom-secondary"
             }`}
           >
             {loading ? "Saving..." : "Save All Settings"}

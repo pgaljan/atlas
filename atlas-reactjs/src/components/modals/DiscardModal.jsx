@@ -19,7 +19,7 @@ const DiscardModal = ({ isOpen, onClose, onConfirm, title }) => {
             Cancel
           </button>
           <button
-            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-red-800 "
+            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-custom-secondary "
             onClick={onConfirm}
           >
             Yes, Discard

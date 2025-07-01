@@ -371,7 +371,7 @@ const index = () => {
             onClose={closeModal}
             onSubmit={editingUser ? handleUpdateUser : handleSaveUser}
             type="user"
-            title={editingUser ? "Edit User" : "Add User"}
+            title={editingUser ? `Update ${editingUser.fullName}` : "Add User"}
             initialData={initialModalData}
           />
 

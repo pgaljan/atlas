@@ -38,7 +38,6 @@ const NodeModal = ({
   onSuccess,
   elementId,
   structureName: initialStructureName,
-  color,
 }) => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -56,6 +55,11 @@ const NodeModal = ({
   const [editStructureModalVisible, setEditStructureModalVisible] =
     useState(false);
   const [structureName, setStructureName] = useState(initialStructureName);
+  const [elementType, setElementType] = useState("event");
+  const [eventType, setEventType] = useState("");
+  const [gateType, setGateType] = useState("");
+  const [eventCode, setEventCode] = useState("");
+  const [status, setStatus] = useState("");
 
   // Feature flags
   const canImportStructure = useFeatureFlag("Import from Excel");
@@ -93,6 +97,11 @@ const NodeModal = ({
       structureId,
       parentId,
       name: elementValue,
+      type: elementType,
+      eventType: elementType === "event" ? eventType : null,
+      gateType: elementType === "gate" ? gateType : null,
+      eventCode: elementType === "event" ? eventCode : null,
+      status: elementType === "event" ? status : null,
     };
 
     try {
@@ -100,9 +109,17 @@ const NodeModal = ({
         await dispatch(
           updateElement({
             id: elementId,
-            updateElementData: elementValue,
+            updateElementData: {
+              name: elementValue,
+              type: elementType,
+              eventType: elementType === "event" ? eventType : null,
+              gateType: elementType === "gate" ? gateType : null,
+              eventCode: elementType === "event" ? eventCode : null,
+              status: elementType === "event" ? status : null,
+            },
           })
         ).unwrap();
+
         cogoToast.success("Element updated successfully!");
       } else {
         await dispatch(createElement(elementData)).unwrap();
@@ -183,6 +200,19 @@ const NodeModal = ({
       dispatch(fetchElementById(elementId)).then((action) => {
         const element = action.payload;
         setElementValue(element.name);
+        setElementType(element.type || "event");
+
+        if (element.type === "event") {
+          setEventType(element.eventType || "");
+          setEventCode(element.eventCode || "");
+          setStatus(element.status || "");
+          setGateType("");
+        } else if (element.type === "gate") {
+          setGateType(element.gateType || "");
+          setEventType("");
+          setEventCode("");
+          setStatus("");
+        }
       });
     }
   }, [isEdit, elementId, dispatch]);
@@ -271,22 +301,22 @@ const NodeModal = ({
                     )
                   }
                   aria-label="Import Structure"
-                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                    color ? `focus:ring-[${color}]` : ""
-                  }`}
+                  className={
+                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  }
                 >
-                  <PiTreeStructureFill size={24} style={{ color }} />
+                  <PiTreeStructureFill size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
               <Tooltip label="Edit Structure">
                 <button
                   onClick={() => setEditStructureModalVisible(true)}
                   aria-label="Edit Structure"
-                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                    color ? `focus:ring-[${color}]` : ""
-                  }`}
+                  className={
+                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  }
                 >
-                  <RiEditCircleFill size={24} style={{ color }} />
+                  <RiEditCircleFill size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
             </>
@@ -300,11 +330,11 @@ const NodeModal = ({
                   )
                 }
                 aria-label="Add Record"
-                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                  color ? `focus:ring-[${color}]` : ""
-                }`}
+                className={
+                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                }
               >
-                <RiPlayListAddFill size={24} style={{ color }} />
+                <RiPlayListAddFill size={24} className="text-custom-main" />
               </button>
             </Tooltip>
           )}
@@ -315,22 +345,22 @@ const NodeModal = ({
                 <button
                   onClick={() => handleViewEditRecord("edit")}
                   aria-label="View Record"
-                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                    color ? `focus:ring-[${color}]` : ""
-                  }`}
+                  className={
+                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  }
                 >
-                  <GiBrassEye size={24} style={{ color }} />
+                  <GiBrassEye size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
               <Tooltip label="Delete Record">
                 <button
                   onClick={() => handleDeleteButtonClick(recordId)}
                   aria-label="Delete Record"
-                  className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                    color ? `focus:ring-[${color}]` : ""
-                  }`}
+                  className={
+                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  }
                 >
-                  <IoIosRemoveCircle size={24} style={{ color }} />
+                  <IoIosRemoveCircle size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
             </>
@@ -339,9 +369,9 @@ const NodeModal = ({
             <Tooltip label="Edit Link">
               <button
                 aria-label="Edit Link"
-                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${color ? `focus:ring-[${color}]` : ""}`}
+                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${color ? `focus:ring-[custom-main]` : ""}`}
               >
-                <BiLink size={24} style={{ color }} />
+                <BiLink size={24}  className="text-custom-main" />
               </button>
             </Tooltip>
           )} */}
@@ -349,30 +379,30 @@ const NodeModal = ({
           <Tooltip label="Add Element">
             <button
               aria-label="Add Element"
-              className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                color ? `focus:ring-[${color}]` : ""
-              }`}
+              className={
+                "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+              }
               onClick={() => {
                 setChildModalVisible(true);
                 setIsEdit(false);
               }}
             >
-              <FaCirclePlus size={24} style={{ color }} />
+              <FaCirclePlus size={24} className="text-custom-main" />
             </button>
           </Tooltip>
           {wbs !== "1" && (
             <Tooltip label="Edit Element">
               <button
                 aria-label="Edit Element"
-                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                  color ? `focus:ring-[${color}]` : ""
-                }`}
+                className={
+                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                }
                 onClick={() => {
                   setChildModalVisible(true);
                   setIsEdit(true);
                 }}
               >
-                <FaEdit size={24} style={{ color }} />
+                <FaEdit size={24} className="text-custom-main" />
               </button>
             </Tooltip>
           )}
@@ -380,12 +410,12 @@ const NodeModal = ({
             <Tooltip label="Delete Element">
               <button
                 aria-label="Delete Element"
-                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${
-                  color ? `focus:ring-[${color}]` : ""
-                }`}
+                className={
+                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                }
                 onClick={() => handleDeleteButtonClick(null)}
               >
-                <IoTrash size={24} style={{ color }} />
+                <IoTrash size={24} className="text-custom-main" />
               </button>
             </Tooltip>
           )}
@@ -422,16 +452,139 @@ const NodeModal = ({
           submitText={isEdit ? "Edit" : "Save"}
           cancelText="Cancel"
         >
-          <InputField
-            label="Element Name"
-            name="elementName"
-            value={elementValue}
-            disabled={!elementValue.trim()}
-            focusRef={focusRef}
-            onKeyDown={handleKeyPress}
-            onChange={(e) => setElementValue(e.target.value)}
-            placeholder="Enter element name"
-          />
+          <>
+            {/* Element Name */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">
+                Element Name
+              </label>
+              <input
+                type="text"
+                value={elementValue}
+                onChange={(e) => setElementValue(e.target.value)}
+                onKeyDown={handleKeyPress}
+                ref={focusRef}
+                placeholder="Enter element name"
+                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              />
+            </div>
+
+            {/* Element Type */}
+            <div className="mb-4">
+              <label className="block text-sm font-semibold text-gray-700 mb-2">
+                Element Type
+              </label>
+              <div className="flex items-center gap-6">
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="elementType"
+                    value="event"
+                    checked={elementType === "event"}
+                    onChange={() => setElementType("event")}
+                    className="accent-blue-600"
+                  />
+                  <span className="text-gray-700">Event</span>
+                </label>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="elementType"
+                    value="gate"
+                    checked={elementType === "gate"}
+                    onChange={() => setElementType("gate")}
+                    className="accent-blue-600"
+                  />
+                  <span className="text-gray-700">Gate</span>
+                </label>
+              </div>
+            </div>
+
+            {/* Event Fields */}
+            {elementType === "event" && (
+              <>
+                {/* Event Type */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Event Type
+                  </label>
+                  <select
+                    value={eventType}
+                    onChange={(e) => setEventType(e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Event Type</option>
+                    <option value="intermediate">Intermediate</option>
+                    <option value="basic">Basic</option>
+                    <option value="transfer">Transfer</option>
+                    <option value="dormant">Dormant</option>
+                    <option value="conditional">Conditional</option>
+                    <option value="external">External</option>
+                    <option value="undeveloped">Undeveloped</option>
+                    <option value="house">House</option>
+                  </select>
+                </div>
+
+                {/* Additional Event Input */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Event Code
+                  </label>
+                  <input
+                    type="text"
+                    value={eventCode}
+                    onChange={(e) => setEventCode(e.target.value)}
+                    placeholder="Enter event code (e.g., E-001)"
+                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+
+                {/* P/A Dropdown */}
+                <div className="mb-4">
+                  <label className="block text-sm font-semibold text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={status}
+                    onChange={(e) => setStatus(e.target.value)}
+                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Select Status</option>
+                    <option value="λ">λ</option>
+                    <option value="P">P</option>
+                  </select>
+                </div>
+              </>
+            )}
+
+            {/* Gate Fields */}
+            {elementType === "gate" && (
+              <div className="mb-4">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Gate Type
+                </label>
+                <select
+                  value={gateType}
+                  onChange={(e) => setGateType(e.target.value)}
+                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">Select Gate Type</option>
+                  <option value="OR">OR</option>
+                  <option value="AND">AND</option>
+                  <option value="inhibit">Inhibit</option>
+                  <option value="priority-and">Priority AND</option>
+                  <option value="exclusive-or">Exclusive OR</option>
+                  <option value="voting-or">Voting OR</option>
+                  <option value="cold-spare">Cold Spare</option>
+                  <option value="warm-spare">Warm Spare</option>
+                  <option value="dependency">Dependency</option>
+                  <option value="not">Not</option>
+                  <option value="delay">Delay</option>
+                  <option value="sequence-enforce">Sequence Enforce</option>
+                </select>
+              </div>
+            )}
+          </>
         </ModalComponent>
       )}
       {/* Edit Structure Modal */}

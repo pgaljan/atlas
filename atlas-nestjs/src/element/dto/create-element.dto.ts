@@ -5,16 +5,17 @@ import {
   IsNotEmpty,
   IsArray,
   ValidateNested,
+  IsIn,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateElementDto {
-  @IsInt()
+  @IsString()
   @IsNotEmpty()
   structureId: string;
 
-  @IsInt()
   @IsOptional()
+  @IsString()
   parentId?: string;
 
   @IsString()
@@ -22,7 +23,27 @@ export class CreateElementDto {
   name: string;
 
   @IsOptional()
-  @IsInt()
+  @IsString()
+  type?: string;
+
+  @IsOptional()
+  @IsString()
+  eventType?: string;
+
+  @IsOptional()
+  @IsString()
+  gateType?: string;
+
+  @IsOptional()
+  @IsString()
+  eventCode?: string;
+
+  @IsOptional()
+  @IsIn(['P', 'λ'])
+  status?: string;
+
+  @IsOptional()
+  @IsString()
   recordId?: string;
 
   @IsOptional()

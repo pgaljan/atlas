@@ -57,6 +57,7 @@ const MarkmapEditor = ({ structureId }) => {
       window.removeEventListener("svgPreviewUpdate", onSvg);
     };
   }, []);
+
   useEffect(() => {
     const handleAutoSave = async () => {
       if (svgRef.current) {
@@ -217,6 +218,7 @@ const MarkmapEditor = ({ structureId }) => {
   }, []);
 
   const treeMap = useMemo(() => flattenTree(treeData), [treeData, flattenTree]);
+
   useEffect(() => {
     if (modalData) {
       const handleInteraction = () => {
@@ -452,7 +454,6 @@ const MarkmapEditor = ({ structureId }) => {
           structureId={structureId}
           parentId={modalData.elementId}
           elementId={modalData.elementId}
-          color={"#660000"}
           recordId={modalData.recordId}
           structureName={modalData.structureName}
           onClose={() => setModalData(null)}

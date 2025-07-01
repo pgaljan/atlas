@@ -20,9 +20,10 @@ const StructureModal = ({ isOpen, onClose }) => {
   const [inputValue, setInputValue] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
-  const [visibility, setVisibility] = useState(Visibility.PUBLIC);
   const [structureId, setStructureId] = useState(null);
   const [showRendererModal, setShowRendererModal] = useState(false);
+  const [visibility, setVisibility] = useState(Visibility.PUBLIC);
+  const [selectedStructureType, setSelectedStructureType] = useState("default");
 
   const handleSubmit = async () => {
     if (!inputValue.trim()) return;
@@ -41,6 +42,7 @@ const StructureModal = ({ isOpen, onClose }) => {
       visibility,
       ownerId,
       workspaceId,
+      type: selectedStructureType,
     };
 
     try {
@@ -53,10 +55,10 @@ const StructureModal = ({ isOpen, onClose }) => {
       const id = createdStructure?.structure?.id;
       if (id) {
         setStructureId(id);
-        setShowRendererModal(true); // 👈 Show modal here
+        setShowRendererModal(true);
         setInputValue("");
         setDescription("");
-        onClose(); // close create modal
+        onClose();
       } else {
         throw new Error("Structure ID is missing in the response");
       }
@@ -112,20 +114,29 @@ const StructureModal = ({ isOpen, onClose }) => {
           required={false}
         />
 
-        <div className="flex items-center space-x-6 mt-4">
-          {Object.values(Visibility).map((val) => (
-            <label key={val} className="flex items-center space-x-2 text-black">
-              <input
-                type="radio"
-                name="visibility"
-                value={val}
-                checked={visibility === val}
-                onChange={() => setVisibility(val)}
-                className="appearance-none w-5 h-5 border-2 border-custom-main rounded-full focus:outline-none checked:relative checked:after:content-[''] checked:after:block checked:after:w-2.5 checked:after:h-2.5 checked:after:rounded-full checked:after:bg-custom-main checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
-              />
-              <span>{val.charAt(0).toUpperCase() + val.slice(1)}</span>
-            </label>
-          ))}
+        {/* ✅ Structure Type as radio buttons */}
+        <div className="mt-4">
+          <label className="block text-black font-medium mb-2">
+            Structure Type
+          </label>
+          <div className="flex items-center space-x-6">
+            {["default", "faultTree"].map((type) => (
+              <label
+                key={type}
+                className="flex items-center space-x-2 text-black"
+              >
+                <input
+                  type="radio"
+                  name="structureType"
+                  value={type}
+                  checked={selectedStructureType === type}
+                  onChange={() => setSelectedStructureType(type)}
+                  className="appearance-none w-5 h-5 border-2 border-custom-main rounded-full focus:outline-none checked:relative checked:after:content-[''] checked:after:block checked:after:w-2.5 checked:after:h-2.5 checked:after:rounded-full checked:after:bg-custom-main checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
+                />
+                <span>{type === "default" ? "Default" : "Fault Tree"}</span>
+              </label>
+            ))}
+          </div>
         </div>
       </ModalComponent>
 

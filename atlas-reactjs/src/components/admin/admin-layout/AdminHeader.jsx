@@ -1,14 +1,14 @@
-import { Navbar } from "flowbite-react"
-import React from "react"
-import NotificationDropdown from "../notification-dropdown/NotificationDropdown"
-import UserDropdown from "../user-dropdown/UserDropdown"
+import { Navbar } from "flowbite-react";
+import React from "react";
+import NotificationDropdown from "../notification-dropdown/NotificationDropdown";
+import UserDropdown from "../user-dropdown/UserDropdown";
 
 const AdminHeader = () => {
   return (
     <header className="bg-gray-100  flex justify-between items-center">
       <Navbar fluid rounded className="w-full p-4">
         <Navbar.Brand href="#">
-          <h1 className="text-2xl font-bold text-[#660000] capitalize">
+          <h1 className="text-2xl font-bold text-custom-main capitalize">
             admin
           </h1>
         </Navbar.Brand>
@@ -18,7 +18,7 @@ const AdminHeader = () => {
         </div>
       </Navbar>
     </header>
-  )
-}
+  );
+};
 
-export default AdminHeader
+export default AdminHeader;

@@ -24,6 +24,8 @@ export class AppSettingsService {
       return await this.prisma.appSettings.create({
         data: {
           appName: data.appName || '',
+          primaryColor: data.primaryColor || '',
+          secondaryColor: data.secondaryColor || '',
           supportEmail: data.supportEmail || '',
           feedbackLink: data.feedbackLink || '',
           logoUrl: data.logoUrl || '',

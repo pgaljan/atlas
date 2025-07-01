@@ -77,8 +77,18 @@ export class ElementService {
    * Create a single (or top‐level) Element.
    */
   async createElement(createElementDto: CreateElementDto, userId?: string) {
-    const { structureId, name, recordId, parentId, isExpanded } =
-      createElementDto;
+    const {
+      structureId,
+      name,
+      recordId,
+      parentId,
+      isExpanded,
+      type,
+      eventType,
+      gateType,
+      eventCode,
+      status,
+    } = createElementDto;
 
     if (!structureId || !name) {
       throw new BadRequestException('Missing required fields');
@@ -107,7 +117,12 @@ export class ElementService {
           name,
           recordId: recordId || null,
           orderIndex: nextOrderIndex,
-          isExpanded: isExpanded ?? true, // default to true if not provided
+          isExpanded: isExpanded ?? true,
+          type: type || null,
+          eventType: eventType || null,
+          gateType: gateType || null,
+          eventCode: eventCode || null,
+          status: status || null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -149,7 +164,18 @@ export class ElementService {
     userId?: string,
   ) {
     for (const elementDto of nestedElements) {
-      const { structureId, name, recordId, isExpanded, children } = elementDto;
+      const {
+        structureId,
+        name,
+        recordId,
+        isExpanded,
+        children,
+        type,
+        eventType,
+        gateType,
+        eventCode,
+        status,
+      } = elementDto;
 
       if (!structureId || !name) {
         throw new BadRequestException(
@@ -173,6 +199,11 @@ export class ElementService {
             recordId: recordId || null,
             orderIndex: nextOrderIndex,
             isExpanded: isExpanded ?? true,
+            type: type || null,
+            eventType: eventType || null,
+            gateType: gateType || null,
+            eventCode: eventCode || null,
+            status: status || null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -236,38 +267,56 @@ export class ElementService {
     updateElementDto: UpdateElementDto,
     userId?: string,
   ) {
-    // 1) Fetch the existing element (to get previous data for audit)
     const element = await this.getElement(id);
 
+    const {
+      name,
+      recordId,
+      parentId,
+      isExpanded,
+      type,
+      eventType,
+      gateType,
+      eventCode,
+      status,
+    } = updateElementDto;
+
     if (
-      updateElementDto.name === undefined &&
-      updateElementDto.recordId === undefined &&
-      updateElementDto.parentId === undefined &&
-      updateElementDto.isExpanded === undefined
+      name === undefined &&
+      recordId === undefined &&
+      parentId === undefined &&
+      isExpanded === undefined &&
+      type === undefined &&
+      eventType === undefined &&
+      gateType === undefined &&
+      eventCode === undefined &&
+      status === undefined
     ) {
       throw new BadRequestException('No updatable field provided');
     }
 
     try {
-      // 2) Apply the update (prisma will ignore undefined properties automatically)
       const updatedElement = await this.prisma.element.update({
         where: { id },
         data: {
-          name: updateElementDto.name,
-          recordId: updateElementDto.recordId,
-          parentId: updateElementDto.parentId,
-          isExpanded: updateElementDto.isExpanded,
+          name,
+          recordId,
+          parentId,
+          isExpanded,
+          type,
+          eventType,
+          gateType,
+          eventCode,
+          status,
           updatedAt: new Date(),
         },
       });
 
-      // 3) Update the Structure’s updatedAt
       await this.prisma.structure.update({
         where: { id: updatedElement.structureId },
         data: { updatedAt: new Date() },
       });
 
-      // 4) Audit log
       await this.logAudit(
         'UPDATE',
         'Element',
@@ -444,6 +493,7 @@ export class ElementService {
       throw new BadRequestException('Error updating expand state');
     }
   }
+
   async updateOrderIndex(id: string, orderIndex: number, userId?: string) {
     const element = await this.getElement(id);
 
