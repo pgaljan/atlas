@@ -134,13 +134,13 @@ const ExportModalStructure = ({
                   includeTags,
                   colorStrategy
                 )
-              : exportAsPdf(
+              : exportAsDoc(
                   treeData,
+                  showWbs,
                   includeWbs,
                   includeTags,
                   colorStrategy,
-                  isMarkmap,
-                  svgContent
+                  isMarkmap
                 );
         }
 

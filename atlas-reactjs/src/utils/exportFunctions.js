@@ -33,6 +33,7 @@ export const exportAsDoc = (
     return;
   }
 
+  // ✅ Assign WBS numbers if needed
   const treeWithWbs = includeWbs ? assignWbsNumbers(treeData) : treeData;
 
   const zip = new JSZip();
@@ -227,15 +228,11 @@ export const exportAsPdf = async (
     cogoToast.warn("No elements found to export.");
     return;
   }
-
-  // ✅ Assign WBS numbers if needed
-  const treeWithWbs = includeWbs ? assignWbsNumbers(treeData) : treeData;
-
   const zip = new JSZip();
   const now = new Date();
   const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
   const structureTitle =
-    treeWithWbs && treeWithWbs.content ? treeWithWbs.content : "Markmap Export";
+    treeData && treeData.content ? treeData.content : "Markmap Export";
 
   const stripHtml = (html) => {
     const tmp = document.createElement("DIV");
@@ -245,7 +242,6 @@ export const exportAsPdf = async (
 
   const processNode = async (node) => {
     if (!node) return;
-    const wbsPrefix = includeWbs && node.wbs ? `${node.wbs} ` : "";
     const elementName = node.name || "Untitled";
 
     if (node.Record) {
@@ -262,7 +258,7 @@ export const exportAsPdf = async (
       let yOffset = 40;
 
       doc.setFontSize(16);
-      doc.text(`${wbsPrefix}${elementName}`, 10, 20);
+      doc.text(`${elementName}`, 10, 20);
       doc.setFontSize(12);
 
       const tempDiv = document.createElement("div");
@@ -348,21 +344,135 @@ export const exportAsPdf = async (
         }
       }
 
-      const plainText = stripHtml(recordContent.replace(/<img[^>]*>/g, ""));
-      const lineHeight = 10;
-      const maxLineWidth = 180;
-      const textLines = doc.splitTextToSize(plainText, maxLineWidth);
+      if (record.recordSvg && editorType === "markeddown") {
+        const tempDiv = document.createElement("div");
+        tempDiv.innerHTML = record.recordSvg;
 
-      for (let i = 0; i < textLines.length; i++) {
-        if (yOffset + lineHeight > MAX_Y) {
-          doc.addPage();
-          yOffset = PAGE_MARGIN;
+        const structuredLines = extractTextForPdfPreview(tempDiv);
+        const baseX = 10;
+        const indentX = 10;
+
+        for (const line of structuredLines) {
+          const {
+            type,
+            text,
+            src,
+            width = 50,
+            height = 30,
+            bold = false,
+            italic = false,
+            mono = false,
+            size = 12,
+            color = "#000000",
+            underline = false,
+            link = null,
+            indentLevel = 0,
+            isHeading = false,
+            content = null,
+          } = line;
+
+          const xPos = baseX + indentX * indentLevel;
+
+          if (type === "image" && src) {
+            if (yOffset + height > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+            doc.addImage(src, "JPEG", xPos, yOffset, width, height);
+            yOffset += height + 5;
+            continue;
+          }
+
+          if (type === "paragraph" && Array.isArray(content)) {
+            let fullText = "";
+            content.forEach((part) => {
+              let styled = part.text;
+              if (part.bold) styled = styled;
+              if (part.italic) styled = styled;
+              fullText += styled + " ";
+            });
+            doc.setFontSize(size);
+            doc.setFont("helvetica", bold ? "bold" : "normal");
+            doc.setTextColor(color);
+            const lines = doc.splitTextToSize(fullText.trim(), 180 - xPos);
+            lines.forEach((lineText) => {
+              if (yOffset > 280) {
+                doc.addPage();
+                yOffset = 20;
+              }
+              doc.text(lineText, xPos, yOffset);
+              yOffset += size + 1;
+            });
+            continue;
+          }
+
+          if (!text) {
+            yOffset += 4;
+            continue;
+          }
+
+          doc.setFontSize(size);
+          if (mono) {
+            doc.setFont("courier", italic ? "italic" : "normal");
+          } else {
+            if (bold && italic) doc.setFont("helvetica", "bolditalic");
+            else if (bold) doc.setFont("helvetica", "bold");
+            else if (italic) doc.setFont("helvetica", "italic");
+            else doc.setFont("helvetica", "normal");
+          }
+
+          const lines = doc.splitTextToSize(text, 180 - xPos);
+          for (const lineText of lines) {
+            if (yOffset > 280) {
+              doc.addPage();
+              yOffset = 20;
+            }
+
+            if (link) {
+              doc.setTextColor("#0000EE");
+              doc.textWithLink(lineText, xPos, yOffset, { url: link });
+              if (underline) {
+                const textWidth = doc.getTextWidth(lineText);
+                doc.setDrawColor("#0000EE");
+                doc.setLineWidth(0.3);
+                doc.line(xPos, yOffset + 1, xPos + textWidth, yOffset + 1);
+              }
+              doc.setTextColor(color);
+            } else {
+              doc.setTextColor(color);
+              doc.text(lineText, xPos, yOffset);
+            }
+
+            yOffset += isHeading ? size : size + 1;
+          }
         }
-        doc.text(textLines[i], 10, yOffset);
-        yOffset += lineHeight;
+      }
+
+      if (
+        editorType !== "markeddown" &&
+        editorType !== "plantuml" &&
+        editorType !== "vscode"
+      ) {
+        const plainContent = stripHtml(
+          recordContent.replace(/<img[^>]*>/g, "")
+        );
+        const lineHeight = 10;
+        const maxLineWidth = 180;
+
+        const textLines = doc.splitTextToSize(plainContent, maxLineWidth);
+
+        for (let i = 0; i < textLines.length; i++) {
+          if (yOffset + lineHeight > MAX_Y) {
+            doc.addPage();
+            yOffset = PAGE_MARGIN;
+          }
+          doc.text(textLines[i], 10, yOffset);
+          yOffset += lineHeight;
+        }
       }
 
       if (includeTags && recordTags) {
+        const lineHeight = 10;
         if (yOffset + lineHeight > MAX_Y) {
           doc.addPage();
           yOffset = PAGE_MARGIN;
@@ -371,7 +481,7 @@ export const exportAsPdf = async (
       }
 
       const pdfBlob = doc.output("blob");
-      const fileName = `${wbsPrefix}${elementName.replace(/\s+/g, "_")}.pdf`;
+      const fileName = `${elementName.replace(/\s+/g, "_")}.pdf`;
       zip.file(fileName, pdfBlob);
     }
 
@@ -382,7 +492,7 @@ export const exportAsPdf = async (
     }
   };
 
-  for (const child of treeWithWbs.children) {
+  for (const child of treeData.children) {
     await processNode(child);
   }
 
@@ -390,18 +500,22 @@ export const exportAsPdf = async (
   const defaultStrategy = (index) => colorScale(index);
 
   if (isMarkmap) {
-    treeWithWbs.children.forEach((topLevelNode, index) => {
+    // Apply default color strategy ONLY for markmap
+    treeData.children.forEach((topLevelNode, index) => {
       const color = defaultStrategy(index);
       assignNodeColors(topLevelNode, () => color);
     });
-  } else if (typeof colorStrategy === "function") {
-    treeWithWbs.children.forEach((topLevelNode, index) => {
-      const color = colorStrategy(index);
-      assignNodeColors(topLevelNode, () => color);
-    });
+  } else {
+    // Apply provided color strategy for Syncfusion
+    if (typeof colorStrategy === "function") {
+      treeData.children.forEach((topLevelNode, index) => {
+        const color = colorStrategy(index);
+        assignNodeColors(topLevelNode, () => color);
+      });
+    }
   }
 
-  const markmapData = treeToMarkmapData(treeWithWbs, includeWbs);
+  const markmapData = treeToMarkmapData(treeData, includeWbs);
 
   const htmlContent = `
 <!DOCTYPE html>
@@ -427,7 +541,7 @@ export const exportAsPdf = async (
     <script>
       window.onload = function () {
         const data = ${JSON.stringify(markmapData, null, 2)};
-        window.markmap.Markmap.create("#mindmap", {
+        const markmapInstance = window.markmap.Markmap.create("#mindmap", {
           color: node => node.color || "#1f77b4"
         }, data);
       };
@@ -527,7 +641,6 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
       const recordSection = `
         <hr />
         <h2>${elementName}</h2>
-       <!-- <p><em>Exported on: ${timestamp}</em></p> -->
         <div>${recordContent}</div>
         ${svgContent}
 
@@ -566,7 +679,6 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
     </head>
     <body>
       <h1>${structureTitle}</h1>
-    <!--  <p><em>Full export generated on: ${timestamp}</em></p> -->
       ${combinedContent}
     </body>
     </html>
