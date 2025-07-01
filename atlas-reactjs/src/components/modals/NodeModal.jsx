@@ -469,8 +469,7 @@ const NodeModal = ({
               />
             </div>
 
-            {/* Element Type */}
-            <div className="mb-4">
+            {/* <div className="mb-4">
               <label className="block text-sm font-semibold text-gray-700 mb-2">
                 Element Type
               </label>
@@ -500,10 +499,8 @@ const NodeModal = ({
               </div>
             </div>
 
-            {/* Event Fields */}
             {elementType === "event" && (
               <>
-                {/* Event Type */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Event Type
@@ -525,7 +522,6 @@ const NodeModal = ({
                   </select>
                 </div>
 
-                {/* Additional Event Input */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Event Code
@@ -539,7 +535,6 @@ const NodeModal = ({
                   />
                 </div>
 
-                {/* P/A Dropdown */}
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
                     Status
@@ -555,10 +550,9 @@ const NodeModal = ({
                   </select>
                 </div>
               </>
-            )}
+            )} */}
 
-            {/* Gate Fields */}
-            {elementType === "gate" && (
+            {/* {elementType === "gate" && (
               <div className="mb-4">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">
                   Gate Type
@@ -583,7 +577,7 @@ const NodeModal = ({
                   <option value="sequence-enforce">Sequence Enforce</option>
                 </select>
               </div>
-            )}
+            )} */}
           </>
         </ModalComponent>
       )}
