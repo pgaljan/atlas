@@ -1037,6 +1037,7 @@ const Syncfusion = () => {
           onSuccess={() => {
             handleNodeUpdate();
           }}
+          structureType={structureType}
         />
       )}
       <ConfirmationModal
