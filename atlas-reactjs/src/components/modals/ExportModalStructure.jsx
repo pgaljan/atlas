@@ -97,7 +97,6 @@ const ExportModalStructure = ({
           return () =>
             exportAsHtml(
               treeData,
-              showWbs,
               includeWbs,
               colorStrategy,
               isMarkmap

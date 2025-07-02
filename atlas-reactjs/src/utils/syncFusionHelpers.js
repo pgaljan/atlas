@@ -1,11 +1,13 @@
-export const LAYOUT_CONFIG = {
-  type: "HierarchicalTree",
-  orientation: "LeftToRight",
-  horizontalAlignment: "Center",
-  verticalAlignment: "Center",
-  horizontalSpacing: 30,
-  verticalSpacing: 40,
-  margin: { left: 20, top: 20 },
+export const getLayoutConfig = (type) => {
+  return {
+    type: "HierarchicalTree",
+    orientation: type === "default" ? "LeftToRight" :"TopToBottom",
+    horizontalAlignment: "Center",
+    verticalAlignment: "Center",
+    horizontalSpacing: 30,
+    verticalSpacing: 40,
+    margin: { left: 20, top: 20 },
+  };
 };
 
 const LEVEL_COLORS = [

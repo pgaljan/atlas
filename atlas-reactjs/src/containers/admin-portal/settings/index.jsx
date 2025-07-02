@@ -1,71 +1,71 @@
-import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState, useRef } from "react";
-import { FaUpload } from "react-icons/fa";
-import { useDispatch } from "react-redux";
-import AdminLayout from "../../../components/admin/admin-layout";
+import cogoToast from "@successtar/cogo-toast"
+import React, { useEffect, useState, useRef } from "react"
+import { FaUpload } from "react-icons/fa"
+import { useDispatch } from "react-redux"
+import AdminLayout from "../../../components/admin/admin-layout"
 import {
   fetchAppSettings,
   saveAppSettings,
-} from "../../../redux/slices/app-settings";
-import { uploadAnonymousFile } from "../../../redux/slices/upload-files";
+} from "../../../redux/slices/app-settings"
+import { uploadAnonymousFile } from "../../../redux/slices/upload-files"
 
 const Settings = () => {
-  const dispatch = useDispatch();
-  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
-  const [feedbackLink, setFeedbackLink] = useState("");
-  const [appName, setAppName] = useState("");
-  const [supportEmail, setSupportEmail] = useState("");
-  const [primaryColor, setPrimaryColor] = useState("#660000");
-  const [secondaryColor, setSecondaryColor] = useState("#006666");
-  const [loading, setLoading] = useState(false);
-  const colorInputRef = useRef(null);
-  const secondaryColorInputRef = useRef(null);
+  const dispatch = useDispatch()
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png")
+  const [feedbackLink, setFeedbackLink] = useState("")
+  const [appName, setAppName] = useState("")
+  const [supportEmail, setSupportEmail] = useState("")
+  const [primaryColor, setPrimaryColor] = useState("#660000")
+  const [secondaryColor, setSecondaryColor] = useState("#006666")
+  const [loading, setLoading] = useState(false)
+  const colorInputRef = useRef(null)
+  const secondaryColorInputRef = useRef(null)
 
   const loadSettings = async () => {
     try {
-      const resultAction = await dispatch(fetchAppSettings());
+      const resultAction = await dispatch(fetchAppSettings())
       if (fetchAppSettings.fulfilled.match(resultAction)) {
-        const settings = resultAction?.payload;
+        const settings = resultAction?.payload
         if (settings) {
-          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
-          setAppName(settings.appName || "");
-          setSupportEmail(settings.supportEmail || "");
-          setFeedbackLink(settings.feedbackLink || "");
-          setPrimaryColor(settings.primaryColor || "#660000");
-          setSecondaryColor(settings.secondaryColor || "#006666");
+          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png")
+          setAppName(settings.appName || "")
+          setSupportEmail(settings.supportEmail || "")
+          setFeedbackLink(settings.feedbackLink || "")
+          setPrimaryColor(settings.primaryColor || "#660000")
+          setSecondaryColor(settings.secondaryColor || "#006666")
         }
       }
     } catch (error) {
-      console.log(error);
+      console.log(error)
     }
-  };
+  }
 
   useEffect(() => {
-    loadSettings();
-  }, [dispatch]);
+    loadSettings()
+  }, [dispatch])
 
-  const handleLogoUpload = async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+  const handleLogoUpload = async e => {
+    const file = e.target.files?.[0]
+    if (!file) return
 
     try {
-      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap();
-      const url = uploaded.fileUrl || uploaded.url;
+      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap()
+      const url = uploaded.fileUrl || uploaded.url
 
       if (url) {
-        setLogoUrl(url);
-        cogoToast.success("Logo uploaded successfully.");
+        setLogoUrl(url)
+        cogoToast.success("Logo uploaded successfully.")
       } else {
-        cogoToast.error("No URL returned from upload.");
+        cogoToast.error("No URL returned from upload.")
       }
     } catch (err) {
-      cogoToast.error("Upload failed.");
+      cogoToast.error("Upload failed.")
     }
-  };
+  }
 
   const handleSaveAllSettings = async () => {
     try {
-      setLoading(true);
+      setLoading(true)
       await dispatch(
         saveAppSettings({
           logoUrl,
@@ -75,19 +75,22 @@ const Settings = () => {
           primaryColor,
           secondaryColor,
         })
-      ).unwrap();
-      cogoToast.success("App settings saved successfully.");
-      loadSettings();
+      ).unwrap()
+
+      localStorage.setItem("appName", appName)
+
+      cogoToast.success("App settings saved successfully.")
+      loadSettings()
     } catch (err) {
-      cogoToast.error("Failed to save app settings.");
+      cogoToast.error("Failed to save app settings.")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const openColorPicker = () => {
-    colorInputRef.current?.click();
-  };
+    colorInputRef.current?.click()
+  }
 
   return (
     <AdminLayout>
@@ -130,7 +133,7 @@ const Settings = () => {
           <input
             type="text"
             value={appName}
-            onChange={(e) => setAppName(e.target.value)}
+            onChange={e => setAppName(e.target.value)}
             placeholder="Enter app name"
             className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
           />
@@ -142,7 +145,7 @@ const Settings = () => {
           <input
             type="email"
             value={supportEmail}
-            onChange={(e) => setSupportEmail(e.target.value)}
+            onChange={e => setSupportEmail(e.target.value)}
             placeholder="Enter support email"
             className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
           />
@@ -154,7 +157,7 @@ const Settings = () => {
           <input
             type="url"
             value={feedbackLink}
-            onChange={(e) => setFeedbackLink(e.target.value)}
+            onChange={e => setFeedbackLink(e.target.value)}
             placeholder="https://example.com/feedback"
             className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
           />
@@ -167,7 +170,7 @@ const Settings = () => {
             <input
               type="text"
               value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
+              onChange={e => setPrimaryColor(e.target.value)}
               className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
             <div
@@ -180,7 +183,7 @@ const Settings = () => {
               ref={colorInputRef}
               type="color"
               value={primaryColor}
-              onChange={(e) => setPrimaryColor(e.target.value)}
+              onChange={e => setPrimaryColor(e.target.value)}
               className="hidden"
             />
           </div>
@@ -193,7 +196,7 @@ const Settings = () => {
             <input
               type="text"
               value={secondaryColor}
-              onChange={(e) => setSecondaryColor(e.target.value)}
+              onChange={e => setSecondaryColor(e.target.value)}
               className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
             <div
@@ -206,7 +209,7 @@ const Settings = () => {
               ref={secondaryColorInputRef}
               type="color"
               value={secondaryColor}
-              onChange={(e) => setSecondaryColor(e.target.value)}
+              onChange={e => setSecondaryColor(e.target.value)}
               className="hidden"
             />
           </div>
@@ -228,7 +231,7 @@ const Settings = () => {
         </div>
       </div>
     </AdminLayout>
-  );
-};
+  )
+}
 
-export default Settings;
+export default Settings

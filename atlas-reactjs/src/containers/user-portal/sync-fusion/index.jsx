@@ -36,10 +36,9 @@ import {
   createConnectors,
   generateWBSNumber,
   isDescendant,
-  LAYOUT_CONFIG,
+  getLayoutConfig,
 } from "../../../utils/syncFusionHelpers";
 import ConfirmationModal from "./ConfirmationModal";
-import useCaptureAndUploadSnapshot from "../../../hooks/useCaptureAndUploadSnapshot";
 
 const getNodeLevel = (id, nodesMap, level = 0) => {
   const node = nodesMap[id];
@@ -117,12 +116,14 @@ const Syncfusion = () => {
     targetNode: null,
   });
   const childrenMapRef = useRef({});
+  const [structureType, setStructureType] = useState(null);
 
   const fetchStructure = async () => {
     setIsLoading(true);
     try {
       const structure = await dispatch(getStructure(structureId)).unwrap();
       const startValue = structure?.wbsStart || 1;
+      setStructureType(structure?.type || "default");
       setWbsStart(startValue);
       setShowWbsState(structure.markmapShowWbs);
 
@@ -157,7 +158,8 @@ const Syncfusion = () => {
 
         for (let element of sortedElements) {
           const isNodeExpanded = element?.isExpanded ?? true;
-          const nodeVisible = parentExpanded || true; // Always mark as rendered
+          const nodeVisible = parentExpanded || true;
+          element.name = `${element.name}`;
 
           const currentNode = {
             id: element?.id,
@@ -168,9 +170,11 @@ const Syncfusion = () => {
             recordId: element?.recordId || null,
             level,
             orderIndex: element?.orderIndex ?? 0,
+            gateType: element?.gateType ?? null,
+            eventType: element?.eventType ?? null,
+            elementType: element?.type ?? "event",
           };
 
-          // Store children reference
           if (!childrenMap[parentId]) {
             childrenMap[parentId] = [];
           }
@@ -211,7 +215,6 @@ const Syncfusion = () => {
           visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
       );
 
-      // setNodesData(fullNodes);
       const sortedFullNodes = sortNodesByHierarchy(structure?.id, fullNodes);
       setNodesData(sortedFullNodes);
 
@@ -223,21 +226,6 @@ const Syncfusion = () => {
       setIsLoading(false);
     }
   };
-
-  useEffect(() => {
-    const handleAutoSave = async () => {
-      const containerElement = diagramRef.current?.element;
-      const svgElement = containerElement?.querySelector("svg");
-
-      if (svgElement) {
-        await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch);
-      }
-    };
-
-    const debounceTimer = setTimeout(handleAutoSave, 2000);
-
-    return () => clearTimeout(debounceTimer);
-  }, [structureId]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -461,9 +449,8 @@ const Syncfusion = () => {
     return null;
   };
 
-  const originalExpandStateRef = useRef({}); // Save original expand/collapse
+  const originalExpandStateRef = useRef({});
 
-  // Utility to backup original expand states
   const backupExpandStates = () => {
     const state = {};
     for (const node of nodesData) {
@@ -475,7 +462,6 @@ const Syncfusion = () => {
     originalExpandStateRef.current = state;
   };
 
-  // Restore expand/collapse state
   const restoreExpandStates = () => {
     const restored = nodesData.map((n) => {
       const original = originalExpandStateRef.current[n.id];
@@ -489,7 +475,6 @@ const Syncfusion = () => {
     setDiagramKey((prev) => prev + 1);
   };
 
-  // Traverse tree to collect matched and parent nodes
   const searchTreeRecursive = (node, level, searchTerm, currentLevel = 0) => {
     if (!node) return null;
 
@@ -531,7 +516,6 @@ const Syncfusion = () => {
     return null;
   };
 
-  // Flatten recursive tree to array
   const flattenFilteredTree = (node, parentId = null, level = 0) => {
     if (!node) return [];
 
@@ -539,7 +523,7 @@ const Syncfusion = () => {
       id: node.id,
       name: node.name || "Unnamed",
       parent: parentId,
-      isExpanded: true, // Always expand for result visibility
+      isExpanded: true,
       visible: true,
       level,
       orderIndex: node.orderIndex ?? 0,
@@ -553,7 +537,6 @@ const Syncfusion = () => {
     return [currentNode, ...children];
   };
 
-  // ✅ Main search handler
   const handleSearch = (level, searchTerm) => {
     setSearchLoading(true);
     setCurrentSearchTerm(searchTerm);
@@ -563,7 +546,6 @@ const Syncfusion = () => {
     const cleanSearchTerm = (searchTerm || "").trim().toLowerCase();
     const isLevelOnlySearch = level !== null && !cleanSearchTerm;
 
-    // If search is empty
     if (!cleanSearchTerm && !isLevelOnlySearch) {
       restoreExpandStates();
       fetchStructure();
@@ -609,11 +591,8 @@ const Syncfusion = () => {
       ),
     ];
 
-    // Highlight first match
     setHighlightedNodeId(firstMatchedNodeId);
-    // skip root
 
-    // Recalculate connectors
     const sortedFlat = sortNodesByHierarchy(structureId, flattened);
     const visibleNodeIds = new Set(sortedFlat.map((n) => n.id));
     const connectors = createConnectors(sortedFlat).filter(
@@ -632,6 +611,179 @@ const Syncfusion = () => {
       setDiagramKey((prev) => prev + 1);
     });
   }, []);
+
+  const getNodeShape = (node) => {
+    const defaultWidth = 140;
+    const defaultHeight = 60;
+    const extraPadding = 10;
+    const labelFontSize = 20;
+    const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
+    const labelText = node.name;
+    const labelTextWidth = getTextWidth(labelText, labelFont);
+
+    const estimatedWidth = labelTextWidth + 40 + extraPadding;
+    const estimatedHeight = defaultHeight;
+
+    let shapeStyle = {
+      strokeWidth: 1,
+      cornerRadius: 10,
+      shadow: { angle: 45, distance: 5, opacity: 0.15 },
+    };
+
+    if (node.elementType === "gate") {
+      switch (node.gateType?.toLowerCase()) {
+        case "and":
+          shapeStyle.fill = "#4CAF50";
+          return {
+            type: "Path",
+            data: "M 0 40 A 20 20 0 0 1 40 40 L 40 80 L 0 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "or":
+          shapeStyle.fill = "#FF5722";
+          return {
+            type: "Path",
+            data: "M 0 80 Q 20 0 40 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "inhibit":
+          shapeStyle.fill = "#00BCD4";
+          return {
+            type: "Path",
+            data: "M 0 40 L 40 40 L 40 80 L 0 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "priority-and":
+          shapeStyle.fill = "#FF9800";
+          return {
+            type: "Path",
+            data: "M 0 80 L 20 0 L 40 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "exclusive-or":
+          shapeStyle.fill = "#9C27B0";
+          return {
+            type: "Path",
+            data: "M 0 80 Q 20 0 40 80 Z M 5 80 Q 20 10 35 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        default:
+          shapeStyle.fill = "#9E9E9E";
+          return {
+            type: "Basic",
+            shape: "Rectangle",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+      }
+    }
+
+    if (node.elementType === "event") {
+      switch (node.eventType?.toLowerCase()) {
+        case "basic":
+          shapeStyle.fill = "#81C784";
+          return {
+            type: "Basic",
+            shape: "Ellipse",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "intermediate":
+          shapeStyle.fill = "#FFF176";
+          return {
+            type: "Basic",
+            shape: "Rectangle",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "transfer":
+          shapeStyle.fill = "#FF4081";
+          return {
+            type: "Path",
+            data: "M 0 0 L 40 20 L 0 40 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "dormant":
+          shapeStyle.fill = "#607D8B";
+          return {
+            type: "Path",
+            data: "M 0 40 L 40 40 L 40 80 L 0 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "conditional":
+          shapeStyle.fill = "#FFEB3B";
+          return {
+            type: "Basic",
+            shape: "Diamond",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "external":
+          shapeStyle.fill = "#2196F3";
+          return {
+            type: "Basic",
+            shape: "Ellipse",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "undeveloped":
+          shapeStyle.fill = "#F8BBD0";
+          return {
+            type: "Basic",
+            shape: "Diamond",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        case "house":
+          shapeStyle.fill = "#FF9800";
+          return {
+            type: "Path",
+            data: "M 0 40 L 20 20 L 40 40 L 40 80 L 0 80 Z",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+        default:
+          shapeStyle.fill = "#E0E0E0";
+          return {
+            type: "Basic",
+            shape: "Rectangle",
+            width: estimatedWidth,
+            height: estimatedHeight,
+            style: shapeStyle,
+          };
+      }
+    }
+
+    shapeStyle.fill = "#E0E0E0";
+    return {
+      type: "Basic",
+      shape: "Rectangle",
+      width: estimatedWidth,
+      height: estimatedHeight,
+      style: shapeStyle,
+    };
+  };
 
   return (
     <>
@@ -669,30 +821,58 @@ const Syncfusion = () => {
               : "";
             const hasDragIcon = node.id !== structureId;
 
+            const dragIconWidth = hasDragIcon ? 20 : 0;
+            const gap = hasDragIcon ? 8 : 0;
+            const paddingLeft = 12;
+            const paddingRight = 12;
+            const padding = paddingLeft + paddingRight;
+
             const labelFontSize = 20;
             const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
             const labelText = `${wbsPrefix}${node.name}`;
             const labelTextWidth = getTextWidth(labelText, labelFont);
 
-            const dragIconWidth = 20;
-            const gap = 10;
-            const padding = 5;
+            const estimatedWidth =
+              dragIconWidth + gap + labelTextWidth + padding;
+            const estimatedHeight = 48;
 
-            const estimatedWidth = hasDragIcon
-              ? dragIconWidth + gap + labelTextWidth + padding
-              : labelTextWidth + padding;
-
-            const labelOffsetX = hasDragIcon
-              ? (dragIconWidth + gap) / estimatedWidth
-              : padding / estimatedWidth;
             const shouldHighlight =
               highlightedNodeId === node.id && !!currentSearchTerm;
 
+            const gateColorMap = {
+              and: "#bbdefb",
+              or: "#ffe0b2",
+              "priority-and": "#f8bbd0",
+              "exclusive-or": "#d1c4e9",
+              dependency: "#c8e6c9",
+            };
+
+            const eventColorMap = {
+              basic: "#81c784",
+              intermediate: "#aed581",
+              undeveloped: "#e0e0e0",
+              conditional: "#fff176",
+              house: "#b3e5fc",
+              external: "#ffcc80",
+              transfer: "#4dd0e1",
+              default: "#f8f8f8",
+            };
+
+            const fillColor = shouldHighlight
+              ? "#660000"
+              : node.elementType === "gate"
+              ? gateColorMap[node.gateType?.toLowerCase()] || "#e0f7fa"
+              : eventColorMap[node.eventType?.toLowerCase()] ||
+                eventColorMap.default;
+
+            const labelOffsetX = hasDragIcon
+              ? (dragIconWidth + gap + paddingLeft / 2) / estimatedWidth
+              : paddingLeft / estimatedWidth;
             return {
               id: node.id,
               isExpanded: node.isExpanded,
               visible: node.visible,
-
+              shape: getNodeShape(node),
               annotations: [
                 ...(hasDragIcon
                   ? [
@@ -714,12 +894,13 @@ const Syncfusion = () => {
                   id: `label-${node.id}`,
                   content: labelText,
                   offset: {
-                    x: labelOffsetX,
+                    x: hasDragIcon
+                      ? (dragIconWidth + gap + paddingLeft / 2) / estimatedWidth
+                      : paddingLeft / estimatedWidth,
                     y: 0.5,
                   },
                   horizontalAlignment: "Left",
                   verticalAlignment: "Center",
-                  margin: { left: 0, right: 0 },
                   width: labelTextWidth,
                   style: {
                     color: shouldHighlight ? "#fff" : "#000000",
@@ -729,15 +910,37 @@ const Syncfusion = () => {
                     overflow: "hidden",
                   },
                 },
+                ...(node.eventType === "transfer"
+                  ? [
+                      {
+                        id: `transfer-label-${node.id}`,
+                        content: node.name?.toLowerCase().includes("out")
+                          ? "OUT"
+                          : "IN",
+                        offset: { x: 0.9, y: 0.85 },
+                        style: {
+                          fontSize: 10,
+                          color: "#666",
+                        },
+                      },
+                    ]
+                  : []),
               ],
 
               width: estimatedWidth,
-              height: 40,
+              height: estimatedHeight,
               style: {
-                fill: shouldHighlight ? "#660000" : "#f8f8f8",
-                strokeColor: "#ccc",
+                fill: fillColor,
+                strokeColor:
+                  node.gateType === "and"
+                    ? "#00796b"
+                    : node.gateType === "or"
+                    ? "#ff9800"
+                    : "#ccc",
+                strokeDashArray: node.gateType === "or" ? "4 2" : "",
                 strokeWidth: 1,
               },
+
               constraints: NodeConstraints.Default | NodeConstraints.AllowDrop,
               expandIcon: {
                 shape: "Minus",
@@ -761,7 +964,7 @@ const Syncfusion = () => {
             };
           })}
           connectors={connectorsData}
-          layout={LAYOUT_CONFIG}
+          layout={getLayoutConfig(structureType)}
           drop={onNodeDrop}
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
@@ -898,11 +1101,12 @@ const Syncfusion = () => {
         </div>
       )}
 
-      {isLoading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-        </div>
-      )}
+      {isLoading ||
+        (searchLoading && (
+          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+          </div>
+        ))}
     </>
   );
 };
