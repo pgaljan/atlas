@@ -1025,6 +1025,7 @@ const Syncfusion = () => {
           onClose={closeModal}
           color={"#660000"}
           structureId={structureId}
+          renderType={"synfusion"}
           recordId={nodesMap[selectedNode?.id]?.recordId}
           parentId={
             nodesMap[selectedNode?.id]?.id === structureId
