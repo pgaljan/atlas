@@ -43,7 +43,6 @@ const MarkmapEditor = ({ structureId }) => {
   const [shouldFitView, setShouldFitView] = useState(true);
   const [filteredTree, setFilteredTree] = useState(null);
   const [loaderSearch, setLoaderSearch] = useState(false);
-
   const [rightClickModal, setRightClickModal] = useState({
     visible: false,
     position: { x: 0, y: 0 },
@@ -277,6 +276,7 @@ const MarkmapEditor = ({ structureId }) => {
           children: data.elements,
           isExpanded: data.isExpanded,
           structureId: data.id,
+          type: data.type,
         },
         undefined,
         undefined,
@@ -468,6 +468,7 @@ const MarkmapEditor = ({ structureId }) => {
           parentId={modalData.elementId}
           elementId={modalData.elementId}
           recordId={modalData.recordId}
+          structureType={treeData.type}
           structureName={modalData.structureName}
           onClose={() => setModalData(null)}
           wbs={modalData.wbs}
