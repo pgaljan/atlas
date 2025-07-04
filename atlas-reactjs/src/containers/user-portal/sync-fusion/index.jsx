@@ -95,6 +95,7 @@ const Syncfusion = () => {
   const dispatch = useDispatch();
   const diagramRef = useRef(null);
   const dragInProgress = useRef(false);
+  const [renderType, setrenderType] = useState("");
   const { structureId } = useParams();
   const [highlightedNodeId, setHighlightedNodeId] = useState(null);
   const [showWbs, setShowWbsState] = useState(false);
@@ -122,6 +123,8 @@ const Syncfusion = () => {
     setIsLoading(true);
     try {
       const structure = await dispatch(getStructure(structureId)).unwrap();
+      setrenderType(structure?.type);
+
       const startValue = structure?.wbsStart || 1;
       setStructureType(structure?.type || "default");
       setWbsStart(startValue);
@@ -793,6 +796,7 @@ const Syncfusion = () => {
             onSuccess={fetchStructure}
             structureId={structureId}
             showWbs={showWbs}
+            renderType={renderType}
             wbsStart={wbsStart}
             setWbsStart={setWbsStart}
             treeData={treeData}
@@ -1025,7 +1029,6 @@ const Syncfusion = () => {
           onClose={closeModal}
           color={"#660000"}
           structureId={structureId}
-          renderType={"synfusion"}
           recordId={nodesMap[selectedNode?.id]?.recordId}
           parentId={
             nodesMap[selectedNode?.id]?.id === structureId
@@ -1038,7 +1041,6 @@ const Syncfusion = () => {
           onSuccess={() => {
             handleNodeUpdate();
           }}
-          structureType={structureType}
         />
       )}
       <ConfirmationModal

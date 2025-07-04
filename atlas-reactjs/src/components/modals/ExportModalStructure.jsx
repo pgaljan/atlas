@@ -10,9 +10,8 @@ import {
   exportAsPdf,
   exportAsSinglePdf,
 } from "../../utils/exportFunctions";
-import { assignNodeColors } from "../../utils/markmapHelpers";
+import { assignNodeColors, assignWbsNumbers } from "../../utils/markmapHelpers";
 
-const FORMATS = ["DOC", "PDF", "HTML"];
 const OPTIONS = ["Include WBS", "Include tags"];
 const DOCUMENT_ASSEMBLY = ["Single", "Multiple"];
 const LEVEL_COLORS = [
@@ -28,14 +27,89 @@ const LEVEL_COLORS = [
   "#1ABC9C",
 ];
 
+const flattenTreeData = (nodes, parentId = null) => {
+  let rows = [];
+
+  nodes.forEach((node) => {
+    rows.push({
+      elementName: node.name || "",
+      wbsNumber: node.wbs || "",
+      elementGuid: node.id || "",
+      elementDescription: node.description || "",
+      parentGuid: parentId || "",
+      type:
+        node.type === "event" ? "Event" : node.type === "gate" ? "Gate" : "",
+      subtype:
+        node.type === "event" ? node.eventType || "" : node.gateType || "",
+      eventValue: node.eventValue || "",
+      eventValueType: node.eventValueType || "",
+    });
+
+    if (node.children && node.children.length > 0) {
+      rows = rows.concat(flattenTreeData(node.children, node.id));
+    }
+  });
+
+  return rows;
+};
+
+const exportToJson = (rows) => {
+  const blob = new Blob([JSON.stringify(rows, null, 2)], {
+    type: "application/json",
+  });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "fault-tree-export.json";
+  link.click();
+};
+
+const exportToCsv = (rows) => {
+  const header = [
+    "Element Name",
+    "WBS Number",
+    "Element GUID",
+    "Element Description",
+    "Parent GUID",
+    "Type",
+    "Subtype",
+    "Event Value",
+    "Event Value Type",
+  ];
+
+  const csvRows = [
+    header.join(","),
+    ...rows.map((r) =>
+      [
+        r.elementName,
+        r.wbsNumber,
+        r.elementGuid,
+        r.elementDescription,
+        r.parentGuid,
+        r.type,
+        r.subtype,
+        r.eventValue,
+        r.eventValueType,
+      ]
+        .map((field) => `"${(field || "").replace(/"/g, '""')}"`)
+        .join(",")
+    ),
+  ];
+
+  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  const link = document.createElement("a");
+  link.href = URL.createObjectURL(blob);
+  link.download = "fault-tree-export.csv";
+  link.click();
+};
+
 const ExportModalStructure = ({
   isOpen,
   onClose,
   treeData = [],
   showWbs = false,
+  renderType,
 }) => {
   if (!isOpen) return null;
-
   const [assembly, setAssembly] = useState("Multiple");
   const [formats, setFormats] = useState([]);
   const [options, setOptions] = useState([]);
@@ -55,6 +129,7 @@ const ExportModalStructure = ({
   const toggle = (item, arr, setter) => {
     setter(arr.includes(item) ? arr.filter((x) => x !== item) : [...arr, item]);
   };
+  const structureType = window.location.href.includes("renderer=syncfusion");
 
   const handleExport = async () => {
     if (!formats.length || !options) {
@@ -71,7 +146,6 @@ const ExportModalStructure = ({
 
     try {
       const includeWbs = options.includes("Include WBS");
-      console.log(includeWbs);
       const includeTags = options.includes("Include tags");
       const isSyncfusion = window.location.href.includes("renderer=syncfusion");
 
@@ -92,11 +166,19 @@ const ExportModalStructure = ({
         });
       }
 
+      const treeDataWithWbs = assignWbsNumbers(treeData);
+
       const exportFns = formats.map((format) => {
+        const rows = flattenTreeData(treeDataWithWbs.children || []);
+
+        if (formats.includes("CSV")) exportToCsv(rows);
+        if (formats.includes("JSON")) exportToJson(rows);
+
         if (format === "HTML") {
           return () =>
             exportAsHtml(
               treeData,
+              showWbs,
               includeWbs,
               colorStrategy,
               isMarkmap
@@ -108,6 +190,7 @@ const ExportModalStructure = ({
             assembly === "Single"
               ? exportAsSinglePdf(
                   treeData,
+                  showWbs,
                   includeWbs,
                   includeTags,
                   svgContent,
@@ -115,6 +198,7 @@ const ExportModalStructure = ({
                 )
               : exportAsPdf(
                   treeData,
+                  showWbs,
                   includeWbs,
                   includeTags,
                   colorStrategy,
@@ -157,7 +241,6 @@ const ExportModalStructure = ({
       setIsExporting(false);
     }
   };
-
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg">
@@ -190,10 +273,11 @@ const ExportModalStructure = ({
             </div>
           </div>
 
+          {/* Document Format Section */}
           <div className="border-b pb-6">
             <p className="font-medium">Document Format</p>
             <div className="flex flex-wrap gap-4 mt-2">
-              {FORMATS.map((format) => (
+              {["DOC", "PDF", "HTML"].map((format) => (
                 <label
                   key={format}
                   className="flex items-center gap-2 text-gray-700"
@@ -209,6 +293,28 @@ const ExportModalStructure = ({
               ))}
             </div>
           </div>
+
+          {renderType == "faultTree" && structureType && (
+            <div className="border-b pb-6">
+              <p className="font-medium">Fault Tree</p>
+              <div className="flex flex-wrap gap-4 mt-2">
+                {["CSV", "JSON"].map((format) => (
+                  <label
+                    key={format}
+                    className="flex items-center gap-2 text-gray-700"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={formats.includes(format)}
+                      onChange={() => toggle(format, formats, setFormats)}
+                      className="h-4 w-4 accent-custom-main"
+                    />
+                    {format}
+                  </label>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="space-y-2">
             {OPTIONS.map((opt) => (

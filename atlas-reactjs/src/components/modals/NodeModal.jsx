@@ -60,8 +60,8 @@ const NodeModal = ({
   const [elementType, setElementType] = useState("event");
   const [eventType, setEventType] = useState("");
   const [gateType, setGateType] = useState("");
-  const [eventCode, setEventCode] = useState("");
-  const [status, setStatus] = useState("");
+  const [eventValue, setEventValue] = useState("");
+  const [eventValueType, seEventValueType] = useState("");
 
   // Feature flags
   const canImportStructure = useFeatureFlag("Import from Excel");
@@ -102,8 +102,8 @@ const NodeModal = ({
       type: elementType,
       eventType: elementType === "event" ? eventType : null,
       gateType: elementType === "gate" ? gateType : null,
-      eventCode: elementType === "event" ? eventCode : null,
-      status: elementType === "event" ? status : null,
+      eventValue: elementType === "event" ? eventValue : null,
+      eventValueType: elementType === "event" ? eventValueType : null,
     };
 
     try {
@@ -116,8 +116,8 @@ const NodeModal = ({
               type: elementType,
               eventType: elementType === "event" ? eventType : null,
               gateType: elementType === "gate" ? gateType : null,
-              eventCode: elementType === "event" ? eventCode : null,
-              status: elementType === "event" ? status : null,
+              eventValue: elementType === "event" ? eventValue : null,
+              eventValueType: elementType === "event" ? eventValueType : null,
             },
           })
         ).unwrap();
@@ -206,14 +206,14 @@ const NodeModal = ({
 
         if (element.type === "event") {
           setEventType(element.eventType || "");
-          setEventCode(element.eventCode || "");
-          setStatus(element.status || "");
+          setEventValue(element.eventValue || "");
+          seEventValueType(element.eventValueType || "");
           setGateType("");
         } else if (element.type === "gate") {
           setGateType(element.gateType || "");
           setEventType("");
-          setEventCode("");
-          setStatus("");
+          setEventValue("");
+          seEventValueType("");
         }
       });
     }
@@ -501,85 +501,89 @@ const NodeModal = ({
               </div>
             )}
 
-            {renderType !== "markmap" && elementType === "event" && structureType !== "default" && (
-              <>
+            {renderType !== "markmap" &&
+              elementType === "event" &&
+              structureType !== "default" && (
+                <>
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Event Type
+                    </label>
+                    <select
+                      value={eventType}
+                      onChange={(e) => setEventType(e.target.value)}
+                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Event Type</option>
+                      <option value="intermediate">Intermediate</option>
+                      <option value="basic">Basic</option>
+                      <option value="transfer">Transfer</option>
+                      <option value="dormant">Dormant</option>
+                      <option value="conditional">Conditional</option>
+                      <option value="external">External</option>
+                      <option value="undeveloped">Undeveloped</option>
+                      <option value="house">House</option>
+                    </select>
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Event Value
+                    </label>
+                    <input
+                      type="text"
+                      value={eventValue}
+                      onChange={(e) => setEventValue(e.target.value)}
+                      placeholder="Enter event code (e.g., E-001)"
+                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Event Value Type
+                    </label>
+                    <select
+                      value={eventValueType}
+                      onChange={(e) => seEventValueType(e.target.value)}
+                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Select Value Type</option>
+                      <option value="λ">λ</option>
+                      <option value="P">P</option>
+                    </select>
+                  </div>
+                </>
+              )}
+
+            {renderType !== "markmap" &&
+              elementType === "gate" &&
+              structureType !== "default" && (
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Event Type
+                    Gate Type
                   </label>
                   <select
-                    value={eventType}
-                    onChange={(e) => setEventType(e.target.value)}
+                    value={gateType}
+                    onChange={(e) => setGateType(e.target.value)}
                     className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
-                    <option value="">Select Event Type</option>
-                    <option value="intermediate">Intermediate</option>
-                    <option value="basic">Basic</option>
-                    <option value="transfer">Transfer</option>
-                    <option value="dormant">Dormant</option>
-                    <option value="conditional">Conditional</option>
-                    <option value="external">External</option>
-                    <option value="undeveloped">Undeveloped</option>
-                    <option value="house">House</option>
+                    <option value="">Select Gate Type</option>
+                    <option value="OR">OR</option>
+                    <option value="AND">AND</option>
+                    <option value="inhibit">Inhibit</option>
+                    <option value="priority-and">Priority AND</option>
+                    <option value="exclusive-or">Exclusive OR</option>
+                    <option value="voting-or">Voting OR</option>
+                    <option value="cold-spare">Cold Spare</option>
+                    <option value="warm-spare">Warm Spare</option>
+                    <option value="dependency">Dependency</option>
+                    <option value="not">Not</option>
+                    <option value="delay">Delay</option>
+                    <option value="sequence-enforce">Sequence Enforce</option>
                   </select>
                 </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Event Code
-                  </label>
-                  <input
-                    type="text"
-                    value={eventCode}
-                    onChange={(e) => setEventCode(e.target.value)}
-                    placeholder="Enter event code (e.g., E-001)"
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Status
-                  </label>
-                  <select
-                    value={status}
-                    onChange={(e) => setStatus(e.target.value)}
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Status</option>
-                    <option value="λ">λ</option>
-                    <option value="P">P</option>
-                  </select>
-                </div>
-              </>
-            )}
-
-            {renderType !== "markmap" && elementType === "gate" && structureType !== "default" && (
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Gate Type
-                </label>
-                <select
-                  value={gateType}
-                  onChange={(e) => setGateType(e.target.value)}
-                  className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="">Select Gate Type</option>
-                  <option value="OR">OR</option>
-                  <option value="AND">AND</option>
-                  <option value="inhibit">Inhibit</option>
-                  <option value="priority-and">Priority AND</option>
-                  <option value="exclusive-or">Exclusive OR</option>
-                  <option value="voting-or">Voting OR</option>
-                  <option value="cold-spare">Cold Spare</option>
-                  <option value="warm-spare">Warm Spare</option>
-                  <option value="dependency">Dependency</option>
-                  <option value="not">Not</option>
-                  <option value="delay">Delay</option>
-                  <option value="sequence-enforce">Sequence Enforce</option>
-                </select>
-              </div>
-            )}
+              )}
           </>
         </ModalComponent>
       )}
