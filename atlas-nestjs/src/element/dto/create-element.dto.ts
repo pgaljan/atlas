@@ -36,11 +36,11 @@ export class CreateElementDto {
 
   @IsOptional()
   @IsString()
-  eventCode?: string;
+  eventValue?: string;
 
   @IsOptional()
   @IsIn(['P', 'λ'])
-  status?: string;
+  eventValueType?: string;
 
   @IsOptional()
   @IsString()

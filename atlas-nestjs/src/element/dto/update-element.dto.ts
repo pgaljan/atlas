@@ -31,11 +31,11 @@ export class UpdateElementDto {
 
   @IsOptional()
   @IsString()
-  eventCode?: string;
+  eventValue?: string;
 
   @IsOptional()
   @IsIn(['P', 'A'])
-  status?: string;
+  eventValueType?: string;
 
   @IsOptional()
   @Type(() => Boolean)

@@ -244,11 +244,11 @@ model Element {
   isExpanded    Boolean?  @default(true)
   orderIndex    Int       @default(0)
 
-  type      String?
-  eventType String?
-  gateType  String?
-  eventCode String?
-  status    String?
+  type           String?
+  eventType      String?
+  gateType       String?
+  eventValue     String?
+  eventValueType String?
 
   ElementLink  ElementLink?   @relation(fields: [elementLinkId], references: [id])
   parent       Element?       @relation("ParentChild", fields: [parentId], references: [id])

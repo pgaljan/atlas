@@ -86,8 +86,8 @@ export class ElementService {
       type,
       eventType,
       gateType,
-      eventCode,
-      status,
+      eventValue,
+      eventValueType,
     } = createElementDto;
 
     if (!structureId || !name) {
@@ -121,8 +121,8 @@ export class ElementService {
           type: type || null,
           eventType: eventType || null,
           gateType: gateType || null,
-          eventCode: eventCode || null,
-          status: status || null,
+          eventValue: eventValue || null,
+          eventValueType: eventValueType || null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -173,8 +173,8 @@ export class ElementService {
         type,
         eventType,
         gateType,
-        eventCode,
-        status,
+        eventValue,
+        eventValueType,
       } = elementDto;
 
       if (!structureId || !name) {
@@ -202,8 +202,8 @@ export class ElementService {
             type: type || null,
             eventType: eventType || null,
             gateType: gateType || null,
-            eventCode: eventCode || null,
-            status: status || null,
+            eventValue: eventValue || null,
+            eventValueType: eventValueType || null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -277,8 +277,8 @@ export class ElementService {
       type,
       eventType,
       gateType,
-      eventCode,
-      status,
+      eventValue,
+      eventValueType,
     } = updateElementDto;
 
     if (
@@ -289,8 +289,8 @@ export class ElementService {
       type === undefined &&
       eventType === undefined &&
       gateType === undefined &&
-      eventCode === undefined &&
-      status === undefined
+      eventValue === undefined &&
+      eventValueType === undefined
     ) {
       throw new BadRequestException('No updatable field provided');
     }
@@ -306,8 +306,8 @@ export class ElementService {
           type,
           eventType,
           gateType,
-          eventCode,
-          status,
+          eventValue,
+          eventValueType,
           updatedAt: new Date(),
         },
       });
