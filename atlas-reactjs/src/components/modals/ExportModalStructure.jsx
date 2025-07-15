@@ -1,6 +1,8 @@
 import cogoToast from "@successtar/cogo-toast";
 import * as d3 from "d3";
-import React, { useEffect, useState } from "react";
+import { saveAs } from "file-saver";
+import JSZip from "jszip";
+import { useEffect, useState } from "react";
 import { LuDatabaseBackup } from "react-icons/lu";
 import { RiCloseLine } from "react-icons/ri";
 import {
@@ -53,17 +55,17 @@ const flattenTreeData = (nodes, parentId = null) => {
   return rows;
 };
 
-const exportToJson = (rows) => {
-  const blob = new Blob([JSON.stringify(rows, null, 2)], {
+const exportToJson = (data, filename = "fault-tree-export.json") => {
+  const blob = new Blob([JSON.stringify(data, null, 2)], {
     type: "application/json",
   });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "fault-tree-export.json";
+  link.download = filename;
   link.click();
 };
 
-const exportToCsv = (rows) => {
+const generateCsv = (rows) => {
   const header = [
     "Element Name",
     "WBS Number",
@@ -95,10 +97,15 @@ const exportToCsv = (rows) => {
     ),
   ];
 
-  const blob = new Blob([csvRows.join("\n")], { type: "text/csv" });
+  return csvRows.join("\n");
+};
+
+const exportToCsv = (rows, filename = "fault-tree-export.csv") => {
+  const csv = generateCsv(rows);
+  const blob = new Blob([csv], { type: "text/csv" });
   const link = document.createElement("a");
   link.href = URL.createObjectURL(blob);
-  link.download = "fault-tree-export.csv";
+  link.download = filename;
   link.click();
 };
 
@@ -168,29 +175,57 @@ const ExportModalStructure = ({
 
       const treeDataWithWbs = assignWbsNumbers(treeData);
 
-      const exportFns = formats.map((format) => {
+      const exportFns = [];
+
+      for (const format of formats) {
         const rows = flattenTreeData(treeDataWithWbs.children || []);
 
-        if (formats.includes("CSV")) exportToCsv(rows);
-        if (formats.includes("JSON")) exportToJson(rows);
+        if (["CSV", "JSON"].some((f) => formats.includes(f))) {
+          if (assembly === "Single") {
+            const zip = new JSZip();
+
+            if (formats.includes("CSV")) {
+              rows.forEach((row, idx) => {
+                const csv = generateCsv([row]);
+                zip.file(`fault-tree-record-${idx + 1}.csv`, csv);
+              });
+            }
+
+            if (formats.includes("JSON")) {
+              rows.forEach((row, idx) => {
+                zip.file(
+                  `fault-tree-record-${idx + 1}.json`,
+                  JSON.stringify(row, null, 2)
+                );
+              });
+            }
+
+            exportFns.push(async () => {
+              const zipBlob = await zip.generateAsync({ type: "blob" });
+              saveAs(zipBlob, "fault-tree-records.zip");
+            });
+          } else {
+            if (formats.includes("CSV"))
+              exportFns.push(() => exportToCsv(rows, "fault-tree-export.csv"));
+            if (formats.includes("JSON"))
+              exportFns.push(() =>
+                exportToJson(rows, "fault-tree-export.json")
+              );
+          }
+          break;
+        }
 
         if (format === "HTML") {
-          return () =>
-            exportAsHtml(
-              treeData,
-              showWbs,
-              includeWbs,
-              colorStrategy,
-              isMarkmap
-            );
+          exportFns.push(() =>
+            exportAsHtml(treeData, includeWbs, colorStrategy, isMarkmap)
+          );
         }
 
         if (format === "PDF") {
-          return () =>
+          exportFns.push(() =>
             assembly === "Single"
               ? exportAsSinglePdf(
                   treeData,
-                  showWbs,
                   includeWbs,
                   includeTags,
                   svgContent,
@@ -198,17 +233,17 @@ const ExportModalStructure = ({
                 )
               : exportAsPdf(
                   treeData,
-                  showWbs,
                   includeWbs,
                   includeTags,
                   colorStrategy,
                   isMarkmap,
                   svgContent
-                );
+                )
+          );
         }
 
         if (format === "DOC") {
-          return () =>
+          exportFns.push(() =>
             assembly === "Single"
               ? exportAllAsSingleDoc(
                   treeData,
@@ -224,14 +259,14 @@ const ExportModalStructure = ({
                   includeTags,
                   colorStrategy,
                   isMarkmap
-                );
+                )
+          );
         }
+      }
 
-        return null;
-      });
-
-      for (const fn of exportFns.filter(Boolean)) await fn();
-
+      for (const fn of exportFns) {
+        await fn();
+      }
       cogoToast.success("Export successful!");
       onClose();
     } catch (error) {

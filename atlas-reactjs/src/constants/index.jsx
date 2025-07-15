@@ -3,13 +3,17 @@ import { BsDatabaseFillCheck } from "react-icons/bs";
 import { FaSlideshare } from "react-icons/fa";
 import { HiUsers } from "react-icons/hi2";
 import { IoTrash } from "react-icons/io5";
-import { MdOutlineRestore, MdPermMedia } from "react-icons/md";
+import {
+  MdOutlineCopyAll,
+  MdOutlineRestore,
+  MdPermMedia,
+} from "react-icons/md";
 import { TbEditCircle, TbTrashOff } from "react-icons/tb";
 import Icons from "./icons";
 
 export const teamMembersConfig = {
   title: "Team Members",
-  showId: true, 
+  showId: true,
   tabs: [
     { key: "users", label: "Users" },
     { key: "pending", label: "Pending Invitations" },
@@ -22,7 +26,7 @@ export const teamMembersConfig = {
   },
   enableCheckbox: false,
   columns: [
-    { key: "name", label: "Full Name" },
+    { key: "name", label: "Display Name" },
     { key: "email", label: "Email" },
     { key: "userType", label: "Role" },
     { key: "status", label: "Status" },
@@ -53,8 +57,8 @@ export const teamMembersConfig = {
 };
 
 export const invitedMembersConfig = {
-  title: "Invited Members",
-  showId: false, 
+  title: "Invitations",
+  showId: false,
   tabs: [
     { key: "members", label: "All Invitations" },
     { key: "pending", label: "Pending Invitations" },
@@ -76,7 +80,11 @@ export const invitedMembersConfig = {
   ],
   actions: [
     {
-      icon: <IoTrash className="w-6 h-6" color="red" />,
+      icon: <MdOutlineCopyAll className="w-5 h-5 text-gray-700" />,
+      tooltip: "Copy Token",
+    },
+    {
+      icon: <IoTrash className="w-6 h-6 text-red-600" />,
       tooltip: "Delete",
     },
   ],
@@ -84,7 +92,7 @@ export const invitedMembersConfig = {
 
 export const trashConfig = {
   title: "Deleted Markmaps",
-  showId: true, 
+  showId: true,
   tabs: [],
   enableSearch: false,
   emptyState: {
@@ -111,7 +119,7 @@ export const trashConfig = {
 
 export const mediaConfig = {
   title: "Uploaded Files",
-  showId: true, 
+  showId: true,
   tabs: [],
   enableSearch: false,
   emptyState: {
@@ -138,12 +146,12 @@ export const mediaConfig = {
 
 export const backupConfig = {
   title: "My Backups",
-  showId: true, 
+  showId: true,
   tabs: [],
   enableSearch: false,
   emptyState: {
     title: "No backups found.",
-    description: "all your backups will appear here.",
+    description: "All your backups will appear here.",
     icon: <BsDatabaseFillCheck className="text-5xl text-custom-main" />,
   },
   columns: [
@@ -363,6 +371,7 @@ export const dummyFaqs = [
     answer: "Go to team settings and update the member roles.",
   },
 ];
+
 export const sampleData = {
   csv: `element,Record Data,Tags
   # Human Language Taxonomy,,
@@ -545,7 +554,6 @@ export const sampleData = {
 ##### Bura\t\t`,
 };
 
-
 export const quickReferenceMarkdown = `
 Markdown Quick Reference
 ========================
@@ -714,3 +722,165 @@ It is a pity, but markdown does **not** work in here for most markdown parsers.
 </div>
 
 `;
+
+export const mockAPIs = [
+  {
+    name: "MarkMap Renderer",
+    createdAt: "06/27/2025 10:45:00",
+    status: "Active",
+    format: "REST JSON",
+    provider: "ATLAS Platform",
+    latency: "350ms",
+    uptime: "99.98%",
+    category: "Visualization",
+    updated: "2 days ago",
+    collection: "Mind Mapping",
+  },
+  {
+    name: "Syncfusion Chart Engine",
+    createdAt: "06/15/2025 14:10:00",
+    status: "Active",
+    format: "REST JSON",
+    provider: "ATLAS Platform",
+    latency: "420ms",
+    uptime: "100%",
+    category: "Data Visualization",
+    updated: "1 week ago",
+    collection: "Syncfusion Suite",
+  },
+  {
+    name: "PDF Generator API",
+    createdAt: "06/10/2025 09:25:00",
+    status: "Active",
+    format: "REST JSON",
+    provider: "ATLAS Platform",
+    latency: "510ms",
+    uptime: "99.9%",
+    category: "Documents",
+    updated: "3 days ago",
+    collection: "Syncfusion Suite",
+  },
+  {
+    name: "Atlas Auth API",
+    createdAt: "06/01/2025 11:00:00",
+    status: "Active",
+    format: "REST JSON",
+    provider: "ATLAS Platform",
+    latency: "290ms",
+    uptime: "100%",
+    category: "Authentication",
+    updated: "1 day ago",
+    collection: "Platform Services",
+  },
+  {
+    name: "Mindmap Export Service",
+    createdAt: "05/28/2025 16:45:00",
+    status: "Active",
+    format: "REST JSON",
+    provider: "ATLAS Platform",
+    latency: "400ms",
+    uptime: "99.95%",
+    category: "Visualization",
+    updated: "5 days ago",
+    collection: "Mind Mapping",
+  },
+];
+
+export const apiCategories = [
+  {
+    name: "Visualization",
+    description: "Render and export mindmaps, charts, and graphs visually.",
+  },
+  {
+    name: "Data Visualization",
+    description: "Display tables, grids, charts using Syncfusion components.",
+  },
+  {
+    name: "Authentication",
+    description: "Manage users, tokens, and secure endpoints.",
+  },
+  {
+    name: "Documents",
+    description: "Create, export, and manipulate PDFs and documents.",
+  },
+];
+
+export const topCollections = [
+  {
+    name: "Mind Mapping",
+    description: "APIs to render, update, and export MarkMap mindmaps.",
+    icon: "🧠",
+  },
+  {
+    name: "Syncfusion Suite",
+    description: "Integrate charts, PDF tools, and UI widgets easily.",
+    icon: "📊",
+  },
+  {
+    name: "Platform Services",
+    description: "Core ATLAS services like auth, usage, and workspace APIs.",
+    icon: "🧩",
+  },
+  {
+    name: "Dev Utilities",
+    description: "Helper APIs for previews, file conversion, and testing.",
+    icon: "🛠️",
+  },
+];
+
+export const policies = [
+  {
+    title: "API Key Confidentiality",
+    description:
+      "Your ATLAS API keys (e.g., for MarkMap or Syncfusion rendering) must be kept confidential. Do not expose them in frontend code or public repositories.",
+  },
+  {
+    title: "Token Expiration & Rotation",
+    description:
+      "Rotate your tokens regularly and remove unused keys from the API Keys section of your ATLAS workspace dashboard.",
+  },
+  {
+    title: "Role-Based Access Control",
+    description:
+      "ATLAS supports role-based access across organizations, ensuring users can only perform actions permitted by their role (e.g., Viewer, Editor, Admin).",
+  },
+  {
+    title: "Rate Limiting & Abuse Protection",
+    description:
+      "ATLAS APIs are protected with rate limits to prevent misuse. Exceeding limits may result in throttling or temporary blocking.",
+  },
+  {
+    title: "Secure Transmission (HTTPS)",
+    description:
+      "All ATLAS API calls (including mindmap rendering and data sync) are encrypted via HTTPS to ensure secure data transmission.",
+  },
+  {
+    title: "Logging & Auditing",
+    description:
+      "API usage is logged and auditable via your ATLAS account. For any suspicious access or incident tracking, audit logs can be reviewed on request.",
+  },
+];
+
+export const api = {
+  name: "MarkMap API",
+  category: "Visualization",
+  provider: "ATLAS Platform",
+  latency: "540ms",
+  uptime: "99.98%",
+  updated: "3 days ago",
+  description:
+    "The MarkMap API allows developers to convert markdown content into interactive mindmaps. Ideal for note-taking apps, visual documentation, and knowledge sharing.",
+  format: "REST JSON",
+  version: "v2.1.0",
+  status: "Active",
+  baseUrl: "https://api.atlas.dev/v1/markmap/render",
+  auth: "Bearer Token",
+  rateLimit: "1000 requests / day",
+  docs: "https://docs.atlas.dev/markmap-api",
+  errorFormat: "JSON (RFC 7807)",
+  useCases: [
+    "Generate real-time mindmaps from markdown",
+    "Integrate visual notes into LMS or productivity tools",
+    "Create dynamic knowledge-sharing experiences",
+  ],
+};

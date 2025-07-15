@@ -51,7 +51,10 @@ export default function useMarkmapInteractions({
     const applyCollapsedState = (nodes) => {
       if (nodes && Array.isArray(nodes)) {
         nodes.forEach((node) => {
-          if (node.structureId && collapsedNodes.current.has(node.structureId)) {
+          if (
+            node.structureId &&
+            collapsedNodes.current.has(node.structureId)
+          ) {
             if (!node.state) {
               node.state = {};
             }

@@ -19,6 +19,7 @@ import {
   updateCatalog,
   updateCatalogOrder,
 } from "../../../redux/slices/structure-catalog";
+import { BiCarousel } from "react-icons/bi";
 
 const StructureCatalog = () => {
   const dispatch = useDispatch();
@@ -31,7 +32,6 @@ const StructureCatalog = () => {
   const [file, setFile] = useState(null);
   const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const [description, setDescription] = useState("");
-  const [orderInputs, setOrderInputs] = useState({});
   const [plans, setPlans] = useState([]);
   const [deleteModalOpen, setDeleteModalOpen] = useState(false);
   const [selectedCatalog, setSelectedCatalog] = useState(null);
@@ -219,6 +219,53 @@ const StructureCatalog = () => {
     );
   }
 
+  if (!Array.isArray(catalogs) || catalogs.length === 0) {
+    return (
+      <AdminLayout>
+        <div className="flex h-screen flex-col items-center justify-center text-center p-6">
+          <div className="flex items-center justify-center bg-white text-custom-main rounded-full w-28 h-28 mb-4">
+            <BiCarousel className="text-5xl text-custom-main" />
+          </div>
+          <h2 className="text-2xl font-bold text-custom-text-grey mb-2">
+            No catalogs found
+          </h2>
+          <p className="text-lg text-custom-text-grey mb-4">
+            There are no catalogs available at the moment. <br />
+            Please upload a new catalog to get started.
+          </p>
+          <button
+            className="flex items-center border-2 border-custom-main gap-2 px-5 py-2 text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
+            onClick={() => {
+              resetForm();
+              setAddModalOpen(true);
+            }}
+          >
+            <MdAddTask size={20} />
+            Upload Catalog
+          </button>
+
+          <CatalogModal
+            isOpen={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            onSubmit={handleAddCatalog}
+            title="Add Catalog"
+            CatalogName={CatalogName}
+            setCatalogName={setCatalogName}
+            description={description}
+            setDescription={setDescription}
+            thumbnailUrl={thumbnailUrl}
+            setThumbnailUrl={setThumbnailUrl}
+            selectedUserTier={selectedUserTier}
+            setSelectedUserTier={setSelectedUserTier}
+            userTiers={plans.map((plan) => plan.name)}
+            file={file}
+            setFile={setFile}
+          />
+        </div>
+      </AdminLayout>
+    );
+  }
+
   return (
     <AdminLayout>
       <div className="p-4">
@@ -301,26 +348,6 @@ const StructureCatalog = () => {
                                 <span className="text-gray-500">No Image</span>
                               )}
                             </td>
-                            {/* <td className="px-5 py-4">
-                              <input
-                                type="number"
-                                className="w-16 border rounded px-2 py-1 text-center"
-                                value={orderInputs[catalog.id] ?? index}
-                                onChange={(e) => {
-                                  const value = e.target.value;
-                                  setOrderInputs((prev) => ({
-                                    ...prev,
-                                    [catalog.id]: value,
-                                  }));
-                                }}
-                                onBlur={() =>
-                                  handleOrderChange(
-                                    catalog.id,
-                                    orderInputs[catalog.id] ?? index
-                                  )
-                                }
-                              />
-                            </td> */}
 
                             <td className="px-5 py-4 flex gap-3">
                               <Tooltip label="Edit">

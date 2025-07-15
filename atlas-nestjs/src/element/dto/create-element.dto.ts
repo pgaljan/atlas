@@ -43,6 +43,26 @@ export class CreateElementDto {
   eventValueType?: string;
 
   @IsOptional()
+  @Type(() => Number)
+  mttr?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  missionTime?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  inputK?: number;
+
+  @IsOptional()
+  @IsInt()
+  outputN?: number;
+
+  @IsOptional()
   @IsString()
   recordId?: string;
 

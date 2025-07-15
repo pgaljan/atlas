@@ -92,3 +92,7 @@ body > div:nth-child(5) {
       center / var(--dot-space) var(--dot-space),
     var(--dot-color);
 }
+
+#\:r28\: {
+  left: -20px !important;
+}

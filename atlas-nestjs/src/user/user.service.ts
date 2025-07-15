@@ -13,13 +13,12 @@ import { UpdateUserDto } from './dto/updateUser.dto';
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // fetch all users
   async getAllUsers() {
     try {
       const users = await this.prisma.user.findMany({
         select: {
           id: true,
-          fullName: true,
+          displayName: true,
           username: true,
           email: true,
           inviteCount: true,
@@ -35,25 +34,29 @@ export class UserService {
           },
           subscription: {
             select: {
-              id: false,
-              planId: false,
-              startDate: false,
-              endDate: false,
-              status: false,
               plan: {
                 select: {
-                  id: false,
                   name: true,
-                  description: false,
-                  price: false,
-                  features: false,
+                },
+              },
+            },
+          },
+          _count: {
+            select: {
+              invitationsSent: {
+                where: {
+                  status: 'accepted',
                 },
               },
             },
           },
         },
       });
-      return users;
+
+      return users.map((user) => ({
+        ...user,
+        acceptedInvitesCount: user._count?.invitationsSent || 0,
+      }));
     } catch (error) {
       throw new InternalServerErrorException(
         `Failed to fetch users: ${error.message}`,
@@ -233,6 +236,7 @@ export class UserService {
       );
     }
   }
+
   async exportUsersAsExcel(): Promise<Buffer> {
     try {
       // Get users data
@@ -240,12 +244,12 @@ export class UserService {
 
       // Prepare data for export
       const data = users.map((user) => ({
-        ID: user.id,
-        'Full Name': user.fullName,
+        Id: user.id,
+        'Dsiplay Name': user.displayName,
         Username: user.username,
         Email: user.email,
         Status: user.status,
-        Role: user.role ? user.role.name : '',
+        Role: user.role ? user?.role?.name : '',
       }));
 
       // Create a new workbook and worksheet
@@ -260,6 +264,7 @@ export class UserService {
       });
       return buffer;
     } catch (error) {
+      console.log(error);
       console.error(
         'Error in exportUsersAsExcel:',
         error,

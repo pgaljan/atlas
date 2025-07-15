@@ -64,7 +64,7 @@ model Workspace {
 
 model User {
   id                 String        @id @default(uuid())
-  fullName           String?
+  displayName        String?
   username           String        @unique
   email              String        @unique
   roleId             String
@@ -75,6 +75,7 @@ model User {
   createdAt          DateTime      @default(now())
   deletedAt          DateTime?
   referredBy         String?
+  profileUrl         String?
   apiKeys            ApiKey[]
   attachments        Attachment[]
   auditLogs          AuditLog[]
@@ -249,6 +250,13 @@ model Element {
   gateType       String?
   eventValue     String?
   eventValueType String?
+
+  mttr        Float?
+  missionTime Float?
+  description String?
+
+  inputK  Float?
+  outputN Float?
 
   ElementLink  ElementLink?   @relation(fields: [elementLinkId], references: [id])
   parent       Element?       @relation("ParentChild", fields: [parentId], references: [id])
@@ -441,13 +449,15 @@ model TermsOfService {
 }
 
 model AppSettings {
-  id             String   @id @default(uuid())
-  appName        String?
-  logoUrl        String?
-  supportEmail   String?
-  feedbackLink   String?
-  primaryColor   String?
-  secondaryColor String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id               String   @id @default(uuid())
+  appName          String?
+  logoUrl          String?
+  supportEmail     String?
+  feedbackLink     String?
+  primaryColor     String?
+  secondaryColor   String?
+  inviteCodeOption String?
+  authProviders    Json?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
 }

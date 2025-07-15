@@ -16,13 +16,8 @@ export class AppSettingsController {
 
   @Post('save')
   async saveSettings(@Body() dto: CreateUpdateAppSettingsDto) {
-    try {
-      const settings =
-        await this.appSettingsService.createOrUpdateSettings(dto);
-      return { message: 'App settings saved successfully', settings };
-    } catch (error) {
-      throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+    const settings = await this.appSettingsService.createOrUpdateSettings(dto);
+    return { message: 'App settings saved successfully', settings };
   }
 
   @Get()

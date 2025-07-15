@@ -1,71 +1,86 @@
-import cogoToast from "@successtar/cogo-toast"
-import React, { useEffect, useState, useRef } from "react"
-import { FaUpload } from "react-icons/fa"
-import { useDispatch } from "react-redux"
-import AdminLayout from "../../../components/admin/admin-layout"
+import cogoToast from "@successtar/cogo-toast";
+import React, { useEffect, useState, useRef } from "react";
+import { FaUpload } from "react-icons/fa";
+import { useDispatch } from "react-redux";
+import AdminLayout from "../../../components/admin/admin-layout";
 import {
   fetchAppSettings,
   saveAppSettings,
-} from "../../../redux/slices/app-settings"
-import { uploadAnonymousFile } from "../../../redux/slices/upload-files"
+} from "../../../redux/slices/app-settings";
+import { uploadAnonymousFile } from "../../../redux/slices/upload-files";
 
 const Settings = () => {
-  const dispatch = useDispatch()
-  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png")
-  const [feedbackLink, setFeedbackLink] = useState("")
-  const [appName, setAppName] = useState("")
-  const [supportEmail, setSupportEmail] = useState("")
-  const [primaryColor, setPrimaryColor] = useState("#660000")
-  const [secondaryColor, setSecondaryColor] = useState("#006666")
-  const [loading, setLoading] = useState(false)
-  const colorInputRef = useRef(null)
-  const secondaryColorInputRef = useRef(null)
+  const dispatch = useDispatch();
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
+  const [feedbackLink, setFeedbackLink] = useState("");
+  const [appName, setAppName] = useState("");
+  const [inviteCodeOption, setInviteCodeOption] = useState("disabled");
+  const [authProviders, setAuthProviders] = useState({
+    local: true,
+    google: true,
+    github: true,
+  });
+
+  const [supportEmail, setSupportEmail] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#660000");
+  const [secondaryColor, setSecondaryColor] = useState("#006666");
+  const [loading, setLoading] = useState(false);
+  const colorInputRef = useRef(null);
+  const secondaryColorInputRef = useRef(null);
 
   const loadSettings = async () => {
     try {
-      const resultAction = await dispatch(fetchAppSettings())
+      const resultAction = await dispatch(fetchAppSettings());
       if (fetchAppSettings.fulfilled.match(resultAction)) {
-        const settings = resultAction?.payload
+        const settings = resultAction?.payload;
         if (settings) {
-          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png")
-          setAppName(settings.appName || "")
-          setSupportEmail(settings.supportEmail || "")
-          setFeedbackLink(settings.feedbackLink || "")
-          setPrimaryColor(settings.primaryColor || "#660000")
-          setSecondaryColor(settings.secondaryColor || "#006666")
+          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
+          setAppName(settings.appName || "");
+          setSupportEmail(settings.supportEmail || "");
+          setFeedbackLink(settings.feedbackLink || "");
+          setPrimaryColor(settings.primaryColor || "#660000");
+          setSecondaryColor(settings.secondaryColor || "#006666");
+          setInviteCodeOption(settings.inviteCodeOption || "disabled");
+          setAuthProviders(
+            settings.authProviders || {
+              local: true,
+              google: true,
+              github: true,
+            }
+          );
         }
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadSettings()
-  }, [dispatch])
+    loadSettings();
+  }, [dispatch]);
 
-  const handleLogoUpload = async e => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap()
-      const url = uploaded.fileUrl || uploaded.url
+      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap();
+      const url = uploaded.fileUrl || uploaded.url;
 
       if (url) {
-        setLogoUrl(url)
-        cogoToast.success("Logo uploaded successfully.")
+        setLogoUrl(url);
+        cogoToast.success("Logo uploaded successfully.");
       } else {
-        cogoToast.error("No URL returned from upload.")
+        cogoToast.error("No URL returned from upload.");
       }
     } catch (err) {
-      cogoToast.error("Upload failed.")
+      cogoToast.error("Upload failed.");
     }
-  }
+  };
 
   const handleSaveAllSettings = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       await dispatch(
         saveAppSettings({
           logoUrl,
@@ -74,164 +89,228 @@ const Settings = () => {
           supportEmail,
           primaryColor,
           secondaryColor,
+          inviteCodeOption,
+          authProviders,
         })
-      ).unwrap()
+      ).unwrap();
 
-      localStorage.setItem("appName", appName)
-
-      cogoToast.success("App settings saved successfully.")
-      loadSettings()
+      cogoToast.success("App settings saved successfully.");
+      loadSettings();
     } catch (err) {
-      cogoToast.error("Failed to save app settings.")
+      cogoToast.error("Failed to save app settings.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const openColorPicker = () => {
-    colorInputRef.current?.click()
-  }
+    colorInputRef.current?.click();
+  };
 
   return (
     <AdminLayout>
-      <div className="p-6 sm:p-10 bg-custom-background-white rounded-[18px] shadow-md min-h-[90%]">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
-          <h2 className="text-3xl font-semibold text-custom-text-heading">
-            App Settings
-          </h2>
-        </div>
+      <div className="p-4">
+        <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
+            <h2 className="text-3xl font-semibold text-custom-text-heading">
+              App Settings
+            </h2>
+          </div>
 
-        {/* Logo Section */}
-        <section className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
-          <div className="flex items-center gap-4">
-            <img
-              src={logoUrl}
-              alt="App Logo"
-              className="w-24 h-24 rounded-full p-2 object-cover border"
-            />
-            <div>
-              <p className="text-lg font-medium">Current Logo</p>
-              <p className="text-sm text-gray-500">Recommended: 200x200 PNG</p>
+          {/* Logo Section */}
+          <section className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
+            <div className="flex items-center gap-4">
+              <img
+                src={logoUrl}
+                alt="App Logo"
+                className="w-24 h-24 rounded-full p-2 object-cover border"
+              />
+              <div>
+                <p className="text-lg font-medium">Current Logo</p>
+                <p className="text-sm text-gray-500">
+                  Recommended: 200x200 PNG
+                </p>
+              </div>
             </div>
-          </div>
 
-          <label className="cursor-pointer flex items-center gap-2 rounded-lg bg-custom-main px-4 py-2 text-sm font-medium text-white shadow hover:bg-custom-secondary transition">
-            <FaUpload className="w-4 h-4" />
-            Upload New
-            <input
-              type="file"
-              accept="image/*"
-              onChange={handleLogoUpload}
-              className="hidden"
-            />
-          </label>
-        </section>
+            <label className="cursor-pointer flex items-center gap-2 rounded-lg bg-custom-main px-4 py-2 text-sm font-medium text-white shadow hover:bg-custom-secondary transition">
+              <FaUpload className="w-4 h-4" />
+              Upload New
+              <input
+                type="file"
+                accept="image/*"
+                onChange={handleLogoUpload}
+                className="hidden"
+              />
+            </label>
+          </section>
 
-        {/* App Name */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
-          <h3 className="text-xl font-semibold mb-4">App Name</h3>
-          <input
-            type="text"
-            value={appName}
-            onChange={e => setAppName(e.target.value)}
-            placeholder="Enter app name"
-            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
-          />
-        </section>
-
-        {/* Support Email */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Support Email</h3>
-          <input
-            type="email"
-            value={supportEmail}
-            onChange={e => setSupportEmail(e.target.value)}
-            placeholder="Enter support email"
-            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
-          />
-        </section>
-
-        {/* Feedback Link */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Feedback Link</h3>
-          <input
-            type="url"
-            value={feedbackLink}
-            onChange={e => setFeedbackLink(e.target.value)}
-            placeholder="https://example.com/feedback"
-            className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
-          />
-        </section>
-
-        {/* Primary Color */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Primary Color</h3>
-          <div className="relative">
+          {/* App Name */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">App Name</h3>
             <input
               type="text"
-              value={primaryColor}
-              onChange={e => setPrimaryColor(e.target.value)}
-              className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+              value={appName}
+              onChange={(e) => setAppName(e.target.value)}
+              placeholder="Enter app name"
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
-            <div
-              className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
-              style={{ backgroundColor: primaryColor }}
-              onClick={openColorPicker}
-              title="Pick a color"
-            />
-            <input
-              ref={colorInputRef}
-              type="color"
-              value={primaryColor}
-              onChange={e => setPrimaryColor(e.target.value)}
-              className="hidden"
-            />
-          </div>
-        </section>
+          </section>
 
-        {/* Secondary Color */}
-        <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
-          <h3 className="text-xl font-semibold mb-4">Secondary Color</h3>
-          <div className="relative">
+          {/* Support Email */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Support Email</h3>
             <input
-              type="text"
-              value={secondaryColor}
-              onChange={e => setSecondaryColor(e.target.value)}
-              className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+              type="email"
+              value={supportEmail}
+              onChange={(e) => setSupportEmail(e.target.value)}
+              placeholder="Enter support email"
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
-            <div
-              className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
-              style={{ backgroundColor: secondaryColor }}
-              onClick={() => secondaryColorInputRef.current?.click()}
-              title="Pick a color"
-            />
-            <input
-              ref={secondaryColorInputRef}
-              type="color"
-              value={secondaryColor}
-              onChange={e => setSecondaryColor(e.target.value)}
-              className="hidden"
-            />
-          </div>
-        </section>
+          </section>
 
-        {/* Save Button */}
-        <div className="mt-6 flex justify-end">
-          <button
-            onClick={handleSaveAllSettings}
-            disabled={loading}
-            className={`px-6 py-2 rounded-lg text-white text-sm font-semibold transition ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-custom-main hover:bg-custom-secondary"
-            }`}
-          >
-            {loading ? "Saving..." : "Save All Settings"}
-          </button>
+          {/* Feedback Link */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Feedback Link</h3>
+            <input
+              type="url"
+              value={feedbackLink}
+              onChange={(e) => setFeedbackLink(e.target.value)}
+              placeholder="https://example.com/feedback"
+              className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+            />
+          </section>
+
+          {/* Primary Color */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Primary Color</h3>
+            <div className="relative">
+              <input
+                type="text"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+              />
+              <div
+                className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
+                style={{ backgroundColor: primaryColor }}
+                onClick={openColorPicker}
+                title="Pick a color"
+              />
+              <input
+                ref={colorInputRef}
+                type="color"
+                value={primaryColor}
+                onChange={(e) => setPrimaryColor(e.target.value)}
+                className="hidden"
+              />
+            </div>
+          </section>
+
+          {/* Secondary Color */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Secondary Color</h3>
+            <div className="relative">
+              <input
+                type="text"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
+              />
+              <div
+                className="w-6 h-6 rounded-full absolute top-1/2 left-3 -translate-y-1/2 border cursor-pointer"
+                style={{ backgroundColor: secondaryColor }}
+                onClick={() => secondaryColorInputRef.current?.click()}
+                title="Pick a color"
+              />
+              <input
+                ref={secondaryColorInputRef}
+                type="color"
+                value={secondaryColor}
+                onChange={(e) => setSecondaryColor(e.target.value)}
+                className="hidden"
+              />
+            </div>
+          </section>
+
+          {/* Invite Code Requirement */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">Invite Codes</h3>
+            <div className="flex items-center space-x-6">
+              {["disabled", "enabled", "required"].map((option) => (
+                <label
+                  key={option}
+                  className="flex items-center space-x-2 text-black capitalize"
+                >
+                  <input
+                    type="radio"
+                    name="inviteCodeOption"
+                    value={option}
+                    checked={inviteCodeOption === option}
+                    onChange={(e) => setInviteCodeOption(e.target.value)}
+                    className="appearance-none w-5 h-5 border-2 border-custom-main rounded-full focus:outline-none checked:relative checked:after:content-[''] checked:after:block checked:after:w-2.5 checked:after:h-2.5 checked:after:rounded-full checked:after:bg-custom-main checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
+                  />
+                  <span className="text-sm">{option}</span>
+                </label>
+              ))}
+            </div>
+          </section>
+
+          {/* Authentication Providers */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">
+              Authentication Providers
+            </h3>
+            <div className="flex items-center space-x-6">
+              {["local", "google", "github"].map((provider) => (
+                <label
+                  key={provider}
+                  className="flex items-center space-x-2 text-black capitalize"
+                >
+                  <input
+                    type="checkbox"
+                    checked={authProviders[provider]}
+                    onChange={(e) =>
+                      setAuthProviders((prev) => ({
+                        ...prev,
+                        [provider]: e.target.checked,
+                      }))
+                    }
+                    className="appearance-none w-5 h-5 border-2 border-custom-main rounded-sm bg-white checked:bg-custom-main checked:border-custom-main checked:bg-check-icon focus:outline-none"
+                  />
+                  <span className="text-sm">
+                    {provider === "local"
+                      ? "Local Auth"
+                      : provider === "google"
+                      ? "Google"
+                      : "GitHub"}
+                  </span>
+                </label>
+              ))}
+            </div>
+            <p className="text-sm text-gray-500 mt-2">
+              (Existing accounts will be preserved)
+            </p>
+          </section>
+
+          {/* Save Button */}
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleSaveAllSettings}
+              disabled={loading}
+              className={`px-6 py-2 rounded-lg text-white text-sm font-semibold transition ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-custom-main hover:bg-custom-secondary"
+              }`}
+            >
+              {loading ? "Saving..." : "Save All Settings"}
+            </button>
+          </div>
         </div>
       </div>
     </AdminLayout>
-  )
-}
+  );
+};
 
-export default Settings
+export default Settings;

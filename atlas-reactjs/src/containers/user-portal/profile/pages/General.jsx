@@ -1,52 +1,52 @@
-import cogoToast from "@successtar/cogo-toast"
-import Cookies from "js-cookie"
-import React, { useEffect, useState } from "react"
-import { useDispatch } from "react-redux"
-import InputField from "../../../../components/input-field/InputField"
-import ImportModal from "../../../../components/modals/ImportModal"
-import { fetchUser, updateUser } from "../../../../redux/slices/users"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import React, { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
+import InputField from "../../../../components/input-field/InputField";
+import ImportModal from "../../../../components/modals/ImportModal";
+import { fetchUser, updateUser } from "../../../../redux/slices/users";
 
 const General = () => {
-  const dispatch = useDispatch()
-  const userId = Cookies.get("atlas_userId")
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
+  const dispatch = useDispatch();
+  const userId = Cookies.get("atlas_userId");
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const toggleImportModal = () => {
-    setIsImportModalOpen(prev => !prev)
-  }
-  const handleFileSelection = file => {
-    cogoToast.success("Avatar uploaded successfully!")
-  }
+    setIsImportModalOpen((prev) => !prev);
+  };
+  const handleFileSelection = (file) => {
+    cogoToast.success("Avatar uploaded successfully!");
+  };
 
   const [formData, setFormData] = useState({
-    fullName: "",
+    displayName: "",
     username: "",
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
-        const data = await dispatch(fetchUser(userId)).unwrap()
+        const data = await dispatch(fetchUser(userId)).unwrap();
         setFormData({
-          fullName: data.fullName || "",
+          displayName: data.displayName || "",
           username: data.username || "",
-        })
+        });
       } catch (err) {
-        console.log(err)
+        console.log(err);
       }
-    }
+    };
 
-    fetchUserData()
-  }, [dispatch, userId])
+    fetchUserData();
+  }, [dispatch, userId]);
 
-  const handleInputChange = e => {
-    const { name, value } = e.target
-    setFormData(prev => ({ ...prev, [name]: value }))
-  }
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
 
   const handleSubmit = async () => {
-    setLoading(true)
+    setLoading(true);
 
     try {
       await dispatch(
@@ -54,14 +54,14 @@ const General = () => {
           userId,
           updateData: formData,
         })
-      ).unwrap()
-      cogoToast.success("Changes saved successfully!")
+      ).unwrap();
+      cogoToast.success("Changes saved successfully!");
     } catch (err) {
-      cogoToast.error("Failed to save changes.")
+      cogoToast.error("Failed to save changes.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <div>
@@ -70,9 +70,9 @@ const General = () => {
           <h2 className="text-lg font-bold mb-4">Personal Details</h2>
           <InputField
             label="Name"
-            name="fullName"
+            name="displayName"
             placeholder="Enter your name"
-            value={formData.fullName}
+            value={formData.displayName}
             onChange={handleInputChange}
           />
           <InputField
@@ -123,7 +123,7 @@ const General = () => {
         format={".png, .jpeg, .jpg"}
       />
     </div>
-  )
-}
+  );
+};
 
-export default General
+export default General;

@@ -4,7 +4,6 @@ export class MailerService {
   private transporter: nodemailer.Transporter;
 
   constructor() {
-    // Create a transporter using Gmail service
     this.transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
@@ -20,7 +19,7 @@ export class MailerService {
     workspaceId: string,
   ): Promise<void> {
     const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const invitationUrl = `${baseUrl}/register?token=${token}&code=${workspaceId}`;
+    const invitationUrl = `${baseUrl}/register?token=${token}&code=${workspaceId}&email=${to}`;
 
     const mailOptions: nodemailer.SendMailOptions = {
       from: process.env.GMAIL_USER,
@@ -48,6 +47,49 @@ export class MailerService {
               </div>
               <p style="font-size: 14px; color: #777777;">
                 If you did not request this invitation, please ignore this email.
+              </p>
+            </div>
+            <div style="background-color: #f0f0f0; padding: 15px; text-align: center;">
+              <p style="margin: 0; font-size: 12px; color: #999999;">© ${new Date().getFullYear()} Atlas. All rights reserved.</p>
+            </div>
+          </div>
+        </div>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
+
+  async sendForgotPasswordEmail(to: string, token: string): Promise<void> {
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${baseUrl}/reset-password?token=${token}&email=${to}`;
+
+    const mailOptions: nodemailer.SendMailOptions = {
+      from: process.env.GMAIL_USER,
+      to,
+      subject: 'Reset Your Atlas Password',
+      html: `
+        <div style="font-family: Arial, sans-serif; background-color: #f7f7f7; padding: 30px;">
+          <div style="max-width: 600px; margin: auto; background-color: #ffffff; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); overflow: hidden;">
+            <div style="background-color: #e94e77; padding: 20px; text-align: center;">
+              <h1 style="margin: 0; color: #ffffff; font-size: 24px;">Reset Your Password</h1>
+            </div>
+            <div style="padding: 30px;">
+              <p style="font-size: 16px; color: #333333;">Hi there,</p>
+              <p style="font-size: 16px; color: #333333;">
+                We received a request to reset your Atlas account password.
+              </p>
+              <p style="font-size: 16px; color: #333333;">
+                Click the button below to set a new password.
+              </p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${resetUrl}" 
+                   style="background-color: #e94e77; color: #ffffff; padding: 12px 24px; text-decoration: none; border-radius: 4px; font-size: 16px;">
+                  Reset Password
+                </a>
+              </div>
+              <p style="font-size: 14px; color: #777777;">
+                If you did not request a password reset, please ignore this email.
               </p>
             </div>
             <div style="background-color: #f0f0f0; padding: 15px; text-align: center;">

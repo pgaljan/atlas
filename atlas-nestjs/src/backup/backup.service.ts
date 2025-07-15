@@ -100,28 +100,41 @@ export class BackupService {
         description: structure.description,
         ownerId: structure.ownerId,
         workspaceId: structure.workspaceId,
-        imageUrl: structure.imageUrl,
+        imageUrl: structure.imageUrl || '',
+        isExpanded: structure.isExpanded,
         markmapShowWbs: structure.markmapShowWbs,
+        wbsStart: structure.wbsStart,
+        visibility: structure.visibility,
+        type: structure.type,
         createdAt: structure.createdAt,
         updatedAt: structure.updatedAt,
-        deletedAt: structure.deletedAt || '',
-        visibility: structure.visibility,
+        deletedAt: structure.deletedAt || null,
       }));
 
-      // Elements sheet: include extra fields such as elementLinkId, orderIndex, and deletedAt
+      // Elements sheet
       const elementsSheet = user.structures.flatMap((structure: any) =>
         structure.elements.map((element: any) => ({
           id: element.id,
           name: element.name,
           structureId: element.structureId,
-          recordId: element.recordId,
-          parentId: element.parentId,
-          elementLinkId: element.elementLinkId || '',
+          recordId: element.recordId || null,
+          parentId: element.parentId || null,
+          elementLinkId: element.elementLinkId || null,
           orderIndex: element.orderIndex,
+          isExpanded: element.isExpanded,
+          type: element.type || null,
+          eventType: element.eventType || null,
+          gateType: element.gateType || null,
+          eventValue: element.eventValue != null ? element.eventValue : null,
+          eventValueType: element.eventValueType || null,
+          mttr: element.mttr != null ? element.mttr : null,
+          missionTime: element.missionTime != null ? element.missionTime : null,
+          description: element.description || null,
+          inputK: element.inputK != null ? element.inputK : null,
+          outputN: element.outputN != null ? element.outputN : null,
           createdAt: element.createdAt,
           updatedAt: element.updatedAt,
-          deletedAt: element.deletedAt || '',
-          RecordId: element.Record ? element.Record.id : null,
+          deletedAt: element.deletedAt || null,
         })),
       );
 
@@ -135,6 +148,10 @@ export class BackupService {
                   metadata: safeCellValue(element.Record.metadata),
                   tags: element.Record.tags
                     ? safeCellValue(element.Record.tags)
+                    : null,
+                  editorType: element.Record.editorType,
+                  recordSvg: element.Record.recordSvg
+                    ? safeCellValue(element.Record.recordSvg)
                     : null,
                   createdAt: element.Record.createdAt,
                   updatedAt: element.Record.updatedAt,

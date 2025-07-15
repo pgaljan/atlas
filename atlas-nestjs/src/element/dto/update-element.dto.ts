@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsIn } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsInt } from 'class-validator';
 
 export class UpdateElementDto {
   @IsString()
@@ -34,8 +34,28 @@ export class UpdateElementDto {
   eventValue?: string;
 
   @IsOptional()
-  @IsIn(['P', 'A'])
+  @IsIn(['P', 'λ'])
   eventValueType?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  mttr?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  missionTime?: number;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsInt()
+  inputK?: number;
+
+  @IsOptional()
+  @IsInt()
+  outputN?: number;
 
   @IsOptional()
   @Type(() => Boolean)

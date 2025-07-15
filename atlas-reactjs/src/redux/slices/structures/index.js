@@ -160,6 +160,34 @@ export const updateWbsStart = createAsyncThunk(
   }
 );
 
+// Async thunk for exporting structure as JSON
+export const exportStructureJson = createAsyncThunk(
+  "structures/exportStructureJson",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/structure/export-json/${id}`);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Async thunk for exporting structure as CSV
+export const exportStructureCsv = createAsyncThunk(
+  "structures/exportStructureCsv",
+  async (id, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(`/structure/export-csv/${id}`, {
+        responseType: "blob",
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Structure slice
 const structureSlice = createSlice({
   name: "structures",
@@ -300,6 +328,30 @@ const structureSlice = createSlice({
         );
       })
       .addCase(updateWbsStart.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      }) // Export structure as JSON
+      .addCase(exportStructureJson.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(exportStructureJson.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.exportedJson = action.payload;
+      })
+      .addCase(exportStructureJson.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Export structure as CSV
+      .addCase(exportStructureCsv.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(exportStructureCsv.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.exportedCsv = action.payload;
+      })
+      .addCase(exportStructureCsv.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

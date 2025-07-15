@@ -1,18 +1,15 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
 import { loginUser } from "../../../redux/slices/auth";
+import { fetchAppSettings } from "../../../redux/slices/app-settings";
 
 const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
-  const handleOAuthLogin = async () => {
-    try {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
-    } catch (error) {
-      cogoToast.error(error.message || `${label} login failed!`);
-    }
+  const handleOAuthLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
   };
 
   return (
@@ -28,35 +25,50 @@ const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
 
 const Login = () => {
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
-  const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [authProviders, setAuthProviders] = useState({
+    local: true,
+    google: true,
+    github: true,
+  });
+
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
+  useEffect(() => {
+    const loadAuthSettings = async () => {
+      try {
+        const result = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(result)) {
+          const settings = result.payload;
+          if (settings?.authProviders) {
+            setAuthProviders(settings.authProviders);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch auth settings", error);
+      }
+    };
+
+    loadAuthSettings();
+  }, [dispatch]);
+
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email) {
-      setEmailError("Email is required");
-      return;
-    }
-    if (!password) {
-      setPasswordError("Password is required");
-      return;
-    }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Please enter a valid email");
-      return;
-    }
+    if (!email) return setEmailError("Email is required");
+    if (!/\S+@\S+\.\S+/.test(email)) return setEmailError("Enter valid email");
+    if (!password) return setPasswordError("Password is required");
+
     setEmailError("");
+    setPasswordError("");
     setIsSubmitting(true);
 
-    // Dispatch the login action
     dispatch(loginUser({ email, password }))
       .unwrap()
       .then((response) => {
-        // Store token and user details in cookies
         Cookies.set("atlas_access_token", response.access_token, {
           expires: 1,
         });
@@ -67,32 +79,22 @@ const Login = () => {
 
         cogoToast.success("Login successful!");
         navigate("/app/dashboard");
-        setIsSubmitting(false);
       })
       .catch((err) => {
-        if (err && err.message && err.message === "User not found") {
-          cogoToast.error("No account found with this email.");
-        } else {
-          cogoToast.error(err.message || "Login failed!");
-        }
-        setIsSubmitting(false);
-      });
+        cogoToast.error(err.message || "Login failed!");
+      })
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
     <div className="bg-custom-background-white">
       <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <div className="flex items-center">
-          <Link
-            to="/"
-            className="flex items-center space-x-2 text-xl text-white"
-          >
-            <span className="font-semibold">Atlas</span>
-          </Link>
-        </div>
+        <Link to="/" className="text-white text-xl font-semibold">
+          Atlas
+        </Link>
         <Link
           to="/register"
-          className="border border-white transition duration-200 ease-in-out text-white px-4 py-1.5 rounded-lg text-sm"
+          className="border border-white text-white px-4 py-1.5 rounded-lg text-sm"
         >
           Sign up for free
         </Link>
@@ -104,84 +106,102 @@ const Login = () => {
             Login
           </h1>
 
-          <form onSubmit={handleSubmit} noValidate>
-            <div className="mb-4">
-              <label
-                htmlFor="work-email-input"
-                className="block text-sm font-medium text-custom-text-grey mb-1"
+          {/* 🟢 LOCAL LOGIN FORM (conditionally rendered) */}
+          {authProviders.local && (
+            <form onSubmit={handleSubmit} noValidate>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-custom-text-grey mb-1">
+                  Work email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  placeholder="Enter your email"
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
+                />
+                {emailError && (
+                  <p className="text-red-500 text-xs mt-1">{emailError}</p>
+                )}
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-custom-text-grey mb-1">
+                  Password
+                </label>
+                <input
+                  type="password"
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
+                />
+                {passwordError && (
+                  <p className="text-red-500 text-xs mt-1">{passwordError}</p>
+                )}
+
+                {/* 🔹 Reset password link */}
+                <div className="text-right mt-1">
+                  <Link
+                    to="/forgot-password"
+                    className="text-sm text-blue-600 hover:underline"
+                  >
+                    Forgot your password?
+                  </Link>
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                className="w-full bg-custom-main text-white py-2 rounded-lg mt-2 hover:bg-custom-main transition duration-200 ease-in-out"
+                disabled={isSubmitting}
               >
-                Work email
-              </label>
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="Enter your work email"
-                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
-              />
-              {emailError && (
-                <p className="text-red-500 text-xs mt-1">{emailError}</p>
-              )}
-            </div>
+                {isSubmitting ? "Loading..." : "Continue"}
+              </button>
 
-            <div className="mb-4">
-              <label
-                htmlFor="password-input"
-                className="block text-sm font-medium text-custom-text-grey mb-1"
-              >
-                Password
-              </label>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Enter your password"
-                className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
-              />
-              {passwordError && (
-                <p className="text-red-500 text-xs mt-1">{passwordError}</p>
-              )}
-            </div>
+              <div className="my-4 text-center">
+                <p className="text-sm text-custom-text-grey">Or</p>
+              </div>
+            </form>
+          )}
 
-            <button
-              type="submit"
-              className="w-full bg-custom-main text-white py-2 cursor-pointer rounded-lg mt-2 hover:bg-custom-main transition duration-200 ease-in-out"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? "Loading..." : "Continue"}
-            </button>
-          </form>
-
-          <div className="my-4 text-center">
-            <p className="text-sm text-custom-text-grey">Or</p>
-          </div>
-
+          {/* 🟢 OAUTH BUTTONS */}
           <div className="flex flex-col gap-2">
-            <OAuthLoginButton
-              provider="google"
-              icon={Icons.GoogleIcon}
-              label="Google"
-            />
-            <OAuthLoginButton
-              provider="github"
-              icon={Icons.GithubIcon}
-              label="GitHub"
-            />
+            {authProviders.google && (
+              <OAuthLoginButton
+                provider="google"
+                icon={Icons.GoogleIcon}
+                label="Google"
+              />
+            )}
+            {authProviders.github && (
+              <OAuthLoginButton
+                provider="github"
+                icon={Icons.GithubIcon}
+                label="GitHub"
+              />
+            )}
           </div>
 
           <p className="text-sm text-custom-text-grey text-center mt-4">
             If the Google button doesn't work, try entering your work email
-            above to be redirected to your organization's SSO (single sign-on)
-            login page.
+            above to be redirected to your organization's SSO.
           </p>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-4 text-sm">
             <Link
-              to="http://www.Atlas.co/terms/services-agreement"
-              className="text-black underline text-sm hover:text-blue-700 transition duration-200 ease-in-out"
+              to="http://www.atlas.dev/terms/services-agreement"
+              className="text-black underline hover:text-blue-700"
             >
               Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="http://www.atlas.dev/terms/privacy-policy"
+              className="text-black underline hover:text-blue-700"
+            >
+              Privacy Policy
             </Link>
+            .
           </div>
         </div>
       </main>

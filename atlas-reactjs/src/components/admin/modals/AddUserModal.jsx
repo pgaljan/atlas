@@ -4,7 +4,7 @@ import InputField from "../../input-field/InputField";
 
 const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
   const [formData, setFormData] = useState({
-    fullName: "",
+    displayName: "",
     email: "",
     role: "",
     password: "",
@@ -40,11 +40,11 @@ const AddUserModal = ({ isOpen, onClose, onSubmit, title = "User" }) => {
         </p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <InputField
-            label="Full Name"
-            placeholder="Enter full name"
+            label="Display Name"
+            placeholder="Enter Display Name"
             type="text"
-            name="fullName"
-            value={formData.fullName}
+            name="displayName"
+            value={formData.displayName}
             onChange={handleChange}
           />
           <InputField

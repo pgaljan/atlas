@@ -9,19 +9,28 @@ import {
   NotFoundException,
   Param,
   Patch,
+  Post,
   Request,
   Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
+import * as bcrypt from 'bcryptjs';
+import { randomUUID } from 'crypto';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { UserService } from './user.service';
+import { MailerService } from 'src/utils/mailer.util';
+import { PrismaService } from 'src/prisma/prisma.service';
 
 @Controller('user')
 export class UserController {
-  constructor(private readonly userService: UserService) {}
+  constructor(
+    private readonly userService: UserService,
+    private readonly mailer: MailerService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   // @UseGuards(JwtAuthGuard)
   @Get('all')
@@ -70,7 +79,7 @@ export class UserController {
     try {
       return await this.userService.deleteUser(userId, reason);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       if (error instanceof NotFoundException) {
         throw new NotFoundException(error.message);
       }
@@ -124,7 +133,7 @@ export class UserController {
     @Body('newPassword') newPassword: string,
     @Request() req,
   ) {
-    const userId = req.user.id;
+    const userId = req.params.id;
     try {
       return await this.userService.changePassword(
         id,
@@ -144,5 +153,68 @@ export class UserController {
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
+  }
+
+  @Post('forgot-password')
+  async forgotPassword(@Body('email') email: string) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User with this email not found.');
+    }
+
+    const token = randomUUID();
+    const expiresAt = new Date();
+    expiresAt.setHours(expiresAt.getHours() + 1);
+
+    await this.prisma.token.upsert({
+      where: { userId_key: { userId: user.id, key: 'reset-password' } },
+      update: { value: token, expiresAt },
+      create: {
+        userId: user.id,
+        key: 'reset-password',
+        value: token,
+        expiresAt,
+      },
+    });
+
+    await this.mailer.sendForgotPasswordEmail(user.email, token);
+
+    return { message: 'Password reset link sent to your email.' };
+  }
+
+  @Post('reset-password')
+  async resetPassword(
+    @Body('token') token: string,
+    @Body('email') email: string,
+    @Body('newPassword') newPassword: string,
+  ) {
+    const user = await this.prisma.user.findUnique({ where: { email } });
+    if (!user) {
+      throw new NotFoundException('User not found.');
+    }
+
+    const tokenRecord = await this.prisma.token.findUnique({
+      where: { userId_key: { userId: user.id, key: 'reset-password' } },
+    });
+
+    if (!tokenRecord || tokenRecord.value !== token) {
+      throw new ForbiddenException('Invalid or expired reset token.');
+    }
+
+    if (tokenRecord.expiresAt < new Date()) {
+      throw new ForbiddenException('Reset token has expired.');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.prisma.user.update({
+      where: { id: user.id },
+      data: { password: hashedPassword },
+    });
+
+    await this.prisma.token.delete({
+      where: { userId_key: { userId: user.id, key: 'reset-password' } },
+    });
+
+    return { message: 'Password has been reset successfully.' };
   }
 }

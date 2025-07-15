@@ -45,7 +45,7 @@ const ModalComponent = ({
           </div>
 
           {/* Modal Body */}
-          <div className="p-6 overflow-y-auto space-y-2">
+          <div className="p-4 overflow-y-auto space-y-2">
             {React.Children.map(children, (child) => {
               if (React.isValidElement(child)) {
                 return React.cloneElement(child, { ref: focusRef });

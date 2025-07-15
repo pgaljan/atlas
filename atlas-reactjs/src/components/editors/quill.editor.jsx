@@ -1,3 +1,4 @@
+import cogoToast from "@successtar/cogo-toast"
 import PropTypes from "prop-types"
 import ImageResize from "quill-image-resize-module-react"
 import React, { useEffect, useRef } from "react"
@@ -6,7 +7,6 @@ import "react-quill/dist/quill.snow.css"
 import "tippy.js/dist/tippy.css"
 import "./CustomImageBlot"
 import "./CustomVideoBlot"
-import cogoToast from "@successtar/cogo-toast"
 
 if (!Quill.imports["modules/imageResize"]) {
   Quill.register("modules/imageResize", ImageResize)

@@ -71,7 +71,7 @@ export class TeamMemberService {
         user = await this.prisma.user.create({
           data: {
             email,
-            fullName: '',
+            displayName: '',
             username: email.split('@')[0],
             password: '',
             role: { connect: { id: role.id } },

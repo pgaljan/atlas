@@ -32,9 +32,15 @@ const index = () => {
     setLoading(true);
     try {
       const data = await dispatch(fetchPlans()).unwrap();
-      setTableData(data);
+      if (Array.isArray(data)) {
+        setTableData(data);
+      } else {
+        setTableData([]);
+        console.warn("Unexpected API response:", data);
+      }
     } catch (error) {
       console.error("Error fetching plans:", error);
+      setTableData([]);
     } finally {
       setLoading(false);
     }
@@ -43,8 +49,6 @@ const index = () => {
   useEffect(() => {
     fetchPlansData();
   }, [fetchPlansData]);
-
-  const headers = ["Plan Name", "Description", "Price", "Status", "Actions"];
 
   // Toggle status API call
   const toggleUserStatus = (id) => {
@@ -138,19 +142,21 @@ const index = () => {
   };
 
   const handleDragEnd = async (result) => {
-    if (!result.destination) return;
-
-    const reorderedData = Array.from(tableData);
-    const [movedItem] = reorderedData.splice(result.source.index, 1);
-    reorderedData.splice(result.destination.index, 0, movedItem);
-
-    setTableData(reorderedData);
+    if (!result?.destination || !Array.isArray(tableData)) return;
 
     try {
-      const reorderedPayload = reorderedData.map((plan, index) => ({
-        id: plan.id,
-        order: index,
-      }));
+      const reorderedData = Array.from(tableData);
+      const [movedItem] = reorderedData.splice(result.source.index, 1);
+      reorderedData.splice(result.destination.index, 0, movedItem);
+
+      setTableData(reorderedData);
+
+      const reorderedPayload = reorderedData
+        .map((plan, index) => ({
+          id: plan?.id,
+          order: index,
+        }))
+        .filter((item) => item.id);
 
       await dispatch(reorderPlans(reorderedPayload)).unwrap();
       cogoToast.success("Plans reordered successfully!");
@@ -190,6 +196,14 @@ const index = () => {
             <MdAddTask size={20} />
             Add Plan
           </button>
+
+          <AddSubscriptionModal
+            isOpen={addModalOpen}
+            onClose={() => setAddModalOpen(false)}
+            onSubmit={handleAddPlan}
+            onSuccess={fetchPlansData}
+            title="Add Subscription Plan"
+          />
         </div>
       </AdminLayout>
     );
@@ -238,73 +252,80 @@ const index = () => {
                     {...provided.droppableProps}
                     className="divide-y divide-gray-100"
                   >
-                    {tableData.map((plan, index) => (
-                      <Draggable
-                        key={plan.id}
-                        draggableId={plan.id.toString()}
-                        index={index}
-                      >
-                        {(provided) => (
-                          <tr
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            className="hover:bg-gray-50 transition"
+                    {tableData?.length > 0 &&
+                      tableData.map((plan, index) => {
+                        if (!plan || !plan.id) return null; // skip if invalid plan
+
+                        return (
+                          <Draggable
+                            key={plan.id}
+                            draggableId={plan.id.toString()}
+                            index={index}
                           >
-                            <td
-                              className="px-4 py-3 cursor-grab"
-                              {...provided.dragHandleProps}
-                            >
-                              <TbDragDrop />
-                            </td>
-                            <td className="px-5 py-4 text-gray-500">
-                              {plan.name}
-                            </td>
-                            <td className="px-5 py-4 text-gray-500">
-                              {plan.description}
-                            </td>
-                            <td className="px-4 py-3 text-gray-500">
-                              $ {plan.price}.00
-                            </td>
-                            <td className="px-4 py-3">
-                              <label className="relative inline-flex items-center cursor-pointer">
-                                <input
-                                  type="checkbox"
-                                  checked={plan.status === "active"}
-                                  onChange={() => toggleUserStatus(plan.id)}
-                                  className="sr-only peer"
-                                />
-                                <div
-                                  className={`w-12 h-6 rounded-full transition-all ${
-                                    plan.status === "active"
-                                      ? "bg-custom-main"
-                                      : "bg-gray-300"
-                                  }`}
-                                ></div>
-                                <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
-                              </label>
-                            </td>
-                            <td className="px-2 py-2 flex">
-                              <Tooltip label="Edit">
-                                <button
-                                  className="p-2 text-black rounded transition"
-                                  onClick={() => openModal("edit", plan)}
+                            {(provided) => (
+                              <tr
+                                ref={provided.innerRef}
+                                {...provided.draggableProps}
+                                className="hover:bg-gray-50 transition"
+                              >
+                                <td
+                                  className="px-4 py-3 cursor-grab"
+                                  {...provided.dragHandleProps}
                                 >
-                                  <TbEditCircle className="w-6 h-6" />
-                                </button>
-                              </Tooltip>
-                              <Tooltip label="Delete">
-                                <button
-                                  className="p-2 text-red-500 rounded transition"
-                                  onClick={() => openDeleteModal(plan)}
-                                >
-                                  <IoTrash className="w-5 h-5" />
-                                </button>
-                              </Tooltip>
-                            </td>
-                          </tr>
-                        )}
-                      </Draggable>
-                    ))}
+                                  <TbDragDrop />
+                                </td>
+                                <td className="px-5 py-4 text-gray-500">
+                                  {plan.name || "—"}
+                                </td>
+                                <td className="px-5 py-4 text-gray-500">
+                                  {plan.description || "—"}
+                                </td>
+                                <td className="px-4 py-3 text-gray-500">
+                                  $ {plan.price || "0.00"}
+                                </td>
+                                <td className="px-4 py-3">
+                                  {/* Toggle Switch */}
+                                  <label className="relative inline-flex items-center cursor-pointer">
+                                    <input
+                                      type="checkbox"
+                                      checked={plan.status === "active"}
+                                      onChange={() => toggleUserStatus(plan.id)}
+                                      className="sr-only peer"
+                                    />
+                                    <div
+                                      className={`w-12 h-6 rounded-full transition-all ${
+                                        plan.status === "active"
+                                          ? "bg-custom-main"
+                                          : "bg-gray-300"
+                                      }`}
+                                    ></div>
+                                    <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
+                                  </label>
+                                </td>
+                                <td className="px-2 py-2 flex">
+                                  <Tooltip label="Edit">
+                                    <button
+                                      className="p-2 text-black rounded transition"
+                                      onClick={() => openModal("edit", plan)}
+                                    >
+                                      <TbEditCircle className="w-6 h-6" />
+                                    </button>
+                                  </Tooltip>
+                                  <Tooltip label="Delete">
+                                    <button
+                                      className="p-2 text-red-500 rounded transition"
+                                      onClick={() => openDeleteModal(plan)}
+                                    >
+                                      <IoTrash className="w-5 h-5" />
+                                    </button>
+                                  </Tooltip>
+                                </td>
+                              </tr>
+                            )}
+                          </Draggable>
+                        );
+                      })}
+
                     {provided.placeholder}
                   </tbody>
                 )}
@@ -324,14 +345,15 @@ const index = () => {
             onClose={() => setEditModalOpen(false)}
             onSubmit={handleEditPlan}
             onSuccess={fetchPlansData}
-            plan={selectedPlan}
-            title={selectedPlan?.name}
+            plan={selectedPlan || {}}
+            title={selectedPlan?.name || "Edit Plan"}
           />
+
           <DeleteModal
             isOpen={deleteModalOpen}
             onClose={closeDeleteModal}
             onConfirm={confirmDelete}
-            title={selectedPlan?.name}
+            title={selectedPlan?.name || "Delete Plan"}
           />
         </div>
       </div>

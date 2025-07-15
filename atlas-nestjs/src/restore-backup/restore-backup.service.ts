@@ -90,9 +90,11 @@ export class RestoreService {
       const structuresSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Structures'],
       );
+
       const elementsSheet = xlsx.utils.sheet_to_json<any>(
         workbook.Sheets['Elements'],
       );
+
       const structureMapsSheet = workbook.Sheets['StructureMaps']
         ? xlsx.utils.sheet_to_json<any>(workbook.Sheets['StructureMaps'])
         : [];
@@ -182,22 +184,70 @@ export class RestoreService {
 
         elementIdMapping.set(elementData.id, elementData.id);
 
+        const {
+          id,
+          name,
+          recordId,
+          orderIndex,
+          isExpanded,
+          type,
+          eventType,
+          gateType,
+          eventValue,
+          eventValueType,
+          mttr,
+          missionTime,
+          inputK,
+          outputN,
+          description,
+          deletedAt,
+          createdAt,
+          updatedAt,
+        } = elementData;
+
         await this.prisma.element.upsert({
-          where: { id: elementData.id },
+          where: { id },
           update: {
-            name: elementData.name,
-            structureId: elementData.structureId,
-            recordId: elementData.recordId,
+            name,
+            structureId: targetStructureId,
+            recordId: recordId || null,
+            orderIndex,
             parentId: null,
-            orderIndex: elementData.orderIndex,
+            isExpanded: isExpanded ?? true,
+            type: type || null,
+            eventType: eventType || null,
+            gateType: gateType || null,
+            eventValue: eventValue ?? null,
+            eventValueType: eventValueType || null,
+            mttr: mttr ?? null,
+            missionTime: missionTime ?? null,
+            inputK: inputK ?? null,
+            outputN: outputN ?? null,
+            description: description || null,
+            deletedAt: deletedAt ? new Date(deletedAt) : null,
+            updatedAt: updatedAt ? new Date(updatedAt) : new Date(),
           },
           create: {
-            id: elementData.id,
-            name: elementData.name,
-            structureId: elementData.structureId,
-            recordId: elementData.recordId,
+            id,
+            name,
+            structureId: targetStructureId,
+            recordId: recordId || null,
+            orderIndex,
             parentId: null,
-            orderIndex: elementData.orderIndex,
+            isExpanded: isExpanded ?? true,
+            type: type || null,
+            eventType: eventType || null,
+            gateType: gateType || null,
+            eventValue: eventValue ?? null,
+            eventValueType: eventValueType || null,
+            mttr: mttr ?? null,
+            missionTime: missionTime ?? null,
+            inputK: inputK ?? null,
+            outputN: outputN ?? null,
+            description: description || null,
+            deletedAt: deletedAt ? new Date(deletedAt) : null,
+            createdAt: createdAt ? new Date(createdAt) : new Date(),
+            updatedAt: updatedAt ? new Date(updatedAt) : new Date(),
           },
         });
       }
@@ -236,11 +286,30 @@ export class RestoreService {
         const parsedTags = this.safeParseJSON(tags, 'tags');
         await this.prisma.record.upsert({
           where: { id: recordData.id },
-          update: { metadata: parsedMetadata, tags: parsedTags },
+          update: {
+            metadata: parsedMetadata,
+            tags: parsedTags,
+            editorType: recordData.editorType || 'vscode',
+            recordSvg: this.safeParseJSON(
+              recordData.recordSvg || '{}',
+              'recordSvg',
+            ),
+          },
           create: {
             id: recordData.id,
             metadata: parsedMetadata,
             tags: parsedTags,
+            editorType: recordData.editorType || 'vscode',
+            recordSvg: this.safeParseJSON(
+              recordData.recordSvg || '{}',
+              'recordSvg',
+            ),
+            createdAt: recordData.createdAt
+              ? new Date(recordData.createdAt)
+              : undefined,
+            updatedAt: recordData.updatedAt
+              ? new Date(recordData.updatedAt)
+              : undefined,
           },
         });
       }
@@ -502,11 +571,30 @@ export class RestoreService {
             const parsedTags = this.safeParseJSON(tags, 'tags');
             await this.prisma.record.upsert({
               where: { id: recordData.id },
-              update: { metadata: parsedMetadata, tags: parsedTags },
+              update: {
+                metadata: parsedMetadata,
+                tags: parsedTags,
+                editorType: recordData.editorType || 'vscode',
+                recordSvg: this.safeParseJSON(
+                  recordData.recordSvg || '{}',
+                  'recordSvg',
+                ),
+              },
               create: {
                 id: recordData.id,
                 metadata: parsedMetadata,
                 tags: parsedTags,
+                editorType: recordData.editorType || 'vscode',
+                recordSvg: this.safeParseJSON(
+                  recordData.recordSvg || '{}',
+                  'recordSvg',
+                ),
+                createdAt: recordData.createdAt
+                  ? new Date(recordData.createdAt)
+                  : undefined,
+                updatedAt: recordData.updatedAt
+                  ? new Date(recordData.updatedAt)
+                  : undefined,
               },
             });
           }
@@ -611,13 +699,19 @@ export class RestoreService {
         where: { id: targetStructureId },
         update: {
           name: backupStructure.name,
+          title: backupStructure.title,
           description: backupStructure.description,
           ownerId: backupStructure.ownerId,
-          title: backupStructure.title,
-          visibility: backupStructure.visibility,
           workspaceId: validWorkspaceId,
-          imageUrl: backupStructure.imageUrl,
+          imageUrl: backupStructure.imageUrl || null,
+          isExpanded: backupStructure.isExpanded ?? true,
           markmapShowWbs: backupStructure.markmapShowWbs,
+          wbsStart: backupStructure.wbsStart ?? 1,
+          visibility: backupStructure.visibility,
+          type: backupStructure.type ?? 'default',
+          deletedAt: backupStructure.deletedAt
+            ? new Date(backupStructure.deletedAt)
+            : null,
         },
         create: {
           id: targetStructureId,
@@ -625,22 +719,37 @@ export class RestoreService {
           title: backupStructure.title,
           description: backupStructure.description,
           ownerId: backupStructure.ownerId,
-          visibility: backupStructure.visibility,
           workspaceId: validWorkspaceId,
-          imageUrl: backupStructure.imageUrl,
+          imageUrl: backupStructure.imageUrl || null,
+          isExpanded: backupStructure.isExpanded ?? true,
           markmapShowWbs: backupStructure.markmapShowWbs,
+          wbsStart: backupStructure.wbsStart ?? 1,
+          visibility: backupStructure.visibility,
+          type: backupStructure.type ?? 'default',
+          deletedAt: backupStructure.deletedAt
+            ? new Date(backupStructure.deletedAt)
+            : null,
+          createdAt: backupStructure.createdAt
+            ? new Date(backupStructure.createdAt)
+            : undefined,
+          updatedAt: backupStructure.updatedAt
+            ? new Date(backupStructure.updatedAt)
+            : undefined,
         },
       });
 
       // ---------- Elements Restoration in Two Passes ----------
       const elementIdMapping = new Map<string, string>();
-      const recordIdMapping = new Map<string, string>(); // New map to track recordId
+      const recordIdMapping = new Map<string, string>();
 
       // First pass: Upsert elements and track recordIds.
       for (const elementData of elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
       )) {
         elementData.structureId = targetStructureId;
+
+        const mappedRecordId =
+          recordIdMapping.get(elementData.recordId) || null;
 
         // Map the original ID
         elementIdMapping.set(elementData.id, elementData.id);
@@ -652,9 +761,8 @@ export class RestoreService {
           });
 
           if (record) {
-            recordIdMapping.set(elementData.recordId, record.id); // Store the valid recordId
+            recordIdMapping.set(elementData.recordId, record.id);
           } else {
-            // If record doesn't exist, create a new record or handle error
             const newRecord = await this.prisma.record.create({
               data: {
                 id: elementData.recordId,
@@ -662,7 +770,7 @@ export class RestoreService {
                 tags: '[]',
               },
             });
-            recordIdMapping.set(elementData.recordId, newRecord.id); // Use the new recordId
+            recordIdMapping.set(elementData.recordId, newRecord.id);
           }
         }
 
@@ -670,20 +778,55 @@ export class RestoreService {
           where: { id: elementData.id },
           update: {
             name: elementData.name,
-            structureId: elementData.structureId,
-            recordId:
-              recordIdMapping.get(elementData.recordId) || elementData.recordId, // Use mapped recordId
+            structureId: targetStructureId,
+            recordId: mappedRecordId || null,
             orderIndex: elementData.orderIndex,
             parentId: null,
+            isExpanded: elementData.isExpanded ?? true,
+            type: elementData.type || null,
+            eventType: elementData.eventType || null,
+            gateType: elementData.gateType || null,
+            eventValue: elementData.eventValue ?? null,
+            eventValueType: elementData.eventValueType || null,
+            mttr: elementData.mttr ?? null,
+            missionTime: elementData.missionTime ?? null,
+            inputK: elementData.inputK ?? null,
+            outputN: elementData.outputN ?? null,
+            description: elementData.description || null,
+            deletedAt: elementData.deletedAt
+              ? new Date(elementData.deletedAt)
+              : null,
+            updatedAt: elementData.updatedAt
+              ? new Date(elementData.updatedAt)
+              : new Date(),
           },
           create: {
             id: elementData.id,
             name: elementData.name,
-            structureId: elementData.structureId,
-            recordId:
-              recordIdMapping.get(elementData.recordId) || elementData.recordId, // Use mapped recordId
+            structureId: targetStructureId,
+            recordId: mappedRecordId || null,
             orderIndex: elementData.orderIndex,
             parentId: null,
+            isExpanded: elementData.isExpanded ?? true,
+            type: elementData.type || null,
+            eventType: elementData.eventType || null,
+            gateType: elementData.gateType || null,
+            eventValue: elementData.eventValue ?? null,
+            eventValueType: elementData.eventValueType || null,
+            mttr: elementData.mttr ?? null,
+            missionTime: elementData.missionTime ?? null,
+            inputK: elementData.inputK ?? null,
+            outputN: elementData.outputN ?? null,
+            description: elementData.description || null,
+            deletedAt: elementData.deletedAt
+              ? new Date(elementData.deletedAt)
+              : null,
+            createdAt: elementData.createdAt
+              ? new Date(elementData.createdAt)
+              : new Date(),
+            updatedAt: elementData.updatedAt
+              ? new Date(elementData.updatedAt)
+              : new Date(),
           },
         });
 

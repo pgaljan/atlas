@@ -13,7 +13,7 @@ const GenericModal = ({
   initialData,
 }) => {
   const defaultUserData = {
-    fullName: "",
+    displayName: "",
     username: "",
     email: "",
     role: "",
@@ -87,7 +87,7 @@ const GenericModal = ({
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-end z-50">
-      <div className="bg-white rounded-3xl shadow-lg p-6 w-[400px] h-full overflow-auto relative">
+      <div className="bg-white rounded-3xl shadow-lg p-6 text-start w-[400px] h-full overflow-auto relative">
         <h4 className="mb-2 text-3xl font-bold text-gray-800">{title}</h4>
         <p className="text-base text-gray-500 mb-3">
           Please provide the user details below:
@@ -96,10 +96,10 @@ const GenericModal = ({
           {type === "user" ? (
             <>
               <InputField
-                label="Full Name"
-                name="fullName"
-                placeholder="Enter full name"
-                value={formData.fullName}
+                label="Display Name"
+                name="displayName"
+                placeholder="Enter Display Name"
+                value={formData.displayName}
                 onChange={handleChange}
               />
               <InputField

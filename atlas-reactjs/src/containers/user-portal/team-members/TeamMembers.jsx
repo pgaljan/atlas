@@ -36,7 +36,7 @@ const TeamMembersPage = ({ onSubmit }) => {
         // Map the fetched data to match the existing teamMembers state structure
         const formattedMembers = result.map((member) => ({
           id: member.id,
-          name: member.user?.fullName || member.user?.username || "Unknown",
+          name: member.user?.displayName || member.user?.username || "Unknown",
           email: member.user?.email || "No email",
           userType: member.role,
           lastAccess: member.createdAt,

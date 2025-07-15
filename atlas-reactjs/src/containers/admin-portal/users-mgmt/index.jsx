@@ -19,6 +19,7 @@ import {
   fetchAllUsers,
   updateUser,
 } from "../../../redux/slices/users";
+import { FiUsers } from "react-icons/fi";
 
 const index = () => {
   const dispatch = useDispatch();
@@ -40,8 +41,6 @@ const index = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
-
-  // New states for filtering
   const [searchTerm, setSearchTerm] = useState("");
   const [filterActive, setFilterActive] = useState(false);
 
@@ -60,7 +59,6 @@ const index = () => {
     setIsSortOpen(false);
   };
 
-  // Open delete modal
   const openDeleteModal = (user) => {
     setUserToDelete(user);
     setIsDeleteModalOpen(true);
@@ -80,12 +78,19 @@ const index = () => {
     setLoading(true);
     try {
       const users = await dispatch(fetchAllUsers()).unwrap();
+      if (!Array.isArray(users) || users.length === 0) {
+        setTableData([]);
+        return;
+      }
+
       const sortedUsers = [...users].sort(
         (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
       );
       setTableData(sortedUsers);
     } catch (error) {
       console.error("Failed to fetch users:", error);
+      cogoToast.error("Error fetching users");
+      setTableData([]);
     } finally {
       setLoading(false);
     }
@@ -104,6 +109,7 @@ const index = () => {
     "Admin",
     "Status",
     "Invites",
+    "Accepted",
     "Actions",
   ];
 
@@ -161,7 +167,7 @@ const index = () => {
 
   const handleUpdateUser = async (data) => {
     const updateData = {
-      fullName: data.fullName,
+      displayName: data.displayName,
       username: data.username,
       email: data.email,
       role: data.role,
@@ -232,6 +238,11 @@ const index = () => {
 
   const handleTierChange = async (userId, selectedPlanName) => {
     try {
+      if (!plans || plans.length === 0) {
+        cogoToast.error("No plans available");
+        return;
+      }
+
       const selectedPlan = plans.find((plan) => plan.name === selectedPlanName);
 
       if (!selectedPlan) {
@@ -263,7 +274,7 @@ const index = () => {
   // Prepare initial data for the modal.
   const initialModalData = editingUser
     ? {
-        fullName: editingUser.fullName || "",
+        displayName: editingUser.displayName || "",
         username: editingUser.username || "",
         email: editingUser.email || "",
         role: editingUser.role?.name || "",
@@ -274,7 +285,7 @@ const index = () => {
   const filteredUsers = tableData.filter((user) => {
     const searchLower = searchTerm.toLowerCase();
     const matchesSearch =
-      user.fullName?.toLowerCase().includes(searchLower) ||
+      user.displayName?.toLowerCase().includes(searchLower) ||
       user.username?.toLowerCase().includes(searchLower) ||
       user.email?.toLowerCase().includes(searchLower);
 
@@ -293,6 +304,54 @@ const index = () => {
 
     return matchesSearch && matchesStatus && matchesSort;
   });
+
+  if (filteredUsers.length === 0) {
+    return (
+      <AdminLayout>
+        <div className="flex h-screen flex-col items-center justify-center text-center p-6">
+          <div className="flex items-center justify-center bg-white text-custom-main rounded-full w-28 h-28 mb-4">
+            <FiUsers className="text-5xl text-custom-main" />
+          </div>
+          <h2 className="text-2xl font-bold text-custom-text-grey mb-2">
+            No users found
+          </h2>
+          <p className="text-lg text-custom-text-grey mb-4">
+            There are no users to display. <br /> Please add a new user to get
+            started.
+          </p>
+          <button
+            onClick={() => openModal()}
+            className="flex items-center gap-2 px-5 py-2 border-2 border-custom-main text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
+          >
+            <MdGroupAdd size={20} />
+            Add User
+          </button>
+
+          <GenericModal
+            isOpen={isOpen}
+            onClose={closeModal}
+            onSubmit={editingUser ? handleUpdateUser : handleSaveUser}
+            type="user"
+            title={
+              editingUser ? `Update ${editingUser.displayName}` : "Add User"
+            }
+            initialData={initialModalData}
+          />
+
+          <DeleteModal
+            isOpen={isDeleteModalOpen}
+            onClose={closeDeleteModal}
+            onConfirm={handleDeleteUser}
+            title={
+              userToDelete
+                ? userToDelete.displayName || userToDelete.username
+                : "User"
+            }
+          />
+        </div>
+      </AdminLayout>
+    );
+  }
 
   return (
     <AdminLayout>
@@ -371,7 +430,9 @@ const index = () => {
             onClose={closeModal}
             onSubmit={editingUser ? handleUpdateUser : handleSaveUser}
             type="user"
-            title={editingUser ? `Update ${editingUser.fullName}` : "Add User"}
+            title={
+              editingUser ? `Update ${editingUser.displayName}` : "Add User"
+            }
             initialData={initialModalData}
           />
 
@@ -381,7 +442,7 @@ const index = () => {
             onConfirm={handleDeleteUser}
             title={
               userToDelete
-                ? userToDelete.fullName || userToDelete.username
+                ? userToDelete.displayName || userToDelete.username
                 : "User"
             }
           />
@@ -418,7 +479,7 @@ const index = () => {
                         />
                         <div>
                           <p className="text-gray-600 font-medium">
-                            {user.fullName}
+                            {user.displayName}
                           </p>
                           <p className="text-gray-500 text-sm italic">
                             @{user.username}
@@ -428,7 +489,7 @@ const index = () => {
                     </td>
                     <td className="px-4 py-3 text-gray-500">{user.email}</td>
                     <td className="px-4 py-3 capitalize text-gray-500">
-                      {user.role?.name}
+                      {user.role?.name || "N/A"}
                     </td>
                     <td className="px-4 py-3">
                       <select
@@ -494,6 +555,9 @@ const index = () => {
                         }
                         className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
                       />
+                    </td>
+                    <td className="px-4 py-3 text-center text-gray-500">
+                      {user.acceptedInvitesCount ?? 0}
                     </td>
                     <td className="px-2 py-2 flex mt-2">
                       <Tooltip label="Edit">

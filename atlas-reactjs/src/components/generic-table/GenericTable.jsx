@@ -90,7 +90,7 @@ const GenericTable = ({
       </ModalComponent>
 
       {filteredData?.length === 0 && !searchQuery && activeTab != "pending" ? (
-        <div className="flex h-screen flex-col text-center p-6">
+        <div className="flex flex-col text-center p-6 mt-[15%]">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
               {emptyState.icon}
@@ -289,8 +289,21 @@ const GenericTable = ({
                               label={action.tooltip || "Action"}
                             >
                               <button
-                                className="hover:text-custom-dark items-center flex justify-center"
-                                onClick={() => action.onClick(row)}
+                                className={`items-center flex justify-center ${
+                                  action.disabled?.(row)
+                                    ? "opacity-50 cursor-not-allowed"
+                                    : "hover:text-custom-dark"
+                                }`}
+                                onClick={() => {
+                                  if (!action.disabled?.(row)) {
+                                    action.onClick(row);
+                                  } else {
+                                    cogoToast.warn(
+                                      "Accepted invitations cannot be deleted."
+                                    );
+                                  }
+                                }}
+                                disabled={action.disabled?.(row)}
                               >
                                 {action.icon}
                               </button>

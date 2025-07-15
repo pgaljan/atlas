@@ -1,20 +1,19 @@
-import React, { useEffect } from "react";
 import { Sidebar } from "flowbite-react";
-import { useState } from "react";
+import Cookies from "js-cookie";
+import React, { useEffect, useState } from "react";
+import { BiSolidMessageRoundedDots } from "react-icons/bi";
 import { BsDatabaseFillCheck } from "react-icons/bs";
-import { FaPlusCircle, FaRocket } from "react-icons/fa";
-import { FaSlideshare } from "react-icons/fa";
+import { FaPlusCircle, FaRocket, FaSlideshare } from "react-icons/fa";
+import { FiSettings } from "react-icons/fi";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
+import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import useFeatureFlag from "../../hooks/useFeatureFlag";
-import StructureModal from "../modals/StructureModal";
-import Carousel from "../carousels/TourCarousel";
-import Cookies from "js-cookie";
 import { fetchAppSettings } from "../../redux/slices/app-settings";
-import { fetchSubscription } from "../../redux/slices/subscriptions";
 import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
-import { useDispatch } from "react-redux";
-import { BiSolidMessageRoundedDots } from "react-icons/bi";
+import { fetchSubscription } from "../../redux/slices/subscriptions";
+import Carousel from "../carousels/TourCarousel";
+import StructureModal from "../modals/StructureModal";
 
 // Define custom theme for the Sidebar
 const ownTheme = {
@@ -115,9 +114,9 @@ export function SidebarPage({ onSubmit }) {
     },
     // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
     {
-      name: "Invited Members",
+      name: "Invitations",
       icon: FaSlideshare,
-      link: "/app/invited-members",
+      link: "/app/invitations",
     },
     {
       name: "My Backups",
@@ -130,6 +129,12 @@ export function SidebarPage({ onSubmit }) {
     //   icon: BsFillTrashFill,
     //   link: "/app/deleted-markmaps",
     // },
+
+    {
+      name: "Settings",
+      icon: FiSettings,
+      link: "/app/user-settings",
+    },
   ];
   const handleNewStructureClick = () => {
     if (!canCreateStructure) {

@@ -106,6 +106,38 @@ export const exportUsers = createAsyncThunk(
   }
 );
 
+// Forgot Password
+export const forgotPassword = createAsyncThunk(
+  "user/forgotPassword",
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/user/forgot-password", {
+        email,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+// Reset Password
+export const resetPassword = createAsyncThunk(
+  "user/resetPassword",
+  async ({ token, email, newPassword }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/user/reset-password", {
+        token,
+        email,
+        newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // User slice
 const userSlice = createSlice({
   name: "user",
@@ -185,6 +217,27 @@ const userSlice = createSlice({
         state.exportedFile = action.payload;
       })
       .addCase(exportUsers.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      }) // Forgot Password
+      .addCase(forgotPassword.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(forgotPassword.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(forgotPassword.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Reset Password
+      .addCase(resetPassword.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(resetPassword.fulfilled, (state) => {
+        state.status = "succeeded";
+      })
+      .addCase(resetPassword.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

@@ -24,7 +24,6 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     return [...data].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
   }, [data]);
 
-  console.log(sortedData)
 
   const handleUseTemplate = async () => {
     const currentItem = sortedData[currentIndex];

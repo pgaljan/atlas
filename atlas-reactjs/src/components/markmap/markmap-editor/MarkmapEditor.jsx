@@ -468,8 +468,8 @@ const MarkmapEditor = ({ structureId }) => {
           parentId={modalData.elementId}
           elementId={modalData.elementId}
           recordId={modalData.recordId}
-          renderType={"markmap"}
           structureType={treeData.type}
+          renderType={"markmap"}
           structureName={modalData.structureName}
           onClose={() => setModalData(null)}
           wbs={modalData.wbs}

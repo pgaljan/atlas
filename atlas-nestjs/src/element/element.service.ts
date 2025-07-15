@@ -88,6 +88,11 @@ export class ElementService {
       gateType,
       eventValue,
       eventValueType,
+      mttr,
+      missionTime,
+      description,
+      inputK,
+      outputN,
     } = createElementDto;
 
     if (!structureId || !name) {
@@ -123,6 +128,11 @@ export class ElementService {
           gateType: gateType || null,
           eventValue: eventValue || null,
           eventValueType: eventValueType || null,
+          mttr: mttr ?? null,
+          missionTime: missionTime ?? null,
+          description: description ?? null,
+          inputK: inputK ?? null,
+          outputN: outputN ?? null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -175,6 +185,11 @@ export class ElementService {
         gateType,
         eventValue,
         eventValueType,
+        mttr,
+        missionTime,
+        description,
+        inputK,
+        outputN,
       } = elementDto;
 
       if (!structureId || !name) {
@@ -204,6 +219,11 @@ export class ElementService {
             gateType: gateType || null,
             eventValue: eventValue || null,
             eventValueType: eventValueType || null,
+            mttr: mttr ?? null,
+            missionTime: missionTime ?? null,
+            description: description ?? null,
+            inputK: inputK ?? null,
+            outputN: outputN ?? null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -279,6 +299,11 @@ export class ElementService {
       gateType,
       eventValue,
       eventValueType,
+      mttr,
+      missionTime,
+      description,
+      inputK,
+      outputN,
     } = updateElementDto;
 
     if (
@@ -308,6 +333,11 @@ export class ElementService {
           gateType,
           eventValue,
           eventValueType,
+          mttr,
+          missionTime,
+          description,
+          inputK,
+          outputN,
           updatedAt: new Date(),
         },
       });

@@ -1,32 +1,32 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import React, { useEffect, useRef, useState } from "react";
-import { FaEdit } from "react-icons/fa";
-import { FaCirclePlus } from "react-icons/fa6";
-import { GiBrassEye } from "react-icons/gi";
-import { IoIosRemoveCircle } from "react-icons/io";
-import { IoTrash } from "react-icons/io5";
-import { PiTreeStructureFill } from "react-icons/pi";
-import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import useFeatureFlag from "../../hooks/useFeatureFlag";
-import useOutsideClick from "../../hooks/useOutsideClick";
+import cogoToast from "@successtar/cogo-toast"
+import Cookies from "js-cookie"
+import React, { useEffect, useRef, useState } from "react"
+import { FaEdit } from "react-icons/fa"
+import { FaCirclePlus } from "react-icons/fa6"
+import { GiBrassEye } from "react-icons/gi"
+import { IoIosRemoveCircle } from "react-icons/io"
+import { IoTrash } from "react-icons/io5"
+import { PiTreeStructureFill } from "react-icons/pi"
+import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import useFeatureFlag from "../../hooks/useFeatureFlag"
+import useOutsideClick from "../../hooks/useOutsideClick"
 import {
   createElement,
   deleteElement,
   fetchElementById,
   updateElement,
-} from "../../redux/slices/elements";
-import { deleteRecord, getRecordsByElement } from "../../redux/slices/records";
-import { updateStructure } from "../../redux/slices/structures";
-import { uploadFile } from "../../redux/slices/upload-files";
-import InputField from "../input-field/InputField";
-import Tooltip from "../tooltip/Tooltip";
-import AddQuillModal from "./AddQuillModal";
-import DeleteModal from "./DeleteModal";
-import ImportModal from "./ImportModal";
-import ModalComponent from "./Modal";
+} from "../../redux/slices/elements"
+import { deleteRecord, getRecordsByElement } from "../../redux/slices/records"
+import { updateStructure } from "../../redux/slices/structures"
+import { uploadFile } from "../../redux/slices/upload-files"
+import InputField from "../input-field/InputField"
+import Tooltip from "../tooltip/Tooltip"
+import AddQuillModal from "./AddQuillModal"
+import DeleteModal from "./DeleteModal"
+import ImportModal from "./ImportModal"
+import ModalComponent from "./Modal"
 
 const NodeModal = ({
   position,
@@ -41,39 +41,44 @@ const NodeModal = ({
   structureType,
   renderType,
 }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const userId = Cookies.get("atlas_userId");
-  const [isLoading, setIsLoading] = useState(false);
-  const [deleteRecordId, setDeleteRecordId] = useState(null);
-  const [recordExists, setRecordExists] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [childModalVisible, setChildModalVisible] = useState(false);
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [elementValue, setElementValue] = useState("");
-  const [actionType, setActionType] = useState(null);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isEdit, setIsEdit] = useState(false);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const userId = Cookies.get("atlas_userId")
+  const [isLoading, setIsLoading] = useState(false)
+  const [deleteRecordId, setDeleteRecordId] = useState(null)
+  const [recordExists, setRecordExists] = useState(false)
+  const [modalVisible, setModalVisible] = useState(false)
+  const [childModalVisible, setChildModalVisible] = useState(false)
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [elementValue, setElementValue] = useState("")
+  const [actionType, setActionType] = useState(null)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [isEdit, setIsEdit] = useState(false)
   const [editStructureModalVisible, setEditStructureModalVisible] =
-    useState(false);
-  const [structureName, setStructureName] = useState(initialStructureName);
-  const [elementType, setElementType] = useState("event");
-  const [eventType, setEventType] = useState("");
-  const [gateType, setGateType] = useState("");
-  const [eventValue, setEventValue] = useState("");
-  const [eventValueType, seEventValueType] = useState("");
+    useState(false)
+  const [structureName, setStructureName] = useState(initialStructureName)
+  const [elementType, setElementType] = useState("event")
+  const [eventType, setEventType] = useState("")
+  const [gateType, setGateType] = useState("")
+  const [eventValue, setEventValue] = useState("")
+  const [eventValueType, seEventValueType] = useState("")
+  const [missionTime, setMissionTime] = useState("")
+  const [mttr, setMttr] = useState("")
+  const [description, setDescription] = useState("")
+  const [inputK, setInputK] = useState("")
+  const [outputN, setOutputN] = useState("")
 
   // Feature flags
-  const canImportStructure = useFeatureFlag("Import from Excel");
-  const canTagRecord = useFeatureFlag("Rich Text Records");
+  const canImportStructure = useFeatureFlag("Import from Excel")
+  const canTagRecord = useFeatureFlag("Rich Text Records")
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action();
+      action()
     } else {
-      navigate(`?plan=upgrade-to-premium`);
+      navigate(`?plan=upgrade-to-premium`)
     }
-  };
+  }
 
   const modalRef = useOutsideClick(() => {
     if (
@@ -83,16 +88,64 @@ const NodeModal = ({
       !modalVisible &&
       !deleteModalVisible
     ) {
-      onClose();
+      onClose()
     }
-  });
+  })
 
-  const focusRef = useRef(null);
+  const focusRef = useRef(null)
 
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
-      cogoToast.error("Element title cannot be empty");
-      return;
+      cogoToast.error("Element title cannot be empty")
+      return
+    }
+    if (elementType === "gate" && gateType === "voting-or") {
+      const isFloat = val =>
+        val !== "" &&
+        !isNaN(val) &&
+        val.toString().includes(".") &&
+        parseFloat(val) > 0
+
+      const isEmpty = val => val === "" || val === null
+
+      const inputValid = isFloat(inputK)
+      const outputValid = isFloat(outputN)
+
+      if (isEmpty(inputK) || isEmpty(outputN)) {
+        cogoToast.warn(
+          "Input (K) and Output (N) are required and must be decimal numbers"
+        )
+        return
+      }
+
+      if (!inputValid && !outputValid) {
+        cogoToast.warn(
+          "Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)"
+        )
+        return
+      }
+
+      if (!inputValid) {
+        cogoToast.warn(
+          "Input (K) must be a decimal positive number (e.g. 1.0, 2.5)"
+        )
+        return
+      }
+
+      if (!outputValid) {
+        cogoToast.warn(
+          "Output (N) must be a decimal positive number (e.g. 1.0, 2.5)"
+        )
+        return
+      }
+
+      const k = parseFloat(inputK)
+      const n = parseFloat(outputN)
+
+      if (k > n) {
+        cogoToast.warn("Input (K) cannot be greater than Output (N)")
+        return
+      }
     }
 
     const elementData = {
@@ -104,7 +157,20 @@ const NodeModal = ({
       gateType: elementType === "gate" ? gateType : null,
       eventValue: elementType === "event" ? eventValue : null,
       eventValueType: elementType === "event" ? eventValueType : null,
-    };
+      eventValueMissionTime:
+        elementType === "event" && eventValueType === "λ" ? missionTime : null,
+      eventValueMTTR:
+        elementType === "event" && eventType === "basic" ? mttr : null,
+      description,
+      inputK:
+        elementType === "gate" && gateType === "voting-or"
+          ? Number(inputK) || null
+          : null,
+      outputN:
+        elementType === "gate" && gateType === "voting-or"
+          ? Number(outputN) || null
+          : null,
+    }
 
     try {
       if (isEdit && elementId) {
@@ -118,168 +184,195 @@ const NodeModal = ({
               gateType: elementType === "gate" ? gateType : null,
               eventValue: elementType === "event" ? eventValue : null,
               eventValueType: elementType === "event" ? eventValueType : null,
+              eventValueMissionTime:
+                elementType === "event" && eventValueType === "λ"
+                  ? missionTime
+                  : null,
+              eventValueMTTR:
+                elementType === "event" && eventType === "basic" ? mttr : null,
+              description,
+              inputK:
+                elementType === "gate" && gateType === "voting-or"
+                  ? Number(inputK) || null
+                  : null,
+              outputN:
+                elementType === "gate" && gateType === "voting-or"
+                  ? Number(outputN) || null
+                  : null,
             },
           })
-        ).unwrap();
+        ).unwrap()
 
-        cogoToast.success("Element updated successfully!");
+        cogoToast.success("Element updated successfully!")
       } else {
-        await dispatch(createElement(elementData)).unwrap();
-        cogoToast.success("Element added successfully!");
+        await dispatch(createElement(elementData)).unwrap()
+        cogoToast.success("Element added successfully!")
       }
-      setChildModalVisible(false);
-      setElementValue("");
-      onClose();
-      onSuccess();
+      setChildModalVisible(false)
+      setElementValue("")
+      onClose()
+      onSuccess()
     } catch (error) {
       cogoToast.error(
         "Error saving element: " + (error.message || "Unknown error")
-      );
+      )
     }
-  };
+  }
 
   const handleEditStructureSubmit = async () => {
     if (!structureName.trim()) {
-      cogoToast.error("Structure name cannot be empty");
-      return;
+      cogoToast.error("Structure name cannot be empty")
+      return
     }
     await dispatch(
       updateStructure({ id: structureId, updateData: { name: structureName } })
-    ).unwrap();
-    cogoToast.success("Structure name updated successfully!");
-    setEditStructureModalVisible(false);
-    onSuccess();
-  };
+    ).unwrap()
+    cogoToast.success("Structure name updated successfully!")
+    setEditStructureModalVisible(false)
+    onSuccess()
+  }
 
   const handleDeleteConfirm = async () => {
     try {
       if (!deleteRecordId) {
-        await dispatch(deleteElement(elementId)).unwrap();
-        cogoToast.success("Element deleted successfully!");
-        onSuccess();
+        await dispatch(deleteElement(elementId)).unwrap()
+        cogoToast.success("Element deleted successfully!")
+        onSuccess()
       } else {
-        await dispatch(deleteRecord(deleteRecordId)).unwrap();
-        cogoToast.success("Record deleted successfully!");
+        await dispatch(deleteRecord(deleteRecordId)).unwrap()
+        cogoToast.success("Record deleted successfully!")
       }
-      setDeleteModalVisible(false);
-      setDeleteRecordId(null);
-      onSuccess();
-      onClose();
+      setDeleteModalVisible(false)
+      setDeleteRecordId(null)
+      onSuccess()
+      onClose()
     } catch (error) {
       cogoToast.error(
         "Error deleting element: " + (error.message || "Unknown error")
-      );
+      )
     }
-  };
+  }
 
-  const handleDeleteButtonClick = (recordId) => {
+  const handleDeleteButtonClick = recordId => {
     if (recordId) {
-      setDeleteRecordId(recordId);
+      setDeleteRecordId(recordId)
     } else {
-      setDeleteRecordId(null);
+      setDeleteRecordId(null)
     }
-    setDeleteModalVisible(true);
-  };
+    setDeleteModalVisible(true)
+  }
 
   // Fetch record to check if it exists
   useEffect(() => {
     if (elementId) {
       dispatch(getRecordsByElement(elementId))
         .unwrap()
-        .then((data) => {
+        .then(data => {
           if (data.length > 0) {
-            setRecordExists(true);
+            setRecordExists(true)
           } else {
-            setRecordExists(false);
+            setRecordExists(false)
           }
         })
-        .catch(() => setRecordExists(false));
+        .catch(() => setRecordExists(false))
     }
-  }, [elementId, dispatch]);
+  }, [elementId, dispatch])
 
   useEffect(() => {
     if (isEdit && elementId) {
-      dispatch(fetchElementById(elementId)).then((action) => {
-        const element = action.payload;
-        setElementValue(element.name);
-        setElementType(element.type || "event");
+      dispatch(fetchElementById(elementId)).then(action => {
+        const element = action.payload
+        setElementValue(element.name)
+        setElementType(element.type || "event")
 
         if (element.type === "event") {
-          setEventType(element.eventType || "");
-          setEventValue(element.eventValue || "");
-          seEventValueType(element.eventValueType || "");
-          setGateType("");
+          console.log("element", element)
+          setEventType(element.eventType || "")
+          setEventValue(element.eventValue || "")
+          seEventValueType(element.eventValueType || "")
+          setGateType("")
         } else if (element.type === "gate") {
-          setGateType(element.gateType || "");
-          setEventType("");
-          setEventValue("");
-          seEventValueType("");
+          setGateType(element.gateType || "")
+          setEventType("")
+          setEventValue("")
+          seEventValueType("")
+          setInputK(element.inputK || "")
+          setOutputN(element.outputN || "")
         }
-      });
+      })
     }
-  }, [isEdit, elementId, dispatch]);
+  }, [isEdit, elementId, dispatch])
+  useEffect(() => {
+    if (eventType === "undeveloped" || eventType === "conditional") {
+      if (eventValueType === "λ") seEventValueType("") // Reset illegal value
+      setMissionTime("") // Remove mission time — not allowed
+    }
 
-  const handleKeyPress = (e) => {
+    if (eventType !== "basic") {
+      setMttr("") // MTTR only allowed for basic — remove it otherwise
+    }
+  }, [eventType])
+  const handleKeyPress = e => {
     if (e?.key === "Enter") {
-      handleModalSubmit();
+      handleModalSubmit()
     }
-  };
+  }
 
-  const handleViewEditRecord = (actionType) => {
+  const handleViewEditRecord = actionType => {
     switch (actionType) {
       case "add":
-        setActionType("add");
-        setElementValue(initialStructureName);
-        setModalVisible(true);
-        setIsEdit(false);
-        break;
+        setActionType("add")
+        setElementValue(initialStructureName)
+        setModalVisible(true)
+        setIsEdit(false)
+        break
       case "view":
-        setActionType("view");
-        setModalVisible(true);
-        setIsEdit(false);
-        break;
+        setActionType("view")
+        setModalVisible(true)
+        setIsEdit(false)
+        break
       case "edit":
-        setActionType("edit");
-        setModalVisible(true);
-        setIsEdit(true);
-        break;
+        setActionType("edit")
+        setModalVisible(true)
+        setIsEdit(true)
+        break
       default:
-        setModalVisible(false);
-        break;
+        setModalVisible(false)
+        break
     }
-  };
+  }
 
-  const handleKeyPressEditStructure = (e) => {
+  const handleKeyPressEditStructure = e => {
     if (e?.key === "Enter") {
-      handleEditStructureSubmit();
+      handleEditStructureSubmit()
     }
-  };
+  }
 
-  const handleFileSelection = (file) => {
+  const handleFileSelection = file => {
     if (!file) {
-      cogoToast.error("Please select a valid structure!");
-      return;
+      cogoToast.error("Please select a valid structure!")
+      return
     }
 
-    setIsImportModalOpen(false);
-    handleFileUpload(file);
-  };
+    setIsImportModalOpen(false)
+    handleFileUpload(file)
+  }
 
-  const handleFileUpload = async (file) => {
+  const handleFileUpload = async file => {
     try {
-      setIsLoading(true);
+      setIsLoading(true)
 
-      await dispatch(uploadFile({ file, userId, structureId })).unwrap();
+      await dispatch(uploadFile({ file, userId, structureId })).unwrap()
 
-      cogoToast.success("Structure uploaded successfully!");
+      cogoToast.success("Structure uploaded successfully!")
 
-      onSuccess();
+      onSuccess()
     } catch (err) {
-      cogoToast.error("Failed to upload structure.");
+      cogoToast.error("Failed to upload structure.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <>
@@ -385,8 +478,8 @@ const NodeModal = ({
                 "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               }
               onClick={() => {
-                setChildModalVisible(true);
-                setIsEdit(false);
+                setChildModalVisible(true)
+                setIsEdit(false)
               }}
             >
               <FaCirclePlus size={24} className="text-custom-main" />
@@ -400,8 +493,8 @@ const NodeModal = ({
                   "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 }
                 onClick={() => {
-                  setChildModalVisible(true);
-                  setIsEdit(true);
+                  setChildModalVisible(true)
+                  setIsEdit(true)
                 }}
               >
                 <FaEdit size={24} className="text-custom-main" />
@@ -462,7 +555,7 @@ const NodeModal = ({
               <input
                 type="text"
                 value={elementValue}
-                onChange={(e) => setElementValue(e.target.value)}
+                onChange={e => setElementValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 ref={focusRef}
                 placeholder="Enter element name"
@@ -470,34 +563,32 @@ const NodeModal = ({
               />
             </div>
             {renderType !== "markmap" && structureType !== "default" && (
-              <div className="mb-4">
-                <label className="block text-sm font-semibold text-gray-700 mb-2">
-                  Element Type
+              <div className="flex items-center gap-4 mb-4">
+                <label className="text-sm font-semibold text-gray-700 w-28">
+                  Element Type:
                 </label>
-                <div className="flex items-center gap-6">
-                  <label className="inline-flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="elementType"
-                      value="event"
-                      checked={elementType === "event"}
-                      onChange={() => setElementType("event")}
-                      className="accent-blue-600"
-                    />
-                    <span className="text-gray-700">Event</span>
-                  </label>
-                  <label className="inline-flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="radio"
-                      name="elementType"
-                      value="gate"
-                      checked={elementType === "gate"}
-                      onChange={() => setElementType("gate")}
-                      className="accent-blue-600"
-                    />
-                    <span className="text-gray-700">Gate</span>
-                  </label>
-                </div>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="elementType"
+                    value="event"
+                    checked={elementType === "event"}
+                    onChange={() => setElementType("event")}
+                    className="accent-custom-main"
+                  />
+                  <span className="text-gray-700">Event</span>
+                </label>
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="radio"
+                    name="elementType"
+                    value="gate"
+                    checked={elementType === "gate"}
+                    onChange={() => setElementType("gate")}
+                    className="accent-custom-main"
+                  />
+                  <span className="text-gray-700">Gate</span>
+                </label>
               </div>
             )}
 
@@ -511,18 +602,18 @@ const NodeModal = ({
                     </label>
                     <select
                       value={eventType}
-                      onChange={(e) => setEventType(e.target.value)}
+                      onChange={e => setEventType(e.target.value)}
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Event Type</option>
                       <option value="intermediate">Intermediate</option>
                       <option value="basic">Basic</option>
                       <option value="transfer">Transfer</option>
-                      <option value="dormant">Dormant</option>
+                      {/* <option value="dormant">Dormant</option> */}
                       <option value="conditional">Conditional</option>
-                      <option value="external">External</option>
+                      {/* <option value="external">External</option> */}
                       <option value="undeveloped">Undeveloped</option>
-                      <option value="house">House</option>
+                      {/* <option value="house">House</option> */}
                     </select>
                   </div>
 
@@ -533,7 +624,7 @@ const NodeModal = ({
                     <input
                       type="text"
                       value={eventValue}
-                      onChange={(e) => setEventValue(e.target.value)}
+                      onChange={e => setEventValue(e.target.value)}
                       placeholder="Enter event code (e.g., E-001)"
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -545,43 +636,144 @@ const NodeModal = ({
                     </label>
                     <select
                       value={eventValueType}
-                      onChange={(e) => seEventValueType(e.target.value)}
+                      onChange={e => seEventValueType(e.target.value)}
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Value Type</option>
-                      <option value="λ">λ</option>
-                      <option value="P">P</option>
+                      <option
+                        value="λ"
+                        disabled={
+                          eventType === "conditional" ||
+                          eventType === "undeveloped"
+                        }
+                      >
+                        Rate (λ)
+                      </option>
+                      <option value="P">Probability (P)</option>
                     </select>
                   </div>
+                  {eventValueType === "λ" && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Mission Time (t)
+                      </label>
+                      <input
+                        type="number"
+                        value={missionTime}
+                        onChange={e => setMissionTime(e.target.value)}
+                        placeholder="Enter mission time in hours"
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
+                  {eventType === "basic" && (
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        MTTR (Mean Time To Repair)
+                      </label>
+                      <input
+                        type="number"
+                        value={mttr}
+                        onChange={e => setMttr(e.target.value)}
+                        placeholder="Enter MTTR in hours"
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+                  )}
                 </>
               )}
 
             {renderType !== "markmap" &&
               elementType === "gate" &&
               structureType !== "default" && (
+                <>
+                  <div className="flex items-center gap-4 mb-4">
+                    <label className="text-sm font-semibold text-gray-700 w-28">
+                      Gate Type:
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gateType"
+                        value="AND"
+                        checked={gateType === "AND"}
+                        onChange={() => setGateType("AND")}
+                        className="accent-custom-main"
+                      />
+                      <span className="text-gray-700">AND</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gateType"
+                        value="OR"
+                        checked={gateType === "OR"}
+                        onChange={() => setGateType("OR")}
+                        className="accent-custom-main"
+                      />
+                      <span className="text-gray-700">OR</span>
+                    </label>
+                    <label className="inline-flex items-center gap-2 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="gateType"
+                        value="voting-or"
+                        checked={gateType === "voting-or"}
+                        onChange={() => setGateType("voting-or")}
+                        className="accent-custom-main"
+                      />
+                      <span className="text-gray-700">VOTE</span>
+                    </label>
+                  </div>
+
+                  {gateType === "voting-or" && (
+                    <>
+                      <div className="flex gap-4 mb-4">
+                        <div className="w-1/2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Input (K)
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            value={inputK}
+                            onChange={e => setInputK(e.target.value)}
+                            placeholder="Enter input (K)"
+                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                        <div className="w-1/2">
+                          <label className="block text-sm font-semibold text-gray-700 mb-1">
+                            Output (N)
+                          </label>
+                          <input
+                            type="number"
+                            step="any"
+                            value={outputN}
+                            onChange={e => setOutputN(e.target.value)}
+                            placeholder="Enter output (N)"
+                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          />
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </>
+              )}
+
+            {(elementType === "event" || elementType === "gate") &&
+              renderType !== "markmap" &&
+              structureType !== "default" && (
                 <div className="mb-4">
                   <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Gate Type
+                    Description
                   </label>
-                  <select
-                    value={gateType}
-                    onChange={(e) => setGateType(e.target.value)}
+                  <textarea
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="Enter description"
                     className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="">Select Gate Type</option>
-                    <option value="OR">OR</option>
-                    <option value="AND">AND</option>
-                    <option value="inhibit">Inhibit</option>
-                    <option value="priority-and">Priority AND</option>
-                    <option value="exclusive-or">Exclusive OR</option>
-                    <option value="voting-or">Voting OR</option>
-                    <option value="cold-spare">Cold Spare</option>
-                    <option value="warm-spare">Warm Spare</option>
-                    <option value="dependency">Dependency</option>
-                    <option value="not">Not</option>
-                    <option value="delay">Delay</option>
-                    <option value="sequence-enforce">Sequence Enforce</option>
-                  </select>
+                  />
                 </div>
               )}
           </>
@@ -605,7 +797,7 @@ const NodeModal = ({
             disabled={!structureName.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
-            onChange={(e) => setStructureName(e.target.value)}
+            onChange={e => setStructureName(e.target.value)}
             placeholder="Enter structure name"
           />
         </ModalComponent>
@@ -626,13 +818,13 @@ const NodeModal = ({
           format={".json, .csv, .xls, .xlsx"}
           buttonText={"Import"}
           isLoading={isLoading}
-          handleFileSelection={(file) => handleFileSelection(file)}
+          handleFileSelection={file => handleFileSelection(file)}
           onSuccess={onSuccess}
           showDownloadSample={true}
         />
       )}
     </>
-  );
-};
+  )
+}
 
-export default NodeModal;
+export default NodeModal

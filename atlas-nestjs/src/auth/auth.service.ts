@@ -47,7 +47,7 @@ export class AuthService {
 
   // AuthService
   async register(registerDto: RegisterDto) {
-    const { fullName, email, password, referralCode } = registerDto;
+    const { displayName, email, password, referralCode } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
@@ -56,9 +56,9 @@ export class AuthService {
           throw new ConflictException('User with this email already exists');
         }
 
-        let modifiedUsername = fullName;
-        if (fullName.includes(' ')) {
-          const parts = fullName.split(' ');
+        let modifiedUsername = displayName;
+        if (displayName.includes(' ')) {
+          const parts = displayName.split(' ');
           const baseUsername = parts
             .map((word, index) =>
               index === parts.length - 1 ? word : word.toLowerCase(),
@@ -85,7 +85,7 @@ export class AuthService {
         const newUser = await prisma.user.create({
           data: {
             username: modifiedUsername,
-            fullName,
+            displayName,
             email,
             password: hashedPassword,
             roleId: role.id,
@@ -350,7 +350,7 @@ export class AuthService {
         data: {
           email: user.email,
           username: generateFromEmail(user.email, 5),
-          fullName: user.name || user.displayName,
+          displayName: user.name || user.displayName,
           password: '',
           roleId: '',
         },
@@ -388,12 +388,12 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
-        // Ensure we have the fullName or default to displayName if it's missing
-        const fullName = user.name || user.displayName;
+        // Ensure we have the displayName or default to displayName if it's missing
+        const displayName = user.name || user.displayName;
 
-        let modifiedUsername = fullName;
-        if (fullName && fullName.includes(' ')) {
-          const parts = fullName.split(' ');
+        let modifiedUsername = displayName;
+        if (displayName && displayName.includes(' ')) {
+          const parts = displayName.split(' ');
           const baseUsername = parts
             .map((word, index) =>
               index === parts.length - 1 ? word : word.toLowerCase(),
@@ -420,7 +420,7 @@ export class AuthService {
           data: {
             email: user.email,
             username: generateFromEmail(user.email, 5),
-            fullName: fullName,
+            displayName: displayName,
             password: '',
             roleId: role.id,
             defaultWorkspaceId: newWorkspace.id,
@@ -537,16 +537,16 @@ export class AuthService {
           data: {
             email: user.email,
             username: tempUsername,
-            fullName: user.name,
+            displayName: user.name,
             password: '',
             roleId: role.id,
             defaultWorkspaceId: newWorkspace.id,
           },
         });
 
-        let modifiedUsername = existingUser.fullName;
-        if (existingUser.fullName.includes(' ')) {
-          const parts = existingUser.fullName.split(' ');
+        let modifiedUsername = existingUser.displayName;
+        if (existingUser.displayName.includes(' ')) {
+          const parts = existingUser.displayName.split(' ');
           const baseUsername = parts
             .map((word, index) =>
               index === parts.length - 1 ? word : word.toLowerCase(),

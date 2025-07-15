@@ -1,17 +1,14 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
+import { fetchAppSettings } from "../../../redux/slices/app-settings";
 import { registerUser } from "../../../redux/slices/auth";
 
 const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
-  const handleOAuthLogin = async () => {
-    try {
-      window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
-    } catch (error) {
-      cogoToast.error(error.message || `${label} login failed!`);
-    }
+  const handleOAuthLogin = () => {
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
   };
 
   return (
@@ -29,78 +26,91 @@ const Register = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-
   const searchParams = new URLSearchParams(location.search);
   const token = searchParams.get("token");
   const code = searchParams.get("code");
-
+  const emailFromParams = searchParams.get("email");
   const [email, setEmail] = useState("");
-  const [fullName, setFullName] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [password, setPassword] = useState("");
+  const [inviteCode, setInviteCode] = useState(code || "");
+  const [inviteCodeOption, setInviteCodeOption] = useState("disabled");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    const loadInviteSetting = async () => {
+      try {
+        const result = await dispatch(fetchAppSettings());
+        if (fetchAppSettings.fulfilled.match(result)) {
+          const settings = result.payload;
+          if (settings?.inviteCodeOption) {
+            setInviteCodeOption(settings.inviteCodeOption);
+          }
+        }
+      } catch (err) {
+        console.error("Failed to fetch app settings", err);
+      }
+    };
+    loadInviteSetting();
+
+    if (emailFromParams && !email) {
+      setEmail(emailFromParams);
+    }
+  }, [dispatch, emailFromParams, email]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    if (!email || !password || !fullName) {
+
+    if (!email || !password || !displayName) {
       cogoToast.error("All fields are required");
       return;
     }
+
     if (!/\S+@\S+\.\S+/.test(email)) {
       cogoToast.error("Please enter a valid email");
       return;
     }
 
-    setIsSubmitting(true);
+    if (inviteCodeOption === "required" && !inviteCode) {
+      cogoToast.error("Invite code is required");
+      return;
+    }
 
     const registrationData = {
-      fullName,
+      displayName,
       email,
       password,
-      ...(token && code ? { referralCode: code } : {}),
+      referralCode: inviteCode,
     };
+
+    setIsSubmitting(true);
 
     dispatch(registerUser(registrationData))
       .unwrap()
       .then((response) => {
         cogoToast.success("Registration successful!");
-
-        const userId = response?.id;
-        navigate(`/subscription-plans?userId=${userId}`);
-
-        // Reset form values
-        setEmail("");
-        setPassword("");
-        setFullName("");
+        navigate(`/subscription-plans?userId=${response?.id}`);
       })
       .catch((err) => {
-        if (
-          err &&
-          err.message &&
-          err.message === "User with this email already exists"
-        ) {
-          cogoToast.error(
-            "This email is already registered. Please try another one."
-          );
+        if (err?.message === "User with this email already exists") {
+          cogoToast.error("This email is already registered.");
+        } else if (err?.message?.includes("Display name must be unique")) {
+          cogoToast.error("Display name is already taken.");
+        } else if (err?.message?.includes("Invalid or expired invite code")) {
+          cogoToast.error("Invalid invite code.");
         } else {
-          cogoToast.error(err.message || "Registration failed");
+          cogoToast.error(err.message || "Registration failed.");
         }
       })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
+      .finally(() => setIsSubmitting(false));
   };
 
   return (
     <div className="bg-custom-background-white">
       <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <div className="flex items-center">
-          <Link
-            to="/"
-            className="flex items-center space-x-2 text-xl text-white"
-          >
-            <span className="font-semibold">Atlas</span>
-          </Link>
-        </div>
+        <Link to="/" className="flex items-center space-x-2 text-xl text-white">
+          <span className="font-semibold">Atlas</span>
+        </Link>
         <Link
           to="/"
           className="border border-white text-white px-4 py-1.5 rounded-lg text-sm"
@@ -117,32 +127,24 @@ const Register = () => {
 
           <form onSubmit={handleSubmit} noValidate>
             <div className="mb-4">
-              <label
-                htmlFor="full-name-input"
-                className="block text-sm font-medium text-custom-text-grey mb-1"
-              >
-                Full Name
+              <label className="block text-sm font-medium text-custom-text-grey mb-1">
+                Display Name
               </label>
               <input
                 type="text"
-                id="full-name-input"
-                value={fullName}
-                onChange={(e) => setFullName(e.target.value)}
-                placeholder="Enter your full name"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                placeholder="Enter your display name"
                 className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
               />
             </div>
 
             <div className="mb-4">
-              <label
-                htmlFor="work-email-input"
-                className="block text-sm font-medium text-custom-text-grey mb-1"
-              >
+              <label className="block text-sm font-medium text-custom-text-grey mb-1">
                 Work Email
               </label>
               <input
                 type="email"
-                id="work-email-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Enter your work email"
@@ -151,15 +153,11 @@ const Register = () => {
             </div>
 
             <div className="mb-4">
-              <label
-                htmlFor="password-input"
-                className="block text-sm font-medium text-custom-text-grey mb-1"
-              >
+              <label className="block text-sm font-medium text-custom-text-grey mb-1">
                 Password
               </label>
               <input
                 type="password"
-                id="password-input"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Enter your password"
@@ -167,9 +165,28 @@ const Register = () => {
               />
             </div>
 
+            {/* Invite Code (conditionally rendered) */}
+            {inviteCodeOption !== "disabled" && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium text-custom-text-grey mb-1">
+                  Invite Code{" "}
+                  {inviteCodeOption === "required" && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </label>
+                <input
+                  type="text"
+                  value={inviteCode}
+                  onChange={(e) => setInviteCode(e.target.value)}
+                  placeholder="Enter invite code"
+                  className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
+                />
+              </div>
+            )}
+
             <button
               type="submit"
-              className="w-full bg-custom-main text-white py-2 cursor-pointer rounded-lg mt-2 hover:bg-custom-main transition duration-200 ease-in-out"
+              className="w-full bg-custom-main text-white py-2 rounded-lg mt-2 hover:bg-custom-main transition duration-200 ease-in-out"
               disabled={isSubmitting}
             >
               {isSubmitting ? "Loading..." : "Sign Up"}
@@ -198,13 +215,22 @@ const Register = () => {
             register your account.
           </p>
 
-          <div className="text-center mt-4">
+          <div className="text-center mt-4 text-sm">
+            By registering, you agree to our{" "}
             <Link
               to="http://www.Atlas.co/terms/services-agreement"
-              className="text-black underline text-sm hover:text-blue-700 transition duration-200 ease-in-out"
+              className="text-black underline hover:text-blue-700 transition"
             >
               Terms of Service
+            </Link>{" "}
+            and{" "}
+            <Link
+              to="http://www.Atlas.co/terms/privacy-policy"
+              className="text-black underline hover:text-blue-700 transition"
+            >
+              Privacy Policy
             </Link>
+            .
           </div>
         </div>
       </main>

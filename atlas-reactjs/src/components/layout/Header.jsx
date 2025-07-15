@@ -1,12 +1,12 @@
 import cogoToast from "@successtar/cogo-toast";
-import { Avatar, Dropdown, Navbar } from "flowbite-react";
+import { Dropdown, Navbar } from "flowbite-react";
 import Cookies from "js-cookie";
-import React, { useState, useEffect } from "react";
-import { FiSearch } from "react-icons/fi";
+import { useEffect, useState } from "react";
+import Avatar from "react-avatar";
+import { FiLogOut, FiSearch } from "react-icons/fi";
 import { useDispatch } from "react-redux";
-import { BiMailSend } from "react-icons/bi";
-import { fetchAppSettings } from "../../redux/slices/app-settings";
 import { useNavigate } from "react-router-dom";
+import { fetchAppSettings } from "../../redux/slices/app-settings";
 import { logoutUser } from "../../redux/slices/auth";
 import InviteModal from "../modals/InviteModal";
 
@@ -58,7 +58,7 @@ const Header = () => {
   return (
     <header className="bg-gray-100 flex justify-between items-center">
       <Navbar fluid rounded className="w-full p-4">
-        {/* Logo on the Left */}
+        {/* Logo */}
         <Navbar.Brand href="#" className="flex items-center gap-2">
           <img src={logoUrl} className="h-8 w-8" alt={appName} />
           <span className="text-2xl font-bold text-custom-main uppercase">
@@ -66,7 +66,7 @@ const Header = () => {
           </span>
         </Navbar.Brand>
 
-        {/* Centered Search Bar */}
+        {/* Search */}
         <div className="flex items-center justify-center flex-grow">
           <div className="relative flex items-center w-full max-w-xl mx-auto">
             <FiSearch className="absolute left-4 text-gray-500" size={20} />
@@ -78,39 +78,52 @@ const Header = () => {
           </div>
         </div>
 
-        {/* Right Side - Learning, Help, Upgrade, User Image */}
+        {/* User Menu */}
         <div className="flex items-center ml-4 space-x-6">
-          {/* Invite Button */}
-          <button
-            onClick={() => setIsInviteModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 text-custom-main rounded-lg border-2 border-custom-main hover:text-white hover:bg-custom-main transition"
-          >
-            <BiMailSend size={20} />
-            <span className="text-base">Invite Members</span>
-          </button>
-
-          {/* User Icon */}
           <Dropdown
             arrowIcon={false}
             inline
             label={
               <Avatar
-                alt="User settings"
-                img="/assets/userimg.jpeg"
-                rounded
-                className="w-[40px]"
+                name={Cookies.get("atlas_username") || "User"}
+                size="36"
+                round={true}
+                className="text-lg"
               />
             }
           >
-            <div className="w-auto min-w-[150px]">
-              <Dropdown.Header>
-                <span className="block truncate text-sm font-medium">
-                  {Cookies.get("atlas_username")}
-                </span>
-              </Dropdown.Header>
-              <Dropdown.Divider />
-              <Dropdown.Item onClick={handleLogout}>Sign out</Dropdown.Item>
-            </div>
+            <Dropdown.Header>
+              <span className="block text-sm font-semibold text-gray-900 truncate">
+                {Cookies.get("atlas_username")}
+              </span>
+              <span className="block text-xs text-gray-500 truncate">
+                {Cookies.get("atlas_email")}
+              </span>
+            </Dropdown.Header>
+
+            <Dropdown.Item
+              onClick={() => navigate("/app/user-settings")}
+              className="hover:bg-gray-100 transition-colors"
+            >
+              Account Settings
+            </Dropdown.Item>
+
+            <Dropdown.Item
+              onClick={() => navigate("/api-management/overview")}
+              className="hover:bg-gray-100 transition-colors"
+            >
+              API Access
+            </Dropdown.Item>
+
+            <Dropdown.Divider />
+
+            <Dropdown.Item
+              icon={FiLogOut}
+              onClick={handleLogout}
+              className="!text-red-600 hover:!bg-red-100 font-semibold transition-all"
+            >
+              Sign Out
+            </Dropdown.Item>
           </Dropdown>
         </div>
       </Navbar>

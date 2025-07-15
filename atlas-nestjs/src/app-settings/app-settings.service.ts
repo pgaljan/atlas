@@ -14,22 +14,30 @@ export class AppSettingsService {
     try {
       const existing = await this.prisma.appSettings.findFirst();
 
+      const updateData = {
+        appName: data.appName || '',
+        primaryColor: data.primaryColor || '',
+        secondaryColor: data.secondaryColor || '',
+        supportEmail: data.supportEmail || '',
+        feedbackLink: data.feedbackLink || '',
+        logoUrl: data.logoUrl || '',
+        inviteCodeOption: data.inviteCodeOption || 'disabled',
+        authProviders: data.authProviders || {
+          local: true,
+          google: true,
+          github: true,
+        },
+      };
+
       if (existing) {
         return await this.prisma.appSettings.update({
           where: { id: existing.id },
-          data,
+          data: updateData,
         });
       }
 
       return await this.prisma.appSettings.create({
-        data: {
-          appName: data.appName || '',
-          primaryColor: data.primaryColor || '',
-          secondaryColor: data.secondaryColor || '',
-          supportEmail: data.supportEmail || '',
-          feedbackLink: data.feedbackLink || '',
-          logoUrl: data.logoUrl || '',
-        },
+        data: updateData,
       });
     } catch (error) {
       throw new InternalServerErrorException(

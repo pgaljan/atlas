@@ -4,7 +4,15 @@ import {
   IsOptional,
   IsString,
   IsUrl,
+  IsEnum,
+  IsObject,
 } from 'class-validator';
+
+export enum InviteCodeOption {
+  DISABLED = 'disabled',
+  ENABLED = 'enabled',
+  REQUIRED = 'required',
+}
 
 export class CreateUpdateAppSettingsDto {
   @IsString()
@@ -13,18 +21,33 @@ export class CreateUpdateAppSettingsDto {
 
   @IsString()
   @IsOptional()
-  primaryColor: string;
+  primaryColor?: string;
 
   @IsString()
   @IsOptional()
-  secondaryColor: string;
+  secondaryColor?: string;
 
   @IsUrl()
-  logoUrl: string;
+  @IsOptional()
+  logoUrl?: string;
 
   @IsEmail()
-  supportEmail: string;
+  @IsOptional()
+  supportEmail?: string;
 
   @IsUrl()
-  feedbackLink: string;
+  @IsOptional()
+  feedbackLink?: string;
+
+  @IsEnum(InviteCodeOption)
+  @IsOptional()
+  inviteCodeOption?: InviteCodeOption;
+
+  @IsObject()
+  @IsOptional()
+  authProviders?: {
+    local: boolean;
+    google: boolean;
+    github: boolean;
+  };
 }
