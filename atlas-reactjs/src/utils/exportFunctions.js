@@ -240,7 +240,7 @@ export const exportAsPdf = async (
     return tmp.textContent || tmp.innerText || "";
   };
 
-  const processNode = async (node) => {
+  const processNode = async (node) => { 
     if (!node) return;
     const elementName = node.name || "Untitled";
 

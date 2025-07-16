@@ -99,6 +99,35 @@ const NodeModal = ({
       cogoToast.error("Element title cannot be empty")
       return
     }
+
+    if (elementType === "event") {
+      if (!eventType) {
+        cogoToast.warn("Please select an event type.")
+        return
+      }
+
+      if (!eventValueType) {
+        cogoToast.warn("Please select an event value type.")
+        return
+      }
+
+      if (["conditional", "undeveloped"].includes(eventType)) {
+        if (eventValueType === "λ") {
+          cogoToast.warn(
+            `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`
+          )
+          return
+        }
+      }
+
+      if (eventType === "basic") {
+        if (eventValueType === "λ" && !missionTime) {
+          cogoToast.warn("Mission Time is required when using Rate (λ).")
+          return
+        }
+      }
+    }
+
     if (elementType === "gate" && gateType === "voting-or") {
       const isFloat = val =>
         val !== "" &&
@@ -108,15 +137,32 @@ const NodeModal = ({
 
       const isEmpty = val => val === "" || val === null
 
-      const inputValid = isFloat(inputK)
-      const outputValid = isFloat(outputN)
+      const inputEmpty = isEmpty(inputK)
+      const outputEmpty = isEmpty(outputN)
 
-      if (isEmpty(inputK) || isEmpty(outputN)) {
+      if (inputEmpty && outputEmpty) {
         cogoToast.warn(
-          "Input (K) and Output (N) are required and must be decimal numbers"
+          "Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)"
         )
         return
       }
+
+      if (inputEmpty) {
+        cogoToast.warn(
+          "Input (K) is required and must be a decimal number (e.g. 1.0)"
+        )
+        return
+      }
+
+      if (outputEmpty) {
+        cogoToast.warn(
+          "Output (N) is required and must be a decimal number (e.g. 1.0)"
+        )
+        return
+      }
+
+      const inputValid = isFloat(inputK)
+      const outputValid = isFloat(outputN)
 
       if (!inputValid && !outputValid) {
         cogoToast.warn(
@@ -286,7 +332,6 @@ const NodeModal = ({
         setElementType(element.type || "event")
 
         if (element.type === "event") {
-          console.log("element", element)
           setEventType(element.eventType || "")
           setEventValue(element.eventValue || "")
           seEventValueType(element.eventValueType || "")

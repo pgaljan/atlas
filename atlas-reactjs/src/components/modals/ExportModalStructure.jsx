@@ -1,6 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
 import * as d3 from "d3";
-import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { useEffect, useState } from "react";
 import { LuDatabaseBackup } from "react-icons/lu";
@@ -176,45 +175,29 @@ const ExportModalStructure = ({
       const treeDataWithWbs = assignWbsNumbers(treeData);
 
       const exportFns = [];
+      const rows = flattenTreeData(treeDataWithWbs.children || []);
 
-      for (const format of formats) {
-        const rows = flattenTreeData(treeDataWithWbs.children || []);
+      if (formats.includes("CSV") || formats.includes("JSON")) {
+        const zip = new JSZip();
 
-        if (["CSV", "JSON"].some((f) => formats.includes(f))) {
-          if (assembly === "Single") {
-            const zip = new JSZip();
-
-            if (formats.includes("CSV")) {
-              rows.forEach((row, idx) => {
-                const csv = generateCsv([row]);
-                zip.file(`fault-tree-record-${idx + 1}.csv`, csv);
-              });
-            }
-
-            if (formats.includes("JSON")) {
-              rows.forEach((row, idx) => {
-                zip.file(
-                  `fault-tree-record-${idx + 1}.json`,
-                  JSON.stringify(row, null, 2)
-                );
-              });
-            }
-
-            exportFns.push(async () => {
-              const zipBlob = await zip.generateAsync({ type: "blob" });
-              saveAs(zipBlob, "fault-tree-records.zip");
-            });
-          } else {
-            if (formats.includes("CSV"))
-              exportFns.push(() => exportToCsv(rows, "fault-tree-export.csv"));
-            if (formats.includes("JSON"))
-              exportFns.push(() =>
-                exportToJson(rows, "fault-tree-export.json")
-              );
-          }
-          break;
+        if (formats.includes("CSV")) {
+          const csvData = generateCsv(rows);
+          zip.file("fault-tree-records.csv", csvData);
         }
 
+        if (formats.includes("JSON")) {
+          const jsonData = JSON.stringify(rows, null, 2);
+          zip.file("fault-tree-records.json", jsonData);
+        }
+
+        exportFns.push(async () => {
+          const zipBlob = await zip.generateAsync({ type: "blob" });
+          saveAs(zipBlob, "fault-tree-records.zip");
+        });
+      }
+
+      // Handle other formats (HTML, PDF, DOC)
+      for (const format of formats) {
         if (format === "HTML") {
           exportFns.push(() =>
             exportAsHtml(treeData, includeWbs, colorStrategy, isMarkmap)
@@ -264,6 +247,7 @@ const ExportModalStructure = ({
         }
       }
 
+      // Execute all export functions
       for (const fn of exportFns) {
         await fn();
       }
@@ -276,6 +260,7 @@ const ExportModalStructure = ({
       setIsExporting(false);
     }
   };
+
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
       <div className="bg-white rounded-2xl p-6 w-full max-w-lg">

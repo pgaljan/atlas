@@ -1,5 +1,5 @@
-import cogoToast from "@successtar/cogo-toast";
-import "@syncfusion/ej2-icons/styles/material.css";
+import cogoToast from "@successtar/cogo-toast"
+import "@syncfusion/ej2-icons/styles/material.css"
 import {
   DataBinding,
   DiagramComponent,
@@ -8,134 +8,128 @@ import {
   Inject,
   NodeConstraints,
   UndoRedo,
-} from "@syncfusion/ej2-react-diagrams";
-import "@syncfusion/ej2-react-navigations/styles/material.css";
-import React, {
-  useCallback,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-import { useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
-import MarkmapHeader from "../../../components/markmap/markmap-layout/MarkmapHeader";
-import NodeModal from "../../../components/modals/NodeModal";
-import ZoomToolbar from "../../../components/syncfusion/Toolbar";
-import useCaptureAndUploadSnapshot from "../../../hooks/useCaptureAndUploadSnapshot";
+} from "@syncfusion/ej2-react-diagrams"
+import "@syncfusion/ej2-react-navigations/styles/material.css"
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import { useDispatch } from "react-redux"
+import { useParams } from "react-router-dom"
+import MarkmapHeader from "../../../components/markmap/markmap-layout/MarkmapHeader"
+import NodeModal from "../../../components/modals/NodeModal"
+import ZoomToolbar from "../../../components/syncfusion/Toolbar"
+import useCaptureAndUploadSnapshot from "../../../hooks/useCaptureAndUploadSnapshot"
 import {
   reparentElements,
   updateElementOrderIndex,
   updateExpandState,
-} from "../../../redux/slices/elements";
+} from "../../../redux/slices/elements"
 import {
   getStructure,
   updateStructure,
   updateStructureExpandState,
-} from "../../../redux/slices/structures";
+} from "../../../redux/slices/structures"
 import {
   createConnectors,
   generateWBSNumber,
   getLayoutConfig,
   isDescendant,
-} from "../../../utils/syncFusionHelpers";
-import ConfirmationModal from "./ConfirmationModal";
-import { elementType } from "prop-types";
+} from "../../../utils/syncFusionHelpers"
+import ConfirmationModal from "./ConfirmationModal"
+import { elementType } from "prop-types"
 
 const getNodeLevel = (id, nodesMap, level = 0) => {
-  const node = nodesMap[id];
-  if (!node?.parent || !nodesMap[node?.parent]) return level;
-  return getNodeLevel(node?.parent, nodesMap, level + 1);
-};
+  const node = nodesMap[id]
+  if (!node?.parent || !nodesMap[node?.parent]) return level
+  return getNodeLevel(node?.parent, nodesMap, level + 1)
+}
 
 const getTextWidth = (text, font = "20px 'Segoe UI', Arial, sans-serif") => {
-  if (typeof document === "undefined") return 160;
-  const canvas = document.createElement("canvas");
-  const context = canvas.getContext("2d");
-  context.font = font;
-  const metrics = context.measureText(text);
-  return metrics.width + 14;
-};
+  if (typeof document === "undefined") return 160
+  const canvas = document.createElement("canvas")
+  const context = canvas.getContext("2d")
+  context.font = font
+  const metrics = context.measureText(text)
+  return metrics.width + 14
+}
 
 const sortNodesByHierarchy = (rootId, allNodes) => {
-  const nodeMap = Object.fromEntries(allNodes.map((n) => [n.id, n]));
-  const childrenMap = {};
+  const nodeMap = Object.fromEntries(allNodes.map(n => [n.id, n]))
+  const childrenMap = {}
 
   for (const node of allNodes) {
     if (node.parent) {
       if (!childrenMap[node.parent]) {
-        childrenMap[node.parent] = [];
+        childrenMap[node.parent] = []
       }
-      childrenMap[node.parent].push(node);
+      childrenMap[node.parent].push(node)
     }
   }
 
-  const sorted = [];
+  const sorted = []
 
-  const traverse = (nodeId) => {
-    const node = nodeMap[nodeId];
-    if (!node) return;
-    sorted.push(node);
+  const traverse = nodeId => {
+    const node = nodeMap[nodeId]
+    if (!node) return
+    sorted.push(node)
 
-    const children = childrenMap[nodeId] || [];
+    const children = childrenMap[nodeId] || []
     const orderedChildren = [...children].sort((a, b) => {
-      if (a.orderIndex == null) return 1;
-      if (b.orderIndex == null) return -1;
-      return a.orderIndex - b.orderIndex;
-    });
+      if (a.orderIndex == null) return 1
+      if (b.orderIndex == null) return -1
+      return a.orderIndex - b.orderIndex
+    })
 
     for (const child of orderedChildren) {
-      traverse(child.id);
+      traverse(child.id)
     }
-  };
+  }
 
-  traverse(rootId);
-  return sorted;
-};
+  traverse(rootId)
+  return sorted
+}
 
 const Syncfusion = () => {
-  const dispatch = useDispatch();
-  const diagramRef = useRef(null);
-  const dragInProgress = useRef(false);
-  const [renderType, setrenderType] = useState("");
-  const { structureId } = useParams();
-  const [highlightedNodeId, setHighlightedNodeId] = useState(null);
-  const [showWbs, setShowWbsState] = useState(false);
-  const [wbsStart, setWbsStart] = useState(1);
-  const [nodesData, setNodesData] = useState([]);
-  const [connectorsData, setConnectorsData] = useState([]);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [currentSearchTerm, setCurrentSearchTerm] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
-  const [isLoading, setIsLoading] = useState(true);
-  const [diagramKey, setDiagramKey] = useState(0);
-  const [noResults, setNoResults] = useState(false);
-  const [treeData, setTreeData] = useState(null);
-  const [searchLoading, setSearchLoading] = useState(false);
+  const dispatch = useDispatch()
+  const diagramRef = useRef(null)
+  const dragInProgress = useRef(false)
+  const [renderType, setrenderType] = useState("")
+  const { structureId } = useParams()
+  const [highlightedNodeId, setHighlightedNodeId] = useState(null)
+  const [showWbs, setShowWbsState] = useState(false)
+  const [wbsStart, setWbsStart] = useState(1)
+  const [nodesData, setNodesData] = useState([])
+  const [connectorsData, setConnectorsData] = useState([])
+  const [selectedNode, setSelectedNode] = useState(null)
+  const [currentSearchTerm, setCurrentSearchTerm] = useState("")
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 })
+  const [isLoading, setIsLoading] = useState(true)
+  const [diagramKey, setDiagramKey] = useState(0)
+  const [noResults, setNoResults] = useState(false)
+  const [treeData, setTreeData] = useState(null)
+  const [searchLoading, setSearchLoading] = useState(false)
   const [modalState, setModalState] = useState({
     isOpen: false,
     draggedNode: null,
     targetNode: null,
-  });
-  const childrenMapRef = useRef({});
-  const [structureType, setStructureType] = useState(null);
+  })
+  const childrenMapRef = useRef({})
+  const [structureType, setStructureType] = useState(null)
 
   const fetchStructure = async () => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
-      const structure = await dispatch(getStructure(structureId)).unwrap();
-      setrenderType(structure?.type);
+      const structure = await dispatch(getStructure(structureId)).unwrap()
+      setrenderType(structure?.type)
 
-      const startValue = structure?.wbsStart || 1;
-      setStructureType(structure?.type || "default");
-      setWbsStart(startValue);
-      setShowWbsState(structure.markmapShowWbs);
+      const startValue = structure?.wbsStart || 1
+      setStructureType(structure?.type || "default")
+      setWbsStart(startValue)
+      setShowWbsState(structure.markmapShowWbs)
 
       setTreeData({
         content: structure?.name || "Main",
         children: structure?.elements || [],
-      });
+      })
 
       const rootNode = {
         id: structure?.id,
@@ -145,9 +139,9 @@ const Syncfusion = () => {
         visible: true,
         level: 0,
         orderIndex: null,
-      };
+      }
 
-      const childrenMap = {};
+      const childrenMap = {}
 
       const flattenElements = (
         elements,
@@ -155,16 +149,16 @@ const Syncfusion = () => {
         parentExpanded = true,
         level = 0
       ) => {
-        let flatNodes = [];
+        let flatNodes = []
 
         const sortedElements = [...elements].sort(
           (a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0)
-        );
+        )
 
         for (let element of sortedElements) {
-          const isNodeExpanded = element?.isExpanded ?? true;
-          const nodeVisible = parentExpanded || true;
-          element.name = `${element.name}`;
+          const isNodeExpanded = element?.isExpanded ?? true
+          const nodeVisible = parentExpanded || true
+          element.name = `${element.name}`
           const currentNode = {
             id: element?.id,
             name: element?.name || "Unnamed",
@@ -183,14 +177,14 @@ const Syncfusion = () => {
             missionTime: element?.missionTime,
             mttr: element?.mttr,
             type: element?.type,
-          };
+          }
 
           if (!childrenMap[parentId]) {
-            childrenMap[parentId] = [];
+            childrenMap[parentId] = []
           }
-          childrenMap[parentId].push(element.id);
+          childrenMap[parentId].push(element.id)
 
-          flatNodes.push(currentNode);
+          flatNodes.push(currentNode)
 
           if (Array.isArray(element.children) && element.children.length > 0) {
             flatNodes.push(
@@ -200,13 +194,13 @@ const Syncfusion = () => {
                 parentExpanded && isNodeExpanded,
                 level + 1
               )
-            );
+            )
           }
         }
 
-        return flatNodes;
-      };
-      childrenMapRef.current = childrenMap;
+        return flatNodes
+      }
+      childrenMapRef.current = childrenMap
 
       const nodes = flattenElements(
         structure.elements,
@@ -214,214 +208,214 @@ const Syncfusion = () => {
         structure?.isExpanded ?? true,
         1,
         structure.orderIndex
-      );
+      )
 
-      const fullNodes = [rootNode, ...nodes];
+      const fullNodes = [rootNode, ...nodes]
       const visibleNodeIds = new Set(
-        fullNodes.filter((n) => n.visible).map((n) => n.id)
-      );
+        fullNodes.filter(n => n.visible).map(n => n.id)
+      )
       const connectors = createConnectors(fullNodes).filter(
-        (conn) =>
+        conn =>
           visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
-      );
+      )
 
-      const sortedFullNodes = sortNodesByHierarchy(structure?.id, fullNodes);
-      setNodesData(sortedFullNodes);
+      const sortedFullNodes = sortNodesByHierarchy(structure?.id, fullNodes)
+      setNodesData(sortedFullNodes)
 
-      setConnectorsData(connectors);
-      setDiagramKey((prev) => prev + 1);
+      setConnectorsData(connectors)
+      setDiagramKey(prev => prev + 1)
     } catch (err) {
-      cogoToast.error("Failed to load structure");
+      cogoToast.error("Failed to load structure")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const handleAutoSave = async () => {
-      const containerElement = diagramRef.current?.element;
-      const svgElement = containerElement?.querySelector("svg");
+      const containerElement = diagramRef.current?.element
+      const svgElement = containerElement?.querySelector("svg")
 
       if (svgElement) {
-        await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch);
+        await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch)
       }
-    };
+    }
 
-    const debounceTimer = setTimeout(handleAutoSave, 2000);
+    const debounceTimer = setTimeout(handleAutoSave, 2000)
 
-    return () => clearTimeout(debounceTimer);
-  }, [structureId]);
+    return () => clearTimeout(debounceTimer)
+  }, [structureId])
 
   useEffect(() => {
-    const handleClickOutside = (event) => {
-      const diagramElement = document.getElementById("orgDiagram");
+    const handleClickOutside = event => {
+      const diagramElement = document.getElementById("orgDiagram")
       if (
         diagramElement &&
         !diagramElement.contains(event.target) &&
         diagramRef.current
       ) {
-        diagramRef.current.clearSelection();
+        diagramRef.current.clearSelection()
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside)
 
     return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, []);
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
 
-  const handleDiagramClick = (args) => {
-    const diagram = diagramRef.current;
-    if (!diagram) return;
+  const handleDiagramClick = args => {
+    const diagram = diagramRef.current
+    if (!diagram) return
 
-    const clickedObj = args?.actualObject;
+    const clickedObj = args?.actualObject
 
-    const isNode = clickedObj?.shape !== undefined;
-    const isConnector = clickedObj?.type === "Straight" || clickedObj?.segments;
+    const isNode = clickedObj?.shape !== undefined
+    const isConnector = clickedObj?.type === "Straight" || clickedObj?.segments
 
     if (!isNode && !isConnector) {
-      diagram.clearSelection();
-      setSelectedNode(null);
-      setIsModalOpen(false);
+      diagram.clearSelection()
+      setSelectedNode(null)
+      setIsModalOpen(false)
     }
-  };
+  }
 
-  const setShowWbsFactory = (value) => {
+  const setShowWbsFactory = value => {
     return async () => {
       try {
-        setShowWbsState(value);
+        setShowWbsState(value)
         await dispatch(
           updateStructure({
             id: structureId,
             updateData: { markmapShowWbs: value },
           })
-        ).unwrap();
-        setDiagramKey((prev) => prev + 1);
-        await fetchStructure();
+        ).unwrap()
+        setDiagramKey(prev => prev + 1)
+        await fetchStructure()
       } catch (error) {
-        cogoToast.error("Failed to toggle WBS visibility.");
+        cogoToast.error("Failed to toggle WBS visibility.")
       }
-    };
-  };
+    }
+  }
 
-  const handleSetShowWbs = (value) => {
-    const fn = setShowWbsFactory(value);
-    fn();
-  };
+  const handleSetShowWbs = value => {
+    const fn = setShowWbsFactory(value)
+    fn()
+  }
 
   useEffect(() => {
-    setDiagramKey((prev) => prev + 1);
-  }, [nodesData]);
+    setDiagramKey(prev => prev + 1)
+  }, [nodesData])
 
   useEffect(() => {
     if (structureId) {
-      fetchStructure();
+      fetchStructure()
     }
-  }, [dispatch, structureId]);
+  }, [dispatch, structureId])
 
   const nodesMap = useMemo(
-    () => Object.fromEntries(nodesData.map((n) => [n.id, n])),
+    () => Object.fromEntries(nodesData.map(n => [n.id, n])),
     [nodesData]
-  );
+  )
 
-  const onSelectionChange = (args) => {
-    const selected = args?.newValue?.[0];
-    if (!selected) return;
+  const onSelectionChange = args => {
+    const selected = args?.newValue?.[0]
+    if (!selected) return
 
-    setSelectedNode(selected);
-    setIsModalOpen(true);
+    setSelectedNode(selected)
+    setIsModalOpen(true)
 
-    const diagram = diagramRef.current;
-    if (!diagram) return;
+    const diagram = diagramRef.current
+    if (!diagram) return
 
-    const node = diagram.nodes.find((n) => n.id === selected.id);
-    if (!node) return;
+    const node = diagram.nodes.find(n => n.id === selected.id)
+    if (!node) return
 
-    const { offsetX, offsetY } = node;
-    const zoom = diagram.scrollSettings.currentZoom || 1;
-    const scrollX = diagram.scrollSettings.horizontalOffset || 0;
-    const scrollY = diagram.scrollSettings.verticalOffset || 0;
+    const { offsetX, offsetY } = node
+    const zoom = diagram.scrollSettings.currentZoom || 1
+    const scrollX = diagram.scrollSettings.horizontalOffset || 0
+    const scrollY = diagram.scrollSettings.verticalOffset || 0
 
-    const diagramContainer = document.getElementById("orgDiagram");
-    const containerRect = diagramContainer.getBoundingClientRect();
+    const diagramContainer = document.getElementById("orgDiagram")
+    const containerRect = diagramContainer.getBoundingClientRect()
 
-    const x = containerRect.left + (offsetX - scrollX) * zoom;
-    const y = containerRect.top + (offsetY - scrollY) * zoom;
+    const x = containerRect.left + (offsetX - scrollX) * zoom
+    const y = containerRect.top + (offsetY - scrollY) * zoom
 
-    const modalWidth = 300;
-    const modalHeight = 200;
-    const screenWidth = window.innerWidth;
-    const screenHeight = window.innerHeight;
+    const modalWidth = 300
+    const modalHeight = 200
+    const screenWidth = window.innerWidth
+    const screenHeight = window.innerHeight
 
-    const clampedX = Math.min(Math.max(x, 0), screenWidth - modalWidth);
-    const clampedY = Math.min(Math.max(y, 0), screenHeight - modalHeight);
+    const clampedX = Math.min(Math.max(x, 0), screenWidth - modalWidth)
+    const clampedY = Math.min(Math.max(y, 0), screenHeight - modalHeight)
 
-    setModalPosition({ x: clampedX, y: clampedY });
-  };
+    setModalPosition({ x: clampedX, y: clampedY })
+  }
 
   const closeModal = () => {
-    setIsModalOpen(false);
-    setSelectedNode(null);
-  };
+    setIsModalOpen(false)
+    setSelectedNode(null)
+  }
 
   const handleZoomIn = () => {
-    if (!diagramRef.current) return;
-    diagramRef.current.zoomTo({ type: "ZoomIn", zoomFactor: 0.2 });
-  };
+    if (!diagramRef.current) return
+    diagramRef.current.zoomTo({ type: "ZoomIn", zoomFactor: 0.2 })
+  }
 
   const handleZoomOut = () => {
-    if (!diagramRef.current) return;
-    diagramRef.current.zoomTo({ type: "ZoomOut", zoomFactor: 0.2 });
-  };
+    if (!diagramRef.current) return
+    diagramRef.current.zoomTo({ type: "ZoomOut", zoomFactor: 0.2 })
+  }
 
   const handleNodeUpdate = async () => {
-    await fetchStructure();
-  };
+    await fetchStructure()
+  }
 
   const onNodeDrop = useCallback(
-    async (args) => {
-      const diagram = diagramRef.current;
-      if (!diagram) return;
+    async args => {
+      const diagram = diagramRef.current
+      if (!diagram) return
 
-      const draggedNodeId = args.element?.id;
-      const targetNodeId = args.target?.id || structureId;
+      const draggedNodeId = args.element?.id
+      const targetNodeId = args.target?.id || structureId
 
       if (
         dragInProgress.current ||
         !draggedNodeId ||
         draggedNodeId === targetNodeId
       )
-        return;
+        return
 
-      const isTargetRoot = targetNodeId === structureId;
+      const isTargetRoot = targetNodeId === structureId
 
       const isDroppingOnDescendant = isDescendant(
         draggedNodeId,
         targetNodeId,
         nodesData
-      );
+      )
       if (isDroppingOnDescendant) {
-        cogoToast.error("Cannot reparent to a descendant node.");
-        return;
+        cogoToast.error("Cannot reparent to a descendant node.")
+        return
       }
 
-      const draggedNode = nodesMap[draggedNodeId];
-      const targetNode = isTargetRoot ? null : nodesMap[targetNodeId];
+      const draggedNode = nodesMap[draggedNodeId]
+      const targetNode = isTargetRoot ? null : nodesMap[targetNodeId]
 
-      const currentParent = draggedNode?.parent ?? null;
-      const targetParent = isTargetRoot ? null : targetNode?.parent ?? null;
+      const currentParent = draggedNode?.parent ?? null
+      const targetParent = isTargetRoot ? null : targetNode?.parent ?? null
 
-      const isSameParent = currentParent === targetParent;
+      const isSameParent = currentParent === targetParent
 
-      dragInProgress.current = true;
+      dragInProgress.current = true
 
       if (isSameParent && !isTargetRoot) {
         setModalState({
           isOpen: true,
           draggedNode,
           targetNode,
-        });
+        })
       } else {
         try {
           await dispatch(
@@ -434,115 +428,115 @@ const Syncfusion = () => {
                 },
               ],
             })
-          );
-          cogoToast.success("Node reparented successfully.");
-          await fetchStructure();
+          )
+          cogoToast.success("Node reparented successfully.")
+          await fetchStructure()
         } catch (error) {
-          cogoToast.error("Failed to reparent node.");
+          cogoToast.error("Failed to reparent node.")
         } finally {
-          dragInProgress.current = false;
+          dragInProgress.current = false
         }
       }
     },
     [dispatch, nodesData, structureId, nodesMap]
-  );
+  )
 
   const filterTreeByCriteria = (node, level, searchTerm, currentLevel = 0) => {
-    if (!node) return null;
+    if (!node) return null
 
-    const lowerSearch = searchTerm?.toLowerCase();
-    const matchesLevel = level !== null && currentLevel === level;
+    const lowerSearch = searchTerm?.toLowerCase()
+    const matchesLevel = level !== null && currentLevel === level
     const matchesText = lowerSearch
       ? node?.name?.toLowerCase().includes(lowerSearch)
-      : false;
+      : false
 
     const filteredChildren = (node.children || [])
-      .map((child) =>
+      .map(child =>
         filterTreeByCriteria(child, level, searchTerm, currentLevel + 1)
       )
-      .filter(Boolean);
+      .filter(Boolean)
 
     if (matchesLevel || matchesText || filteredChildren.length > 0) {
-      if (matchesText && !highlightedNodeId) setHighlightedNodeId(node.id);
+      if (matchesText && !highlightedNodeId) setHighlightedNodeId(node.id)
       return {
         ...node,
         visible: true,
         children: filteredChildren,
-      };
+      }
     }
 
-    return null;
-  };
+    return null
+  }
 
-  const originalExpandStateRef = useRef({});
+  const originalExpandStateRef = useRef({})
 
   const backupExpandStates = () => {
-    const state = {};
+    const state = {}
     for (const node of nodesData) {
       state[node.id] = {
         isExpanded: node.isExpanded,
         visible: node.visible,
-      };
+      }
     }
-    originalExpandStateRef.current = state;
-  };
+    originalExpandStateRef.current = state
+  }
 
   const restoreExpandStates = () => {
-    const restored = nodesData.map((n) => {
-      const original = originalExpandStateRef.current[n.id];
+    const restored = nodesData.map(n => {
+      const original = originalExpandStateRef.current[n.id]
       return {
         ...n,
         isExpanded: original?.isExpanded ?? n.isExpanded,
         visible: original?.visible ?? true,
-      };
-    });
-    setNodesData(restored);
-    setDiagramKey((prev) => prev + 1);
-  };
+      }
+    })
+    setNodesData(restored)
+    setDiagramKey(prev => prev + 1)
+  }
 
   const searchTreeRecursive = (node, level, searchTerm, currentLevel = 0) => {
-    if (!node) return null;
+    if (!node) return null
 
-    const lowerSearch = searchTerm?.toLowerCase();
-    const matchesLevel = level !== null && currentLevel === level;
+    const lowerSearch = searchTerm?.toLowerCase()
+    const matchesLevel = level !== null && currentLevel === level
     const matchesText = lowerSearch
       ? node.name?.toLowerCase().includes(lowerSearch)
-      : false;
+      : false
 
-    let firstMatchId = null;
+    let firstMatchId = null
 
     const matchedChildren = (node.children || [])
-      .map((child) =>
+      .map(child =>
         searchTreeRecursive(child, level, searchTerm, currentLevel + 1)
       )
-      .filter(Boolean);
+      .filter(Boolean)
 
     if (matchesText) {
-      firstMatchId = node.id;
+      firstMatchId = node.id
     } else {
       for (const child of matchedChildren) {
         if (child._firstMatchId) {
-          firstMatchId = child._firstMatchId;
-          break;
+          firstMatchId = child._firstMatchId
+          break
         }
       }
     }
 
-    const isMatch = matchesText || matchesLevel;
+    const isMatch = matchesText || matchesLevel
 
     if (isMatch || matchedChildren.length > 0) {
       return {
         ...node,
         children: matchedChildren,
         _firstMatchId: firstMatchId,
-      };
+      }
     }
 
-    return null;
-  };
+    return null
+  }
 
   const flattenFilteredTree = (node, parentId = null, level = 0) => {
-    if (!node) return [];
+    if (!node) return []
 
     const currentNode = {
       id: node.id,
@@ -553,50 +547,50 @@ const Syncfusion = () => {
       level,
       orderIndex: node.orderIndex ?? 0,
       recordId: node.recordId ?? null,
-    };
-
-    const children = (node.children || []).flatMap((child) =>
-      flattenFilteredTree(child, node.id, level + 1)
-    );
-
-    return [currentNode, ...children];
-  };
-
-  const handleSearch = (level, searchTerm) => {
-    setSearchLoading(true);
-    setCurrentSearchTerm(searchTerm);
-    setNoResults(null);
-    setHighlightedNodeId(null);
-
-    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase();
-    const isLevelOnlySearch = level !== null && !cleanSearchTerm;
-
-    if (!cleanSearchTerm && !isLevelOnlySearch) {
-      restoreExpandStates();
-      fetchStructure();
-      setSearchLoading(false);
-      return;
     }
 
-    backupExpandStates();
+    const children = (node.children || []).flatMap(child =>
+      flattenFilteredTree(child, node.id, level + 1)
+    )
 
-    let firstMatchedNodeId = null;
+    return [currentNode, ...children]
+  }
+
+  const handleSearch = (level, searchTerm) => {
+    setSearchLoading(true)
+    setCurrentSearchTerm(searchTerm)
+    setNoResults(null)
+    setHighlightedNodeId(null)
+
+    const cleanSearchTerm = (searchTerm || "").trim().toLowerCase()
+    const isLevelOnlySearch = level !== null && !cleanSearchTerm
+
+    if (!cleanSearchTerm && !isLevelOnlySearch) {
+      restoreExpandStates()
+      fetchStructure()
+      setSearchLoading(false)
+      return
+    }
+
+    backupExpandStates()
+
+    let firstMatchedNodeId = null
 
     const matchedChildren = (treeData?.children || [])
-      .map((child) => {
-        const result = searchTreeRecursive(child, level, cleanSearchTerm, 1);
+      .map(child => {
+        const result = searchTreeRecursive(child, level, cleanSearchTerm, 1)
         if (result && result._firstMatchId && !firstMatchedNodeId) {
-          firstMatchedNodeId = result._firstMatchId;
+          firstMatchedNodeId = result._firstMatchId
         }
-        return result;
+        return result
       })
-      .filter(Boolean);
+      .filter(Boolean)
 
     if (!matchedChildren.length) {
-      setNoResults(true);
-      setDiagramKey((prev) => prev + 1);
-      setSearchLoading(false);
-      return;
+      setNoResults(true)
+      setDiagramKey(prev => prev + 1)
+      setSearchLoading(false)
+      return
     }
 
     const rootNode = {
@@ -607,40 +601,40 @@ const Syncfusion = () => {
       visible: true,
       level: 0,
       orderIndex: null,
-    };
+    }
 
     const flattened = [
       rootNode,
-      ...matchedChildren.flatMap((child) =>
+      ...matchedChildren.flatMap(child =>
         flattenFilteredTree(child, rootNode.id, 1)
       ),
-    ];
+    ]
 
-    setHighlightedNodeId(firstMatchedNodeId);
+    setHighlightedNodeId(firstMatchedNodeId)
 
-    const sortedFlat = sortNodesByHierarchy(structureId, flattened);
-    const visibleNodeIds = new Set(sortedFlat.map((n) => n.id));
+    const sortedFlat = sortNodesByHierarchy(structureId, flattened)
+    const visibleNodeIds = new Set(sortedFlat.map(n => n.id))
     const connectors = createConnectors(sortedFlat).filter(
-      (conn) =>
+      conn =>
         visibleNodeIds.has(conn.sourceID) && visibleNodeIds.has(conn.targetID)
-    );
+    )
 
-    setNodesData(sortedFlat);
-    setConnectorsData(connectors);
-    setDiagramKey((prev) => prev + 1);
-    setSearchLoading(false);
-  };
+    setNodesData(sortedFlat)
+    setConnectorsData(connectors)
+    setDiagramKey(prev => prev + 1)
+    setSearchLoading(false)
+  }
 
   useEffect(() => {
     document.fonts?.ready?.then(() => {
-      setDiagramKey((prev) => prev + 1);
-    });
-  }, []);
+      setDiagramKey(prev => prev + 1)
+    })
+  }, [])
 
-  const getNodeShape = (node) => {
-    const defaultWidth = 100;
-    const defaultHeight = 60;
-    const legHeight = 10;
+  const getNodeShape = node => {
+    const defaultWidth = 100
+    const defaultHeight = 60
+    const legHeight = 10
 
     const shapeStyle = {
       fill: "#E0E0E0",
@@ -648,24 +642,34 @@ const Syncfusion = () => {
       strokeWidth: 1,
       cornerRadius: 0,
       shadow: { angle: 45, distance: 4, opacity: 0.1 },
-    };
-
+    }
+    // ✅ RETURN BASIC RECTANGLE IF DEFAULT STRUCTURE TYPE
+    if (structureType === "default") {
+      return {
+        type: "Basic",
+        shape: "Rectangle",
+        width: defaultWidth,
+        height: defaultHeight,
+        style: shapeStyle,
+      }
+    }
     // ✅ GATE shapes
     if (node.elementType === "gate") {
-      const gate = node.gateType?.toLowerCase();
-      const w = defaultWidth;
+      const gate = node.gateType?.toLowerCase()
+      const w = defaultWidth
       const h =
         gate === "voting-or"
           ? defaultHeight + 60
           : gate === "or"
           ? defaultHeight + 40
-          : defaultHeight;
-      const legY = h + legHeight;
-      const legStartY = h - 6;
+          : defaultHeight
+      // const legY = h + legHeight
+      const legY = h
+      const legStartY = h - 6
 
       switch (gate) {
         case "and":
-          shapeStyle.fill = "#4CAF50";
+          shapeStyle.fill = "#4CAF50"
           return {
             type: "Path",
             width: w,
@@ -679,9 +683,9 @@ const Syncfusion = () => {
             A ${w / 2} ${h / 2} 0 0 0 0 ${h / 2} 
             Z
             M ${w * 0.25} ${h}
-            L ${w * 0.25} ${legY}
+            L ${w * 0.25} ${h + legHeight}
             M ${w * 0.75} ${h}
-            L ${w * 0.75} ${legY}
+            L ${w * 0.75} ${h + legHeight}
           `,
             annotations: [
               {
@@ -697,12 +701,12 @@ const Syncfusion = () => {
                 style: { strokeColor: "#000", strokeWidth: 2 },
               },
             ],
-          };
+          }
 
         case "or":
         case "voting-or":
-          shapeStyle.fill = gate === "or" ? "#FF5722" : "#03A9F4";
-          const isVotingOr = gate === "voting-or";
+          shapeStyle.fill = gate === "or" ? "#FF5722" : "#03A9F4"
+          const isVotingOr = gate === "voting-or"
           return {
             type: "Path",
             width: w,
@@ -716,9 +720,9 @@ const Syncfusion = () => {
             Q ${w * 0.5} ${h * 0.85}, 0 ${h}
             Z
             M ${w * 0.25} ${legStartY}
-            L ${w * 0.25} ${legY}
+            L ${w * 0.25} ${h + 5}
             M ${w * 0.75} ${legStartY}
-            L ${w * 0.75} ${legY}
+            L ${w * 0.75} ${h + 5}
           `,
             annotations: [
               ...(isVotingOr
@@ -750,143 +754,143 @@ const Syncfusion = () => {
                 style: { strokeColor: "#000", strokeWidth: 2 },
               },
             ],
-          };
+          }
 
         case "priority-and":
-          shapeStyle.fill = "#FF9800";
+          shapeStyle.fill = "#FF9800"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 80 L 20 0 L 40 80 Z",
-          };
+          }
 
         case "exclusive-or":
-          shapeStyle.fill = "#9C27B0";
+          shapeStyle.fill = "#9C27B0"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 80 Q 20 0 40 80 Z M 5 80 Q 20 10 35 80 Z",
-          };
+          }
 
         case "inhibit":
-          shapeStyle.fill = "#00BCD4";
+          shapeStyle.fill = "#00BCD4"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 40 L 40 40 L 40 80 L 0 80 Z",
-          };
+          }
 
         default:
-          shapeStyle.fill = "#9E9E9E";
+          shapeStyle.fill = "#9E9E9E"
           return {
             type: "Basic",
             shape: "Rectangle",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
       }
     }
 
     if (node.elementType === "event") {
-      const type = node.eventType?.toLowerCase();
+      const type = node.eventType?.toLowerCase()
 
       switch (type) {
         case "basic":
-          shapeStyle.fill = "#81C784";
+          shapeStyle.fill = "#81C784"
           return {
             type: "Basic",
             shape: "Ellipse",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
 
         case "intermediate":
-          shapeStyle.fill = "#FFF176";
+          shapeStyle.fill = "#FFF176"
           return {
             type: "Basic",
             shape: "Rectangle",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
 
         case "transfer":
-          shapeStyle.fill = "#FF4081";
+          shapeStyle.fill = "#FF4081"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 0 L 40 20 L 0 40 Z",
-          };
+          }
 
         case "dormant":
-          shapeStyle.fill = "#607D8B";
+          shapeStyle.fill = "#607D8B"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 40 L 40 40 L 40 80 L 0 80 Z",
-          };
+          }
 
         case "conditional":
-          shapeStyle.fill = "#FFEB3B";
+          shapeStyle.fill = "#FFEB3B"
           return {
             type: "Basic",
             shape: "Diamond",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
 
         case "external":
-          shapeStyle.fill = "#2196F3";
+          shapeStyle.fill = "#2196F3"
           return {
             type: "Basic",
             shape: "Ellipse",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
 
         case "undeveloped":
-          shapeStyle.fill = "#F8BBD0";
+          shapeStyle.fill = "#F8BBD0"
           return {
             type: "Basic",
             shape: "Diamond",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
 
         case "house":
-          shapeStyle.fill = "#FF9800";
+          shapeStyle.fill = "#FF9800"
           return {
             type: "Path",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
             data: "M 0 40 L 20 20 L 40 40 L 40 80 L 0 80 Z",
-          };
+          }
 
         default:
-          shapeStyle.fill = "#E0E0E0";
+          shapeStyle.fill = "#E0E0E0"
           return {
             type: "Basic",
             shape: "Rectangle",
             width: defaultWidth,
             height: defaultHeight,
             style: shapeStyle,
-          };
+          }
       }
     }
 
@@ -897,8 +901,8 @@ const Syncfusion = () => {
       width: defaultWidth,
       height: defaultHeight,
       style: shapeStyle,
-    };
-  };
+    }
+  }
 
   return (
     <>
@@ -928,28 +932,34 @@ const Syncfusion = () => {
               color: "white",
             },
           }}
-          nodes={nodesData.map((node) => {
-            const children = nodesData.filter((n) => n.parent === node.id);
-            const hasAnyChildren = !!childrenMapRef.current[node.id]?.length;
+          nodes={nodesData.map(node => {
+            const children = nodesData.filter(n => n.parent === node.id)
+            const hasAnyChildren = !!childrenMapRef.current[node.id]?.length
 
             const wbsPrefix = showWbs
               ? `${generateWBSNumber(node.id, nodesData, wbsStart)} - `
-              : "";
-            const hasDragIcon = node.id !== structureId;
+              : ""
+            const hasDragIcon = node.id !== structureId
 
-            const dragIconWidth = hasDragIcon ? 20 : 0;
-            const gap = hasDragIcon ? 8 : 0;
-            const paddingLeft = 12;
-            const paddingRight = 12;
-            const padding = paddingLeft + paddingRight;
+            const dragIconWidth = hasDragIcon ? 20 : 0
+            const gap = hasDragIcon ? 8 : 0
+            const paddingLeft = 12
+            const paddingRight = 12
+            const padding = paddingLeft + paddingRight
 
-            const labelFontSize = 20;
-            const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`;
-            const labelText = `${wbsPrefix}${node.name}`;
-            const labelTextWidth = getTextWidth(labelText, labelFont);
+            const labelFontSize = 20
+            const labelFont = `${labelFontSize}px 'Segoe UI', Arial, sans-serif`
+            const labelText = `${wbsPrefix}${node.name}`
+            const labelTextWidth = getTextWidth(labelText, labelFont)
+            const eventType = node.eventType?.toUpperCase() || "EVENT"
+            const eventTypeFont = `12px 'Segoe UI', Arial, sans-serif`
+            const eventTypeWidth = getTextWidth(eventType, eventTypeFont)
+
+            const contentMaxWidth = Math.max(labelTextWidth, eventTypeWidth)
             const estimatedWidth =
-              dragIconWidth + gap + labelTextWidth + padding;
-            const gateType = node.gateType?.toLowerCase();
+              dragIconWidth + gap + contentMaxWidth + padding
+
+            const gateType = node.gateType?.toLowerCase()
 
             const estimatedHeight =
               node.id === structureId
@@ -958,11 +968,11 @@ const Syncfusion = () => {
                 ? node.elementType === "gate" &&
                   (gateType == "or" || gateType == "voting-or")
                   ? 90
-                  : 60
-                : 48;
+                  : 65
+                : 48
 
             const shouldHighlight =
-              highlightedNodeId === node.id && !!currentSearchTerm;
+              highlightedNodeId === node.id && !!currentSearchTerm
 
             const gateColorMap = {
               and: "#bbdefb",
@@ -970,7 +980,7 @@ const Syncfusion = () => {
               "priority-and": "#f8bbd0",
               "exclusive-or": "#d1c4e9",
               dependency: "#c8e6c9",
-            };
+            }
 
             const eventColorMap = {
               basic: "#81c784",
@@ -981,24 +991,25 @@ const Syncfusion = () => {
               external: "#ffcc80",
               transfer: "#4dd0e1",
               default: "#f8f8f8",
-            };
+            }
 
             const fillColor = shouldHighlight
               ? "#660000"
               : node.elementType === "gate"
               ? gateColorMap[node.gateType?.toLowerCase()] || "#e0f7fa"
               : eventColorMap[node.eventType?.toLowerCase()] ||
-                eventColorMap.default;
+                eventColorMap.default
 
             const labelOffsetX = hasDragIcon
               ? (dragIconWidth + gap + paddingLeft / 2) / estimatedWidth
-              : paddingLeft / estimatedWidth;
+              : paddingLeft / estimatedWidth
             return {
               id: node.id,
               isExpanded: node.isExpanded,
               visible: node.visible,
               shape: getNodeShape(node),
               annotations: [
+                // ─── DRAG HANDLE (unchanged) ─────────────────────────────────────────
                 ...(hasDragIcon
                   ? [
                       {
@@ -1008,73 +1019,19 @@ const Syncfusion = () => {
                         horizontalAlignment: "Left",
                         verticalAlignment: "Center",
                         margin: { left: 0 },
-                        style: {
-                          color: "#333333",
-                          fontSize: 18,
-                        },
+                        style: { color: "#333333", fontSize: 18 },
                       },
                     ]
                   : []),
-                {
-                  id: `label-${node.id}`,
-                  content: labelText,
-                  offset: {
-                    x: hasDragIcon
-                      ? (dragIconWidth + gap + paddingLeft / 2) / estimatedWidth
-                      : paddingLeft / estimatedWidth,
-                    y: 0.5,
-                  },
-                  horizontalAlignment: "Left",
-                  verticalAlignment: "Center",
-                  width: labelTextWidth,
-                  style: {
-                    color: shouldHighlight ? "#fff" : "#000000",
-                    fontSize: labelFontSize,
-                    whiteSpace: "Normal",
-                    textOverflow: "ellipsis",
-                    overflow: "hidden",
-                  },
-                },
-                ...(node.gateType === "voting-or"
+
+                // ─── ROOT LABEL (unchanged) ──────────────────────────────────────────
+                ...(node.id === structureId || structureType == "default"
                   ? [
                       {
                         id: `label-${node.id}`,
                         content: labelText,
-                        offset: { x: 0.5, y: 0.4 }, // 👈 Move label higher
-                        horizontalAlignment: "Center",
-                        verticalAlignment: "Center",
-                        width: labelTextWidth,
-                        style: {
-                          color: shouldHighlight ? "#fff" : "#000000",
-                          fontSize: labelFontSize,
-                          whiteSpace: "Normal",
-                          textOverflow: "ellipsis",
-                          overflow: "hidden",
-                        },
-                      },
-                      {
-                        id: `vote-ratio-${node.id}`,
-                        content: `${node?.inputK || "K"}/${
-                          node?.outputN || "N"
-                        }`,
-                        offset: { x: 0.5, y: 0.65 }, // 👈 Move ratio further down
-                        horizontalAlignment: "Center",
-                        verticalAlignment: "Center",
-                        style: {
-                          color: "#000",
-                          fontSize: 13,
-                        },
-                      },
-                    ]
-                  : [
-                      {
-                        id: `label-${node.id}`,
-                        content: labelText,
                         offset: {
-                          x: hasDragIcon
-                            ? (dragIconWidth + gap + paddingLeft / 2) /
-                              estimatedWidth
-                            : paddingLeft / estimatedWidth,
+                          x: labelOffsetX,
                           y: 0.5,
                         },
                         horizontalAlignment: "Left",
@@ -1088,8 +1045,107 @@ const Syncfusion = () => {
                           overflow: "hidden",
                         },
                       },
-                    ]),
+                    ]
+                  : []),
 
+                // ─── GATE Annotations (only if not 'default') ─────────────────────────
+                ...(node.elementType === "gate" && structureType !== "default" // ← ADDED CONDITION
+                  ? node.gateType === "voting-or"
+                    ? [
+                        {
+                          id: `gate-label-${node.id}`,
+                          content: labelText,
+                          offset: { x: 0.5, y: 0.4 },
+                          horizontalAlignment: "Center",
+                          verticalAlignment: "Center",
+                          width: labelTextWidth,
+                          style: {
+                            fontSize: 14,
+                            color: shouldHighlight ? "#fff" : "#000",
+                            whiteSpace: "Normal",
+                            textOverflow: "ellipsis",
+                            overflow: "hidden",
+                          },
+                        },
+                        {
+                          id: `vote-ratio-${node.id}`,
+                          content: `${node?.inputK || "K"}/${
+                            node?.outputN || "N"
+                          }`,
+                          offset: { x: 0.5, y: 0.65 },
+                          horizontalAlignment: "Center",
+                          verticalAlignment: "Center",
+                          style: {
+                            color: "#000",
+                            fontSize: 13,
+                          },
+                        },
+                      ]
+                    : [
+                        {
+                          id: `gate-label-${node.id}`,
+                          content: labelText,
+                          offset: { x: 0.5, y: 0.32 },
+                          horizontalAlignment: "Center",
+                          verticalAlignment: "Center",
+                          width: labelTextWidth,
+                          style: {
+                            fontSize: 14,
+                            color: shouldHighlight ? "#fff" : "#000",
+                            whiteSpace: "Normal",
+                            textOverflow: "ellipsis",
+                            overflow: "hidden",
+                          },
+                        },
+                        {
+                          id: `gate-type-${node.id}`,
+                          content: (node.gateType || "GATE").toUpperCase(),
+                          offset: { x: 0.5, y: 0.58 },
+                          horizontalAlignment: "Center",
+                          verticalAlignment: "Center",
+                          style: {
+                            fontSize: 12,
+                            color: shouldHighlight ? "#fff" : "#444",
+                            fontStyle: "Italic",
+                          },
+                        },
+                      ]
+                  : []),
+
+                // ─── EVENT Annotations (only if not 'default') ────────────────────────
+                ...(node.elementType === "event" && structureType !== "default" // ← ADDED CONDITION
+                  ? [
+                      {
+                        id: `event-label-${node.id}`,
+                        content: labelText,
+                        offset: { x: 0.5, y: 0.4 },
+                        horizontalAlignment: "Center",
+                        verticalAlignment: "Center",
+                        width: labelTextWidth,
+                        style: {
+                          fontSize: 14,
+                          color: shouldHighlight ? "#fff" : "#000",
+                          whiteSpace: "Normal",
+                          textOverflow: "ellipsis",
+                          overflow: "hidden",
+                        },
+                      },
+                      {
+                        id: `event-type-${node.id}`,
+                        content: node.eventType?.toUpperCase() || "EVENT",
+                        offset: { x: 0.5, y: 0.65 },
+                        horizontalAlignment: "Center",
+                        verticalAlignment: "Center",
+                        style: {
+                          fontSize: 12,
+                          color: shouldHighlight ? "#fff" : "#444",
+                          fontStyle: "Italic",
+                        },
+                      },
+                    ]
+                  : []),
+
+                // ─── TRANSFER DIRECTION (IN/OUT) – always shown ───────────────────────
                 ...(node.eventType === "transfer"
                   ? [
                       {
@@ -1098,10 +1154,7 @@ const Syncfusion = () => {
                           ? "OUT"
                           : "IN",
                         offset: { x: 0.9, y: 0.85 },
-                        style: {
-                          fontSize: 10,
-                          color: "#666",
-                        },
+                        style: { fontSize: 10, color: "#666" },
                       },
                     ]
                   : []),
@@ -1141,7 +1194,7 @@ const Syncfusion = () => {
 
               cornerRadius: 6,
               shadow: { angle: 45, distance: 5, opacity: 0.1 },
-            };
+            }
           })}
           connectors={connectorsData}
           layout={getLayoutConfig(structureType)}
@@ -1149,34 +1202,34 @@ const Syncfusion = () => {
           click={handleDiagramClick}
           tool={DiagramTools.SingleSelect | DiagramTools.ZoomPan}
           selectionChange={onSelectionChange}
-          expandStateChange={async (args) => {
-            const isExpanded = args.state;
-            const nodeId = args?.element?.id;
+          expandStateChange={async args => {
+            const isExpanded = args.state
+            const nodeId = args?.element?.id
 
-            if (!nodeId) return;
+            if (!nodeId) return
 
-            const current = nodesMap[nodeId];
-            if (!current || current.isExpanded === isExpanded) return;
+            const current = nodesMap[nodeId]
+            if (!current || current.isExpanded === isExpanded) return
 
             try {
               if (nodeId === structureId) {
                 await dispatch(
                   updateStructureExpandState({ id: nodeId, isExpanded })
-                ).unwrap();
+                ).unwrap()
               } else {
                 await dispatch(
                   updateExpandState({ id: nodeId, isExpanded })
-                ).unwrap();
+                ).unwrap()
               }
 
-              await fetchStructure();
+              await fetchStructure()
             } catch (error) {
               cogoToast.error(
                 `Failed to update expand state for node ${nodeId}`
-              );
+              )
             }
           }}
-          getNodeDefaults={(node) => node}
+          getNodeDefaults={node => node}
         >
           <Inject services={[DataBinding, HierarchicalTree, UndoRedo]} />
         </DiagramComponent>
@@ -1216,7 +1269,7 @@ const Syncfusion = () => {
           wbs={generateWBSNumber(selectedNode?.id, nodesData, wbsStart)}
           structureName={nodesMap[structureId]?.name || "Structure"}
           onSuccess={() => {
-            handleNodeUpdate();
+            handleNodeUpdate()
           }}
           structureType={structureType}
         />
@@ -1236,44 +1289,44 @@ const Syncfusion = () => {
                 },
               ],
             })
-          );
-          setModalState({ isOpen: false, draggedNode: null, targetNode: null });
-          cogoToast.success("Node reparented successfully.");
-          await fetchStructure();
-          dragInProgress.current = false;
+          )
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          cogoToast.success("Node reparented successfully.")
+          await fetchStructure()
+          dragInProgress.current = false
         }}
         onReorder={async () => {
           const siblings = nodesData
-            .filter((n) => n.parent === modalState.targetNode.parent)
-            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0));
+            .filter(n => n.parent === modalState.targetNode.parent)
+            .sort((a, b) => (a.orderIndex ?? 0) - (b.orderIndex ?? 0))
 
           let insertIndex = siblings.findIndex(
-            (n) => n.id === modalState.targetNode.id
-          );
-          if (insertIndex === -1) insertIndex = siblings.length;
+            n => n.id === modalState.targetNode.id
+          )
+          if (insertIndex === -1) insertIndex = siblings.length
 
           const reordered = siblings.filter(
-            (n) => n.id !== modalState.draggedNode.id
-          );
-          reordered.splice(insertIndex, 0, modalState.draggedNode);
+            n => n.id !== modalState.draggedNode.id
+          )
+          reordered.splice(insertIndex, 0, modalState.draggedNode)
 
           for (let i = 0; i < reordered.length; i++) {
-            const node = reordered[i];
+            const node = reordered[i]
             if (node.orderIndex !== i) {
               await dispatch(
                 updateElementOrderIndex({ id: node.id, orderIndex: i })
-              ).unwrap();
+              ).unwrap()
             }
           }
 
-          setModalState({ isOpen: false, draggedNode: null, targetNode: null });
-          cogoToast.success("Node reordered successfully.");
-          await fetchStructure();
-          dragInProgress.current = false;
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          cogoToast.success("Node reordered successfully.")
+          await fetchStructure()
+          dragInProgress.current = false
         }}
         onClose={() => {
-          setModalState({ isOpen: false, draggedNode: null, targetNode: null });
-          dragInProgress.current = false;
+          setModalState({ isOpen: false, draggedNode: null, targetNode: null })
+          dragInProgress.current = false
         }}
       />
 
@@ -1290,7 +1343,7 @@ const Syncfusion = () => {
           </div>
         ))}
     </>
-  );
-};
+  )
+}
 
-export default Syncfusion;
+export default Syncfusion
