@@ -100,97 +100,99 @@ const NodeModal = ({
       return
     }
 
-    if (elementType === "event") {
-      if (!eventType) {
-        cogoToast.warn("Please select an event type.")
-        return
+    if (structureType !== "default") {
+      if (elementType === "event") {
+        if (!eventType) {
+          cogoToast.warn("Please select an event type.")
+          return
+        }
+
+        if (!eventValueType) {
+          cogoToast.warn("Please select an event value type.")
+          return
+        }
+
+        if (["conditional", "undeveloped"].includes(eventType)) {
+          if (eventValueType === "λ") {
+            cogoToast.warn(
+              `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`
+            )
+            return
+          }
+        }
+
+        if (eventType === "basic") {
+          if (eventValueType === "λ" && !missionTime) {
+            cogoToast.warn("Mission Time is required when using Rate (λ).")
+            return
+          }
+        }
       }
 
-      if (!eventValueType) {
-        cogoToast.warn("Please select an event value type.")
-        return
-      }
+      if (elementType === "gate" && gateType === "voting-or") {
+        const isFloat = val =>
+          val !== "" &&
+          !isNaN(val) &&
+          val.toString().includes(".") &&
+          parseFloat(val) > 0
 
-      if (["conditional", "undeveloped"].includes(eventType)) {
-        if (eventValueType === "λ") {
+        const isEmpty = val => val === "" || val === null
+
+        const inputEmpty = isEmpty(inputK)
+        const outputEmpty = isEmpty(outputN)
+
+        if (inputEmpty && outputEmpty) {
           cogoToast.warn(
-            `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`
+            "Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)"
           )
           return
         }
-      }
 
-      if (eventType === "basic") {
-        if (eventValueType === "λ" && !missionTime) {
-          cogoToast.warn("Mission Time is required when using Rate (λ).")
+        if (inputEmpty) {
+          cogoToast.warn(
+            "Input (K) is required and must be a decimal number (e.g. 1.0)"
+          )
           return
         }
-      }
-    }
 
-    if (elementType === "gate" && gateType === "voting-or") {
-      const isFloat = val =>
-        val !== "" &&
-        !isNaN(val) &&
-        val.toString().includes(".") &&
-        parseFloat(val) > 0
+        if (outputEmpty) {
+          cogoToast.warn(
+            "Output (N) is required and must be a decimal number (e.g. 1.0)"
+          )
+          return
+        }
 
-      const isEmpty = val => val === "" || val === null
+        const inputValid = isFloat(inputK)
+        const outputValid = isFloat(outputN)
 
-      const inputEmpty = isEmpty(inputK)
-      const outputEmpty = isEmpty(outputN)
+        if (!inputValid && !outputValid) {
+          cogoToast.warn(
+            "Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)"
+          )
+          return
+        }
 
-      if (inputEmpty && outputEmpty) {
-        cogoToast.warn(
-          "Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)"
-        )
-        return
-      }
+        if (!inputValid) {
+          cogoToast.warn(
+            "Input (K) must be a decimal positive number (e.g. 1.0, 2.5)"
+          )
+          return
+        }
 
-      if (inputEmpty) {
-        cogoToast.warn(
-          "Input (K) is required and must be a decimal number (e.g. 1.0)"
-        )
-        return
-      }
+        if (!outputValid) {
+          cogoToast.warn(
+            "Output (N) must be a decimal positive number (e.g. 1.0, 2.5)"
+          )
+          return
+        }
 
-      if (outputEmpty) {
-        cogoToast.warn(
-          "Output (N) is required and must be a decimal number (e.g. 1.0)"
-        )
-        return
-      }
+        const k = parseFloat(inputK)
+        const n = parseFloat(outputN)
 
-      const inputValid = isFloat(inputK)
-      const outputValid = isFloat(outputN)
-
-      if (!inputValid && !outputValid) {
-        cogoToast.warn(
-          "Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)"
-        )
-        return
-      }
-
-      if (!inputValid) {
-        cogoToast.warn(
-          "Input (K) must be a decimal positive number (e.g. 1.0, 2.5)"
-        )
-        return
-      }
-
-      if (!outputValid) {
-        cogoToast.warn(
-          "Output (N) must be a decimal positive number (e.g. 1.0, 2.5)"
-        )
-        return
-      }
-
-      const k = parseFloat(inputK)
-      const n = parseFloat(outputN)
-
-      if (k > n) {
-        cogoToast.warn("Input (K) cannot be greater than Output (N)")
-        return
+        if (k > n) {
+          cogoToast.warn("Input (K) cannot be greater than Output (N)")
+          return
+        }
       }
     }
 
