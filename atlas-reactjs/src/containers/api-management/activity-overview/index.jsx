@@ -1,15 +1,15 @@
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 import {
-  FiUsers,
-  FiGlobe,
   FiActivity,
-  FiDollarSign,
   FiAlertCircle,
   FiClock,
-  FiRepeat,
   FiCreditCard,
+  FiDollarSign,
   FiExternalLink,
+  FiGlobe,
+  FiRepeat,
+  FiUsers,
 } from "react-icons/fi";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 import { api } from "../../../constants";
 
 const StatCard = ({ label, value, Icon }) => (

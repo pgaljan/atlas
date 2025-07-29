@@ -1,4 +1,3 @@
-import React from "react";
 import { FaCookieBite, FaRegFileAlt } from "react-icons/fa";
 import { MdPrivacyTip } from "react-icons/md";
 
@@ -9,7 +8,7 @@ const TermsAndPolicies = () => {
         Terms & Policies
       </h1>
       <p className="text-custom-text-grey mb-4 mt-2">
-        Below, you'll find information on our Terms of Service and our Privacy
+        Below, you&aposll find information on our Terms of Service and our Privacy
         Policy.
       </p>
 

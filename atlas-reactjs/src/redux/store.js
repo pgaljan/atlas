@@ -1,25 +1,23 @@
 import { configureStore } from "@reduxjs/toolkit";
-import authReducer from "./slices/auth";
 import elementsReducer from "./slices/elements";
 import plansReducer from "./slices/plans";
 import recordsReducer from "./slices/records";
 import restoreBackupsReducer from "./slices/restore-backups";
 import rolesReducer from "./slices/roles";
-import structureSlice from "./slices/structures";
 import uploadFilesReducer from "./slices/upload-files";
 import userReducer from "./slices/users";
+import structureTemplatesSlice from "./slices/structure-templates";
 
 const store = configureStore({
   reducer: {
-    // auth: authReducer,
     user: userReducer,
     elements: elementsReducer,
     plans: plansReducer,
     records: recordsReducer,
     restoreBackups: restoreBackupsReducer,
     roles: rolesReducer,
-    // structures: structureSlice,
     uploadFiles: uploadFilesReducer,
+    structureTemplates: structureTemplatesSlice,
   },
 });
 

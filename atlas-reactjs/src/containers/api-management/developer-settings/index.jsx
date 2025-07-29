@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { FiCopy, FiKey, FiLink, FiRefreshCw, FiSettings } from "react-icons/fi";
 import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiKey, FiLink, FiCopy, FiRefreshCw, FiSettings } from "react-icons/fi";
 
 const DeveloperSettingsPage = () => {
   const [apiKey] = useState("sk_live_4e7cf98357b8...");

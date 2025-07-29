@@ -56,7 +56,7 @@ const useCaptureAndUploadSnapshot = async (
             if (linkUrl.origin !== window.location.origin) {
               return false;
             }
-          } catch (err) {
+          } catch {
             return true;
           }
         }

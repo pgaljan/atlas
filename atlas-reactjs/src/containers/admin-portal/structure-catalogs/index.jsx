@@ -268,7 +268,7 @@ const StructureCatalog = () => {
 
   return (
     <AdminLayout>
-      <div className="p-4">
+      <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex justify-between w-full items-center">
             <h2 className="text-3xl font-semibold text-gray-800">

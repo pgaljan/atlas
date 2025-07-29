@@ -1,6 +1,6 @@
 import cogoToast from "@successtar/cogo-toast"
 import Cookies from "js-cookie"
-import React, { useEffect, useRef, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import { FaEdit } from "react-icons/fa"
 import { FaCirclePlus } from "react-icons/fa6"
 import { GiBrassEye } from "react-icons/gi"
@@ -71,7 +71,6 @@ const NodeModal = ({
   // Feature flags
   const canImportStructure = useFeatureFlag("Import from Excel")
   const canTagRecord = useFeatureFlag("Rich Text Records")
-
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action()
@@ -93,14 +92,13 @@ const NodeModal = ({
   })
 
   const focusRef = useRef(null)
-
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
       cogoToast.error("Element title cannot be empty")
       return
     }
 
-    if (structureType !== "default") {
+    if (structureType !== "default" && renderType !== "markmap") {
       if (elementType === "event") {
         if (!eventType) {
           cogoToast.warn("Please select an event type.")
@@ -205,10 +203,12 @@ const NodeModal = ({
       gateType: elementType === "gate" ? gateType : null,
       eventValue: elementType === "event" ? eventValue : null,
       eventValueType: elementType === "event" ? eventValueType : null,
-      eventValueMissionTime:
-        elementType === "event" && eventValueType === "λ" ? missionTime : null,
-      eventValueMTTR:
-        elementType === "event" && eventType === "basic" ? mttr : null,
+      missionTime:
+        elementType === "event" && eventValueType === "λ"
+          ? Number(missionTime)
+          : null,
+      mttr:
+        elementType === "event" && eventType === "basic" ? Number(mttr) : null,
       description,
       inputK:
         elementType === "gate" && gateType === "voting-or"
@@ -232,12 +232,14 @@ const NodeModal = ({
               gateType: elementType === "gate" ? gateType : null,
               eventValue: elementType === "event" ? eventValue : null,
               eventValueType: elementType === "event" ? eventValueType : null,
-              eventValueMissionTime:
+              missionTime:
                 elementType === "event" && eventValueType === "λ"
-                  ? missionTime
+                  ? Number(missionTime)
                   : null,
-              eventValueMTTR:
-                elementType === "event" && eventType === "basic" ? mttr : null,
+              mttr:
+                elementType === "event" && eventType === "basic"
+                  ? Number(mttr)
+                  : null,
               description,
               inputK:
                 elementType === "gate" && gateType === "voting-or"
@@ -254,6 +256,7 @@ const NodeModal = ({
         cogoToast.success("Element updated successfully!")
       } else {
         await dispatch(createElement(elementData)).unwrap()
+
         cogoToast.success("Element added successfully!")
       }
       setChildModalVisible(false)
@@ -332,31 +335,39 @@ const NodeModal = ({
         const element = action.payload
         setElementValue(element.name)
         setElementType(element.type || "event")
+        setDescription(element.description || "")
 
         if (element.type === "event") {
           setEventType(element.eventType || "")
           setEventValue(element.eventValue || "")
           seEventValueType(element.eventValueType || "")
+          setMissionTime(element.missionTime || "")
+          setMttr(element.mttr || "")
           setGateType("")
+          setInputK("")
+          setOutputN("")
         } else if (element.type === "gate") {
           setGateType(element.gateType || "")
+          setInputK(element.inputK || "")
+          setOutputN(element.outputN || "")
           setEventType("")
           setEventValue("")
           seEventValueType("")
-          setInputK(element.inputK || "")
-          setOutputN(element.outputN || "")
+          setMissionTime("")
+          setMttr("")
         }
       })
     }
   }, [isEdit, elementId, dispatch])
+
   useEffect(() => {
     if (eventType === "undeveloped" || eventType === "conditional") {
-      if (eventValueType === "λ") seEventValueType("") // Reset illegal value
-      setMissionTime("") // Remove mission time — not allowed
+      if (eventValueType === "λ") seEventValueType("")
+      setMissionTime("")
     }
 
     if (eventType !== "basic") {
-      setMttr("") // MTTR only allowed for basic — remove it otherwise
+      setMttr("")
     }
   }, [eventType])
   const handleKeyPress = e => {
@@ -785,7 +796,7 @@ const NodeModal = ({
                             step="any"
                             value={inputK}
                             onChange={e => setInputK(e.target.value)}
-                            placeholder="Enter input (K)"
+                            placeholder="Enter input K (e.g. 2.0)"
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>
@@ -798,7 +809,7 @@ const NodeModal = ({
                             step="any"
                             value={outputN}
                             onChange={e => setOutputN(e.target.value)}
-                            placeholder="Enter output (N)"
+                            placeholder="Enter input N (e.g 3.0) (≥ K)"
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
                         </div>

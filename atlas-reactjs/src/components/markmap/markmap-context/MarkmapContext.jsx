@@ -1,5 +1,5 @@
 import { Markmap } from "markmap-view"
-import React, {
+import {
   createContext,
   useContext,
   useEffect,

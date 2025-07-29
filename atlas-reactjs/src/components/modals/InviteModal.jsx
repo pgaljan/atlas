@@ -1,14 +1,14 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { createInvitation } from "../../redux/slices/invitations";
 import { fetchUser } from "../../redux/slices/users";
 
 const InviteModal = ({ onClose }) => {
+  const dispatch = useDispatch();
   const [email, setEmail] = useState("");
   const workspaceId = Cookies.get("workspaceId");
-  const dispatch = useDispatch();
   const [selectedEmails, setSelectedEmails] = useState([]);
   const [customMessage, setCustomMessage] = useState("");
   const [isSending, setIsSending] = useState(false);

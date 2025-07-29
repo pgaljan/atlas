@@ -86,7 +86,7 @@ const teamMemberSlice = createSlice({
       .addCase(inviteTeamMember.pending, (state) => {
         state.inviteStatus = "loading";
       })
-      .addCase(inviteTeamMember.fulfilled, (state, action) => {
+      .addCase(inviteTeamMember.fulfilled, (state) => {
         state.inviteStatus = "succeeded";
       })
       .addCase(inviteTeamMember.rejected, (state, action) => {
@@ -97,7 +97,7 @@ const teamMemberSlice = createSlice({
       .addCase(verifyTeamMember.pending, (state) => {
         state.verifyStatus = "loading";
       })
-      .addCase(verifyTeamMember.fulfilled, (state, action) => {
+      .addCase(verifyTeamMember.fulfilled, (state) => {
         state.verifyStatus = "succeeded";
       })
       .addCase(verifyTeamMember.rejected, (state, action) => {

@@ -4,6 +4,7 @@ import axiosInstance from "../../../middleware/axiosInstance";
 // Initial state for structure slice
 const initialState = {
   structures: [],
+  structureSummaries: {},
   status: "idle",
   error: null,
 };
@@ -33,6 +34,20 @@ export const getStructuresByWorkspaceId = createAsyncThunk(
         `/structure/workspace/${workspaceId}`
       );
       return response.data.structures;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+export const getStructureSummariesByWorkspaceId = createAsyncThunk(
+  "structures/getStructureSummariesByWorkspaceId",
+  async (workspaceId, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get(
+        `/structure/workspace/${workspaceId}/summary`
+      );
+      return { workspaceId, summaries: response.data.summaries };
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
     }
@@ -73,7 +88,7 @@ export const deleteStructure = createAsyncThunk(
   "structures/deleteStructure",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.delete(`/structure/delete/${id}`);
+      await axiosInstance.delete(`/structure/delete/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -118,7 +133,7 @@ export const deleteBatchStructures = createAsyncThunk(
   "structures/deleteBatchStructures",
   async (ids, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.delete("/structure/batch-delete", {
+      await axiosInstance.delete("/structure/batch-delete", {
         data: { ids },
       });
       return ids;
@@ -133,10 +148,7 @@ export const updateStructureExpandState = createAsyncThunk(
   "structures/updateStructureExpandState",
   async ({ id, isExpanded }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(
-        `/structure/expand-state/${id}`,
-        { isExpanded }
-      );
+      await axiosInstance.put(`/structure/expand-state/${id}`, { isExpanded });
       return { id, isExpanded };
     } catch (error) {
       console.log(error);
@@ -352,6 +364,21 @@ const structureSlice = createSlice({
         state.exportedCsv = action.payload;
       })
       .addCase(exportStructureCsv.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      .addCase(getStructureSummariesByWorkspaceId.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(
+        getStructureSummariesByWorkspaceId.fulfilled,
+        (state, action) => {
+          state.status = "succeeded";
+          const { workspaceId, summaries } = action.payload;
+          state.structureSummaries[workspaceId] = summaries;
+        }
+      )
+      .addCase(getStructureSummariesByWorkspaceId.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       });

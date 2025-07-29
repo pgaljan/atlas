@@ -1,35 +1,34 @@
-import React, { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.bubble.css";
-import { useDispatch } from "react-redux";
-import Layout from "../../../components/layout";
-import { fetchTermsOfService } from "../../../redux/slices/terms-of-service";
+import { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import Layout from "../../../components/layout"
+import { fetchTermsOfService } from "../../../redux/slices/terms-of-service"
+import HugeRTEEditor from "../../../components/editors/hugeRTE.editor"
 
 const TermsOfService = () => {
-  const dispatch = useDispatch();
-  const [content, setContent] = useState("");
-  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025");
-  const [isLoading, setIsLoading] = useState(true);
+  const dispatch = useDispatch()
+  const [content, setContent] = useState("")
+  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025")
+  const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true);
-      const resultAction = await dispatch(fetchTermsOfService());
+      setIsLoading(true)
+      const resultAction = await dispatch(fetchTermsOfService())
       if (fetchTermsOfService.fulfilled.match(resultAction)) {
-        setContent(resultAction?.payload?.terms?.content || "");
-        setLastUpdatedDate(resultAction.payload.terms.updatedAt || "N/A");
+        setContent(resultAction?.payload?.terms?.content || "")
+        setLastUpdatedDate(resultAction.payload.terms.updatedAt || "N/A")
       }
-      setIsLoading(false);
-    };
+      setIsLoading(false)
+    }
 
-    fetchData();
-  }, [dispatch]);
+    fetchData()
+  }, [dispatch])
 
   const formattedDate = new Date(lastUpdatedDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
+  })
 
   return (
     <Layout>
@@ -47,11 +46,11 @@ const TermsOfService = () => {
             </div>
           </div>
         ) : (
-          <ReactQuill value={content} readOnly={true} theme="bubble" />
+          <HugeRTEEditor content={content} />
         )}
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default TermsOfService;
+export default TermsOfService

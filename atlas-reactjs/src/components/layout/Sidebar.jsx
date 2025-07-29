@@ -1,10 +1,12 @@
 import { Sidebar } from "flowbite-react";
 import Cookies from "js-cookie";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { BiSolidMessageRoundedDots } from "react-icons/bi";
 import { BsDatabaseFillCheck } from "react-icons/bs";
+import { CgTemplate } from "react-icons/cg";
+import { SiGithubactions } from "react-icons/si";
 import { FaPlusCircle, FaRocket, FaSlideshare } from "react-icons/fa";
-import { FiSettings } from "react-icons/fi";
+import { FiExternalLink, FiSettings } from "react-icons/fi";
 import { TbLayoutDashboardFilled } from "react-icons/tb";
 import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -12,8 +14,10 @@ import useFeatureFlag from "../../hooks/useFeatureFlag";
 import { fetchAppSettings } from "../../redux/slices/app-settings";
 import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
 import { fetchSubscription } from "../../redux/slices/subscriptions";
-import Carousel from "../carousels/TourCarousel";
+import Carousel from "../carousels";
+import { TbTemplate } from "react-icons/tb";
 import StructureModal from "../modals/StructureModal";
+import { MdDatasetLinked } from "react-icons/md";
 
 // Define custom theme for the Sidebar
 const ownTheme = {
@@ -112,6 +116,12 @@ export function SidebarPage({ onSubmit }) {
       icon: TbLayoutDashboardFilled,
       link: "/app/dashboard",
     },
+    {
+      name: "Templates",
+      icon: TbTemplate,
+      link: "/app/templates", 
+    },
+
     // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
     {
       name: "Invitations",
@@ -200,7 +210,7 @@ export function SidebarPage({ onSubmit }) {
                   rel="noopener noreferrer"
                   className="border-2 border-custom-main text-custom-main py-2 flex items-center justify-center rounded-md hover:bg-custom-main hover:text-white transition-colors"
                 >
-                  <BiSolidMessageRoundedDots className="mr-2" />
+                  <MdDatasetLinked className="mr-2" />
                   Feedback
                 </a>
               </div>

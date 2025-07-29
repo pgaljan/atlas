@@ -1,6 +1,5 @@
-import React from "react";
-import Icons from "../../constants/icons";
 import { Link } from "react-router-dom";
+import Icons from "../../constants/icons";
 
 const PremiumModal = ({ closeModal }) => {
   return (

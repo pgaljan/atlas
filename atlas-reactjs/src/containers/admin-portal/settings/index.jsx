@@ -1,5 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect, useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FaUpload } from "react-icons/fa";
 import { useDispatch } from "react-redux";
 import AdminLayout from "../../../components/admin/admin-layout";
@@ -20,13 +20,21 @@ const Settings = () => {
     google: true,
     github: true,
   });
-
   const [supportEmail, setSupportEmail] = useState("");
   const [primaryColor, setPrimaryColor] = useState("#660000");
   const [secondaryColor, setSecondaryColor] = useState("#006666");
   const [loading, setLoading] = useState(false);
   const colorInputRef = useRef(null);
   const secondaryColorInputRef = useRef(null);
+  const [smtpSettings, setSmtpSettings] = useState({
+    host: "",
+    port: "",
+    encryption: "TLS",
+    username: "",
+    password: "",
+    fromEmail: "",
+    fromName: "",
+  });
 
   const loadSettings = async () => {
     try {
@@ -48,6 +56,7 @@ const Settings = () => {
               github: true,
             }
           );
+          setSmtpSettings(settings.smtpSettings || {});
         }
       }
     } catch (error) {
@@ -65,6 +74,7 @@ const Settings = () => {
 
     try {
       const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap();
+      console.log(uploaded);
       const url = uploaded.fileUrl || uploaded.url;
 
       if (url) {
@@ -91,6 +101,7 @@ const Settings = () => {
           secondaryColor,
           inviteCodeOption,
           authProviders,
+          smtpSettings,
         })
       ).unwrap();
 
@@ -109,7 +120,7 @@ const Settings = () => {
 
   return (
     <AdminLayout>
-      <div className="p-4">
+      <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-6">
             <h2 className="text-3xl font-semibold text-custom-text-heading">
@@ -179,6 +190,94 @@ const Settings = () => {
               placeholder="https://example.com/feedback"
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
+          </section>
+
+          {/* SMTP Settings */}
+          <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
+            <h3 className="text-xl font-semibold mb-4">SMTP Configuration</h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input
+                type="text"
+                value={smtpSettings.host}
+                onChange={(e) =>
+                  setSmtpSettings({ ...smtpSettings, host: e.target.value })
+                }
+                placeholder="SMTP Host Server"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+
+              <input
+                type="number"
+                value={smtpSettings.port}
+                onChange={(e) =>
+                  setSmtpSettings({ ...smtpSettings, port: e.target.value })
+                }
+                placeholder="Port"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+
+              <select
+                value={smtpSettings.encryption}
+                onChange={(e) =>
+                  setSmtpSettings({
+                    ...smtpSettings,
+                    encryption: e.target.value,
+                  })
+                }
+                className="p-3 rounded-lg border border-gray-300"
+              >
+                <option value="TLS">TLS</option>
+                <option value="SSL">SSL</option>
+              </select>
+
+              <input
+                type="text"
+                value={smtpSettings.username}
+                onChange={(e) =>
+                  setSmtpSettings({ ...smtpSettings, username: e.target.value })
+                }
+                placeholder="Username"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+
+              <input
+                type="password"
+                value={smtpSettings.password}
+                onChange={(e) =>
+                  setSmtpSettings({ ...smtpSettings, password: e.target.value })
+                }
+                placeholder="Password"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+
+              <input
+                type="email"
+                value={smtpSettings.fromEmail}
+                onChange={(e) =>
+                  setSmtpSettings({
+                    ...smtpSettings,
+                    fromEmail: e.target.value,
+                  })
+                }
+                placeholder="From Email"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+
+              <input
+                type="text"
+                value={smtpSettings.fromName}
+                onChange={(e) =>
+                  setSmtpSettings({ ...smtpSettings, fromName: e.target.value })
+                }
+                placeholder="From Name"
+                className="p-3 rounded-lg border border-gray-300"
+              />
+            </div>
+
+            <p className="text-sm text-gray-500 mt-3">
+              Subject lines will be prepended with:{" "}
+              <strong>{appName || "Platform"}:</strong>
+            </p>
           </section>
 
           {/* Primary Color */}

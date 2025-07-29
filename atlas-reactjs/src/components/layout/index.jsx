@@ -1,6 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { useLocation } from "react-router-dom";
 import {

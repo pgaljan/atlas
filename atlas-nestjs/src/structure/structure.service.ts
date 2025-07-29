@@ -255,7 +255,7 @@ export class StructureService {
             name,
             description,
             visibility,
-            imageUrl, // Include imageUrl snapshot in the log
+            imageUrl,
             elements: elementsToProcess.map((element) => ({
               type: element.name,
             })),
@@ -468,5 +468,25 @@ export class StructureService {
         `Failed to update WBS Start: ${error.message}`,
       );
     }
+  }
+
+  async getStructureSummariesByWorkspace(workspaceId: string) {
+    const summaries = await this.prisma.structure.findMany({
+      where: { workspaceId },
+      select: {
+        id: true,
+        name: true,
+        type: true,
+        imageUrl: true,
+      },
+    });
+
+    if (!summaries || summaries.length === 0) {
+      throw new NotFoundException(
+        `No structure summaries found for workspace ${workspaceId}`,
+      );
+    }
+
+    return summaries;
   }
 }

@@ -1,6 +1,7 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaChevronDown } from "react-icons/fa";
+import { FiUsers } from "react-icons/fi";
 import { IoTrash } from "react-icons/io5";
 import { MdGroupAdd, MdOutlineDownloading } from "react-icons/md";
 import { TbEditCircle } from "react-icons/tb";
@@ -19,7 +20,7 @@ import {
   fetchAllUsers,
   updateUser,
 } from "../../../redux/slices/users";
-import { FiUsers } from "react-icons/fi";
+import Avatar from "react-avatar";
 
 const index = () => {
   const dispatch = useDispatch();
@@ -305,7 +306,7 @@ const index = () => {
     return matchesSearch && matchesStatus && matchesSort;
   });
 
-  if (filteredUsers.length === 0) {
+  if (filteredUsers.length === 0 && !searchTerm === "") {
     return (
       <AdminLayout>
         <div className="flex h-screen flex-col items-center justify-center text-center p-6">
@@ -359,7 +360,7 @@ const index = () => {
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
           <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between w-full">
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 sm:mb-0">
-              Users
+              Users Management
             </h2>
             <div className="flex flex-col sm:flex-row sm:items-center gap-3">
               {/* Search Box */}
@@ -435,7 +436,6 @@ const index = () => {
             }
             initialData={initialModalData}
           />
-
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={closeDeleteModal}
@@ -447,141 +447,157 @@ const index = () => {
             }
           />
 
-          <table className="p-10 w-full">
-            <thead className="border-b border-gray-100">
-              <tr>
-                {headers.map((header, index) => (
-                  <th
-                    key={index}
-                    className="px-5 py-3 text-left border-b text-black-100"
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {filteredUsers.length === 0 ? (
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[900px] w-full p-10">
+              <thead className="border-b border-gray-100">
                 <tr>
-                  <td colSpan={headers.length} className="text-center py-4">
-                    No users found.
-                  </td>
+                  {headers.map((header, index) => (
+                    <th
+                      key={index}
+                      className="px-5 py-3 text-left border-b text-black-100"
+                    >
+                      {header}
+                    </th>
+                  ))}
                 </tr>
-              ) : (
-                filteredUsers.map((user) => (
-                  <tr key={user.id} className="border-b border-gray-100">
-                    <td className="px-5 py-4 sm:px-6">
-                      <div className="flex items-center gap-3">
-                        <img
-                          className="w-10 h-10 rounded-full"
-                          src={user.image || "/assets/userimg.jpeg"}
-                          alt={user.username}
-                        />
-                        <div>
-                          <p className="text-gray-600 font-medium">
-                            {user.displayName}
-                          </p>
-                          <p className="text-gray-500 text-sm italic">
-                            @{user.username}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-3 text-gray-500">{user.email}</td>
-                    <td className="px-4 py-3 capitalize text-gray-500">
-                      {user.role?.name || "N/A"}
-                    </td>
-                    <td className="px-4 py-3">
-                      <select
-                        value={user.subscription?.plan?.name || ""}
-                        onChange={(e) =>
-                          handleTierChange(user.id, e.target.value)
-                        }
-                        className="border px-2 py-1 rounded-md text-sm"
-                      >
-                        <option value="">None</option>
-                        {plans.map((plan) => (
-                          <option key={plan.id} value={plan.name}>
-                            {plan.name}
-                          </option>
-                        ))}
-                      </select>
-                    </td>
-
-                    <td className="px-4 py-3">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={user.isAdmin === true}
-                          onChange={() => toggleAdminStatus(user.id)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-12 h-6 rounded-full transition-all ${
-                            user.isAdmin === true
-                              ? "bg-custom-main"
-                              : "bg-gray-300"
-                          }`}
-                        ></div>
-                        <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
-                      </label>
-                    </td>
-                    <td className="px-4 py-3">
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={user.status === "active"}
-                          onChange={() => toggleUserStatus(user.id)}
-                          className="sr-only peer"
-                        />
-                        <div
-                          className={`w-12 h-6 rounded-full transition-all ${
-                            user.status === "active"
-                              ? "bg-custom-main"
-                              : "bg-gray-300"
-                          }`}
-                        ></div>
-                        <div
-                          className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform`}
-                        ></div>
-                      </label>
-                    </td>
-                    <td className="px-4 py-3">
-                      <input
-                        type="number"
-                        defaultValue={user.inviteCount || 0}
-                        onBlur={(e) =>
-                          handleInviteUpdate(user.id, e.target.value)
-                        }
-                        className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
-                      />
-                    </td>
-                    <td className="px-4 py-3 text-center text-gray-500">
-                      {user.acceptedInvitesCount ?? 0}
-                    </td>
-                    <td className="px-2 py-2 flex mt-2">
-                      <Tooltip label="Edit">
-                        <button
-                          onClick={() => openModal(user)}
-                          className="p-2 text-custom-main rounded transition hover:text-green-600"
-                        >
-                          <TbEditCircle className="w-5 h-5" />
-                        </button>
-                      </Tooltip>
-                      <Tooltip label="Delete">
-                        <button
-                          onClick={() => openDeleteModal(user)}
-                          className="p-2 text-red-500 rounded transition hover:text-red-600"
-                        >
-                          <IoTrash className="w-5 h-5" />
-                        </button>
-                      </Tooltip>
+              </thead>
+              <tbody>
+                {filteredUsers.length === 0 ? (
+                  <tr>
+                    <td colSpan={headers.length} className="text-center py-4">
+                      No users found.
                     </td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ) : (
+                  filteredUsers.map((user) => (
+                    <tr key={user.id} className="border-b border-gray-100">
+                      <td className="px-5 py-4 sm:px-6">
+                        <div className="flex items-center gap-3">
+                          {user.profileUrl ? (
+                            <img
+                              className="w-10 h-10 rounded-full"
+                              src={user.profileUrl}
+                              alt={user.username}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = "";
+                              }}
+                            />
+                          ) : (
+                            <Avatar
+                              name={user.username}
+                              size="36"
+                              round={true}
+                              className="text-lg"
+                            />
+                          )}
+
+                          <div>
+                            <p className="text-gray-600 font-medium">
+                              {user.displayName}
+                            </p>
+                            <p className="text-gray-500 text-sm italic">
+                              @{user.username}
+                            </p>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-4 py-3 text-gray-500">{user.email}</td>
+                      <td className="px-4 py-3 capitalize text-gray-500">
+                        {user.role?.name || "N/A"}
+                      </td>
+                      <td className="px-4 py-3">
+                        <select
+                          value={user.subscription?.plan?.name || ""}
+                          onChange={(e) =>
+                            handleTierChange(user.id, e.target.value)
+                          }
+                          className="border px-2 py-1 rounded-md text-sm"
+                        >
+                          <option value="">None</option>
+                          {plans.map((plan) => (
+                            <option key={plan.id} value={plan.name}>
+                              {plan.name}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+
+                      <td className="px-4 py-3">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={user.isAdmin === true}
+                            onChange={() => toggleAdminStatus(user.id)}
+                            className="sr-only peer"
+                          />
+                          <div
+                            className={`w-12 h-6 rounded-full transition-all ${
+                              user.isAdmin === true
+                                ? "bg-custom-main"
+                                : "bg-gray-300"
+                            }`}
+                          ></div>
+                          <div className="absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform"></div>
+                        </label>
+                      </td>
+                      <td className="px-4 py-3">
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={user.status === "active"}
+                            onChange={() => toggleUserStatus(user.id)}
+                            className="sr-only peer"
+                          />
+                          <div
+                            className={`w-12 h-6 rounded-full transition-all ${
+                              user.status === "active"
+                                ? "bg-custom-main"
+                                : "bg-gray-300"
+                            }`}
+                          ></div>
+                          <div
+                            className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white border border-gray-600 rounded-full peer-checked:translate-x-6 transition-transform`}
+                          ></div>
+                        </label>
+                      </td>
+                      <td className="px-4 py-3">
+                        <input
+                          type="number"
+                          defaultValue={user.inviteCount || 0}
+                          onBlur={(e) =>
+                            handleInviteUpdate(user.id, e.target.value)
+                          }
+                          className="border-2 border-gray-300 rounded px-2 py-1 text-sm w-20 focus:border-custom-main focus:outline-none"
+                        />
+                      </td>
+                      <td className="px-4 py-3 text-center text-gray-500">
+                        {user.acceptedInvitesCount ?? 0}
+                      </td>
+                      <td className="px-2 py-2 flex mt-2">
+                        <Tooltip label="Edit">
+                          <button
+                            onClick={() => openModal(user)}
+                            className="p-2 text-custom-main rounded transition hover:text-green-600"
+                          >
+                            <TbEditCircle className="w-5 h-5" />
+                          </button>
+                        </Tooltip>
+                        <Tooltip label="Delete">
+                          <button
+                            onClick={() => openDeleteModal(user)}
+                            className="p-2 text-red-500 rounded transition hover:text-red-600"
+                          >
+                            <IoTrash className="w-5 h-5" />
+                          </button>
+                        </Tooltip>
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </AdminLayout>

@@ -1,5 +1,5 @@
 /** @type {import('tailwindcss').Config} */
-export default {
+module.exports = {
   content: ["./index.html", "./src/**/*.{js,ts,jsx,tsx}"],
   darkMode: ["selector", '[data-mode="light"]'],
   theme: {
@@ -99,6 +99,8 @@ export default {
         100: "0 0 100%",
       },
     },
+    
   },
+  
   plugins: [require("@tailwindcss/typography")],
 };

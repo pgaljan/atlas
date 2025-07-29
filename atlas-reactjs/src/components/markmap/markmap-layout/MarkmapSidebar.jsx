@@ -1,4 +1,3 @@
-import React from "react";
 import Icons from "../../../constants/icons";
 
 const MarkmapSidebar = () => {
@@ -23,12 +22,18 @@ const MarkmapSidebar = () => {
         </div>
       </button>
 
-      <button className="p-2 text-white hover:bg-custom-main" aria-label="Outline">
+      <button
+        className="p-2 text-white hover:bg-custom-main"
+        aria-label="Outline"
+      >
         <div className="w-6 h-6">
           <Icons.ImagesIcon />
         </div>
       </button>
-      <button className="p-2 text-white hover:bg-custom-main" aria-label="Outline">
+      <button
+        className="p-2 text-white hover:bg-custom-main"
+        aria-label="Outline"
+      >
         <div className="w-6 h-6">
           <Icons.ClickMoreIcon />
         </div>

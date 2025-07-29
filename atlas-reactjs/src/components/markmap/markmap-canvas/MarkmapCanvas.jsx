@@ -1,5 +1,5 @@
 import cogoToast from "@successtar/cogo-toast";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { MarkmapProvider } from "../markmap-context/MarkmapContext";
 import MarkmapEditor from "../markmap-editor/MarkmapEditor";

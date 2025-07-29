@@ -1,14 +1,14 @@
-import React from "react";
 import { BsDatabaseFillCheck } from "react-icons/bs";
 import { FaSlideshare } from "react-icons/fa";
 import { HiUsers } from "react-icons/hi2";
-import { IoTrash } from "react-icons/io5";
+import { IoDuplicateOutline, IoTrash } from "react-icons/io5";
 import {
   MdOutlineCopyAll,
   MdOutlineRestore,
   MdPermMedia,
 } from "react-icons/md";
-import { TbEditCircle, TbTrashOff } from "react-icons/tb";
+import { PiTreeStructure } from "react-icons/pi";
+import { TbEditCircle, TbTemplate, TbTrashOff } from "react-icons/tb";
 import Icons from "./icons";
 
 export const teamMembersConfig = {
@@ -21,7 +21,7 @@ export const teamMembersConfig = {
   enableSearch: true,
   emptyState: {
     title: "No team members found.",
-    description: "please invite team members to display here.",
+    description: "Invite members to display here.",
     icon: <HiUsers className="text-5xl text-custom-main" />,
   },
   enableCheckbox: false,
@@ -56,7 +56,7 @@ export const teamMembersConfig = {
   ],
 };
 
-export const invitedMembersConfig = {
+export const invitationConfig = {
   title: "Invitations",
   showId: false,
   tabs: [
@@ -73,6 +73,7 @@ export const invitedMembersConfig = {
   columns: [
     { key: "email", label: "Email" },
     { key: "token", label: "Token" },
+    { label: "Invite Code", key: "inviteCode" },
     { key: "generated", label: "Generated at" },
     { key: "accepted", label: "Accepted at" },
     { key: "expire", label: "Expires at" },
@@ -86,6 +87,79 @@ export const invitedMembersConfig = {
     {
       icon: <IoTrash className="w-6 h-6 text-red-600" />,
       tooltip: "Delete",
+    },
+  ],
+};
+
+export const templatesConfig = {
+  title: "Templates",
+  showId: false,
+  enableSearch: true,
+  emptyState: {
+    title: "No Templates Found",
+    description: "Start by creating your first template.",
+    icon: <TbTemplate className="text-5xl text-custom-main" />,
+  },
+  enableCheckbox: false,
+  columns: [
+    {
+      key: "thumbnail",
+      label: "Preview",
+      render: (template) => {
+        return (
+          <img
+            src={
+              template.structureJson?.imageUrl ||
+              "/assets/placeholder-template.png"
+            }
+            alt="Template Thumbnail"
+            className="w-14 h-14 rounded-md object-cover border"
+          />
+        );
+      },
+    },
+    { key: "name", label: "Name" },
+    {
+      key: "description",
+      label: "Description",
+      render: (template) => template?.description || "-",
+    },
+    {
+      key: "type",
+      label: "Template Type",
+      render: (template) => (
+        <span className="capitalize text-sm text-custom-text-grey">
+          {template.structureType || template.structureJson?.type || "Unknown"}
+        </span>
+      ),
+    },
+    {
+      key: "createdAt",
+      label: "Created At",
+      render: (template) =>
+        new Date(template.createdAt).toLocaleDateString("en-US", {
+          month: "short",
+          day: "2-digit",
+          year: "numeric",
+        }),
+    },
+  ],
+  actions: [
+    {
+      tooltip: "Utilize Template",
+      icon: <PiTreeStructure className="w-6 h-6 text-green-600" />,
+    },
+    {
+      tooltip: "Duplicate Template",
+      icon: <IoDuplicateOutline className="w-5 h-5 text-blue-500" />,
+    },
+    {
+      tooltip: "Edit Template",
+      icon: <TbEditCircle className="w-5 h-5" />,
+    },
+    {
+      tooltip: "Delete Template",
+      icon: <IoTrash className="w-6 h-6 text-red-600" />,
     },
   ],
 };

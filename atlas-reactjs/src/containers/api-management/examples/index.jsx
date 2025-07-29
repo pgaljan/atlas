@@ -1,7 +1,7 @@
-import React, { useState } from "react";
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiCode, FiTerminal, FiCopy, FiKey } from "react-icons/fi";
+import { useState } from "react";
+import { FiCode, FiCopy, FiKey, FiTerminal } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 
 const tabs = [
   { label: "cURL", icon: <FiTerminal size={14} /> },

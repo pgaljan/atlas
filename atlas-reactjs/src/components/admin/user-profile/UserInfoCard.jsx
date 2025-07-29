@@ -1,4 +1,3 @@
-import React from "react";
 import { TbEditCircle } from "react-icons/tb";
 import useModal from "../../../hooks/useModal";
 import InputField from "../../input-field/InputField";
@@ -7,7 +6,6 @@ import Modal from "../../modals/AdminModal";
 const UserInfoCard = () => {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
-    console.log("Saving changes...");
     closeModal();
   };
   const userData = {
@@ -17,6 +15,7 @@ const UserInfoCard = () => {
     phone: "+09 363 398 46",
     role: "Team Manager",
   };
+  
   return (
     <div className="p-5 border-2 border-gray-200 rounded-2xl ">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">

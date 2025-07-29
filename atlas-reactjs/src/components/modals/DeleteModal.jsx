@@ -1,6 +1,4 @@
-import React from "react";
-
-const DeleteModal = ({ isOpen, onClose, onConfirm, title }) => {
+const DeleteModal = ({ isOpen, onClose, onConfirm, title, loading }) => {
   if (!isOpen) return null;
 
   return (
@@ -19,10 +17,15 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title }) => {
             Cancel
           </button>
           <button
-            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg  bg-custom-main text-white  hover:bg-custom-secondary "
+            disabled={loading}
+            className={`py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg ${
+              loading
+                ? "bg-gray-300 cursor-not-allowed"
+                : "bg-custom-main text-white hover:bg-custom-secondary"
+            }`}
             onClick={onConfirm}
           >
-            Yes, Delete
+            {loading ? "Deleting..." : "Yes, Delete"}
           </button>
         </div>
       </div>

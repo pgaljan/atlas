@@ -1,6 +1,5 @@
-import React from "react";
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 import { FiBookOpen, FiHelpCircle, FiMail } from "react-icons/fi";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 
 const supportLinks = [
   {

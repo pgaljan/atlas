@@ -1,8 +1,8 @@
-import React, { useState } from "react"
 import cogoToast from "@successtar/cogo-toast"
+import { useState } from "react"
 import { GoCheck, GoCopy } from "react-icons/go"
-import Tooltip from "../tooltip/Tooltip"
 import { sampleData } from "../../constants"
+import Tooltip from "../tooltip/Tooltip"
 
 const ImportModal = ({
   isOpen,

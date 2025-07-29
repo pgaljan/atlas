@@ -1,6 +1,5 @@
 import Editor from "@monaco-editor/react";
-import { useRef, useState } from "react";
-import { CustomLoader } from "../customLoader/CustomLoader";
+import { useRef } from "react";
 
 const VsCodeEditor = ({
   language = "plaintext",

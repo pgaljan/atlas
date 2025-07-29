@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
+import { AppSettingsModule } from './app-settings/app-settings.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
@@ -10,18 +11,18 @@ import { ElementModule } from './element/element.module';
 import { FileUploadModule } from './file-upload/file-upload.module';
 import { InvitationModule } from './invitations/invitations.module';
 import { PlansModule } from './plans/plans.module';
+import { PolicyModule } from './policy/policy.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { RecordModule } from './record/record.module';
 import { RestoreBackupModule } from './restore-backup/restore-backup.module';
 import { RoleModule } from './role/role.module';
 import { StructureCataloguesModule } from './structure-catalogues/structure-catalogues.module';
+import { StructureTemplatesModule } from './structure-templates/structure-templates.module';
 import { StructureModule } from './structure/structure.module';
 import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TeamMemberModule } from './team-member/team-member.module';
-import { UserModule } from './user/user.module';
-import { PolicyModule } from './policy/policy.module';
 import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module';
-import { AppSettingsModule } from './app-settings/app-settings.module';
+import { UserModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { AppSettingsModule } from './app-settings/app-settings.module';
     PolicyModule,
     TermsOfServiceModule,
     AppSettingsModule,
+    StructureTemplatesModule,
   ],
   controllers: [AppController],
   providers: [AppService],

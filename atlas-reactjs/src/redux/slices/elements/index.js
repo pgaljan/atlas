@@ -101,7 +101,7 @@ export const updateExpandState = createAsyncThunk(
   "element/updateExpandState",
   async ({ id, isExpanded }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(`/element/expand-state/${id}`, {
+      await axiosInstance.put(`/element/expand-state/${id}`, {
         isExpanded,
       });
       return { id, isExpanded };
@@ -115,7 +115,7 @@ export const updateElementOrderIndex = createAsyncThunk(
   "element/updateOrderIndex",
   async ({ id, orderIndex }, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.put(`/element/order-index/${id}`, {
+      await axiosInstance.put(`/element/order-index/${id}`, {
         orderIndex,
       });
       return { id, orderIndex };
@@ -207,7 +207,7 @@ const elementSlice = createSlice({
       .addCase(reparentElements.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(reparentElements.fulfilled, (state, action) => {
+      .addCase(reparentElements.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(reparentElements.rejected, (state, action) => {

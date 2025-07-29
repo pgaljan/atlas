@@ -1,7 +1,6 @@
 import { useEffect } from "react";
-import React from "react";
 
-const Modal = ({ isOpen, onClose, children, className = "" }) => {
+const Modal = ({ isOpen, onClose, children }) => {
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === "Escape") {

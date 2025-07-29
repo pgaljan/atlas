@@ -1,25 +1,25 @@
-import cogoToast from "@successtar/cogo-toast";
-import React, { useCallback, useEffect, useState } from "react";
-import { BsTags } from "react-icons/bs";
-import { IoTrash } from "react-icons/io5";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import useFeatureFlag from "../../hooks/useFeatureFlag";
+import cogoToast from "@successtar/cogo-toast"
+import DOMPurify from "dompurify"
+import { useCallback, useEffect, useState } from "react"
+import { BsTags } from "react-icons/bs"
+import { IoTrash } from "react-icons/io5"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import marked from "../../helpers/MarkedHelper"
+import useFeatureFlag from "../../hooks/useFeatureFlag"
 import {
   createRecord,
   getRecordById,
   updateRecord,
-} from "../../redux/slices/records";
-import QuillEditor from "../editors/quill.editor";
-import DiscardModal from "../modals/DiscardModal";
-import PlantUMLRenderer from "../plantUml/PlantUmlRenderer";
-import MarkJsRenderer from "../markedJs/MarkedJsRenderer";
-import MermaidRenderer from "../marmeid/MermaidRenderer";
-import marked from "../markedJs/MarkedHelper";
-import DOMPurify from "dompurify";
+} from "../../redux/slices/records"
+import HugeRTEEditor from "../editors/hugeRTE.editor"
+import DiscardModal from "../modals/DiscardModal"
+import LatexRenderer from "../renderers/LatexRenderer"
+import MarkJsRenderer from "../renderers/MarkedJsRenderer"
+import MermaidRenderer from "../renderers/MermaidRenderer"
+import PlantUMLRenderer from "../renderers/PlantUmlRenderer"
 
 const AddQuillModal = ({
-  structureId,
   position,
   onClose,
   elementId,
@@ -32,187 +32,203 @@ const AddQuillModal = ({
   recordId,
   elementValue,
 }) => {
-  const dispatch = useDispatch();
-  const [isLoading, setIsLoading] = useState(false);
-  const navigate = useNavigate();
+  const dispatch = useDispatch()
+  const [isLoading, setIsLoading] = useState(false)
+  const navigate = useNavigate()
   const [initialData, setInitialData] = useState({
     quilleditor: "",
     vscode: "",
     tags: [],
-  });
-  const [hasChanges, setHasChanges] = useState(false);
-  const [tags, setTags] = useState([]);
-  const canTags = useFeatureFlag("Record Tagging");
-  const [discardModalVisible, setDiscardModalVisible] = useState(false);
-  const [pendingDiscard, setPendingDiscard] = useState(null);
-  const [quillContent, setQuillContent] = useState("");
-  const [mermaidCodeContent, setMermaidCodeContent] = useState("");
-  const [mermaidSvg, setMermaidSvg] = useState("");
-  const [plantUmlSvg, setPlantUmlSvg] = useState("");
-  const [markedJsContent, setMarkedJsContent] = useState("");
-  const [plantUmlContent, setPlantUmlContent] = useState("");
-  const [editor, setEditor] = useState("quilleditor");
-  const [renderer, setRenderer] = useState("mermaid");
+  })
+  const [hasChanges, setHasChanges] = useState(false)
+  const [tags, setTags] = useState([])
+  const canTags = useFeatureFlag("Record Tagging")
+  const [discardModalVisible, setDiscardModalVisible] = useState(false)
+  const [pendingDiscard, setPendingDiscard] = useState(null)
+  const [quillContent, setQuillContent] = useState("")
+  const [mermaidCodeContent, setMermaidCodeContent] = useState("")
+  const [mermaidSvg, setMermaidSvg] = useState("")
+  const [plantUmlSvg, setPlantUmlSvg] = useState("")
+  const [latexSvg, setLatexSvg] = useState("")
+  const [markedJsContent, setMarkedJsContent] = useState("")
+  const [plantUmlContent, setPlantUmlContent] = useState("")
+  const [latexContent, setLatexContent] = useState("")
+  const [editor, setEditor] = useState("quilleditor")
+  const [renderer, setRenderer] = useState("mermaid")
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action();
+      action()
     } else {
-      navigate(`?plan=upgrade-to-premium`);
+      navigate(`?plan=upgrade-to-premium`)
     }
-  };
+  }
 
   const fetchRecordData = useCallback(async () => {
     if (actionType === "edit" && recordId) {
       try {
-        const record = await dispatch(getRecordById(recordId)).unwrap();
+        const record = await dispatch(getRecordById(recordId)).unwrap()
         if (record) {
-          const { content, editorType } = record.metadata;
+          const { content, editorType } = record.metadata
 
           // Set content state
-          setQuillContent(editorType === "quilleditor" ? content : "");
-          setMermaidCodeContent(editorType === "vscode" ? content : "");
-          setMarkedJsContent(editorType === "markeddown" ? content : "");
-          setPlantUmlContent(editorType === "plantuml" ? content : "");
+          setQuillContent(editorType === "quilleditor" ? content : "")
+          setMermaidCodeContent(editorType === "vscode" ? content : "")
+          setMarkedJsContent(editorType === "markeddown" ? content : "")
+          setPlantUmlContent(editorType === "plantuml" ? content : "")
+          setLatexContent(editorType === "latex" ? content : "")
 
           // Set tag and initial data
-          setTags(record.tags || []);
+          setTags(record.tags || [])
           setInitialData({
             quilleditor: editorType === "quilleditor" ? content : "",
             vscode: editorType === "vscode" ? content : "",
             markedjs: editorType === "markeddown" ? content : "",
             plantuml: editorType === "plantuml" ? content : "",
+            latex: editorType === "latex" ? content : "",
             tags: record.tags || [],
-          });
+          })
 
           if (editorType === "quilleditor") {
-            setEditor("quilleditor");
-            setRenderer("");
+            setEditor("quilleditor")
+            setRenderer("")
           } else if (
             editorType === "vscode" ||
             editorType === "markeddown" ||
-            editorType === "plantuml"
+            editorType === "plantuml" ||
+            editorType === "latex"
           ) {
-            setEditor("vscode");
+            setEditor("vscode")
             if (editorType === "markeddown") {
-              setRenderer("markeddown");
+              setRenderer("markeddown")
             } else if (editorType === "plantuml") {
-              setRenderer("plantuml");
+              setRenderer("plantuml")
+            } else if (editorType === "latex") {
+              setRenderer("latex")
             } else {
-              setRenderer("mermaid");
+              setRenderer("mermaid")
             }
           } else {
-            setEditor("quilleditor");
-            setRenderer("");
+            setEditor("quilleditor")
+            setRenderer("")
           }
         }
       } catch (error) {
-        cogoToast.error(`Failed to fetch record: ${error.message}`);
+        cogoToast.error(`Failed to fetch record: ${error.message}`)
       }
     }
-  }, [actionType, recordId, dispatch]);
+  }, [actionType, recordId, dispatch])
 
   useEffect(() => {
-    fetchRecordData();
-  }, [fetchRecordData]);
+    fetchRecordData()
+  }, [fetchRecordData])
 
   useEffect(() => {
-    let currentContent = "";
-    let initialContent = "";
+    let currentContent = ""
+    let initialContent = ""
 
     if (editor === "quilleditor") {
-      currentContent = quillContent;
-      initialContent = initialData.quilleditor || "";
+      currentContent = quillContent
+      initialContent = initialData.quilleditor || ""
     } else if (renderer === "mermaid") {
-      currentContent = mermaidCodeContent;
-      initialContent = initialData.vscode || "";
+      currentContent = mermaidCodeContent
+      initialContent = initialData.vscode || ""
     } else if (renderer === "plantuml") {
-      currentContent = plantUmlContent;
-      initialContent = initialData.plantuml || "";
+      currentContent = plantUmlContent
+      initialContent = initialData.plantuml || ""
+    } else if (renderer === "latex") {
+      currentContent = latexContent
+      initialContent = initialData.latex || ""
     } else {
-      currentContent = markedJsContent;
-      initialContent = initialData.markeddown || "";
+      currentContent = markedJsContent
+      initialContent = initialData.markeddown || ""
     }
 
     if (!currentContent) {
-      setHasChanges(false);
-      return;
+      setHasChanges(false)
+      return
     }
 
-    const metadataChanged = currentContent !== initialContent;
+    const metadataChanged = currentContent !== initialContent
     const tagsChanged =
-      JSON.stringify(tags) !== JSON.stringify(initialData.tags);
+      JSON.stringify(tags) !== JSON.stringify(initialData.tags)
 
-    setHasChanges(metadataChanged || tagsChanged);
+    setHasChanges(metadataChanged || tagsChanged)
   }, [
     quillContent,
     mermaidCodeContent,
     markedJsContent,
     plantUmlContent,
+    latexContent,
     tags,
     initialData,
     editor,
     renderer,
-  ]);
+  ])
 
-  const getMarkedPreviewHtml = (markdown) => {
-    const rawHtml = marked.parse(markdown || "");
-    const sanitizedHtml = DOMPurify.sanitize(rawHtml);
-    return sanitizedHtml;
-  };
+  const getMarkedPreviewHtml = markdown => {
+    const rawHtml = marked.parse(markdown || "")
+    const sanitizedHtml = DOMPurify.sanitize(rawHtml)
+    return sanitizedHtml
+  }
 
-  const handleEditorChange = (newEditor) => {
+  const handleEditorChange = newEditor => {
     const hasContentOrTags =
       quillContent.trim() ||
       mermaidCodeContent.trim() ||
       markedJsContent.trim() ||
-      plantUmlContent.trim();
+      plantUmlContent.trim() ||
+      latexContent.trim()
     // tags.length > 0
 
     if (hasContentOrTags) {
-      setPendingDiscard({ type: "main", value: newEditor });
-      setDiscardModalVisible(true);
+      setPendingDiscard({ type: "main", value: newEditor })
+      setDiscardModalVisible(true)
     } else {
-      setEditor(newEditor);
-      resetEditorStates();
+      setEditor(newEditor)
+      resetEditorStates()
     }
-  };
+  }
 
-  const handleRendererChange = (newRenderer) => {
+  const handleRendererChange = newRenderer => {
     const hasContentOrTags =
       mermaidCodeContent.trim() ||
       markedJsContent.trim() ||
-      plantUmlContent.trim();
+      plantUmlContent.trim() ||
+      latexContent.trim()
     // tags.length > 0
 
     if (hasContentOrTags) {
-      setPendingDiscard({ type: "sub", value: newRenderer });
-      setDiscardModalVisible(true);
+      setPendingDiscard({ type: "sub", value: newRenderer })
+      setDiscardModalVisible(true)
     } else {
-      setRenderer(newRenderer);
-      resetEditorStates();
+      setRenderer(newRenderer)
+      resetEditorStates()
     }
-  };
+  }
 
   const resetEditorStates = () => {
-    setQuillContent("");
-    setMermaidCodeContent("");
-    setMarkedJsContent("");
-    setPlantUmlContent("");
-    // setTags([]);
-  };
+    setQuillContent("")
+    setMermaidCodeContent("")
+    setMarkedJsContent("")
+    setPlantUmlContent("")
+    setLatexContent("")
+    setMermaidSvg("")
+    setPlantUmlSvg("")
+    setLatexSvg("")
+  }
 
   const confirmDiscard = () => {
-    resetEditorStates();
+    resetEditorStates()
     if (pendingDiscard?.type === "main") {
-      setEditor(pendingDiscard.value);
-      if (pendingDiscard.value === "vscode") setRenderer("mermaid");
+      setEditor(pendingDiscard.value)
+      if (pendingDiscard.value === "vscode") setRenderer("mermaid")
     } else if (pendingDiscard?.type === "sub") {
-      setRenderer(pendingDiscard.value);
+      setRenderer(pendingDiscard.value)
     }
-    setDiscardModalVisible(false);
-    setPendingDiscard(null);
-  };
+    setDiscardModalVisible(false)
+    setPendingDiscard(null)
+  }
 
   const handleSave = async () => {
     const editorType =
@@ -222,7 +238,9 @@ const AddQuillModal = ({
         ? "vscode"
         : renderer === "plantuml"
         ? "plantuml"
-        : "markeddown";
+        : renderer === "latex"
+        ? "latex"
+        : "markeddown"
 
     const currentContent =
       editor === "quilleditor"
@@ -231,26 +249,28 @@ const AddQuillModal = ({
         ? mermaidCodeContent
         : renderer === "plantuml"
         ? plantUmlContent
-        : markedJsContent;
+        : renderer === "latex"
+        ? latexContent
+        : markedJsContent
 
     if (!currentContent?.trim()) {
-      cogoToast.error("Metadata is required!");
-      return;
+      cogoToast.error("Metadata is required!")
+      return
     }
 
     if (
       tags.length > 0 &&
-      tags.some((tag) => !tag.key.trim() || !tag.value.trim())
+      tags.some(tag => !tag.key.trim() || !tag.value.trim())
     ) {
-      cogoToast.error("Each tag must have both a key and a value.");
-      return;
+      cogoToast.error("Each tag must have both a key and a value.")
+      return
     }
 
-    const parsedMetadata = { content: currentContent, editorType };
+    const parsedMetadata = { content: currentContent, editorType }
     const previewContent =
       editorType === "markeddown"
         ? getMarkedPreviewHtml(markedJsContent)
-        : currentContent;
+        : currentContent
     const createRecordDto = {
       metadata: parsedMetadata,
       tags,
@@ -259,13 +279,15 @@ const AddQuillModal = ({
           ? mermaidSvg
           : renderer === "plantuml"
           ? plantUmlSvg
+          : renderer === "latex"
+          ? latexSvg
           : renderer === "markeddown"
           ? previewContent
           : undefined,
-    };
+    }
 
     try {
-      setIsLoading(true);
+      setIsLoading(true)
 
       if (actionType === "edit") {
         const updateRecordDto = {
@@ -276,49 +298,51 @@ const AddQuillModal = ({
               ? mermaidSvg
               : renderer === "plantuml"
               ? plantUmlSvg
+              : renderer === "latex"
+              ? latexSvg
               : renderer === "markeddown"
               ? previewContent
               : undefined,
-        };
-        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap();
-        cogoToast.success("Record updated successfully!");
-        await dispatch(getRecordById(recordId)).unwrap();
+        }
+        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap()
+        cogoToast.success("Record updated successfully!")
+        await dispatch(getRecordById(recordId)).unwrap()
       } else if (actionType === "add") {
         const response = await dispatch(
           createRecord({ elementId, createRecordDto })
-        ).unwrap();
-        await dispatch(getRecordById(response.recordId)).unwrap();
-        cogoToast.success("Record added successfully!");
+        ).unwrap()
+        await dispatch(getRecordById(response.recordId)).unwrap()
+        cogoToast.success("Record added successfully!")
       }
 
-      onClose();
-      onSuccess();
-      fetchData();
+      onClose()
+      onSuccess()
+      fetchData()
     } catch (error) {
-      cogoToast.error(`Error adding record: ${error.message}`);
+      cogoToast.error(`Error adding record: ${error.message}`)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const cancelDiscard = () => {
-    setDiscardModalVisible(false);
-    setPendingDiscard(null);
-  };
+    setDiscardModalVisible(false)
+    setPendingDiscard(null)
+  }
 
   const addTag = () => {
-    setTags((prev) => [...prev, { key: "", value: "", id: Date.now() }]);
-  };
+    setTags(prev => [...prev, { key: "", value: "", id: Date.now() }])
+  }
 
   const handleTagChange = (id, field, value) => {
-    setTags((prev) =>
-      prev.map((tag) => (tag.id === id ? { ...tag, [field]: value } : tag))
-    );
-  };
+    setTags(prev =>
+      prev.map(tag => (tag.id === id ? { ...tag, [field]: value } : tag))
+    )
+  }
 
-  const deleteTag = (id) => {
-    setTags((prev) => prev.filter((tag) => tag.id !== id));
-  };
+  const deleteTag = id => {
+    setTags(prev => prev.filter(tag => tag.id !== id))
+  }
 
   return (
     <>
@@ -362,10 +386,10 @@ const AddQuillModal = ({
                 </span>
                 <select
                   value={editor}
-                  onChange={(e) => handleEditorChange(e.target.value)}
+                  onChange={e => handleEditorChange(e.target.value)}
                   className="border border-gray-300 rounded px-2 py-1"
                 >
-                  <option value="quilleditor">Quill</option>
+                  <option value="quilleditor">HugeRTE</option>
                   <option value="vscode">VSCode</option>
                 </select>
               </label>
@@ -377,12 +401,13 @@ const AddQuillModal = ({
                   </span>
                   <select
                     value={renderer}
-                    onChange={(e) => handleRendererChange(e.target.value)}
+                    onChange={e => handleRendererChange(e.target.value)}
                     className="border border-gray-300 rounded px-2 py-1"
                   >
                     <option value="mermaid">Mermaid</option>
                     <option value="plantuml">PlantUML</option>
                     <option value="markeddown">MarkedJS</option>
+                    <option value="latex">LaTex</option>
                   </select>
                 </label>
               )}
@@ -391,7 +416,7 @@ const AddQuillModal = ({
 
           <div>
             {editor === "quilleditor" && (
-              <QuillEditor
+              <HugeRTEEditor
                 content={quillContent}
                 onEditorChange={setQuillContent}
                 editorClassName={"h-[400px] mb-[50px]"}
@@ -413,7 +438,13 @@ const AddQuillModal = ({
                 onSvgChange={setPlantUmlSvg}
               />
             )}
-
+            {editor === "vscode" && renderer === "latex" && (
+              <LatexRenderer
+                content={latexContent}
+                onEditorChange={setLatexContent}
+                onSvgChange={setLatexSvg}
+              />
+            )}
             {editor === "vscode" && renderer === "markeddown" && (
               <MarkJsRenderer
                 content={markedJsContent}
@@ -437,7 +468,7 @@ const AddQuillModal = ({
           {tags?.length > 0 && (
             <div className="mt-4">
               <div className="max-h-28 overflow-y-auto pr-3">
-                {tags?.map((tag) => (
+                {tags?.map(tag => (
                   <div
                     key={tag.id}
                     className="flex items-center justify-between mt-2"
@@ -455,7 +486,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Key"
                         value={tag.key}
-                        onChange={(e) =>
+                        onChange={e =>
                           handleTagChange(tag.id, "key", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -475,7 +506,7 @@ const AddQuillModal = ({
                         type="text"
                         placeholder="Value"
                         value={tag.value}
-                        onChange={(e) =>
+                        onChange={e =>
                           handleTagChange(tag.id, "value", e?.target?.value)
                         }
                         className="border-2 border-gray-300 rounded-md p-2 focus:border-custom-main focus:outline-none"
@@ -526,7 +557,7 @@ const AddQuillModal = ({
         />
       )}
     </>
-  );
-};
+  )
+}
 
-export default AddQuillModal;
+export default AddQuillModal

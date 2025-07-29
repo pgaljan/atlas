@@ -21,7 +21,6 @@ const GenericTable = ({
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  // Filter data based on active tab
   const filteredData =
     activeTab === "pending"
       ? data.filter((item) => item.status === "pending")
@@ -33,16 +32,6 @@ const GenericTable = ({
 
   const handleZoomOut = () => {
     setZoomLevel((prevZoom) => Math.max(prevZoom - 0.1, 1));
-  };
-
-  const getStatusStyle = (row) => {
-    if (row.status === "accepted") {
-      return "bg-green-100 text-green-800";
-    }
-    const isExpired = new Date(row.expire) < new Date();
-    return isExpired
-      ? "bg-red-100 text-red-800"
-      : "bg-orange-100 text-orange-800";
   };
 
   const getStatusText = (row) => {
@@ -90,7 +79,7 @@ const GenericTable = ({
       </ModalComponent>
 
       {filteredData?.length === 0 && !searchQuery && activeTab != "pending" ? (
-        <div className="flex flex-col text-center p-6 mt-[15%]">
+        <div className="flex flex-col text-center mt-[25%]">
           <div className="flex flex-col items-center justify-center flex-grow">
             <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
               {emptyState.icon}
@@ -133,7 +122,7 @@ const GenericTable = ({
           {enableSearch && (
             <div className="flex items-center justify-between mb-4">
               <div className="relative w-full max-w-md">
-                <FiSearch className="absolute top-3 left-3 text-custom-text-grey" />
+                <FiSearch className="absolute top-3 left-4 text-xl text-custom-text-grey" />
                 <input
                   type="text"
                   placeholder="Search..."
@@ -145,8 +134,12 @@ const GenericTable = ({
                 {buttons?.map((button, index) => (
                   <button
                     key={index}
+                    disabled={button?.disabled}
+                    onClick={button?.onClick}
                     className={`px-4 py-2 rounded-lg hover:bg-opacity-90 ${
                       button?.className || "bg-custom-main text-white"
+                    } ${
+                      button?.disabled ? "opacity-50 cursor-not-allowed" : ""
                     }`}
                   >
                     {button?.label}
@@ -155,13 +148,13 @@ const GenericTable = ({
               </div>
             </div>
           )}
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
+          <div className="w-full overflow-x-auto">
+            <table className="min-w-[800px] w-full text-left">
               <thead>
                 <tr className="text-custom-text-heading border-b border-gray-300">
                   {showId && <th className="px-4 py-2">#Id</th>}
                   {columns?.map((col) => (
-                    <th key={col?.key} className="px-4 py-2">
+                    <th key={col?.key} className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         {col?.label}
                         {Array?.isArray(col?.icon)
@@ -191,7 +184,7 @@ const GenericTable = ({
                       >
                         <div className="flex flex-col items-center justify-center">
                           <p className="text-lg text-custom-text-grey">
-                            No member found against this email.
+                            No results found matching your search query.
                           </p>
                         </div>
                       </td>
@@ -200,7 +193,7 @@ const GenericTable = ({
                     <tr>
                       <td
                         colSpan={columns.length + (showId ? 1 : 0)}
-                        className="text-center p-6"
+                        className="text-center p-6 whitespace-nowrap"
                       >
                         <div className="flex flex-col items-center justify-center">
                           <p className="text-lg text-custom-text-grey">
@@ -224,63 +217,35 @@ const GenericTable = ({
                         </td>
                       )}
                       {columns?.map((col) => (
-                        <td key={col?.key} className="px-4 py-2">
+                        <td
+                          key={col?.key}
+                          className="px-4 py-2 whitespace-nowrap"
+                        >
                           <div className="flex items-center">
-                            {col?.key === "fileUrl" ? (
-                              [
-                                "image/png",
-                                "image/jpeg",
-                                "image/jpg",
-                                "image/webp",
-                              ].includes(row?.fileType) ? (
-                                <img
-                                  src={row[col?.key]}
-                                  alt="Uploaded File"
-                                  className="w-12 h-12 object-cover cursor-pointer rounded-md shadow-sm"
-                                  onClick={() =>
-                                    setSelectedImage(row[col?.key])
-                                  }
-                                />
-                              ) : (
-                                <a
-                                  href={row[col?.key]}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="px-3 py-1 hover:underline text-blue-500"
-                                >
-                                  Download
-                                </a>
-                              )
-                            ) : col?.key === "updatedAt" ? (
-                              <span>
-                                {row[col?.key]
-                                  ? new Date(row[col?.key]).toLocaleString(
-                                      "en-US",
-                                      {
-                                        month: "2-digit",
-                                        day: "2-digit",
-                                        year: "numeric",
-                                        hour: "2-digit",
-                                        minute: "2-digit",
-                                        hour12: true,
-                                      }
-                                    )
-                                  : "N/A"}
-                              </span>
-                            ) : col?.key === "status" ? (
-                              <span
-                                className={`px-2 py-1 rounded-full text-sm ${getStatusStyle(
-                                  row
-                                )}`}
-                              >
-                                {getStatusText(row)}
-                              </span>
-                            ) : (
-                              row[col?.key]
-                            )}
+                            {col?.render
+                              ? col.render(row)
+                              : col?.key === "updatedAt" ||
+                                col?.key === "createdAt"
+                              ? row[col?.key]
+                                ? new Date(row[col?.key]).toLocaleString(
+                                    "en-US",
+                                    {
+                                      month: "2-digit",
+                                      day: "2-digit",
+                                      year: "numeric",
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                      hour12: true,
+                                    }
+                                  )
+                                : "N/A"
+                              : col?.key === "status"
+                              ? getStatusText(row)
+                              : row[col?.key]}
                           </div>
                         </td>
                       ))}
+
                       {actions && (
                         <td className="px-4 py-2 items-center mt-2 flex space-x-4">
                           {actions.map((action, actionIndex) => (

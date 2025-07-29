@@ -3,4 +3,5 @@ export enum EditorType {
   MARKEDDOWN = 'markeddown',
   QUILLEDITOR = 'quilleditor',
   PLANTUML = 'plantuml',
+  LATEX = 'latex',
 }

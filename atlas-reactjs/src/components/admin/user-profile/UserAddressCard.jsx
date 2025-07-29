@@ -1,4 +1,3 @@
-import React from "react";
 import { TbEditCircle } from "react-icons/tb";
 import useModal from "../../../hooks/useModal";
 import InputField from "../../input-field/InputField";
@@ -7,7 +6,6 @@ import Modal from "../../modals/AdminModal";
 const UserAddressCard = () => {
   const { isOpen, openModal, closeModal } = useModal();
   const handleSave = () => {
-    console.log("Saving changes...");
     closeModal();
   };
 

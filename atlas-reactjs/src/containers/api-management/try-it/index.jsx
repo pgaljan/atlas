@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
+import { useState } from "react";
 import {
-  FiSend,
   FiAlertCircle,
+  FiCheck,
   FiCode,
   FiLink,
-  FiCheck,
   FiRefreshCw,
+  FiSend,
 } from "react-icons/fi";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { oneLight } from "react-syntax-highlighter/dist/esm/styles/prism";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 
 const codeSnippets = {
   curl: `curl -X GET \\

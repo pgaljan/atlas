@@ -1,5 +1,4 @@
 import { Sidebar } from "flowbite-react";
-import React from "react";
 import { BiCarousel } from "react-icons/bi";
 import { FiUsers } from "react-icons/fi";
 import { HiMiniClipboardDocumentCheck } from "react-icons/hi2";

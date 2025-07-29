@@ -31,9 +31,8 @@ export const handleLogout = async () => {
     "atlas_userId",
     "atlas_username",
     "atlas_email",
-    "atlas_admin_token", 
-    "workspaceId", 
-    
+    "atlas_admin_token",
+    "workspaceId",
   ];
 
   keysToRemove.forEach((key) => Cookies.remove(key));
@@ -43,29 +42,13 @@ export const handleLogout = async () => {
 // Token validation helper for regular users
 export const isTokenValid = async () => {
   const token = Cookies.get("atlas_access_token");
-  if (!token) {
-    return false;
-  }
-
-  try {
-    return true;
-  } catch (error) {
-    return false;
-  }
+  return !!token;
 };
 
 // Admin token validation helper
 export const isAdminTokenValid = async () => {
   const token = Cookies.get("atlas_admin_token");
-  if (!token) {
-    return false;
-  }
-
-  try {
-    return true;
-  } catch (error) {
-    return false;
-  }
+  return !!token;
 };
 
 export default axiosInstance;

@@ -1,8 +1,7 @@
-import React from "react";
+import { FiHeart } from "react-icons/fi";
+import { Link } from "react-router-dom";
 import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 import { mockAPIs } from "../../../constants";
-import { FiExternalLink, FiHeart } from "react-icons/fi";
-import { Link } from "react-router-dom";
 
 const index = () => {
   return (
@@ -58,7 +57,10 @@ const index = () => {
 
               {/* Actions */}
               <div className="flex flex-wrap gap-2">
-                <Link to="/api-management/try-it" className="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium">
+                <Link
+                  to="/api-management/try-it"
+                  className="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
+                >
                   Try It
                 </Link>
                 <Link

@@ -1,7 +1,14 @@
-import { AnimatePresence, motion } from "framer-motion";
-import { RiCloseLine } from "react-icons/ri";
+import { AnimatePresence, motion } from "framer-motion"
+import { RiCloseLine } from "react-icons/ri"
+import Tooltip from "../tooltip/Tooltip"
 
-const RendererModal = ({ isOpen, onClose, onSelect }) => {
+const RendererModal = ({
+  isOpen,
+  onClose,
+  onSelect,
+  structureType = "default",
+}) => {
+  const isFaultTree = structureType === "faultTree"
   return (
     <AnimatePresence>
       {isOpen && (
@@ -23,7 +30,7 @@ const RendererModal = ({ isOpen, onClose, onSelect }) => {
               scale: 0.85,
               transition: { type: "spring", stiffness: 260, damping: 20 },
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={e => e.stopPropagation()}
           >
             <button
               className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition"
@@ -38,14 +45,25 @@ const RendererModal = ({ isOpen, onClose, onSelect }) => {
               How would you like to visualize this structure?
             </p>
             <div className="flex justify-center gap-4">
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => onSelect("markmap")}
-                className="px-5 py-3 rounded-2xl bg-custom-main text-white font-semibold text-sm shadow-md transition hover:shadow-lg"
-              >
-                Markmap
-              </motion.button>
+              {isFaultTree ? (
+                <Tooltip label="Fault Tree structures open only in Syncfusion">
+                  <motion.button
+                    disabled
+                    className="px-5 py-3 rounded-2xl bg-gray-400 text-gray-200 font-semibold text-sm shadow-md cursor-not-allowed"
+                  >
+                    Markmap
+                  </motion.button>
+                </Tooltip>
+              ) : (
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => onSelect("markmap")}
+                  className="px-5 py-3 rounded-2xl bg-custom-main text-white font-semibold text-sm shadow-md transition hover:shadow-lg"
+                >
+                  Markmap
+                </motion.button>
+              )}
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -59,7 +77,7 @@ const RendererModal = ({ isOpen, onClose, onSelect }) => {
         </motion.div>
       )}
     </AnimatePresence>
-  );
-};
+  )
+}
 
-export default RendererModal;
+export default RendererModal

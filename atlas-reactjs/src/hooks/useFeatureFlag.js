@@ -1,11 +1,11 @@
-import { useDispatch } from "react-redux";
 import Cookies from "js-cookie";
 import { useEffect, useState } from "react";
+import { useDispatch } from "react-redux";
 import { fetchSubscription } from "../redux/slices/subscriptions";
 
 const useFeatureFlag = (feature, currentUsage = 0) => {
-  const userId = Cookies.get("atlas_userId");
   const dispatch = useDispatch();
+  const userId = Cookies.get("atlas_userId");
   const [currentPlan, setCurrentPlan] = useState(null);
 
   useEffect(() => {

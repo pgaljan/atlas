@@ -1,6 +1,6 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import React, { useState } from "react";
+import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { inviteTeamMember } from "../../redux/slices/team-memebers";
 

@@ -22,6 +22,7 @@ export class UserService {
           username: true,
           email: true,
           inviteCount: true,
+          profileUrl: true,
           isAdmin: true,
           createdAt: true,
           deletedAt: true,

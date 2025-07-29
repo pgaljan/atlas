@@ -1,8 +1,7 @@
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiArrowRightCircle, FiExternalLink } from "react-icons/fi";
 import { AiFillHeart } from "react-icons/ai";
-import { mockAPIs } from "../../../constants";
 import { Link } from "react-router-dom";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
+import { mockAPIs } from "../../../constants";
 
 const index = () => {
   const favoriteAPIs = mockAPIs.slice(0, 2);
@@ -57,9 +56,12 @@ const index = () => {
 
                 {/* Action Buttons */}
                 <div className="flex flex-wrap gap-2">
-                   <Link to="/api-management/try-it" className="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium">
-                  Try It
-                </Link>
+                  <Link
+                    to="/api-management/try-it"
+                    className="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-800 rounded-md font-medium"
+                  >
+                    Try It
+                  </Link>
                   <Link
                     to="/api-management/api-templates"
                     className="text-sm px-3 py-1.5 bg-custom-main text-white hover:bg-custom-main/90 rounded-md font-medium"
@@ -73,7 +75,7 @@ const index = () => {
         ) : (
           <div className="text-center py-10">
             <p className="text-gray-500 text-sm">
-              You haven't favorited any APIs yet.
+              You haven&apos;t favorited any APIs yet.
             </p>
           </div>
         )}

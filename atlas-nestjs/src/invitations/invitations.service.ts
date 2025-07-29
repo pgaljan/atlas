@@ -182,6 +182,7 @@ export class InvitationService {
           inviteeEmail: true,
           status: true,
           createdAt: true,
+          referralCode: true,
           expiresAt: true,
           usedAt: true,
           token: true,

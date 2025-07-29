@@ -40,7 +40,7 @@ export const removeAppSettings = createAsyncThunk(
   "appSettings/removeAppSettings",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.post(`/app-settings/remove/${id}`);
+      await axiosInstance.post(`/app-settings/remove/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -92,7 +92,7 @@ const appSettingsSlice = createSlice({
       .addCase(removeAppSettings.pending, (state) => {
         state.deleteStatus = "loading";
       })
-      .addCase(removeAppSettings.fulfilled, (state, action) => {
+      .addCase(removeAppSettings.fulfilled, (state) => {
         state.deleteStatus = "succeeded";
         state.appSettings = null;
       })

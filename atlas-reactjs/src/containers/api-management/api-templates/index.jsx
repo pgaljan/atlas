@@ -1,12 +1,12 @@
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
 import {
-  FiHeart,
-  FiClock,
   FiCheckCircle,
+  FiClock,
   FiExternalLink,
+  FiHeart,
 } from "react-icons/fi";
-import { api } from "../../../constants";
 import { Link } from "react-router-dom";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
+import { api } from "../../../constants";
 
 const index = () => {
   return (

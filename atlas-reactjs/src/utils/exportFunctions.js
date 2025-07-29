@@ -33,7 +33,6 @@ export const exportAsDoc = (
     return;
   }
 
-  // ✅ Assign WBS numbers if needed
   const treeWithWbs = includeWbs ? assignWbsNumbers(treeData) : treeData;
 
   const zip = new JSZip();
@@ -89,7 +88,7 @@ export const exportAsDoc = (
                 pixelRatio: 5,
                 cacheBust: true,
               });
-              svgContent = `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`;
+              svgContent = `<img src="${imageDataURL}"  />`;
             } catch (err) {
               console.error("Error converting SVG with html-to-image:", err);
             }
@@ -115,7 +114,7 @@ export const exportAsDoc = (
   </head>
   <body>
     <h1>${wbsPrefix}${elementName}</h1>
-  <!--  <p>Exported on: ${timestamp}</p> -->
+    <p style="color: gray; font-size: 9px">Exported on: ${timestamp}</p>
     <div>${recordContent}</div>
   ${svgContent}
     ${
@@ -211,7 +210,7 @@ export const exportAsDoc = (
         )}_${filenameTimestamp}.zip`;
         link.click();
       })
-      .catch((err) => {
+      .catch(() => {
         cogoToast.error("Failed to generate ZIP file.");
       });
   })();
@@ -240,7 +239,7 @@ export const exportAsPdf = async (
     return tmp.textContent || tmp.innerText || "";
   };
 
-  const processNode = async (node) => { 
+  const processNode = async (node) => {
     if (!node) return;
     const elementName = node.name || "Untitled";
 
@@ -565,21 +564,24 @@ export const exportAsPdf = async (
       )}_${filenameTimestamp}_pdf.zip`;
       link.click();
     })
-    .catch((error) => {
+    .catch(() => {
       cogoToast.error("Failed to generate ZIP file.");
     });
 };
 
-export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
+export const exportAllAsSingleDoc = async (treeData, includeWbs = false, includeTags = false) => {
   if (!treeData || !treeData.children || treeData.children.length === 0) {
     cogoToast.warn("No elements found to export.");
     return;
   }
 
+  // Apply WBS numbers if requested
+  const treeWithWbs = includeWbs ? assignWbsNumbers(treeData) : treeData;
+
   const now = new Date();
   const timestamp = now.toLocaleString();
   const filenameTimestamp = now.toISOString().replace(/[:.]/g, "-");
-  const structureTitle = treeData.content || "Combined_Markmap_Export";
+  const structureTitle = treeWithWbs.content || "Combined_Markmap_Export";
 
   let combinedContent = "";
 
@@ -587,6 +589,7 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
     if (!node) return;
 
     if (node.Record) {
+      const wbsPrefix = includeWbs && node.wbs ? `${node.wbs} ` : "";
       const elementName = node.name || "Untitled";
       const record = node.Record;
       const editorType = record.metadata?.editorType || "";
@@ -628,7 +631,7 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
                 pixelRatio: 5,
                 cacheBust: true,
               });
-              svgContent = `<div><strong>Diagram:</strong><br/><img src="${imageDataURL}" /></div>`;
+              svgContent = `<img src="${imageDataURL}" />`;
             } catch (err) {
               console.error("Error converting SVG with html-to-image:", err);
             }
@@ -640,7 +643,7 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
 
       const recordSection = `
         <hr />
-        <h2>${elementName}</h2>
+        <h2>${wbsPrefix}${elementName}</h2>
         <div>${recordContent}</div>
         ${svgContent}
 
@@ -659,7 +662,7 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
     }
   };
 
-  for (const child of treeData.children) {
+  for (const child of treeWithWbs.children) {
     await processNode(child);
   }
 
@@ -679,6 +682,7 @@ export const exportAllAsSingleDoc = async (treeData, includeTags = false) => {
     </head>
     <body>
       <h1>${structureTitle}</h1>
+      <p style="color: gray; font-size: 9px;">Exported on: ${timestamp}</p>
       ${combinedContent}
     </body>
     </html>

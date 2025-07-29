@@ -7,6 +7,7 @@ import {
   checkTermsStatus,
 } from "../../redux/slices/terms-of-service";
 import TermsModal from "../modals/TermsModal";
+import UpgradePlanModal from "../modals/UpgradePlanModal";
 import APIManagementHeader from "./APIManagementHeader";
 import APIManagementSidebar from "./APIManagementSidebar";
 
@@ -21,6 +22,7 @@ const APIManagementLayout = ({ children }) => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
   const isExcludedRoute = ROUTES_EXCLUDED.includes(location.pathname);
   const isTermsPage = location.pathname === TERMS_ROUTE;
@@ -86,6 +88,8 @@ const APIManagementLayout = ({ children }) => {
           {children}
         </main>
       </div>
+
+      {showUpgradeModal && <UpgradePlanModal />}
 
       {showTermsModal && (
         <TermsModal

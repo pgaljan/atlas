@@ -220,6 +220,7 @@ export class AuthService {
           email: user.email,
           username: user.username,
           isAdmin: user.isAdmin,
+          displayName: user.displayName,
           workspaceId: user.defaultWorkspaceId,
           role: user.role,
         },

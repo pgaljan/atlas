@@ -15,18 +15,23 @@ export class AppSettingsService {
       const existing = await this.prisma.appSettings.findFirst();
 
       const updateData = {
-        appName: data.appName || '',
-        primaryColor: data.primaryColor || '',
-        secondaryColor: data.secondaryColor || '',
-        supportEmail: data.supportEmail || '',
-        feedbackLink: data.feedbackLink || '',
-        logoUrl: data.logoUrl || '',
-        inviteCodeOption: data.inviteCodeOption || 'disabled',
-        authProviders: data.authProviders || {
-          local: true,
-          google: true,
-          github: true,
-        },
+        appName: data.appName,
+        primaryColor: data.primaryColor ?? '',
+        secondaryColor: data.secondaryColor ?? '',
+        supportEmail: data.supportEmail ?? '',
+        feedbackLink: data.feedbackLink ?? '',
+        logoUrl: data.logoUrl ?? '',
+        inviteCodeOption: data.inviteCodeOption ?? 'disabled',
+        authProviders: data.authProviders
+          ? JSON.parse(JSON.stringify(data.authProviders))
+          : {
+              local: true,
+              google: false,
+              github: false,
+            },
+        smtpSettings: data.smtpSettings
+          ? JSON.parse(JSON.stringify(data.smtpSettings))
+          : {},
       };
 
       if (existing) {
@@ -41,7 +46,7 @@ export class AppSettingsService {
       });
     } catch (error) {
       throw new InternalServerErrorException(
-        `Failed to save app settings: ${error.message}`,
+        `Failed to save settings: ${error.message}`,
       );
     }
   }
@@ -53,7 +58,7 @@ export class AppSettingsService {
       return settings;
     } catch (error) {
       throw new InternalServerErrorException(
-        `Failed to retrieve app settings: ${error.message}`,
+        `Failed to retrieve settings: ${error.message}`,
       );
     }
   }

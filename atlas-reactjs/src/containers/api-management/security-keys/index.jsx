@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { FiCopy, FiEye, FiEyeOff, FiPlus, FiTrash2 } from "react-icons/fi";
 import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiCopy, FiTrash2, FiPlus, FiEye, FiEyeOff } from "react-icons/fi";
 
 const APIKeysPage = () => {
   const [newLabel, setNewLabel] = useState("");

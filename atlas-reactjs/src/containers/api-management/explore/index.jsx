@@ -1,8 +1,8 @@
-import React, { useState } from "react";
-import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { apiCategories, topCollections, mockAPIs } from "../../../constants";
+import { useState } from "react";
 import { FiArrowRightCircle } from "react-icons/fi";
 import { Link } from "react-router-dom";
+import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
+import { apiCategories, mockAPIs, topCollections } from "../../../constants";
 
 const pastelBgColors = [
   "bg-pink-100",

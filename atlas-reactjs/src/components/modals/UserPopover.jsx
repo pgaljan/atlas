@@ -1,5 +1,5 @@
-import React, { useEffect, useRef, useState } from "react";
 import Cookies from "js-cookie";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 
 const UserPopover = () => {

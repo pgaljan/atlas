@@ -1,11 +1,10 @@
 import { Sidebar } from "flowbite-react";
-import { Link, useLocation } from "react-router-dom";
 import { BiCodeAlt } from "react-icons/bi";
 import { HiOutlineDocumentText, HiOutlineStar } from "react-icons/hi";
 import { LuActivity, LuKeyRound } from "react-icons/lu";
-import { MdOutlineDashboard } from "react-icons/md";
+import { MdOutlineDashboard, MdOutlineTravelExplore } from "react-icons/md";
 import { TbApi } from "react-icons/tb";
-import { MdOutlineTravelExplore } from "react-icons/md";
+import { Link, useLocation } from "react-router-dom";
 
 const sidebarTheme = {
   root: {

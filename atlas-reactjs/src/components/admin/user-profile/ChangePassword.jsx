@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { IoTrash } from "react-icons/io5";
 import { TbEditCircle } from "react-icons/tb";
 import useModal from "../../../hooks/useModal";

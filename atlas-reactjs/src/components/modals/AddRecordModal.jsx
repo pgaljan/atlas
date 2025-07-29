@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import TinyMCE from "../editors/tinymce";
 
 const AddRecordModal = ({ position, onClose, onSave }) => {
@@ -41,7 +41,7 @@ const AddRecordModal = ({ position, onClose, onSave }) => {
         </div>
 
         {/* Body */}
-        <div className="p-4">
+        <div className="p-2">
           {/* TinyMCE Editor */}
           <div>
             <TinyMCE />

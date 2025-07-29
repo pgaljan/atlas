@@ -1,141 +1,133 @@
-import cogoToast from "@successtar/cogo-toast"
-import PropTypes from "prop-types"
-import ImageResize from "quill-image-resize-module-react"
-import React, { useEffect, useRef } from "react"
-import ReactQuill, { Quill } from "react-quill"
-import "react-quill/dist/quill.snow.css"
-import "tippy.js/dist/tippy.css"
-import "./CustomImageBlot"
-import "./CustomVideoBlot"
+import cogoToast from "@successtar/cogo-toast";
+import PropTypes from "prop-types";
+import ImageResize from "quill-image-resize-module-react";
+import { useEffect, useRef } from "react";
+import ReactQuill, { Quill } from "react-quill";
+import "react-quill/dist/quill.snow.css";
+import "tippy.js/dist/tippy.css";
 
 if (!Quill.imports["modules/imageResize"]) {
-  Quill.register("modules/imageResize", ImageResize)
+  Quill.register("modules/imageResize", ImageResize);
 }
 
 const imageHandler = function () {
-  const input = document.createElement("input")
-  input.type = "file"
-  input.accept = "image/*"
-  input.click()
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = "image/*";
+  input.click();
 
   input.onchange = () => {
-    const file = input.files[0]
-    if (!file) return
+    const file = input.files[0];
+    if (!file) return;
 
-    const reader = new FileReader()
-    reader.onload = e => {
-      const img = new Image()
-      img.src = e.target.result
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.src = e.target.result;
 
       img.onload = () => {
-        let quality = 0.8
-        let maxDim = 1000
+        let quality = 0.8;
+        let maxDim = 1000;
         if (file.size > 5e6) {
-          quality = 0.4
-          maxDim = 600
+          quality = 0.4;
+          maxDim = 600;
         } else if (file.size > 2e6) {
-          quality = 0.6
-          maxDim = 800
+          quality = 0.6;
+          maxDim = 800;
         }
 
-        let { width, height } = img
+        let { width, height } = img;
         if (width > maxDim || height > maxDim) {
-          const scale = Math.min(maxDim / width, maxDim / height)
-          width = Math.round(width * scale)
-          height = Math.round(height * scale)
+          const scale = Math.min(maxDim / width, maxDim / height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
         }
 
-        const canvas = document.createElement("canvas")
-        canvas.width = width
-        canvas.height = height
-        const ctx = canvas.getContext("2d")
-        ctx.drawImage(img, 0, 0, width, height)
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
 
         canvas.toBlob(
-          blob => {
-            const blobReader = new FileReader()
+          (blob) => {
+            const blobReader = new FileReader();
             blobReader.onload = () => {
-              const base64 = blobReader.result
-              const range = this.quill.getSelection(true)
-              this.quill.insertEmbed(range.index, "image", base64, "user")
-              this.quill.setSelection(range.index + 1)
-            }
-            blobReader.readAsDataURL(blob)
+              const base64 = blobReader.result;
+              const range = this.quill.getSelection(true);
+              this.quill.insertEmbed(range.index, "image", base64, "user");
+              this.quill.setSelection(range.index + 1);
+            };
+            blobReader.readAsDataURL(blob);
           },
           "image/jpeg",
           quality
-        )
-      }
-    }
-    reader.readAsDataURL(file)
-  }
-}
+        );
+      };
+    };
+    reader.readAsDataURL(file);
+  };
+};
 
 const videoHandler = function () {
-  const input = document.createElement("input")
-  input.setAttribute("type", "file")
-  input.setAttribute("accept", "video/*")
-  input.click()
+  const input = document.createElement("input");
+  input.setAttribute("type", "file");
+  input.setAttribute("accept", "video/*");
+  input.click();
 
   input.onchange = () => {
-    const file = input.files[0]
+    const file = input.files[0];
     if (file) {
-      const reader = new FileReader()
-      reader.onload = e => {
-        const videoDataUrl = e.target.result
-        const range = this.quill.getSelection(true)
-        this.quill.insertEmbed(range.index, "video", videoDataUrl, "user")
-        this.quill.setSelection(range.index + 1)
-      }
-      reader.readAsDataURL(file)
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const videoDataUrl = e.target.result;
+        const range = this.quill.getSelection(true);
+        this.quill.insertEmbed(range.index, "video", videoDataUrl, "user");
+        this.quill.setSelection(range.index + 1);
+      };
+      reader.readAsDataURL(file);
     }
-  }
-}
+  };
+};
 
 const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
-  const editorRef = useRef(null)
+  const editorRef = useRef(null);
 
-  const handleChange = content => {
-    onEditorChange(content)
-  }
+  const handleChange = (content) => {
+    onEditorChange(content);
+  };
 
   const modules = {
     toolbar: {
       container: [
-        // [{ font: [] }],
-        // [{ header: [1, 2, 3, 4, 5, 6, false] }],
         ["bold", "italic", "underline", "strike", "blockquote", "code-block"],
         [{ color: [] }, { background: [] }],
         [
           { list: "ordered" },
           { list: "bullet" },
-          // { indent: "-1" },
-          // { indent: "+1" },
         ],
-        // [{ align: [] }],
         ["link", "image"],
       ],
       handlers: {
-        // video: videoHandler,
         image: imageHandler,
       },
     },
     imageResize: {
       parchment: Quill.import("parchment"),
     },
-  }
+  };
 
-  const handlePaste = e => {
-    const clipboardItems = e.clipboardData.items
+  const handlePaste = (e) => {
+    const clipboardItems = e.clipboardData.items;
     for (let i = 0; i < clipboardItems.length; i++) {
-      const item = clipboardItems[i]
+      const item = clipboardItems[i];
       if (item.type.indexOf("image") !== -1) {
-        e.preventDefault()
-        cogoToast.warn("Please use the toolbar to insert images.")
-        return
+        e.preventDefault();
+        cogoToast.warn("Please use the toolbar to insert images.");
+        return;
       }
     }
-  }
+  };
 
   const formats = [
     "header",
@@ -158,7 +150,7 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
     "width",
     "height",
     "style",
-  ]
+  ];
 
   useEffect(() => {
     const tooltips = {
@@ -178,19 +170,19 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
       "ql-align": "Align Text",
       "ql-font": "Font Style",
       "ql-header": "Header Size",
-    }
+    };
 
-    const toolbar = document.querySelector(".ql-toolbar")
+    const toolbar = document.querySelector(".ql-toolbar");
     if (toolbar) {
       Object.entries(tooltips).forEach(([className, title]) => {
-        toolbar.querySelectorAll(`.${className}`).forEach(el => {
+        toolbar.querySelectorAll(`.${className}`).forEach((el) => {
           if (!el.getAttribute("data-tippy-content")) {
-            el.setAttribute("data-tippy-content", title)
+            el.setAttribute("data-tippy-content", title);
           }
-        })
-      })
+        });
+      });
 
-      import("tippy.js").then(tippy => {
+      import("tippy.js").then((tippy) => {
         tippy.default(".ql-toolbar [data-tippy-content]", {
           placement: "top",
           animation: "shift-away",
@@ -198,10 +190,10 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
           theme: "custom",
           delay: [100, 0],
           duration: [200, 150],
-        })
-      })
+        });
+      });
     }
-  }, [])
+  }, []);
 
   return (
     <div className="mx-auto" onPaste={handlePaste}>
@@ -216,13 +208,13 @@ const QuillEditor = ({ content, onEditorChange, editorClassName }) => {
         placeholder="Write something here..."
       />
     </div>
-  )
-}
+  );
+};
 
 QuillEditor.propTypes = {
   content: PropTypes.string.isRequired,
   onEditorChange: PropTypes.func.isRequired,
   editorClassName: PropTypes.string,
-}
+};
 
-export default QuillEditor
+export default QuillEditor;

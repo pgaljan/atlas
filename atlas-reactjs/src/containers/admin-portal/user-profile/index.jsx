@@ -1,4 +1,3 @@
-import React from "react";
 import AdminLayout from "../../../components/admin/admin-layout";
 import ChangePasswordCard from "../../../components/admin/user-profile/ChangePassword";
 import UserAddressCard from "../../../components/admin/user-profile/UserAddressCard";

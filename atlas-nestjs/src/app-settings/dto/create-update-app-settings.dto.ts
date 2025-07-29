@@ -6,12 +6,58 @@ import {
   IsUrl,
   IsEnum,
   IsObject,
+  ValidateNested,
 } from 'class-validator';
+import { Type } from 'class-transformer';
 
 export enum InviteCodeOption {
   DISABLED = 'disabled',
   ENABLED = 'enabled',
   REQUIRED = 'required',
+}
+
+class AuthProvidersDto {
+  @IsOptional()
+  local?: boolean;
+
+  @IsOptional()
+  google?: boolean;
+
+  @IsOptional()
+  github?: boolean;
+}
+
+class SmtpSettingsDto {
+  @IsString()
+  @IsNotEmpty({ message: 'SMTP Host is required' })
+  host: string;
+
+  @IsOptional()
+  port?: number;
+
+  @IsString()
+  @IsOptional()
+  encryption?: 'TLS' | 'SSL';
+
+  @IsString()
+  @IsOptional()
+  username?: string;
+
+  @IsString()
+  @IsOptional()
+  password?: string;
+
+  @IsEmail()
+  @IsOptional()
+  fromAddress?: string;
+
+  @IsString()
+  @IsOptional()
+  fromName?: string;
+
+  @IsString()
+  @IsOptional()
+  subjectPrefix?: string;
 }
 
 export class CreateUpdateAppSettingsDto {
@@ -43,11 +89,13 @@ export class CreateUpdateAppSettingsDto {
   @IsOptional()
   inviteCodeOption?: InviteCodeOption;
 
-  @IsObject()
+  @ValidateNested()
+  @Type(() => AuthProvidersDto)
   @IsOptional()
-  authProviders?: {
-    local: boolean;
-    google: boolean;
-    github: boolean;
-  };
+  authProviders?: AuthProvidersDto;
+
+  @ValidateNested()
+  @Type(() => SmtpSettingsDto)
+  @IsOptional()
+  smtpSettings?: SmtpSettingsDto;
 }

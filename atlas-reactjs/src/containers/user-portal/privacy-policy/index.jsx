@@ -1,35 +1,34 @@
-import React, { useEffect, useState } from "react";
-import ReactQuill from "react-quill";
-import "react-quill/dist/quill.bubble.css";
-import { useDispatch } from "react-redux";
-import Layout from "../../../components/layout";
-import { fetchPrivacyPolicy } from "../../../redux/slices/privacy-policy";
+import { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import Layout from "../../../components/layout"
+import { fetchPrivacyPolicy } from "../../../redux/slices/privacy-policy"
+import HugeRTEEditor from "../../../components/editors/hugeRTE.editor"
 
 const PrivacyPolicy = () => {
-  const dispatch = useDispatch();
-  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025");
-  const [content, setContent] = useState("");
-  const [loading, setLoading] = useState(true);
+  const dispatch = useDispatch()
+  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025")
+  const [content, setContent] = useState("")
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchData = async () => {
-      setLoading(true);
-      const resultAction = await dispatch(fetchPrivacyPolicy());
+      setLoading(true)
+      const resultAction = await dispatch(fetchPrivacyPolicy())
       if (fetchPrivacyPolicy.fulfilled.match(resultAction)) {
-        setContent(resultAction?.payload?.policy?.content || "");
-        setLastUpdatedDate(resultAction.payload.policy.updatedAt || "N/A");
+        setContent(resultAction?.payload?.policy?.content || "")
+        setLastUpdatedDate(resultAction.payload.policy.updatedAt || "N/A")
       }
-      setLoading(false);
-    };
+      setLoading(false)
+    }
 
-    fetchData();
-  }, [dispatch]);
+    fetchData()
+  }, [dispatch])
 
   const formattedDate = new Date(lastUpdatedDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  });
+  })
 
   return (
     <Layout>
@@ -47,11 +46,11 @@ const PrivacyPolicy = () => {
             </div>
           </div>
         ) : (
-          <ReactQuill value={content} readOnly={true} theme="bubble" />
+          <HugeRTEEditor content={content} />
         )}
       </div>
     </Layout>
-  );
-};
+  )
+}
 
-export default PrivacyPolicy;
+export default PrivacyPolicy

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import { useState } from "react";
+import { FiTrash2, FiUpload } from "react-icons/fi";
 import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiUpload, FiTrash2 } from "react-icons/fi";
 
 const index = () => {
   const [certificates, setCertificates] = useState([

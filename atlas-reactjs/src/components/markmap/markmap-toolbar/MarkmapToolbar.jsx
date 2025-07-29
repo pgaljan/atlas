@@ -1,5 +1,5 @@
 import { Toolbar } from "markmap-toolbar"
-import React, { useEffect, useRef } from "react"
+import { useEffect, useRef } from "react"
 import useMarkmap from "../markmap-context/MarkmapContext"
 
 const MarkmapToolbar = () => {

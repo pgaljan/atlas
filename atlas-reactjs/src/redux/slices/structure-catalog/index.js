@@ -231,7 +231,7 @@ const catalogsSlice = createSlice({
       .addCase(reorderCatalogs.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(reorderCatalogs.fulfilled, (state, action) => {
+      .addCase(reorderCatalogs.fulfilled, (state) => {
         state.status = "succeeded";
       })
       .addCase(reorderCatalogs.rejected, (state, action) => {

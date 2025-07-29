@@ -1,5 +1,3 @@
-import React from "react";
-
 const TemplatesIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -756,6 +754,7 @@ const ImagesIcon = () => (
     </g>
   </svg>
 );
+
 const IIcon = ({ className = "", color = "#000000" }) => (
   <svg
     version="1.0"
@@ -788,6 +787,7 @@ const IIcon = ({ className = "", color = "#000000" }) => (
     </g>
   </svg>
 );
+
 const NotificationIcon = () => (
   <svg
     className="fill-current"
@@ -804,6 +804,7 @@ const NotificationIcon = () => (
     />
   </svg>
 );
+
 const ViewFileIcon = ({ className = "", color = "" }) => (
   <svg
     version="1.0"
@@ -860,6 +861,7 @@ c21 13 50 42 65 64 23 34 27 52 27 107 0 55 -4 73 -27 107 -15 22 -44 51 -65
     </g>
   </svg>
 );
+
 const TrashIcon = ({ className = "", color = "" }) => (
   <svg
     className={className}
@@ -910,6 +912,7 @@ const EditIcon = ({ className = "", color = "" }) => (
     </g>
   </svg>
 );
+
 const ProCardIcon = ({ className = "" }) => (
   <svg
     className={className}
@@ -1052,6 +1055,7 @@ const DownArrowIcon = ({ className = "", color = "" }) => (
     </g>
   </svg>
 );
+
 const PriceCardTickIcons = ({ className = "", color = "" }) => (
   <svg
     className={className}
@@ -1141,6 +1145,7 @@ const ClickMoreIcon = () => (
     </g>
   </svg>
 );
+
 const LoadingIcon = () => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -1297,6 +1302,7 @@ const BiggerPlateIcon = ({ className = "" }) => (
     />
   </svg>
 );
+
 const PremiumIcon = ({ className }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
@@ -1337,6 +1343,7 @@ const GithubIcon = ({ size = 24, className = "" }) => (
     />
   </svg>
 );
+
 const SignoutIcon = () => (
   <svg
     className="fill-gray-500 group-hover:fill-gray-700 dark:group-hover:fill-gray-300"
@@ -1354,6 +1361,7 @@ const SignoutIcon = () => (
     />
   </svg>
 );
+
 const SupportIcon = () => (
   <svg
     className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
@@ -1371,6 +1379,7 @@ const SupportIcon = () => (
     />
   </svg>
 );
+
 const AccountSettingIcon = () => (
   <svg
     className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
@@ -1388,6 +1397,7 @@ const AccountSettingIcon = () => (
     />
   </svg>
 );
+
 const EditProfileIcon = () => (
   <svg
     className="fill-gray-500 group-hover:fill-gray-700 dark:fill-gray-400 dark:group-hover:fill-gray-300"
@@ -1405,6 +1415,7 @@ const EditProfileIcon = () => (
     />
   </svg>
 );
+
 const Icons = {
   TemplatesIcon,
   StickyNotesIcon,

@@ -175,4 +175,25 @@ export class StructureController {
       );
     }
   }
+
+  @Get('workspace/:workspaceId/summary')
+  async getStructureSummariesByWorkspace(
+    @Param('workspaceId') workspaceId: string,
+  ) {
+    try {
+      const summaries =
+        await this.structureService.getStructureSummariesByWorkspace(
+          workspaceId,
+        );
+      return {
+        message: 'Structure summaries retrieved successfully',
+        summaries,
+      };
+    } catch (error) {
+      throw new HttpException(
+        `Failed to retrieve structure summaries: ${error.message}`,
+        HttpStatus.NOT_FOUND,
+      );
+    }
+  }
 }

@@ -1,52 +1,52 @@
-import cogoToast from "@successtar/cogo-toast";
-import React, { useState } from "react";
-import { FaTrash, FaFileWord, FaFilePdf } from "react-icons/fa";
-import { PiFileHtmlBold } from "react-icons/pi";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { deleteStructure } from "../../redux/slices/structures";
-import DeleteModal from "./DeleteModal";
-import useFeatureFlag from "../../hooks/useFeatureFlag";
+import cogoToast from "@successtar/cogo-toast"
+import { useState } from "react"
+import { FaFilePdf, FaFileWord, FaTrash } from "react-icons/fa"
+import { PiFileHtmlBold } from "react-icons/pi"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import useFeatureFlag from "../../hooks/useFeatureFlag"
+import { deleteStructure } from "../../redux/slices/structures"
+import DeleteModal from "./DeleteModal"
 
 const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   // Feature flag checks
-  const canExportHtml = useFeatureFlag("Export to HTML/Markdown");
-  const canExportDOC = useFeatureFlag("Export to DOC/PDF");
-  const canExportPDF = useFeatureFlag("Export to DOC/PDF");
+  const canExportHtml = useFeatureFlag("Export to HTML/Markdown")
+  const canExportDOC = useFeatureFlag("Export to DOC/PDF")
+  const canExportPDF = useFeatureFlag("Export to DOC/PDF")
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action();
+      action()
     } else {
-      navigate(`?plan=upgrade-to-premium`);
+      navigate(`?plan=upgrade-to-premium`)
     }
-  };
+  }
 
-  const handleMoveToTrash = (e) => {
-    e.stopPropagation();
-    setIsDeleteModalOpen(true);
-  };
+  const handleMoveToTrash = e => {
+    e.stopPropagation()
+    setIsDeleteModalOpen(true)
+  }
 
   const handleConfirmDelete = () => {
     dispatch(deleteStructure(structureId))
       .then(() => {
-        cogoToast.success("Structure deleted successfully!");
-        setIsDeleteModalOpen(false);
-        onClose();
-        navigate("/app/dashboard");
+        cogoToast.success("Structure deleted successfully!")
+        setIsDeleteModalOpen(false)
+        onClose()
+        navigate("/app/dashboard")
       })
       .catch(() => {
-        cogoToast.error("Failed to delete the structure. Please try again.");
-      });
-  };
+        cogoToast.error("Failed to delete the structure. Please try again.")
+      })
+  }
 
   const handleCloseModal = () => {
-    setIsDeleteModalOpen(false);
-  };
+    setIsDeleteModalOpen(false)
+  }
 
   return (
     <>
@@ -58,8 +58,8 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
           onClick={() =>
             handleFeatureClick(canExportHtml, () => {
-              onOptionSelect("exportHtml");
-              onClose();
+              onOptionSelect("exportHtml")
+              onClose()
             })
           }
         >
@@ -70,15 +70,15 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
           onClick={() =>
             handleFeatureClick(canExportDOC, () => {
-              onOptionSelect("exportDoc");
-              onClose();
+              onOptionSelect("exportDoc")
+              onClose()
             })
           }
         >
           <FaFileWord /> Export as DOC
         </button>
 
-        <button
+        {/* <button
           className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
           onClick={() =>
             handleFeatureClick(canExportPDF, () => {
@@ -88,7 +88,7 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
           }
         >
           <FaFilePdf /> Export as PDF
-        </button>
+        </button> */}
 
         <hr className="border-t border-gray-200 my-2" />
 
@@ -108,7 +108,7 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         title="Structure"
       />
     </>
-  );
-};
+  )
+}
 
-export default RightClickMenu;
+export default RightClickMenu

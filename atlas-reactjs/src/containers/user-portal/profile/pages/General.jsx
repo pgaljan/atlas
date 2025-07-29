@@ -1,6 +1,6 @@
 import cogoToast from "@successtar/cogo-toast";
 import Cookies from "js-cookie";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import InputField from "../../../../components/input-field/InputField";
 import ImportModal from "../../../../components/modals/ImportModal";
@@ -8,21 +8,20 @@ import { fetchUser, updateUser } from "../../../../redux/slices/users";
 
 const General = () => {
   const dispatch = useDispatch();
+  const [loading, setLoading] = useState(false);
   const userId = Cookies.get("atlas_userId");
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [isLoading, setIsLoading] = useState(false);
-  const toggleImportModal = () => {
-    setIsImportModalOpen((prev) => !prev);
-  };
-  const handleFileSelection = (file) => {
-    cogoToast.success("Avatar uploaded successfully!");
-  };
-
   const [formData, setFormData] = useState({
     displayName: "",
     username: "",
   });
-  const [loading, setLoading] = useState(false);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const toggleImportModal = () => {
+    setIsImportModalOpen((prev) => !prev);
+  };
+
+  const handleFileSelection = () => {
+    cogoToast.success("Avatar uploaded successfully!");
+  };
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -57,6 +56,7 @@ const General = () => {
       ).unwrap();
       cogoToast.success("Changes saved successfully!");
     } catch (err) {
+      console.log(err)
       cogoToast.error("Failed to save changes.");
     } finally {
       setLoading(false);
@@ -64,7 +64,7 @@ const General = () => {
   };
 
   return (
-    <div>
+    <>
       <div className="flex gap-8">
         <div className="flex-1 space-y-6">
           <h2 className="text-lg font-bold mb-4">Personal Details</h2>
@@ -117,12 +117,11 @@ const General = () => {
         isOpen={isImportModalOpen}
         onClose={toggleImportModal}
         title={"Import Avatar"}
-        isLoading={isLoading}
         handleFileSelection={handleFileSelection}
         buttonText={"Upload"}
         format={".png, .jpeg, .jpg"}
       />
-    </div>
+    </>
   );
 };
 

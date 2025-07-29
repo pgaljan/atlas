@@ -1,6 +1,5 @@
-import React from "react";
+import { FiCode, FiCopy, FiLink2, FiZap } from "react-icons/fi";
 import APIManagementLayout from "../../../components/api-management/APIManagementLayout";
-import { FiZap, FiLink2, FiCode, FiCopy } from "react-icons/fi";
 
 const webhookPayload = {
   event: "user.created",

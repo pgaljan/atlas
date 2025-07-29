@@ -1,64 +1,148 @@
-import cogoToast from "@successtar/cogo-toast";
-import { Dropdown, Navbar } from "flowbite-react";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import Avatar from "react-avatar";
-import { FiLogOut, FiSearch } from "react-icons/fi";
-import { useDispatch } from "react-redux";
-import { useNavigate } from "react-router-dom";
-import { fetchAppSettings } from "../../redux/slices/app-settings";
-import { logoutUser } from "../../redux/slices/auth";
-import InviteModal from "../modals/InviteModal";
+import cogoToast from "@successtar/cogo-toast"
+import { Navbar } from "flowbite-react"
+import Cookies from "js-cookie"
+import debounce from "lodash.debounce"
+import { useEffect, useState } from "react"
+import { FiSearch } from "react-icons/fi"
+import { useDispatch } from "react-redux"
+import { useNavigate } from "react-router-dom"
+import { fetchAppSettings } from "../../redux/slices/app-settings"
+import { logoutUser } from "../../redux/slices/auth"
+import { getStructureSummariesByWorkspaceId } from "../../redux/slices/structures"
+import InviteModal from "../modals/InviteModal"
+import RendererModal from "../modals/RendererModal"
+import CustomAtlasMenu from "../menu/CustomAtlasMenu"
 
 const Header = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
-  const [appName, setAppName] = useState("loading ...");
-  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png")
+  const [appName, setAppName] = useState("loading ...")
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
+  const [structureSummaries, setStructureSummaries] = useState([])
+  const [searchTerm, setSearchTerm] = useState("")
+  const [filteredSummaries, setFilteredSummaries] = useState([])
+  const [rendererModalVisible, setRendererModalVisible] = useState(false)
+  const [selectedStructure, setSelectedStructure] = useState(null)
 
   const handleLogout = async () => {
     try {
-      await dispatch(logoutUser()).unwrap();
-      Cookies.remove("atlas_access_token");
-      Cookies.remove("atlas_userId");
-      Cookies.remove("atlas_username");
-      Cookies.remove("atlas_email");
-      Cookies.remove("workspaceId");
-      localStorage.clear();
-      cogoToast.success("Logged out successfully!");
-      navigate("/");
+      await dispatch(logoutUser()).unwrap()
+      Cookies.remove("atlas_access_token")
+      Cookies.remove("atlas_userId")
+      Cookies.remove("atlas_username")
+      Cookies.remove("atlas_email")
+      Cookies.remove("workspaceId")
+      localStorage.clear()
+      cogoToast.success("Logged out successfully!")
+      navigate("/")
     } catch (error) {
       cogoToast.error(
         error?.message ||
           "An unexpected error occurred during logout. Please try again."
-      );
+      )
     }
-  };
+  }
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const resultAction = await dispatch(fetchAppSettings());
+        const resultAction = await dispatch(fetchAppSettings())
         if (fetchAppSettings.fulfilled.match(resultAction)) {
-          const settings = resultAction.payload;
-          if (settings) {
-            setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
-            setAppName(settings.appName || "ATLAS");
-          }
+          const settings = resultAction.payload
+          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png")
+          setAppName(settings.appName || "ATLAS")
         }
       } catch (error) {
-        console.error("Error loading app settings");
+        cogoToast.error(
+          `Failed to load application settings: ${error?.message || error}`
+        )
       }
-    };
+    }
 
-    loadSettings();
-  }, [dispatch]);
+    loadSettings()
+  }, [dispatch])
 
+  useEffect(() => {
+    const workspaceId = Cookies.get("workspaceId")
+    if (!workspaceId) return
+
+    const fetchSummaries = async () => {
+      try {
+        const resultAction = await dispatch(
+          getStructureSummariesByWorkspaceId(workspaceId)
+        )
+
+        if (getStructureSummariesByWorkspaceId.fulfilled.match(resultAction)) {
+          const summaries = resultAction.payload.summaries
+          setStructureSummaries(summaries)
+        } else {
+          cogoToast.error("Failed to fetch structure summaries.")
+        }
+      } catch (error) {
+        cogoToast.error(
+          `Error fetching structure summaries: ${error.message || error}`
+        )
+      }
+    }
+
+    fetchSummaries()
+  }, [dispatch])
+
+  const handleSearchInput = e => {
+    const term = e.target.value
+    setSearchTerm(term)
+
+    if (term.trim() === "") {
+      setFilteredSummaries([])
+    } else {
+      const matches = structureSummaries.filter(structure =>
+        structure.name.toLowerCase().includes(term.toLowerCase())
+      )
+      setFilteredSummaries(matches)
+    }
+  }
+
+  const handleSearchKeyDown = e => {
+    if (e.key === "Enter" && filteredSummaries.length > 0) {
+      const selected = filteredSummaries[0]
+      navigate(`/structures/${selected.id}`)
+      setSearchTerm("")
+      setFilteredSummaries([])
+    }
+  }
+
+  useEffect(() => {
+    const debouncedSearch = debounce(() => {
+      const term = searchTerm.trim().toLowerCase()
+
+      if (term === "") {
+        setFilteredSummaries([])
+      } else {
+        const matches = structureSummaries
+          .map(structure => {
+            const nameMatch = structure.name.toLowerCase().includes(term)
+            const typeMatch = structure.type?.toLowerCase().includes(term)
+            const startsWith = structure.name.toLowerCase().startsWith(term)
+
+            return {
+              ...structure,
+              score: startsWith ? 2 : nameMatch || typeMatch ? 1 : 0,
+            }
+          })
+          .filter(s => s.score > 0)
+          .sort((a, b) => b.score - a.score)
+
+        setFilteredSummaries(matches)
+      }
+    }, 200)
+
+    debouncedSearch()
+    return () => debouncedSearch.cancel()
+  }, [searchTerm, structureSummaries])
   return (
     <header className="bg-gray-100 flex justify-between items-center">
       <Navbar fluid rounded className="w-full p-4">
-        {/* Logo */}
         <Navbar.Brand href="#" className="flex items-center gap-2">
           <img src={logoUrl} className="h-8 w-8" alt={appName} />
           <span className="text-2xl font-bold text-custom-main uppercase">
@@ -66,77 +150,68 @@ const Header = () => {
           </span>
         </Navbar.Brand>
 
-        {/* Search */}
-        <div className="flex items-center justify-center flex-grow">
-          <div className="relative flex items-center w-full max-w-xl mx-auto">
-            <FiSearch className="absolute left-4 text-gray-500" size={20} />
-            <input
-              type="text"
-              placeholder="Search for structure..."
-              className="border-2 border-gray-300 rounded-md px-4 py-2 w-full focus:border-custom-main focus:outline-none pl-10"
-            />
-          </div>
+        <div className="relative w-full max-w-md mx-auto hidden md:block">
+          <FiSearch className="absolute left-3 text-2xl top-2.5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Search for structure..."
+            className="pl-10 pr-3 py-2 w-full min-w-[40vw] border border-gray-300 rounded-md focus:outline-none focus:border-custom-main"
+            value={searchTerm}
+            onChange={handleSearchInput}
+            onKeyDown={handleSearchKeyDown}
+          />
+
+          {searchTerm.trim() !== "" && (
+            <div className="absolute left-0 right-0 z-10 mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 min-w-[40vw] w-full overflow-auto">
+              {filteredSummaries.length > 0 ? (
+                filteredSummaries.map(item => (
+                  <div
+                    key={item.id}
+                    onClick={() => {
+                      setSelectedStructure(item)
+                      setRendererModalVisible(true)
+                    }}
+                    className="px-4 py-2 text-sm capitalize text-gray-700 cursor-pointer hover:bg-gray-100"
+                  >
+                    {item.name}
+                    <span className="ml-1 text-gray-400 text-xs">
+                      ({item.type})
+                    </span>
+                  </div>
+                ))
+              ) : (
+                <div className="px-4 py-2 text-sm text-gray-500">
+                  No matching structures found.
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* User Menu */}
-        <div className="flex items-center ml-4 space-x-6">
-          <Dropdown
-            arrowIcon={false}
-            inline
-            label={
-              <Avatar
-                name={Cookies.get("atlas_username") || "User"}
-                size="36"
-                round={true}
-                className="text-lg"
-              />
-            }
-          >
-            <Dropdown.Header>
-              <span className="block text-sm font-semibold text-gray-900 truncate">
-                {Cookies.get("atlas_username")}
-              </span>
-              <span className="block text-xs text-gray-500 truncate">
-                {Cookies.get("atlas_email")}
-              </span>
-            </Dropdown.Header>
-
-            <Dropdown.Item
-              onClick={() => navigate("/app/user-settings")}
-              className="hover:bg-gray-100 transition-colors"
-            >
-              Account Settings
-            </Dropdown.Item>
-
-            <Dropdown.Item
-              onClick={() => navigate("/api-management/overview")}
-              className="hover:bg-gray-100 transition-colors"
-            >
-              API Access
-            </Dropdown.Item>
-
-            <Dropdown.Divider />
-
-            <Dropdown.Item
-              icon={FiLogOut}
-              onClick={handleLogout}
-              className="!text-red-600 hover:!bg-red-100 font-semibold transition-all"
-            >
-              Sign Out
-            </Dropdown.Item>
-          </Dropdown>
-        </div>
+        <CustomAtlasMenu handleLogout={handleLogout} />
       </Navbar>
 
-      {/* Invite Modal */}
       {isInviteModalOpen && (
         <InviteModal
           isOpen={isInviteModalOpen}
           onClose={() => setIsInviteModalOpen(false)}
         />
       )}
+      {rendererModalVisible && selectedStructure && (
+        <RendererModal
+          isOpen={rendererModalVisible}
+          onClose={() => setRendererModalVisible(false)}
+          onSelect={renderer => {
+            setRendererModalVisible(false)
+            setSearchTerm("")
+            setFilteredSummaries([])
+            window.location.href = `/app/s/${selectedStructure.username}/${selectedStructure.id}?renderer=${renderer}`
+          }}
+          structureType={selectedStructure.type || "default"}
+        />
+      )}
     </header>
-  );
-};
+  )
+}
 
-export default Header;
+export default Header
