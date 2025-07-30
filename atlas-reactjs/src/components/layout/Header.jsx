@@ -77,12 +77,12 @@ const Header = () => {
           const summaries = resultAction.payload.summaries
           setStructureSummaries(summaries)
         } else {
-          cogoToast.error("Failed to fetch structure summaries.")
+          // cogoToast.error("Failed to fetch structure summaries.")
         }
       } catch (error) {
-        cogoToast.error(
-          `Error fetching structure summaries: ${error.message || error}`
-        )
+        // cogoToast.error(
+        //   `Error fetching structure summaries: ${error.message || error}`
+        // )
       }
     }
 
