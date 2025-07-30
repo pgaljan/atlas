@@ -1,35 +1,36 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { BiSearch, BiUser } from "react-icons/bi";
-import { PiShareNetworkBold } from "react-icons/pi";
-import { RiDownloadCloud2Line } from "react-icons/ri";
+import cogoToast from "@successtar/cogo-toast"
+import Cookies from "js-cookie"
+import { useCallback, useEffect, useRef, useState } from "react"
+import { BiSearch, BiUser } from "react-icons/bi"
+import { PiShareNetworkBold } from "react-icons/pi"
+import { RiDownloadCloud2Line } from "react-icons/ri"
 import {
   TbFileTypeZip,
   TbLayoutSidebarLeftCollapse,
   TbLayoutSidebarLeftExpand,
   TbTemplate,
   TbWorldUpload,
-} from "react-icons/tb";
-import { VscGitPullRequestCreate } from "react-icons/vsc";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import Icons from "../../../constants/icons";
-import useFeatureFlag from "../../../hooks/useFeatureFlag";
-import { fetchAppSettings } from "../../../redux/slices/app-settings";
-import { createBackup } from "../../../redux/slices/backups";
+} from "react-icons/tb"
+import { VscGitPullRequestCreate } from "react-icons/vsc"
+import { useDispatch } from "react-redux"
+import { Link, useNavigate } from "react-router-dom"
+import Icons from "../../../constants/icons"
+import useFeatureFlag from "../../../hooks/useFeatureFlag"
+import { fetchAppSettings } from "../../../redux/slices/app-settings"
+import { createBackup } from "../../../redux/slices/backups"
 import {
   getStructure,
   updateStructure,
   updateWbsStart,
-} from "../../../redux/slices/structures";
-import { assignWbsNumbers } from "../../../utils/markmapHelpers";
-import ExportModalStructure from "../../modals/ExportModalStructure";
-import ImportModal from "../../modals/ImportModal";
-import ShareModal from "../../modals/ShareModal";
-import WbsModeModal from "../../modals/WbsModeModal";
-import Tooltip from "../../tooltip/Tooltip";
-import { createStructureTemplate } from "../../../redux/slices/structure-templates";
+} from "../../../redux/slices/structures"
+import { assignWbsNumbers } from "../../../utils/markmapHelpers"
+import ExportModalStructure from "../../modals/ExportModalStructure"
+import ImportModal from "../../modals/ImportModal"
+import ShareModal from "../../modals/ShareModal"
+import WbsModeModal from "../../modals/WbsModeModal"
+import Tooltip from "../../tooltip/Tooltip"
+import { createStructureTemplate } from "../../../redux/slices/structure-templates"
+import { restoreBackup } from "../../../redux/slices/restore-backups"
 
 const MarkmapHeader = ({
   showWbs,
@@ -43,235 +44,234 @@ const MarkmapHeader = ({
   setWbsStart,
   renderType,
 }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const wbsStartDebounceTimer = useRef(null);
-  const [title, setTitle] = useState("");
-  const [isWbsModalOpen, setIsWbsModalOpen] = useState(false);
-  const [wbsMode, setWbsMode] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
-  const [isSaveDisabled, setIsSaveDisabled] = useState(true);
-  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
-  const [isExportModal, setIsExportModal] = useState(false);
-  const [isHeaderVisible, setIsHeaderVisible] = useState(false);
-  const [appName, setAppName] = useState("ATLAS");
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const wbsStartDebounceTimer = useRef(null)
+  const [title, setTitle] = useState("")
+  const [isWbsModalOpen, setIsWbsModalOpen] = useState(false)
+  const [wbsMode, setWbsMode] = useState(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isSaveDisabled, setIsSaveDisabled] = useState(true)
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false)
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
+  const [searchValue, setSearchValue] = useState("")
+  const [isExportModal, setIsExportModal] = useState(false)
+  const [isHeaderVisible, setIsHeaderVisible] = useState(false)
+  const [appName, setAppName] = useState("ATLAS")
 
-  // Feature flags
-  const canRestoreBackup = useFeatureFlag("Structure Backup/Restore");
-  const canDynamicWbs = useFeatureFlag("Dynamic WBS");
+  const canRestoreBackup = useFeatureFlag("Structure Backup/Restore")
+  const canDynamicWbs = useFeatureFlag("Dynamic WBS")
 
-  const treeDataWithWbs = assignWbsNumbers(treeData, null, null, 1);
+  const treeDataWithWbs = assignWbsNumbers(treeData, null, null, 1)
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action();
+      action()
     } else {
-      navigate(`?plan=upgrade-to-premium`);
+      navigate(`?plan=upgrade-to-premium`)
     }
-  };
+  }
 
   useEffect(() => {
     if (structureId) {
       dispatch(getStructure(structureId))
         .unwrap()
-        .then((data) => {
-          setTitle(data?.title || "");
+        .then(data => {
+          setTitle(data?.title || "")
         })
-        .catch((error) => {
-          cogoToast.error(`Failed to load structure: ${error}`);
-        });
+        .catch(error => {
+          cogoToast.error(`Failed to load structure: ${error}`)
+        })
     }
-  }, [dispatch, structureId]);
+  }, [dispatch, structureId])
 
   const debounceUpdateTitle = useCallback(
     (() => {
-      let timer;
-      return (newTitle) => {
-        clearTimeout(timer);
+      let timer
+      return newTitle => {
+        clearTimeout(timer)
         timer = setTimeout(() => {
           dispatch(
             updateStructure({
               id: structureId,
               updateData: { title: newTitle },
             })
-          ).unwrap();
-        }, 1000);
-      };
+          ).unwrap()
+        }, 1000)
+      }
     })(),
     [dispatch, structureId]
-  );
+  )
 
-  const handleTitleChange = (e) => {
-    const newTitle = e.target.value;
-    setTitle(newTitle);
-    debounceUpdateTitle(newTitle);
-  };
+  const handleTitleChange = e => {
+    const newTitle = e.target.value
+    setTitle(newTitle)
+    debounceUpdateTitle(newTitle)
+  }
 
-  const saveTitle = async (newTitle) => {
+  const saveTitle = async newTitle => {
     try {
       await dispatch(
         updateStructure({
           id: structureId,
           updateData: { title: newTitle },
         })
-      ).unwrap();
-      cogoToast.success("Structure title updated successfully!");
-      setIsSaveDisabled(true);
+      ).unwrap()
+      cogoToast.success("Structure title updated successfully!")
+      setIsSaveDisabled(true)
     } catch (error) {
-      cogoToast.error(`Failed to update structure title: ${error}`);
+      cogoToast.error(`Failed to update structure title: ${error}`)
     }
-  };
+  }
 
-  const handleTitleKeyDown = (e) => {
+  const handleTitleKeyDown = e => {
     if (e.key === "Enter") {
-      e.preventDefault();
-      saveTitle(title);
+      e.preventDefault()
+      saveTitle(title)
     }
-  };
+  }
 
   useEffect(() => {
-    const handleBeforeUnload = (e) => {
+    const handleBeforeUnload = e => {
       if (!isSaveDisabled) {
-        e.preventDefault();
+        e.preventDefault()
         e.returnValue =
-          "You have unsaved changes. Are you sure you want to leave?";
+          "You have unsaved changes. Are you sure you want to leave?"
       }
-    };
+    }
 
-    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("beforeunload", handleBeforeUnload)
     return () => {
-      window.removeEventListener("beforeunload", handleBeforeUnload);
-    };
-  }, [isSaveDisabled]);
+      window.removeEventListener("beforeunload", handleBeforeUnload)
+    }
+  }, [isSaveDisabled])
 
-  const handleSearchChange = (e) => {
+  const handleSearchChange = e => {
     let value = e?.target?.value
       ?.replace(/^[\s]+/, "")
-      ?.replace(/[^a-zA-Z0-9 ]/g, "");
+      ?.replace(/[^a-zA-Z0-9 ]/g, "")
     if (value === "0") {
-      cogoToast?.error("Level 0 is not searchable.");
-      return;
+      cogoToast?.error("Level 0 is not searchable.")
+      return
     }
-    setSearchValue(value);
+    setSearchValue(value)
     if (!value) {
-      onSearch(null, "");
+      onSearch(null, "")
     }
-  };
+  }
 
-  const handleKeyPress = (e) => {
+  const handleKeyPress = e => {
     if (e?.key === "Enter") {
       const level = /^\d+$/.test(searchValue?.trim())
         ? +searchValue?.trim()
-        : null;
-      onSearch(level, level !== null ? "" : searchValue);
+        : null
+      onSearch(level, level !== null ? "" : searchValue)
     }
-  };
+  }
 
   const handleCreateBackup = async () => {
-    setIsLoading(true);
-    const userId = Cookies.get("atlas_userId");
+    setIsLoading(true)
+    const userId = Cookies.get("atlas_userId")
 
     if (!userId) {
-      cogoToast.error("User ID not found in cookies.");
-      setIsLoading(false);
-      return;
+      cogoToast.error("User ID not found in cookies.")
+      setIsLoading(false)
+      return
     }
 
     try {
       // Create the backup
       const response = await dispatch(
         createBackup({ userId, structureId })
-      ).unwrap();
+      ).unwrap()
 
-      setIsLoading(false);
-      cogoToast.success("Backup created successfully!");
+      setIsLoading(false)
+      cogoToast.success("Backup created successfully!")
 
-      const fileUrl = response?.fileUrl;
+      const fileUrl = response?.fileUrl
       if (fileUrl) {
-        window.open(fileUrl, "_blank");
+        window.open(fileUrl, "_blank")
       }
     } catch (error) {
-      setIsLoading(false);
+      setIsLoading(false)
 
       if (error?.statusCode === 401) {
-        navigate("?plan=upgrade-to-premium");
+        navigate("?plan=upgrade-to-premium")
       } else {
-        cogoToast.error(`Failed to create backup: ${error}`);
+        cogoToast.error(`Failed to create backup: ${error}`)
       }
     }
-  };
+  }
 
-  const handleFileSelection = (file) => {
+  const handleFileSelection = file => {
     if (!file) {
-      cogoToast.error("Please select a valid structure!");
-      return;
+      cogoToast.error("Please select a valid structure!")
+      return
     }
 
-    setIsImportModalOpen(false);
-    handleFileUpload(file);
-  };
+    setIsImportModalOpen(false)
+    handleFileUpload(file)
+  }
 
-  const handleFileUpload = async () => {
+  const handleFileUpload = async file => {
     try {
-      setIsLoading(true);
-      cogoToast.success("Backup restored successfully!");
-      onSuccess();
+      setIsLoading(true)
+      const response = await dispatch(
+        restoreBackup({ fileData: file, structureId })
+      ).unwrap()
+      cogoToast.success("Backup restored successfully!")
+      onSuccess()
     } catch (err) {
-      cogoToast.error("Failed to restore backups.");
+      cogoToast.error("Failed to restore backups.")
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   useEffect(() => {
     const loadSettings = async () => {
       try {
-        const resultAction = await dispatch(fetchAppSettings());
+        const resultAction = await dispatch(fetchAppSettings())
         if (fetchAppSettings.fulfilled.match(resultAction)) {
-          const settings = resultAction.payload;
+          const settings = resultAction.payload
           if (settings) {
-            setAppName(settings.appName || "ATLAS");
+            setAppName(settings.appName || "ATLAS")
           }
         }
       } catch (error) {
-        console.error("Error loading app settings");
+        console.error("Error loading app settings")
       }
-    };
+    }
 
-    loadSettings();
-  }, [dispatch]);
+    loadSettings()
+  }, [dispatch])
 
   useEffect(() => {
     if (structureId) {
-      const savedState = localStorage.getItem(`markMap_header_${structureId}`);
-      setIsHeaderVisible(savedState === "true");
+      const savedState = localStorage.getItem(`markMap_header_${structureId}`)
+      setIsHeaderVisible(savedState === "true")
     }
-  }, [structureId]);
+  }, [structureId])
 
   const toggleSidebar = () => {
-    const newState = !isHeaderVisible;
-    setIsHeaderVisible(newState);
+    const newState = !isHeaderVisible
+    setIsHeaderVisible(newState)
     if (structureId) {
-      localStorage.setItem(
-        `markMap_header_${structureId}`,
-        newState.toString()
-      );
+      localStorage.setItem(`markMap_header_${structureId}`, newState.toString())
     }
-  };
+  }
 
-  const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen);
-  const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen);
+  const toggleShareModal = () => setIsShareModalOpen(!isShareModalOpen)
+  const toggleImportModal = () => setIsImportModalOpen(!isImportModalOpen)
 
   useEffect(() => {
-    const mode = localStorage.getItem(`wbs_mode_${structureId}`);
-    if (mode) setWbsMode(mode);
-  }, [structureId]);
+    const mode = localStorage.getItem(`wbs_mode_${structureId}`)
+    if (mode) setWbsMode(mode)
+  }, [structureId])
 
-  const handleWbsToggle = async (checked) => {
+  const handleWbsToggle = async checked => {
     if (checked) {
-      handleWbsModeSelect("manual");
+      handleWbsModeSelect("manual")
     } else {
       try {
         await dispatch(
@@ -279,17 +279,17 @@ const MarkmapHeader = ({
             id: structureId,
             updateData: { showWbs: false },
           })
-        );
-        setShowWbs(false);
+        )
+        setShowWbs(false)
       } catch (err) {
-        cogoToast.error("Failed to disable WBS view.");
+        cogoToast.error("Failed to disable WBS view.")
       }
     }
-  };
+  }
 
-  const handleWbsModeSelect = async (mode) => {
-    setWbsMode(mode);
-    localStorage.setItem(`wbs_mode_${structureId}`, mode);
+  const handleWbsModeSelect = async mode => {
+    setWbsMode(mode)
+    localStorage.setItem(`wbs_mode_${structureId}`, mode)
 
     try {
       await dispatch(
@@ -297,66 +297,66 @@ const MarkmapHeader = ({
           id: structureId,
           updateData: { showWbs: true },
         })
-      );
-      setShowWbs(true);
+      )
+      setShowWbs(true)
 
       if (mode === "manual") {
-        const data = await dispatch(getStructure(structureId)).unwrap();
-        const currentWbsStart = data?.wbsStart;
+        const data = await dispatch(getStructure(structureId)).unwrap()
+        const currentWbsStart = data?.wbsStart
 
         const startValue =
-          typeof currentWbsStart === "number" ? currentWbsStart : 1;
-        setWbsStart(startValue);
+          typeof currentWbsStart === "number" ? currentWbsStart : 1
+        setWbsStart(startValue)
 
         if (currentWbsStart === null || currentWbsStart === undefined) {
-          await dispatch(updateWbsStart({ id: structureId, wbsStart: 1 }));
+          await dispatch(updateWbsStart({ id: structureId, wbsStart: 1 }))
         }
 
-        onSuccess?.();
+        onSuccess?.()
         cogoToast.success(
           `Manual WBS mode enabled (starting at ${startValue}).`
-        );
+        )
       }
     } catch (err) {
-      cogoToast.error("Failed to enable WBS.");
+      cogoToast.error("Failed to enable WBS.")
     }
-  };
+  }
 
-  const handleWbsStartChange = (e) => {
-    const newValue = parseInt(e.target.value || "1", 10);
-    setWbsStart(newValue);
+  const handleWbsStartChange = e => {
+    const newValue = parseInt(e.target.value || "1", 10)
+    setWbsStart(newValue)
 
     // Clear the existing timeout
     if (wbsStartDebounceTimer.current) {
-      clearTimeout(wbsStartDebounceTimer.current);
+      clearTimeout(wbsStartDebounceTimer.current)
     }
 
     // Debounce the dispatch
     wbsStartDebounceTimer.current = setTimeout(async () => {
       try {
-        await dispatch(updateWbsStart({ id: structureId, wbsStart: newValue }));
-        onSuccess();
-        cogoToast.success("WBS Start value updated!");
+        await dispatch(updateWbsStart({ id: structureId, wbsStart: newValue }))
+        onSuccess()
+        cogoToast.success("WBS Start value updated!")
       } catch (error) {
-        cogoToast.error("Failed to update WBS Start.");
+        cogoToast.error("Failed to update WBS Start.")
       }
-    }, 800);
-  };
+    }, 800)
+  }
 
   useEffect(() => {
     return () => {
       if (wbsStartDebounceTimer.current) {
-        clearTimeout(wbsStartDebounceTimer.current);
+        clearTimeout(wbsStartDebounceTimer.current)
       }
-    };
-  }, []);
+    }
+  }, [])
 
   const handleSaveAsTemplate = async () => {
-    const userId = Cookies.get("atlas_userId");
-    const workspaceId = Cookies.get("workspaceId");
+    const userId = Cookies.get("atlas_userId")
+    const workspaceId = Cookies.get("workspaceId")
 
     if (!structureId || !treeData || !workspaceId) {
-      return cogoToast.error("Missing structure or workspace information.");
+      return cogoToast.error("Missing structure or workspace information.")
     }
 
     try {
@@ -366,14 +366,14 @@ const MarkmapHeader = ({
         ownerId: userId,
         workspaceId,
         name: title,
-      };
+      }
 
-      await dispatch(createStructureTemplate(payload)).unwrap();
-      cogoToast.success("Structure saved as a template!");
+      await dispatch(createStructureTemplate(payload)).unwrap()
+      cogoToast.success("Structure saved as a template!")
     } catch (err) {
-      cogoToast.error(`Failed to save template: ${err?.message || err}`);
+      cogoToast.error(`Failed to save template: ${err?.message || err}`)
     }
-  };
+  }
 
   return (
     <>
@@ -537,7 +537,7 @@ const MarkmapHeader = ({
                     id="show-wbs-toggle"
                     type="checkbox"
                     checked={showWbs}
-                    onChange={(e) =>
+                    onChange={e =>
                       handleFeatureClick(canDynamicWbs, () =>
                         handleWbsToggle(e.target.checked)
                       )
@@ -641,9 +641,9 @@ const MarkmapHeader = ({
           showWbs={showWbs}
           treeDataWithWbs={treeDataWithWbs}
           onClose={() => setIsExportModal(false)}
-          onExport={(opts) => {
-            setIsExportModal(false);
-            onExportModal(opts);
+          onExport={opts => {
+            setIsExportModal(false)
+            onExportModal(opts)
           }}
         />
       )}
@@ -655,7 +655,7 @@ const MarkmapHeader = ({
         />
       )}
     </>
-  );
-};
+  )
+}
 
-export default MarkmapHeader;
+export default MarkmapHeader
