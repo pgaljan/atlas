@@ -88,7 +88,7 @@ export const exportAsDoc = (
                 pixelRatio: 5,
                 cacheBust: true,
               });
-              svgContent = `<img src="${imageDataURL}"  />`;
+               svgContent = `<img src="${imageDataURL}" style="max-width:100%; height:auto" />`;
             } catch (err) {
               console.error("Error converting SVG with html-to-image:", err);
             }
@@ -631,7 +631,7 @@ export const exportAllAsSingleDoc = async (treeData, includeWbs = false, include
                 pixelRatio: 5,
                 cacheBust: true,
               });
-              svgContent = `<img src="${imageDataURL}" />`;
+              svgContent = `<img src="${imageDataURL}" style="max-width:100%; height:auto" />`;
             } catch (err) {
               console.error("Error converting SVG with html-to-image:", err);
             }

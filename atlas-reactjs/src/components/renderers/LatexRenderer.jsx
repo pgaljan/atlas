@@ -1,48 +1,70 @@
-import { useState, useEffect } from "react";
-import { CustomLoader } from "../custom-loader";
-import VsCodeEditor from "../editors/vscode-editor";
-import katex from "katex";
-import "katex/dist/katex.min.css";
+import { useState, useEffect, useRef } from "react"
+import { CustomLoader } from "../custom-loader"
+import VsCodeEditor from "../editors/vscode-editor"
+import katex from "katex"
+import "katex/dist/katex.min.css"
+import { toPng } from "html-to-image"
 
 const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
-  const [latexCode, setLatexCode] = useState(content || "");
-  const [isEditorLoading, setIsEditorLoading] = useState(true);
-  const [renderedLatex, setRenderedLatex] = useState("");
+  const [latexCode, setLatexCode] = useState(content || "")
+  const [isEditorLoading, setIsEditorLoading] = useState(true)
+  const [renderedLatex, setRenderedLatex] = useState("")
 
-  const handleCodeChange = (value) => {
-    const val = value || "";
-    setLatexCode(val);
-    onEditorChange?.(val);
-  };
+  const previewRef = useRef(null)
+
+  const handleCodeChange = value => {
+    const val = value || ""
+    setLatexCode(val)
+    onEditorChange?.(val)
+  }
 
   useEffect(() => {
-    setLatexCode(content || "");
-  }, [content]);
+    setLatexCode(content || "")
+  }, [content])
 
+  // ✅ Renders LaTeX to HTML (preview only)
   useEffect(() => {
     try {
       const html = katex.renderToString(latexCode, {
         displayMode: true,
         throwOnError: false,
         output: "html",
-      });
-
-      setRenderedLatex(html);
-
-      // Convert HTML to SVG
-      const svgData = `<svg xmlns="http://www.w3.org/2000/svg">
-        <foreignObject width="100%" height="100%">
-          <div xmlns="http://www.w3.org/1999/xhtml">${html}</div>
-        </foreignObject>
-      </svg>`;
-      onSvgChange?.(svgData);
+      })
+      setRenderedLatex(html)
     } catch (error) {
       setRenderedLatex(
         `<pre style="color: red;">Error rendering LaTeX: ${error?.message}</pre>`
-      );
-      onSvgChange?.(null);
+      )
+      onSvgChange?.(null)
     }
-  }, [latexCode]);
+  }, [latexCode])
+
+  // ✅ Converts updated preview to image AFTER DOM updates
+  useEffect(() => {
+    if (!renderedLatex || !previewRef.current) return
+
+    const convertToImage = async () => {
+      await new Promise(r => requestAnimationFrame(r))
+
+      try {
+        const dataUrl = await toPng(previewRef.current, {
+          pixelRatio: 3,
+          cacheBust: true,
+        })
+
+        const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
+          <image href="${dataUrl}" x="0" y="0" height="100%" width="100%" />
+        </svg>`
+
+        onSvgChange?.(svgData)
+      } catch (error) {
+        console.error("Error converting preview to PNG:", error)
+        onSvgChange?.(null)
+      }
+    }
+
+    convertToImage()
+  }, [renderedLatex])
 
   return (
     <div className="relative flex flex-row h-[480px]">
@@ -73,13 +95,29 @@ const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
         }`}
       >
         <h2 className="mb-2 text-gray-600 font-semibold">LaTeX Preview</h2>
-        <div
-          className="flex-1 overflow-auto p-4 box-border"
-          dangerouslySetInnerHTML={{ __html: renderedLatex }}
-        />
+        <div className="flex justify-center items-start">
+          <div
+            ref={previewRef}
+            style={{
+              display: "inline-block",
+              padding: "8px",
+              backgroundColor: "white",
+              fontSize: "1.2rem",
+              fontFamily: "KaTeX_Main, serif",
+              WebkitFontSmoothing: "antialiased",
+              MozOsxFontSmoothing: "grayscale",
+              width: "fit-content",
+              height: "fit-content",
+              maxWidth: "none",
+              overflow: "visible",
+              whiteSpace: "nowrap",
+            }}
+            dangerouslySetInnerHTML={{ __html: renderedLatex }}
+          />
+        </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default LatexRenderer;
+export default LatexRenderer
