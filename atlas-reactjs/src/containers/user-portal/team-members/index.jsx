@@ -20,7 +20,9 @@ const TeamMembersPage = ({ onSubmit }) => {
   const [formData, setFormData] = useState({ name: "", email: "" });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
+   const [deleting, setDeleting] = useState(false);
 
+  
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -83,14 +85,32 @@ const TeamMembersPage = ({ onSubmit }) => {
     setIsDeleteModalOpen(true);
   };
 
-  const confirmDelete = () => {
-    if (!selectedMember) return;
+  const confirmDelete = async () => {
+  if (!selectedMember) return;
+
+  setDeleting(true);
+
+  try {
+    await dispatch(
+      deleteInvitation({
+        invitationId: selectedMember.id,
+        workspaceId,
+      })
+    ).unwrap();
+
+    cogoToast.success("Invitation deleted successfully!");
 
     setTeamMembers((prevMembers) =>
       prevMembers.filter((member) => member.id !== selectedMember.id)
     );
+  } catch (err) {
+    cogoToast.error(err?.message || "Failed to delete invitation.");
+  } finally {
+    setDeleting(false);
     setIsDeleteModalOpen(false);
-  };
+  }
+};
+
 
   // Attach Handlers to Actions
   const updatedTeamMembersConfig = {
@@ -153,6 +173,7 @@ const TeamMembersPage = ({ onSubmit }) => {
         title={selectedMember?.name || "this member"}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
+        loading={deleting}
       />
     </Layout>
   );

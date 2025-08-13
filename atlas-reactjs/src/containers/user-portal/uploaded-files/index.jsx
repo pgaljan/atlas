@@ -14,6 +14,7 @@ const UploadedFiles = ({ onSubmit }) => {
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const userId = Cookies.get("atlas_userId");
+    const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -46,17 +47,27 @@ const UploadedFiles = ({ onSubmit }) => {
   };
 
   // Confirm Delete
-  const confirmDelete = () => {
-    if (!selectedFile) return;
+  const confirmDelete = async () => {
+  if (!selectedFile) return;
 
-    // Remove the file from state
+  setDeleting(true); // Start loading
+
+  try {
+    // Simulate API delay or real delete logic here
+    // e.g. await dispatch(deleteFile(selectedFile.id)).unwrap();
+
+    // Remove from UI
     setFiles((prevFiles) =>
       prevFiles.filter((file) => file.id !== selectedFile.id)
     );
 
-    // Close modal
-    setIsDeleteModalOpen(false);
-  };
+    setIsDeleteModalOpen(false); // Close modal
+  } catch (err) {
+    console.error("Delete failed:", err);
+  } finally {
+    setDeleting(false); // Stop loading
+  }
+};
 
   // Transform files data for GenericTable
   const tableData = files.map((file) => ({
@@ -101,6 +112,7 @@ const UploadedFiles = ({ onSubmit }) => {
         title={"this file"}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
+        loading={deleting}
       />
     </Layout>
   );

@@ -4,6 +4,7 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { Structure } from '@prisma/client';
+import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStructureTemplateDto } from './dto/create-structure-template.dto';
 
@@ -63,7 +64,6 @@ export class StructureTemplateService {
 
       return template;
     } catch (error) {
-      console.log(error);
       throw new InternalServerErrorException(
         `Failed to create structure template: ${error.message}`,
       );
@@ -169,6 +169,7 @@ export class StructureTemplateService {
       maps?: any[];
     };
 
+    // Create new structure without elements first
     const newStructure = await this.prisma.structure.create({
       data: {
         title: overrides.name || `${template.name} (From Template)`,
@@ -183,32 +184,6 @@ export class StructureTemplateService {
         imageUrl: overrides.imageUrl || null,
         markmapShowWbs: false,
         isExpanded: true,
-
-        elements: {
-          create:
-            parsed.elements?.map((el) => {
-              const {
-                id,
-                createdAt,
-                updatedAt,
-                deletedAt,
-                structureId,
-                parentId,
-                recordId,
-                elementLinkId,
-                ...rest
-              } = el;
-
-              return {
-                ...rest,
-                parent: parentId ? { connect: { id: parentId } } : undefined,
-                Record: recordId ? { connect: { id: recordId } } : undefined,
-                ElementLink: elementLinkId
-                  ? { connect: { id: elementLinkId } }
-                  : undefined,
-              };
-            }) || [],
-        },
 
         renderers: {
           create:
@@ -234,6 +209,16 @@ export class StructureTemplateService {
             }) || [],
         },
       },
+    });
+
+    // Now handle elements with proper ID remapping
+    if (parsed.elements && parsed.elements.length > 0) {
+      await this.createElementsWithRemapping(parsed.elements, newStructure.id);
+    }
+
+    // Return the complete structure with all elements
+    return await this.prisma.structure.findUnique({
+      where: { id: newStructure.id },
       include: {
         elements: true,
         renderers: true,
@@ -241,7 +226,126 @@ export class StructureTemplateService {
         StructureMap: true,
       },
     });
+  }
 
-    return newStructure;
+  private async createElementsWithRemapping(
+    templateElements: any[],
+    newStructureId: string,
+  ) {
+    const elementIdMapping = new Map<string, string>();
+    const recordIdMapping = new Map<string, string>();
+
+    // Phase 1: Generate new IDs and create mapping
+    for (const templateElement of templateElements) {
+      const originalId = templateElement.id;
+      const newId = crypto.randomUUID
+        ? crypto.randomUUID()
+        : crypto.randomBytes(16).toString('hex');
+
+      elementIdMapping.set(originalId, newId);
+
+      // Store original relationships for later phases
+      templateElement._originalId = originalId;
+      templateElement._originalParentId = templateElement.parentId || null;
+      templateElement._originalElementLinkId =
+        templateElement.elementLinkId || null;
+      templateElement._originalRecordId = templateElement.recordId || null;
+    }
+
+    // Phase 2: Handle records
+    for (const templateElement of templateElements) {
+      if (templateElement._originalRecordId) {
+        const recordExists = await this.prisma.record.findUnique({
+          where: { id: templateElement._originalRecordId },
+        });
+
+        if (recordExists) {
+          recordIdMapping.set(
+            templateElement._originalRecordId,
+            recordExists.id,
+          );
+        } else {
+          // Create a new record with new ID
+          const newRecordId = crypto.randomUUID
+            ? crypto.randomUUID()
+            : crypto.randomBytes(16).toString('hex');
+
+          const newRecord = await this.prisma.record.create({
+            data: {
+              id: newRecordId,
+              metadata: {},
+              tags: [],
+              editorType: 'vscode',
+              recordSvg: {},
+            },
+          });
+          recordIdMapping.set(templateElement._originalRecordId, newRecord.id);
+        }
+      }
+    }
+
+    // Phase 3: Create elements with new IDs
+    for (const templateElement of templateElements) {
+      const originalId = templateElement._originalId;
+      const newId = elementIdMapping.get(originalId);
+      const mappedRecordId = templateElement._originalRecordId
+        ? recordIdMapping.get(templateElement._originalRecordId) || null
+        : null;
+
+      const {
+        id,
+        createdAt,
+        updatedAt,
+        deletedAt,
+        structureId,
+        parentId,
+        recordId,
+        elementLinkId,
+        _originalId,
+        _originalParentId,
+        _originalElementLinkId,
+        _originalRecordId,
+        ...rest
+      } = templateElement;
+
+      await this.prisma.element.create({
+        data: {
+          id: newId,
+          ...rest,
+          structureId: newStructureId,
+          recordId: mappedRecordId,
+          parentId: null, // Will be set in Phase 4
+          elementLinkId: null, // Will be set in Phase 5
+        },
+      });
+    }
+
+    // Phase 4: Update parentId with mapped IDs
+    for (const templateElement of templateElements) {
+      const newId = elementIdMapping.get(templateElement._originalId);
+      const originalParentId = templateElement._originalParentId;
+
+      if (originalParentId && elementIdMapping.has(originalParentId)) {
+        const newParentId = elementIdMapping.get(originalParentId);
+        await this.prisma.element.update({
+          where: { id: newId },
+          data: { parentId: newParentId },
+        });
+      }
+    }
+
+    // Phase 5: Update elementLinkId with mapped IDs
+    for (const templateElement of templateElements) {
+      const newId = elementIdMapping.get(templateElement._originalId);
+      const originalLinkId = templateElement._originalElementLinkId;
+
+      if (originalLinkId && elementIdMapping.has(originalLinkId)) {
+        const newLinkId = elementIdMapping.get(originalLinkId);
+        await this.prisma.element.update({
+          where: { id: newId },
+          data: { elementLinkId: newLinkId },
+        });
+      }
+    }
   }
 }

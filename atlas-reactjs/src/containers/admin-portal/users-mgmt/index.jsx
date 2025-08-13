@@ -30,6 +30,7 @@ const index = () => {
   const [plans, setPlans] = useState([]);
   const [isSortOpen, setIsSortOpen] = useState(false);
   const [selectedOption, setSelectedOption] = useState("Sort");
+
   const options = [
     "Personal",
     "Analyst",
@@ -44,7 +45,7 @@ const index = () => {
   const [userToDelete, setUserToDelete] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [filterActive, setFilterActive] = useState(false);
-
+  const [deleting, setDeleting] = useState(false)
   const openModal = (user = null) => {
     setEditingUser(user);
     setIsOpen(true);
@@ -187,22 +188,27 @@ const index = () => {
     }
   };
 
-  const handleDeleteUser = async () => {
-    try {
-      await dispatch(
-        deleteUser({
-          userId: userToDelete.id,
-          reason: "Deleted by Super Admin",
-        })
-      ).unwrap();
+  
+const handleDeleteUser = async () => {
+  setDeleting(true);
 
-      cogoToast.success("User deleted successfully!");
-      closeDeleteModal();
-      fetchUsersData();
-    } catch (error) {
-      cogoToast.error(error.message || "Failed to delete user");
-    }
-  };
+  try {
+    await dispatch(
+      deleteUser({
+        userId: userToDelete.id,
+        reason: "Deleted by Super Admin",
+      })
+    ).unwrap();
+
+    cogoToast.success("User deleted successfully!");
+    closeDeleteModal();
+    fetchUsersData();
+  } catch (error) {
+    cogoToast.error(error.message || "Failed to delete user");
+  } finally {
+    setDeleting(false);
+  }
+};
 
   const toggleAdminStatus = async (id) => {
     const user = tableData.find((u) => u.id === id);
@@ -320,7 +326,7 @@ const index = () => {
             There are no users to display. <br /> Please add a new user to get
             started.
           </p>
-          <button
+          {/* <button
             onClick={() => openModal()}
             className="flex items-center gap-2 px-5 py-2 border-2 border-custom-main text-custom-main hover:bg-custom-main hover:text-white rounded-md transition"
           >
@@ -337,12 +343,13 @@ const index = () => {
               editingUser ? `Update ${editingUser.displayName}` : "Add User"
             }
             initialData={initialModalData}
-          />
+          /> */}
 
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={closeDeleteModal}
             onConfirm={handleDeleteUser}
+            loading ={deleting}
             title={
               userToDelete
                 ? userToDelete.displayName || userToDelete.username
@@ -417,16 +424,16 @@ const index = () => {
                 Export Users
               </button>
               {/* Add User Button */}
-              <button
+              {/* <button
                 onClick={() => openModal()}
                 className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
               >
                 <MdGroupAdd size={20} />
-              </button>
+              </button> */}
             </div>
           </div>
 
-          <GenericModal
+          {/* <GenericModal
             isOpen={isOpen}
             onClose={closeModal}
             onSubmit={editingUser ? handleUpdateUser : handleSaveUser}
@@ -435,11 +442,12 @@ const index = () => {
               editingUser ? `Update ${editingUser.displayName}` : "Add User"
             }
             initialData={initialModalData}
-          />
+          /> */}
           <DeleteModal
             isOpen={isDeleteModalOpen}
             onClose={closeDeleteModal}
             onConfirm={handleDeleteUser}
+            loading={deleting}
             title={
               userToDelete
                 ? userToDelete.displayName || userToDelete.username

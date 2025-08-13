@@ -1,9 +1,8 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { useSearchParams } from "react-router-dom";
-import { resetPassword } from "../../../redux/slices/users";
 import cogoToast from "@successtar/cogo-toast";
+import { useState } from "react";
+import { useDispatch } from "react-redux";
+import { Link, useSearchParams } from "react-router-dom";
+import { resetPassword } from "../../../redux/slices/users";
 
 const ResetPassword = () => {
   const dispatch = useDispatch();

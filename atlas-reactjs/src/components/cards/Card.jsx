@@ -21,10 +21,11 @@ const Card = ({
   onSuccess,
   structureType = "default",
 }) => {
-  const dispatch = useDispatch()
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [dropdownVisible, setDropdownVisible] = useState(false)
-  const [rendererModalVisible, setRendererModalVisible] = useState(false)
+  const dispatch = useDispatch();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [rendererModalVisible, setRendererModalVisible] = useState(false);
+const [deleting, setDeleting] = useState(false);
 
   const handleDeleteStructure = () => {
     setDeleteModalVisible(true)
@@ -32,16 +33,21 @@ const Card = ({
   }
 
   const handleConfirmDelete = () => {
-    dispatch(deleteStructure(structureId))
-      .then(() => {
-        setDeleteModalVisible(false)
-        cogoToast.success("Structure deleted successfully!")
-        onSuccess()
-      })
-      .catch(() => {
-        cogoToast.error("Failed to delete the structure.")
-      })
-  }
+  setDeleting(true);
+  dispatch(deleteStructure(structureId))
+    .then(() => {
+      cogoToast.success("Structure deleted successfully!");
+      setDeleteModalVisible(false);
+      onSuccess();
+    })
+    .catch(() => {
+      cogoToast.error("Failed to delete the structure.");
+    })
+    .finally(() => {
+      setDeleting(false);
+    });
+};
+
 
   const dropdownRef = useOutsideClick(() => setDropdownVisible(false))
 
@@ -145,11 +151,13 @@ const Card = ({
       </div>
       {deleteModalVisible && (
         <DeleteModal
-          isOpen={deleteModalVisible}
-          title={"Structure"}
-          onClose={() => setDeleteModalVisible(false)}
-          onConfirm={handleConfirmDelete}
-        />
+  isOpen={deleteModalVisible}
+  title={"Structure"}
+  onClose={() => setDeleteModalVisible(false)}
+  onConfirm={handleConfirmDelete}
+  loading={deleting}
+/>
+
       )}
 
       <RendererModal

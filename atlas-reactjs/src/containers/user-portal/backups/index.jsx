@@ -18,7 +18,7 @@ const Backups = ({ onSubmit }) => {
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-
+  const [deleting, setDeleting] = useState(false)
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -48,20 +48,29 @@ const Backups = ({ onSubmit }) => {
   };
 
   const confirmDelete = async () => {
-    if (!selectedBackup) return;
+  if (!selectedBackup) return;
 
-    try {
-      await dispatch(deleteBackup(selectedBackup.id)).unwrap();
-      cogoToast.success("Backup deleted successfully!");
-      setBackups((prevBackups) =>
-        prevBackups.filter((backup) => backup.id !== selectedBackup.id)
-      );
-    } catch (error) {
-      cogoToast.error("Error deleting backup.");
-    } finally {
-      setIsDeleteModalOpen(false);
-    }
-  };
+  setDeleting(true); // start loader
+
+  try {
+    await dispatch(deleteBackup(selectedBackup.id)).unwrap();
+
+    cogoToast.success("Backup deleted successfully!");
+
+    setBackups((prevBackups) =>
+      prevBackups.filter((backup) => backup.id !== selectedBackup.id)
+    );
+
+  } catch (error) {
+    cogoToast.error(
+      error?.message || "Error deleting backup. Please try again."
+    );
+  } finally {
+    setDeleting(false); // stop loader
+    setIsDeleteModalOpen(false); // close modal
+  }
+};
+
 
   const updatedBackupConfig = {
     ...backupConfig,
@@ -93,6 +102,7 @@ const Backups = ({ onSubmit }) => {
         title={"this item"}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
+        loading={deleting}
       />
     </Layout>
   );

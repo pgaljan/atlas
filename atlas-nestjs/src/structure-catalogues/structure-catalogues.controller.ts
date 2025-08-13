@@ -4,12 +4,15 @@ import {
   Controller,
   Delete,
   Get,
+  HttpException,
+  HttpStatus,
   NotFoundException,
   Param,
   Patch,
   Post,
   Put,
 } from '@nestjs/common';
+import { Structure } from '@prisma/client';
 import { StructureCataloguesService } from './structure-catalogues.service';
 import { UpdateStructureCatalogDto } from './dto/update-structure-catalog.dto';
 import { UpdateStructureCatalogOrderDto } from './dto/update-structure-catalog-order.dto';
@@ -101,6 +104,25 @@ export class StructureCataloguesController {
     } catch (error) {
       if (error instanceof NotFoundException) throw error;
       throw new BadRequestException('Error deleting structure catalog');
+    }
+  }
+
+  @Post(':id/use')
+  async useCatalog(
+    @Param('id') catalogId: string,
+    @Body() overrides: Partial<Structure>,
+  ) {
+    try {
+      const structure = await this.catalogService.useCatalogAsStructure(
+        catalogId,
+        overrides,
+      );
+      return {
+        message: 'Structure created from catalog successfully',
+        structure,
+      };
+    } catch (err) {
+      throw new HttpException(err.message, HttpStatus.INTERNAL_SERVER_ERROR);
     }
   }
 }

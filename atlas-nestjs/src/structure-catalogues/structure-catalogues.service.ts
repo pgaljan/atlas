@@ -1,11 +1,16 @@
 import {
   BadRequestException,
   Injectable,
+  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
+import { Structure } from '@prisma/client';
+import * as crypto from 'crypto';
+import axios from 'axios';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateStructureCatalogDto } from './dto/create-structure-catalog.dto';
 import { UpdateStructureCatalogDto } from './dto/update-structure-catalog.dto';
+import { RestoreService } from '../restore-backup/restore-backup.service';
 
 @Injectable()
 export class StructureCataloguesService {
@@ -138,7 +143,6 @@ export class StructureCataloguesService {
         where: { id },
       });
     } catch (error) {
-      console.error(error);
       throw new BadRequestException('Error deleting structure catalog');
     }
   }
@@ -155,5 +159,109 @@ export class StructureCataloguesService {
       where: { id },
       data: { order },
     });
+  }
+
+  async useCatalogAsStructure(
+    catalogId: string,
+    overrides: Partial<Structure>,
+  ) {
+    try {
+      // 1. Get the catalog entry
+      const catalog = await this.prisma.structureCatalog.findUnique({
+        where: { id: catalogId },
+      });
+
+      if (!catalog) {
+        throw new NotFoundException(`Catalog with ID ${catalogId} not found`);
+      }
+
+      if (!catalog.fileUrl) {
+        throw new BadRequestException(
+          'Catalog does not have a backup file URL',
+        );
+      }
+
+      // 2. Download the backup file from the URL
+      let fileBuffer: Buffer;
+      try {
+        const response = await axios.get<ArrayBuffer>(catalog.fileUrl, {
+          responseType: 'arraybuffer',
+        });
+        fileBuffer = Buffer.from(response.data);
+      } catch (error) {
+        throw new InternalServerErrorException(
+          `Failed to download backup file from URL: ${catalog.fileUrl}`,
+        );
+      }
+
+      // 3. Get user information for workspace
+      const user = await this.prisma.user.findUnique({
+        where: { id: overrides.ownerId },
+      });
+      if (!user || !user.defaultWorkspaceId) {
+        throw new InternalServerErrorException(
+          'No valid workspaceId found for the user',
+        );
+      }
+
+      // 4. Create a new structure using the same name pattern as templates
+      const newStructureId = crypto.randomUUID
+        ? crypto.randomUUID()
+        : crypto.randomBytes(16).toString('hex');
+
+      // 5. Use RestoreService to restore the backup with proper ID remapping
+      const restoreService = new RestoreService(this.prisma);
+
+      try {
+        await restoreService.restoreBackupfromURL(
+          fileBuffer,
+          newStructureId,
+          overrides.ownerId,
+        );
+      } catch (restoreError) {
+        throw new InternalServerErrorException(
+          `Failed to restore catalog backup: ${restoreError.message}`,
+        );
+      }
+
+      // 6. Update the created structure with the provided overrides
+      const updatedStructure = await this.prisma.structure.update({
+        where: { id: newStructureId },
+        data: {
+          name: overrides.name || `${catalog.name} (From Catalog)`,
+          title: overrides.name || `${catalog.name} (From Catalog)`,
+          description: overrides.description || catalog.description || null,
+          ownerId: overrides.ownerId,
+          workspaceId: overrides.workspaceId || user.defaultWorkspaceId,
+          imageUrl: overrides.imageUrl || null,
+        },
+      });
+
+      // 7. Return the complete structure with all elements
+      return await this.prisma.structure.findUnique({
+        where: { id: newStructureId },
+        include: {
+          elements: {
+            include: {
+              Record: true,
+            },
+          },
+          renderers: true,
+          parsedData: true,
+          StructureMap: true,
+        },
+      });
+    } catch (error) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof BadRequestException ||
+        error instanceof InternalServerErrorException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        `Failed to use catalog as structure: ${error.message}`,
+      );
+    }
   }
 }

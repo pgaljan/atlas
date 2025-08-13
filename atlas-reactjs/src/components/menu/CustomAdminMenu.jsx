@@ -1,34 +1,49 @@
-import Cookies from "js-cookie";
-import { useEffect, useRef, useState } from "react";
-import Avatar from "react-avatar";
-import { FiLogOut, FiSettings } from "react-icons/fi";
-import { HiOutlineRocketLaunch } from "react-icons/hi2";
-import { TbAppsFilled } from "react-icons/tb";
-import { useNavigate } from "react-router-dom";
+import Cookies from "js-cookie"
+import { useEffect, useRef, useState } from "react"
+import Avatar from "react-avatar"
+import { FiLogOut, FiSettings } from "react-icons/fi"
+import { HiOutlineRocketLaunch } from "react-icons/hi2"
+import { TbAppsFilled } from "react-icons/tb"
+import { useNavigate } from "react-router-dom"
 
-const CustomAdminMenu = ({ handleLogout }) => {
-  const [open, setOpen] = useState(false);
-  const navigate = useNavigate();
-  const menuRef = useRef();
+const CustomAdminMenu = () => {
+  const [open, setOpen] = useState(false)
+  const navigate = useNavigate()
+  const menuRef = useRef()
 
-  const displayName = Cookies.get("atlas_admin_username") || "Admin";
-  const email = Cookies.get("atlas_admin_email") || "admin@example.com";
+  const displayName = Cookies.get("atlas_admin_username") || "Admin"
+  const email = Cookies.get("atlas_admin_email") || "admin@example.com"
 
   useEffect(() => {
-    const handleClickOutside = (e) => {
+    const handleClickOutside = e => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
-        setOpen(false);
+        setOpen(false)
       }
-    };
+    }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
+  const handleLogout = () => {
+    const cookieKeys = [
+      "atlas_admin_email",
+      "atlas_admin_token",
+      "atlas_admin_userId",
+      "atlas_admin_username",
+    ]
+
+    cookieKeys.forEach(key => Cookies.remove(key))
+
+    localStorage.clear()
+    sessionStorage.clear()
+
+    window.location.href = "/"
+  }
 
   return (
     <div className="relative" ref={menuRef}>
       <button
-        onClick={() => setOpen((prev) => !prev)}
+        onClick={() => setOpen(prev => !prev)}
         className="focus:outline-none"
       >
         <Avatar name={displayName} size="38" round />
@@ -48,8 +63,8 @@ const CustomAdminMenu = ({ handleLogout }) => {
           <div className="p-1 space-y-1">
             <button
               onClick={() => {
-                navigate("/app/admin-portal/user-management");
-                setOpen(false);
+                navigate("/app/admin-portal/user-management")
+                setOpen(false)
               }}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition"
             >
@@ -59,8 +74,8 @@ const CustomAdminMenu = ({ handleLogout }) => {
 
             <button
               onClick={() => {
-                navigate("/app/admin-portal/settings");
-                setOpen(false);
+                navigate("/app/admin-portal/settings")
+                setOpen(false)
               }}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition"
             >
@@ -70,8 +85,8 @@ const CustomAdminMenu = ({ handleLogout }) => {
 
             <button
               onClick={() => {
-                navigate("/app/admin-portal/subscription-plan");
-                setOpen(false);
+                navigate("/app/admin-portal/subscription-plan")
+                setOpen(false)
               }}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-gray-700 rounded-md hover:bg-gray-100 transition"
             >
@@ -83,8 +98,8 @@ const CustomAdminMenu = ({ handleLogout }) => {
 
             <button
               onClick={() => {
-                handleLogout();
-                setOpen(false);
+                handleLogout()
+                setOpen(false)
               }}
               className="w-full flex items-center gap-2 px-4 py-2 text-sm text-red-600 rounded-md font-semibold hover:bg-red-100 transition"
             >
@@ -95,7 +110,7 @@ const CustomAdminMenu = ({ handleLogout }) => {
         </div>
       )}
     </div>
-  );
-};
+  )
+}
 
-export default CustomAdminMenu;
+export default CustomAdminMenu

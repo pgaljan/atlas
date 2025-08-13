@@ -1,8 +1,9 @@
 import cogoToast from "@successtar/cogo-toast";
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import PricingCard from "../../../components/cards/PricingCard";
+import OnboardingHeader from "../../../components/common/OnboardingHeader";
 import Icons from "../../../constants/icons";
 import { fetchPlans } from "../../../redux/slices/plans";
 import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions";
@@ -64,16 +65,7 @@ const SubscriptionPlans = () => {
 
   return (
     <div className="bg-custom-background-white">
-      <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <div className="flex items-center">
-          <Link
-            to="#"
-            className="flex items-center space-x-2 text-xl text-custom-text-white"
-          >
-            <span className="font-semibold">Atlas</span>
-          </Link>
-        </div>
-      </header>
+      <OnboardingHeader />
 
       <section className="relative z-10 overflow-hidden bg-custom-background-white pb-12 pt-20 lg:pb-[90px] lg:pt-[60px]">
         <div className="container mx-auto">

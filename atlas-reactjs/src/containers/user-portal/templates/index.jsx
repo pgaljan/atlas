@@ -104,17 +104,6 @@ const Templates = () => {
       .includes(searchQuery.toLowerCase())
   );
 
-  const maxTemplatesReached = templates.length >= 5;
-
-  const buttons = [
-    {
-      label: "Create Template",
-      className: "bg-custom-main text-white",
-      disabled: maxTemplatesReached,
-      onClick: () => setIsTemplatesModalOpen(true),
-    },
-  ];
-
   {
     status === "loading" && (
       <div className="flex h-screen flex-col text-center p-6">
@@ -127,12 +116,18 @@ const Templates = () => {
 
   return (
     <Layout>
+      {status === "loading" && (
+        <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+        </div>
+      )}
+
       <div className="p-2">
         <GenericTable
           {...templatesConfig}
           data={filteredTemplates}
           searchQuery={searchQuery}
-          buttons={buttons}
+          // buttons={buttons}
           onSearchChange={setSearchQuery}
           actions={templatesConfig.actions.map((action) => ({
             ...action,

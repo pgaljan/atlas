@@ -6,6 +6,8 @@ import { Link, useNavigate } from "react-router-dom";
 import Icons from "../../../constants/icons";
 import { fetchAppSettings } from "../../../redux/slices/app-settings";
 import { loginUser } from "../../../redux/slices/auth";
+import PrivacyPolicy from "../privacy-policy/index"
+import OnboardingHeader from "../../../components/common/OnboardingHeader";
 
 const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
   const handleOAuthLogin = () => {
@@ -88,17 +90,7 @@ const Login = () => {
 
   return (
     <div className="bg-custom-background-white">
-      <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <Link to="/" className="text-white text-xl font-semibold">
-          Atlas
-        </Link>
-        <Link
-          to="/register"
-          className="border border-white text-white px-4 py-1.5 rounded-lg text-sm"
-        >
-          Sign up for free
-        </Link>
-      </header>
+      <OnboardingHeader/>
 
       <main className="flex items-center justify-center h-screen">
         <div className="p-6 w-full max-w-[30%]">
@@ -189,17 +181,17 @@ const Login = () => {
 
           <div className="text-center mt-4 text-sm">
             <Link
-              to="http://www.atlas.dev/terms/services-agreement"
+              to="/terms-of-service"
               className="text-black underline hover:text-blue-700"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
-              to="http://www.atlas.dev/terms/privacy-policy"
+              to="/privacy-policy"
               className="text-black underline hover:text-blue-700"
             >
-              Privacy Policy
+            Privacy Policy
             </Link>
             .
           </div>

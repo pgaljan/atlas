@@ -15,12 +15,14 @@ import {
 const Invitation = ({ onSubmit }) => {
   const dispatch = useDispatch();
   const workspaceId = Cookies.get("workspaceId");
+
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -31,7 +33,6 @@ const Invitation = ({ onSubmit }) => {
         }
 
         setIsLoading(true);
-
         const result = await dispatch(listInvitations(workspaceId)).unwrap();
 
         const formattedData = result.map((invitation) => ({
@@ -70,7 +71,7 @@ const Invitation = ({ onSubmit }) => {
 
         setInvitations(formattedData);
       } catch (err) {
-        console.log(err);
+        console.error(err);
       } finally {
         setIsLoading(false);
       }
@@ -89,7 +90,7 @@ const Invitation = ({ onSubmit }) => {
 
   const confirmDelete = async () => {
     if (!selectedMember) return;
-
+    setDeleting(true);
     try {
       setIsLoading(true);
 
@@ -108,6 +109,7 @@ const Invitation = ({ onSubmit }) => {
     } catch (err) {
       cogoToast.error(err?.message || "Failed to delete invitation.");
     } finally {
+      setDeleting(false);
       setIsLoading(false);
       setIsDeleteModalOpen(false);
     }
@@ -204,7 +206,6 @@ const Invitation = ({ onSubmit }) => {
           </div>
         ) : (
           <>
-            {invitations.length > 0 && (
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
                 {/* Token Counts */}
                 <div className="flex flex-wrap gap-3 text-sm text-gray-600 font-medium">
@@ -242,7 +243,6 @@ const Invitation = ({ onSubmit }) => {
                   </button>
                 </div>
               </div>
-            )}
 
             <GenericTable
               {...updatedInvitationConfig}
@@ -254,7 +254,7 @@ const Invitation = ({ onSubmit }) => {
               <div className="flex justify-center mt-3">
                 <button
                   onClick={() => setIsInviteModalOpen(true)}
-                  className="px-6 py-2 bg-custom-main text-white rounded-lg shadow hover:bg-custom-secondary transition"
+                  className="px-4 py-2 bg-custom-main text-white rounded-lg shadow hover:bg-custom-secondary transition"
                 >
                   Invite a Member
                 </button>
@@ -276,6 +276,7 @@ const Invitation = ({ onSubmit }) => {
         title={selectedMember?.name || "this invitation"}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
+        loading={deleting}
       />
     </Layout>
   );

@@ -27,7 +27,7 @@ const index = () => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  const [deleting, setDeleting ] = useState(false)
   const fetchPlansData = useCallback(async () => {
     setLoading(true);
     try {
@@ -121,25 +121,31 @@ const index = () => {
   };
 
   const confirmDelete = () => {
-    if (selectedPlan) {
-      dispatch(deletePlan(selectedPlan.id))
-        .unwrap()
-        .then(() => {
-          setTableData((prevData) =>
-            prevData.filter((item) => item.id !== selectedPlan.id)
-          );
-          cogoToast.success("Plan deleted successfully!");
-          closeDeleteModal();
-        })
-        .catch((error) => {
-          if (error?.status === 400) {
-            cogoToast.error("Cannot delete plan: Bad request.");
-          } else {
-            cogoToast.error(error?.message || "Failed to delete plan");
-          }
-        });
-    }
-  };
+  if (!selectedPlan) return;
+
+  setDeleting(true); // 🟡 Start loading state
+
+  dispatch(deletePlan(selectedPlan.id))
+    .unwrap()
+    .then(() => {
+      setTableData((prevData) =>
+        prevData.filter((item) => item.id !== selectedPlan.id)
+      );
+      cogoToast.success("Plan deleted successfully!");
+      closeDeleteModal();
+    })
+    .catch((error) => {
+      if (error?.status === 400) {
+        cogoToast.error("Cannot delete plan: Bad request.");
+      } else {
+        cogoToast.error(error?.message || "Failed to delete plan");
+      }
+    })
+    .finally(() => {
+      setDeleting(false); // 🔵 Reset loading state
+    });
+};
+
 
   const handleDragEnd = async (result) => {
     if (!result?.destination || !Array.isArray(tableData)) return;
@@ -354,6 +360,8 @@ const index = () => {
             onClose={closeDeleteModal}
             onConfirm={confirmDelete}
             title={selectedPlan?.name || "Delete Plan"}
+            loading={deleting}
+          
           />
         </div>
       </div>

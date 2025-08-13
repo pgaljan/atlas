@@ -9,6 +9,8 @@ const initialState = {
   error: null,
 };
 
+
+
 // Fetch current app settings
 export const fetchAppSettings = createAsyncThunk(
   "appSettings/fetchAppSettings",

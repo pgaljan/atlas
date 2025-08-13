@@ -1,39 +1,43 @@
-import { useEffect, useState } from "react"
-import { useDispatch } from "react-redux"
-import Layout from "../../../components/layout"
-import { fetchTermsOfService } from "../../../redux/slices/terms-of-service"
-import HugeRTEEditor from "../../../components/editors/hugeRTE.editor"
+import { useEffect, useState } from "react";
+import Layout from "../../../components/layout";
+import { fetchTermsOfService } from "../../../redux/slices/terms-of-service";
+import { useDispatch, useSelector } from "react-redux"; // ✅ updated import
 
 const TermsOfService = () => {
-  const dispatch = useDispatch()
-  const [content, setContent] = useState("")
-  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025")
-  const [isLoading, setIsLoading] = useState(true)
+  const dispatch = useDispatch();
+  const appName = useSelector(
+    (state) => state.appSettings.appSettings?.appName || "Atlas"
+  );
+
+  const [content, setContent] = useState("");
+  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025");
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const fetchData = async () => {
-      setIsLoading(true)
-      const resultAction = await dispatch(fetchTermsOfService())
+      setIsLoading(true);
+      const resultAction = await dispatch(fetchTermsOfService());
       if (fetchTermsOfService.fulfilled.match(resultAction)) {
-        setContent(resultAction?.payload?.terms?.content || "")
-        setLastUpdatedDate(resultAction.payload.terms.updatedAt || "N/A")
+        const rawContent = resultAction?.payload?.terms?.content || "";
+        const updatedContent = rawContent.replaceAll("{{appName}}", appName);
+        setContent(updatedContent);
+        setLastUpdatedDate(resultAction.payload.terms.updatedAt || "N/A");
       }
-      setIsLoading(false)
-    }
+      setIsLoading(false);
+    };
 
-    fetchData()
-  }, [dispatch])
-
+    fetchData();
+  }, [dispatch, appName]);
   const formattedDate = new Date(lastUpdatedDate).toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
     day: "numeric",
-  })
+  });
 
   return (
     <Layout>
       <div className="bg-white shadow rounded-[18px] p-8 m-2">
-        <h1 className="text-2xl font-bold mb-4">Terms of Service</h1>
+        <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
         <div className="text-sm text-gray-500 mb-4">
           <span className="block">
             Last updated: <strong>{formattedDate}</strong>
@@ -46,11 +50,14 @@ const TermsOfService = () => {
             </div>
           </div>
         ) : (
-          <HugeRTEEditor content={content} />
+          <div
+            className="prose max-w-none"
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
         )}
       </div>
     </Layout>
-  )
-}
+  );
+};
 
-export default TermsOfService
+export default TermsOfService;

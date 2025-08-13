@@ -8,19 +8,19 @@ import { PrismaService } from '../prisma/prisma.service';
 export class RestoreService {
   constructor(private readonly prisma: PrismaService) {}
 
-  // Helper to safely parse JSON from a string.
   private safeParseJSON(data: string, fieldName: string): any {
     try {
       if (!data || data.trim() === '') return fieldName === 'tags' ? [] : {};
+
+      if (fieldName === 'recordSvg' && data.trim().startsWith('<svg')) {
+        return data;
+      }
+
       return JSON.parse(data);
     } catch (error) {
-      console.error(
-        `Error parsing ${fieldName}:`,
-        error.message,
-        'Original data:',
-        data,
-      );
-      return fieldName === 'tags' ? [] : {};
+      if (fieldName === 'tags') return [];
+      if (fieldName === 'recordSvg') return data;
+      return {};
     }
   }
 
@@ -167,27 +167,68 @@ export class RestoreService {
 
       // ------------------ ELEMENT RESTORE ------------------
       const elementIdMapping = new Map<string, string>();
+      const recordIdMapping = new Map<string, string>();
 
-      // Phase 1: Upsert elements with parentId and elementLinkId = null
-      for (const elementData of elementsSheet.filter(
+      // Phase 1: Generate new IDs and create ID mapping
+      const elementsToRestore = elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
-      )) {
-        const originalParentId = elementData.parentId || null;
-        const originalElementLinkId = elementData.elementLinkId || null;
+      );
 
-        elementData.structureId = targetStructureId;
-        elementData.parentId = null;
-        elementData.elementLinkId = null;
+      for (const elementData of elementsToRestore) {
+        const originalId = elementData.id;
+        const newId = crypto.randomUUID
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString('hex');
 
-        elementData._originalParentId = originalParentId;
-        elementData._originalElementLinkId = originalElementLinkId;
+        // Map old ID to new ID
+        elementIdMapping.set(originalId, newId);
 
-        elementIdMapping.set(elementData.id, elementData.id);
+        // Store original relationships for Phase 2
+        elementData._originalId = originalId;
+        elementData._originalParentId = elementData.parentId || null;
+        elementData._originalElementLinkId = elementData.elementLinkId || null;
+        elementData._originalRecordId = elementData.recordId || null;
+      }
+
+      // Phase 2: Create/Update records first (if they don't exist)
+      for (const elementData of elementsToRestore) {
+        if (elementData._originalRecordId) {
+          const recordExists = await this.prisma.record.findUnique({
+            where: { id: elementData._originalRecordId },
+          });
+
+          if (recordExists) {
+            recordIdMapping.set(elementData._originalRecordId, recordExists.id);
+          } else {
+            // Create a new record with new ID if it doesn't exist
+            const newRecordId = crypto.randomUUID
+              ? crypto.randomUUID()
+              : crypto.randomBytes(16).toString('hex');
+
+            const newRecord = await this.prisma.record.create({
+              data: {
+                id: newRecordId,
+                metadata: {},
+                tags: [],
+                editorType: 'vscode',
+                recordSvg: {},
+              },
+            });
+            recordIdMapping.set(elementData._originalRecordId, newRecord.id);
+          }
+        }
+      }
+
+      // Phase 3: Create elements with new IDs and no parent relationships yet
+      for (const elementData of elementsToRestore) {
+        const originalId = elementData._originalId;
+        const newId = elementIdMapping.get(originalId);
+        const mappedRecordId = elementData._originalRecordId
+          ? recordIdMapping.get(elementData._originalRecordId) || null
+          : null;
 
         const {
-          id,
           name,
-          recordId,
           orderIndex,
           isExpanded,
           type,
@@ -206,13 +247,14 @@ export class RestoreService {
         } = elementData;
 
         await this.prisma.element.upsert({
-          where: { id },
+          where: { id: newId },
           update: {
             name,
             structureId: targetStructureId,
-            recordId: recordId || null,
+            recordId: mappedRecordId,
             orderIndex,
-            parentId: null,
+            parentId: null, // Will be set in Phase 4
+            elementLinkId: null, // Will be set in Phase 5
             isExpanded: isExpanded ?? true,
             type: type || null,
             eventType: eventType || null,
@@ -228,12 +270,13 @@ export class RestoreService {
             updatedAt: updatedAt ? new Date(updatedAt) : new Date(),
           },
           create: {
-            id,
+            id: newId,
             name,
             structureId: targetStructureId,
-            recordId: recordId || null,
+            recordId: mappedRecordId,
             orderIndex,
-            parentId: null,
+            parentId: null, // Will be set in Phase 4
+            elementLinkId: null, // Will be set in Phase 5
             isExpanded: isExpanded ?? true,
             type: type || null,
             eventType: eventType || null,
@@ -252,28 +295,30 @@ export class RestoreService {
         });
       }
 
-      // Phase 2: Update parentId now that all elements exist
-      for (const elementData of elementsSheet.filter(
-        (e) => e.structureId === originalBackupStructureId,
-      )) {
-        const parentId = elementData._originalParentId;
-        if (parentId && elementIdMapping.has(parentId)) {
+      // Phase 4: Update parentId with mapped IDs
+      for (const elementData of elementsToRestore) {
+        const newId = elementIdMapping.get(elementData._originalId);
+        const originalParentId = elementData._originalParentId;
+
+        if (originalParentId && elementIdMapping.has(originalParentId)) {
+          const newParentId = elementIdMapping.get(originalParentId);
           await this.prisma.element.update({
-            where: { id: elementData.id },
-            data: { parentId },
+            where: { id: newId },
+            data: { parentId: newParentId },
           });
         }
       }
 
-      // Phase 3: Update elementLinkId now that all elements exist
-      for (const elementData of elementsSheet.filter(
-        (e) => e.structureId === originalBackupStructureId,
-      )) {
-        const linkId = elementData._originalElementLinkId;
-        if (linkId && elementIdMapping.has(linkId)) {
+      // Phase 5: Update elementLinkId with mapped IDs
+      for (const elementData of elementsToRestore) {
+        const newId = elementIdMapping.get(elementData._originalId);
+        const originalLinkId = elementData._originalElementLinkId;
+
+        if (originalLinkId && elementIdMapping.has(originalLinkId)) {
+          const newLinkId = elementIdMapping.get(originalLinkId);
           await this.prisma.element.update({
-            where: { id: elementData.id },
-            data: { elementLinkId: linkId },
+            where: { id: newId },
+            data: { elementLinkId: newLinkId },
           });
         }
       }
@@ -319,9 +364,14 @@ export class RestoreService {
         (m) => m.structureId === originalBackupStructureId,
       );
       for (const mapData of filteredMaps) {
+        const originalMapId = mapData.id;
+        const newMapId = crypto.randomUUID
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString('hex');
+
         mapData.structureId = targetStructureId;
         await this.prisma.structureMap.upsert({
-          where: { id: mapData.id },
+          where: { id: newMapId },
           update: {
             structureId: mapData.structureId,
             name: mapData.name,
@@ -334,17 +384,22 @@ export class RestoreService {
               : new Date(),
           },
           create: {
-            id: mapData.id,
+            id: newMapId,
             structureId: mapData.structureId,
             name: mapData.name,
             description: mapData.description,
+            createdAt: mapData.createdAt
+              ? new Date(mapData.createdAt)
+              : new Date(),
+            updatedAt: mapData.updatedAt
+              ? new Date(mapData.updatedAt)
+              : new Date(),
           },
         });
       }
 
       return { message: 'Backup restored successfully' };
     } catch (error) {
-      console.error(error);
       throw new InternalServerErrorException(
         'Failed to restore backup: ' + error.message,
       );
@@ -504,59 +559,155 @@ export class RestoreService {
         // Process Elements.
         if (structureData.elements && Array.isArray(structureData.elements)) {
           const fullElementMapping = new Map<string, string>();
+          const fullRecordMapping = new Map<string, string>();
+
+          // Phase 1: Generate new IDs and create mappings
           for (const elementData of structureData.elements) {
             if (elementData.structureId === originalStructureId) {
               elementData.structureId = targetStructureId;
             }
-            const origParentId = elementData.parentId;
-            elementData.parentId = null;
-            const originalElementLinkId = elementData.elementLinkId || null;
-            elementData.elementLinkId = null;
 
-            fullElementMapping.set(elementData.id, elementData.id);
+            const originalId = elementData.id;
+            const newId = crypto.randomUUID
+              ? crypto.randomUUID()
+              : crypto.randomBytes(16).toString('hex');
+
+            // Map old ID to new ID
+            fullElementMapping.set(originalId, newId);
+
+            // Store original relationships
+            elementData._originalId = originalId;
+            elementData._originalParentId = elementData.parentId || null;
+            elementData._originalElementLinkId =
+              elementData.elementLinkId || null;
+            elementData._originalRecordId = elementData.recordId || null;
+          }
+
+          // Phase 2: Handle records
+          for (const elementData of structureData.elements) {
+            if (elementData._originalRecordId) {
+              const recordExists = await this.prisma.record.findUnique({
+                where: { id: elementData._originalRecordId },
+              });
+
+              if (recordExists) {
+                fullRecordMapping.set(
+                  elementData._originalRecordId,
+                  recordExists.id,
+                );
+              } else {
+                const newRecordId = crypto.randomUUID
+                  ? crypto.randomUUID()
+                  : crypto.randomBytes(16).toString('hex');
+
+                const newRecord = await this.prisma.record.create({
+                  data: {
+                    id: newRecordId,
+                    metadata: {},
+                    tags: [],
+                    editorType: 'vscode',
+                    recordSvg: {},
+                  },
+                });
+                fullRecordMapping.set(
+                  elementData._originalRecordId,
+                  newRecord.id,
+                );
+              }
+            }
+          }
+
+          // Phase 3: Create elements with new IDs
+          for (const elementData of structureData.elements) {
+            const originalId = elementData._originalId;
+            const newId = fullElementMapping.get(originalId);
+            const mappedRecordId = elementData._originalRecordId
+              ? fullRecordMapping.get(elementData._originalRecordId) || null
+              : null;
 
             await this.prisma.element.upsert({
-              where: { id: elementData.id },
+              where: { id: newId },
               update: {
                 name: elementData.name,
                 structureId: elementData.structureId,
-                recordId: elementData.recordId,
-                parentId: null,
+                recordId: mappedRecordId,
+                parentId: null, // Will be set in Phase 4
+                elementLinkId: null, // Will be set in Phase 5
                 orderIndex: elementData.orderIndex,
+                isExpanded: elementData.isExpanded ?? true,
+                type: elementData.type || null,
+                eventType: elementData.eventType || null,
+                gateType: elementData.gateType || null,
+                eventValue: elementData.eventValue ?? null,
+                eventValueType: elementData.eventValueType || null,
+                mttr: elementData.mttr ?? null,
+                missionTime: elementData.missionTime ?? null,
+                inputK: elementData.inputK ?? null,
+                outputN: elementData.outputN ?? null,
+                description: elementData.description || null,
+                deletedAt: elementData.deletedAt
+                  ? new Date(elementData.deletedAt)
+                  : null,
+                updatedAt: elementData.updatedAt
+                  ? new Date(elementData.updatedAt)
+                  : new Date(),
               },
               create: {
-                id: elementData.id,
+                id: newId,
                 name: elementData.name,
                 structureId: elementData.structureId,
-                recordId: elementData.recordId,
-                parentId: null,
+                recordId: mappedRecordId,
+                parentId: null, // Will be set in Phase 4
+                elementLinkId: null, // Will be set in Phase 5
                 orderIndex: elementData.orderIndex,
+                isExpanded: elementData.isExpanded ?? true,
+                type: elementData.type || null,
+                eventType: elementData.eventType || null,
+                gateType: elementData.gateType || null,
+                eventValue: elementData.eventValue ?? null,
+                eventValueType: elementData.eventValueType || null,
+                mttr: elementData.mttr ?? null,
+                missionTime: elementData.missionTime ?? null,
+                inputK: elementData.inputK ?? null,
+                outputN: elementData.outputN ?? null,
+                description: elementData.description || null,
+                deletedAt: elementData.deletedAt
+                  ? new Date(elementData.deletedAt)
+                  : null,
+                createdAt: elementData.createdAt
+                  ? new Date(elementData.createdAt)
+                  : new Date(),
+                updatedAt: elementData.updatedAt
+                  ? new Date(elementData.updatedAt)
+                  : new Date(),
               },
             });
-            elementData._originalElementLinkId = originalElementLinkId;
-            elementData._originalParentId = origParentId;
           }
-          // Phase 2: Update elementLinkId and parentId.
+
+          // Phase 4: Update elementLinkId with mapped IDs
           for (const elementData of structureData.elements) {
-            const newLinkId = elementData._originalElementLinkId
-              ? fullElementMapping.get(elementData._originalElementLinkId) ||
-                null
-              : null;
-            if (newLinkId) {
+            const newId = fullElementMapping.get(elementData._originalId);
+            const originalLinkId = elementData._originalElementLinkId;
+
+            if (originalLinkId && fullElementMapping.has(originalLinkId)) {
+              const newLinkId = fullElementMapping.get(originalLinkId);
               await this.prisma.element.update({
-                where: { id: elementData.id },
+                where: { id: newId },
                 data: { elementLinkId: newLinkId },
               });
             }
           }
-          // Update parent-child relationships.
-          const elementIds = new Set(structureData.elements.map((el) => el.id));
+
+          // Phase 5: Update parent-child relationships with mapped IDs
           for (const elementData of structureData.elements) {
-            const origParentId = elementData._originalParentId;
-            if (origParentId && elementIds.has(origParentId)) {
+            const newId = fullElementMapping.get(elementData._originalId);
+            const originalParentId = elementData._originalParentId;
+
+            if (originalParentId && fullElementMapping.has(originalParentId)) {
+              const newParentId = fullElementMapping.get(originalParentId);
               await this.prisma.element.update({
-                where: { id: elementData.id },
-                data: { parentId: origParentId },
+                where: { id: newId },
+                data: { parentId: newParentId },
               });
             }
           }
@@ -738,50 +889,77 @@ export class RestoreService {
         },
       });
 
-      // ---------- Elements Restoration in Two Passes ----------
+      // ---------- Elements Restoration with Proper ID Remapping ----------
       const elementIdMapping = new Map<string, string>();
       const recordIdMapping = new Map<string, string>();
 
-      // First pass: Upsert elements and track recordIds.
-      for (const elementData of elementsSheet.filter(
+      // Phase 1: Generate new IDs and create mappings
+      const urlElementsToRestore = elementsSheet.filter(
         (e) => e.structureId === originalBackupStructureId,
-      )) {
+      );
+
+      for (const elementData of urlElementsToRestore) {
+        const originalId = elementData.id;
+        const newId = crypto.randomUUID
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString('hex');
+
+        // Map old ID to new ID
+        elementIdMapping.set(originalId, newId);
+
+        // Store original relationships
+        elementData._originalId = originalId;
+        elementData._originalParentId = elementData.parentId || null;
+        elementData._originalElementLinkId = elementData.elementLinkId || null;
+        elementData._originalRecordId = elementData.recordId || null;
         elementData.structureId = targetStructureId;
+      }
 
-        const mappedRecordId =
-          recordIdMapping.get(elementData.recordId) || null;
-
-        // Map the original ID
-        elementIdMapping.set(elementData.id, elementData.id);
-
-        // Ensure the recordId exists before attempting upsert
-        if (elementData.recordId) {
-          const record = await this.prisma.record.findUnique({
-            where: { id: elementData.recordId },
+      // Phase 2: Handle records first
+      for (const elementData of urlElementsToRestore) {
+        if (elementData._originalRecordId) {
+          const recordExists = await this.prisma.record.findUnique({
+            where: { id: elementData._originalRecordId },
           });
 
-          if (record) {
-            recordIdMapping.set(elementData.recordId, record.id);
+          if (recordExists) {
+            recordIdMapping.set(elementData._originalRecordId, recordExists.id);
           } else {
+            const newRecordId = crypto.randomUUID
+              ? crypto.randomUUID()
+              : crypto.randomBytes(16).toString('hex');
+
             const newRecord = await this.prisma.record.create({
               data: {
-                id: elementData.recordId,
-                metadata: '{}',
-                tags: '[]',
+                id: newRecordId,
+                metadata: {},
+                tags: [],
+                editorType: 'vscode',
+                recordSvg: {},
               },
             });
-            recordIdMapping.set(elementData.recordId, newRecord.id);
+            recordIdMapping.set(elementData._originalRecordId, newRecord.id);
           }
         }
+      }
+
+      // Phase 3: Create elements with new IDs
+      for (const elementData of urlElementsToRestore) {
+        const originalId = elementData._originalId;
+        const newId = elementIdMapping.get(originalId);
+        const mappedRecordId = elementData._originalRecordId
+          ? recordIdMapping.get(elementData._originalRecordId) || null
+          : null;
 
         await this.prisma.element.upsert({
-          where: { id: elementData.id },
+          where: { id: newId },
           update: {
             name: elementData.name,
             structureId: targetStructureId,
-            recordId: mappedRecordId || null,
+            recordId: mappedRecordId,
             orderIndex: elementData.orderIndex,
-            parentId: null,
+            parentId: null, // Will be set in Phase 4
+            elementLinkId: null, // Will be set in Phase 5
             isExpanded: elementData.isExpanded ?? true,
             type: elementData.type || null,
             eventType: elementData.eventType || null,
@@ -801,12 +979,13 @@ export class RestoreService {
               : new Date(),
           },
           create: {
-            id: elementData.id,
+            id: newId,
             name: elementData.name,
             structureId: targetStructureId,
-            recordId: mappedRecordId || null,
+            recordId: mappedRecordId,
             orderIndex: elementData.orderIndex,
-            parentId: null,
+            parentId: null, // Will be set in Phase 4
+            elementLinkId: null, // Will be set in Phase 5
             isExpanded: elementData.isExpanded ?? true,
             type: elementData.type || null,
             eventType: elementData.eventType || null,
@@ -829,35 +1008,32 @@ export class RestoreService {
               : new Date(),
           },
         });
-
-        elementData._originalParentId = elementData.parentId;
       }
 
-      // Phase 2: Update elementLinkId based on the stored mapping.
-      for (const elementData of elementsSheet.filter(
-        (e) => e.structureId === targetStructureId,
-      )) {
+      // Phase 4: Update elementLinkId with mapped IDs
+      for (const elementData of urlElementsToRestore) {
+        const newId = elementIdMapping.get(elementData._originalId);
         const originalLinkId = elementData._originalElementLinkId;
-        if (originalLinkId) {
-          const newLinkId = elementIdMapping.get(originalLinkId) || null;
-          if (newLinkId) {
-            await this.prisma.element.update({
-              where: { id: elementData.id },
-              data: { elementLinkId: newLinkId },
-            });
-          }
+
+        if (originalLinkId && elementIdMapping.has(originalLinkId)) {
+          const newLinkId = elementIdMapping.get(originalLinkId);
+          await this.prisma.element.update({
+            where: { id: newId },
+            data: { elementLinkId: newLinkId },
+          });
         }
       }
 
-      // Phase 3: Update parentId for elements.
-      for (const elementData of elementsSheet.filter(
-        (e) => e.structureId === targetStructureId,
-      )) {
-        const parentId = elementData._originalParentId;
-        if (parentId && elementIdMapping.has(parentId)) {
+      // Phase 5: Update parentId with mapped IDs
+      for (const elementData of urlElementsToRestore) {
+        const newId = elementIdMapping.get(elementData._originalId);
+        const originalParentId = elementData._originalParentId;
+
+        if (originalParentId && elementIdMapping.has(originalParentId)) {
+          const newParentId = elementIdMapping.get(originalParentId);
           await this.prisma.element.update({
-            where: { id: elementData.id },
-            data: { parentId: parentId },
+            where: { id: newId },
+            data: { parentId: newParentId },
           });
         }
       }
@@ -879,14 +1055,19 @@ export class RestoreService {
         });
       }
 
-      // Restore Structure Maps.
+      // Restore Structure Maps with new IDs.
       const filteredMaps = structureMapsSheet.filter(
         (m) => m.structureId === originalBackupStructureId,
       );
       for (const mapData of filteredMaps) {
+        const originalMapId = mapData.id;
+        const newMapId = crypto.randomUUID
+          ? crypto.randomUUID()
+          : crypto.randomBytes(16).toString('hex');
+
         mapData.structureId = targetStructureId;
         await this.prisma.structureMap.upsert({
-          where: { id: mapData.id },
+          where: { id: newMapId },
           update: {
             structureId: mapData.structureId,
             name: mapData.name,
@@ -899,10 +1080,16 @@ export class RestoreService {
               : new Date(),
           },
           create: {
-            id: mapData.id,
+            id: newMapId,
             structureId: mapData.structureId,
             name: mapData.name,
             description: mapData.description,
+            createdAt: mapData.createdAt
+              ? new Date(mapData.createdAt)
+              : new Date(),
+            updatedAt: mapData.updatedAt
+              ? new Date(mapData.updatedAt)
+              : new Date(),
           },
         });
       }

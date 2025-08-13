@@ -1,4 +1,4 @@
-const DiscardModal = ({ isOpen, onClose, onConfirm, title }) => {
+const DiscardModal = ({ isOpen, onClose, onConfirm, title,  }) => {
   if (!isOpen) return null;
 
   return (

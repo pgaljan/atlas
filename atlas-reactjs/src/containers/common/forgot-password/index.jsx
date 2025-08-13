@@ -2,6 +2,7 @@ import cogoToast from "@successtar/cogo-toast";
 import { useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link } from "react-router-dom";
+import OnboardingHeader from "../../../components/common/OnboardingHeader";
 import { forgotPassword } from "../../../redux/slices/users";
 
 const ForgotPassword = () => {
@@ -33,18 +34,7 @@ const ForgotPassword = () => {
 
   return (
     <div className="bg-custom-background-white">
-      <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <Link to="/" className="text-white text-xl font-semibold">
-          Atlas
-        </Link>
-        <Link
-          to="/register"
-          className="border border-white text-white px-4 py-1.5 rounded-lg text-sm"
-        >
-          Don't have an account? Sign Up
-        </Link>
-      </header>
-
+      <OnboardingHeader />
       <main className="flex items-center justify-center h-screen">
         <div className="p-6 w-full max-w-[30%]">
           <h1 className="text-3xl font-semibold text-center mb-4 text-custom-text-heading">

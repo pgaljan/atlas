@@ -2,6 +2,7 @@ import cogoToast from "@successtar/cogo-toast";
 import { useEffect, useState } from "react";
 import { useDispatch } from "react-redux";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import OnboardingHeader from "../../../components/common/OnboardingHeader";
 import Icons from "../../../constants/icons";
 import { fetchAppSettings } from "../../../redux/slices/app-settings";
 import { registerUser } from "../../../redux/slices/auth";
@@ -27,7 +28,6 @@ const Register = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
-  const token = searchParams.get("token");
   const code = searchParams.get("code");
   const emailFromParams = searchParams.get("email");
   const [email, setEmail] = useState("");
@@ -107,18 +107,7 @@ const Register = () => {
 
   return (
     <div className="bg-custom-background-white">
-      <header className="p-4 bg-custom-navbar flex items-center justify-between">
-        <Link to="/" className="flex items-center space-x-2 text-xl text-white">
-          <span className="font-semibold">Atlas</span>
-        </Link>
-        <Link
-          to="/"
-          className="border border-white text-white px-4 py-1.5 rounded-lg text-sm"
-        >
-          Already have an account? Log in
-        </Link>
-      </header>
-
+      <OnboardingHeader />
       <main className="flex items-center justify-center h-screen">
         <div className="p-6 w-full max-w-[30%]">
           <h1 className="text-3xl font-semibold text-center mb-4 text-custom-text-heading">
@@ -218,14 +207,14 @@ const Register = () => {
           <div className="text-center mt-4 text-sm">
             By registering, you agree to our{" "}
             <Link
-              to="http://www.Atlas.co/terms/services-agreement"
+              to="/terms-of-service"
               className="text-black underline hover:text-blue-700 transition"
             >
               Terms of Service
             </Link>{" "}
             and{" "}
             <Link
-              to="http://www.Atlas.co/terms/privacy-policy"
+              to="/privacy-policy"
               className="text-black underline hover:text-blue-700 transition"
             >
               Privacy Policy

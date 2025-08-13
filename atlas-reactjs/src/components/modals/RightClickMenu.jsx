@@ -9,15 +9,15 @@ import { deleteStructure } from "../../redux/slices/structures"
 import DeleteModal from "./DeleteModal"
 
 const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   // Feature flag checks
-  const canExportHtml = useFeatureFlag("Export to HTML/Markdown")
-  const canExportDOC = useFeatureFlag("Export to DOC/PDF")
-  const canExportPDF = useFeatureFlag("Export to DOC/PDF")
-
+  const canExportHtml = useFeatureFlag("Export to HTML/Markdown");
+  const canExportDOC = useFeatureFlag("Export to DOC/PDF");
+  const canExportPDF = useFeatureFlag("Export to DOC/PDF");
+  const [deleting, setDeleting] = useState(false);
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action()
@@ -32,6 +32,8 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
   }
 
   const handleConfirmDelete = () => {
+    setDeleting(true); // start loading
+
     dispatch(deleteStructure(structureId))
       .then(() => {
         cogoToast.success("Structure deleted successfully!")
@@ -40,9 +42,12 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         navigate("/app/dashboard")
       })
       .catch(() => {
-        cogoToast.error("Failed to delete the structure. Please try again.")
+        cogoToast.error("Failed to delete the structure. Please try again.");
       })
-  }
+      .finally(() => {
+        setDeleting(false); // stop loading
+      });
+  };
 
   const handleCloseModal = () => {
     setIsDeleteModalOpen(false)
@@ -100,12 +105,12 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         </button>
       </div>
 
-      {/* Delete Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
         onClose={handleCloseModal}
         onConfirm={handleConfirmDelete}
         title="Structure"
+        loading={deleting}
       />
     </>
   )

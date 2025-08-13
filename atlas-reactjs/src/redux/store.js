@@ -7,6 +7,7 @@ import rolesReducer from "./slices/roles";
 import uploadFilesReducer from "./slices/upload-files";
 import userReducer from "./slices/users";
 import structureTemplatesSlice from "./slices/structure-templates";
+import appSettingsReducer from "./slices/app-settings"; 
 
 const store = configureStore({
   reducer: {
@@ -18,6 +19,7 @@ const store = configureStore({
     roles: rolesReducer,
     uploadFiles: uploadFilesReducer,
     structureTemplates: structureTemplatesSlice,
+    appSettings: appSettingsReducer,
   },
 });
 

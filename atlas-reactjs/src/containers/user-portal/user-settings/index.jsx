@@ -49,7 +49,6 @@ const UserSettings = () => {
       if (!file) return;
 
       const uploaded = await dispatch(uploadFile({ file, userId })).unwrap();
-
       const url = uploaded.fileUrl || uploaded.url;
 
       if (url) {
@@ -82,7 +81,6 @@ const UserSettings = () => {
       ).unwrap();
 
       Cookies.set("displayName", updatedUser.displayName);
-
       cogoToast.success("Profile updated!");
     } catch (err) {
       cogoToast.error(err.message || "Failed to update profile.");
@@ -115,6 +113,11 @@ const UserSettings = () => {
     }
   };
 
+  const handleDelete = () => {
+    console.log("Project deleted");
+    setShowConfirm(false);
+  };
+
   return (
     <Layout>
       {isLoading ? (
@@ -126,7 +129,7 @@ const UserSettings = () => {
       ) : (
         <div className="p-6 sm:p-10 bg-white rounded-[18px] shadow-md min-h-[90%] space-y-8">
           <h2 className="text-3xl font-semibold text-gray-800">
-            User Settings
+            Settings
           </h2>
 
           {/* Section 1: Personal Info */}
@@ -304,12 +307,6 @@ const UserSettings = () => {
                 👋 Farewell
               </button>
             </div>
-
-            {/* <div className="absolute top-0 right-0 -mt-5 -mr-5">
-              <div className="bg-white rounded-full p-2 shadow-lg text-red-400 text-2xl">
-                💔
-              </div>
-            </div> */}
           </div>
         </div>
       )}

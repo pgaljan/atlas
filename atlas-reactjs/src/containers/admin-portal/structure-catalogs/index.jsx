@@ -37,6 +37,7 @@ const StructureCatalog = () => {
   const [selectedCatalog, setSelectedCatalog] = useState(null);
   const [editedCatalog, setEditedCatalog] = useState(null);
   const [catalogs, setCatalogs] = useState([]);
+  const [deleting, setDeleting] = useState(false);
 
   // Fetch Plans & set default user tier from backend
   const fetchPlansData = useCallback(async () => {
@@ -140,15 +141,19 @@ const StructureCatalog = () => {
     setDeleteModalOpen(false);
   };
   const confirmDelete = () => {
+    setDeleting(true);
     if (selectedCatalog) {
       dispatch(deleteCatalog(selectedCatalog.id))
         .unwrap()
         .then(async () => {
           cogoToast.success("Catalog deleted successfully!");
           closeDeleteModal();
+          setDeleting(false);
           await fetchCatalogData();
         })
+
         .catch((error) => {
+          setDeleting(false);
           if (error?.status === 400) {
             cogoToast.error("Cannot delete catalog: Bad request.");
           } else {
@@ -425,12 +430,14 @@ const StructureCatalog = () => {
             userTiers={plans.map((plan) => plan.name)}
           />
 
-          <DeleteModal
-            isOpen={deleteModalOpen}
-            onClose={closeDeleteModal}
-            onConfirm={confirmDelete}
-            title={selectedCatalog?.name}
-          />
+         <DeleteModal
+  isOpen={deleteModalOpen}
+  onClose={closeDeleteModal}
+  loading={deleting}           
+  onConfirm={confirmDelete}
+  title={selectedCatalog?.name}
+/>
+
         </div>
       </div>
     </AdminLayout>

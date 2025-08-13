@@ -101,7 +101,8 @@ const CatalogModal = ({
     }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     if (!validate()) return;
     setIsSubmitting(true);
     try {
@@ -150,7 +151,7 @@ const CatalogModal = ({
           Enter details to {title.toLowerCase()}
         </p>
 
-        <form className="space-y-4">
+        <form className="space-y-4" onSubmit={handleSubmit}>
           {/* Catalog Name */}
           <div className="mb-4 flex items-start flex-col">
             <label className="block text-gray-700 font-medium mb-2">
@@ -282,9 +283,8 @@ const CatalogModal = ({
               Cancel
             </button>
             <button
-              type="button"
+              type="submit"
               className="flex items-center gap-2 py-2 px-4 rounded-md bg-custom-main text-white hover:bg-custom-dark disabled:opacity-50"
-              onClick={handleSubmit}
               disabled={isSubmitting}
             >
               {isSubmitting ? "Loading..." : "Submit"}

@@ -51,7 +51,7 @@ const TermsAndPolicies = () => {
           </span>
           <div>
             <h2 className="text-custom-text-heading font-medium mb-1">
-              Terms of Service
+              Terms of Services
             </h2>
             <p className="text-custom-text-grey text-sm">
               When you signed up for our product(s) you agreed to our Terms of

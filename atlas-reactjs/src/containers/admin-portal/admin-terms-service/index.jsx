@@ -9,9 +9,9 @@ import {
 } from "../../../redux/slices/terms-of-service";
 
 const AdminTermsService = () => {
+  const dispatch = useDispatch();
   const [termsText, setTermsText] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const dispatch = useDispatch();
 
   // Fetch the terms of service when the component mounts
   useEffect(() => {
