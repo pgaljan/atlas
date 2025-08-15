@@ -11,9 +11,12 @@ import {
   Patch,
   Post,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { CreateStructureDto, UpdateIsExpandedDto } from './dto';
 import { StructureService } from './structure.service';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 
 @Controller('structure')
 export class StructureController {
@@ -36,18 +39,26 @@ export class StructureController {
     }
   }
 
+  // structure.controller.ts
   @Get('workspace/:workspaceId')
-  async getStructuresByUserId(@Param('workspaceId') workspaceId: string) {
+  @UseGuards(JwtAuthGuard)
+  async getAccessibleStructuresByWorkspace(
+    @Param('workspaceId') workspaceId: string,
+    @Req() req: any,
+  ) {
     try {
       const structures =
-        await this.structureService.getStructuresByWorkspaceId(workspaceId);
+        await this.structureService.getAccessibleStructuresByWorkspace(
+          workspaceId,
+          req.user.id,
+        );
       return {
-        message: 'Structures retrieved successfully',
+        message: 'Accessible structures retrieved successfully',
         structures,
       };
     } catch (error) {
       throw new HttpException(
-        `Failed to retrieve structures: ${error.message}`,
+        `Failed to retrieve accessible structures: ${error.message}`,
         HttpStatus.NOT_FOUND,
       );
     }
@@ -191,7 +202,7 @@ export class StructureController {
       };
     } catch (error) {
       throw new HttpException(
-        `Failed to retrieve structure summaries: ${error.message}`,
+        `Failed to retrieve structure summaries: ${error?.message}`,
         HttpStatus.NOT_FOUND,
       );
     }

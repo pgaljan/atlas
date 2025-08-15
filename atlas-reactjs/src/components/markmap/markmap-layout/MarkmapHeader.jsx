@@ -594,16 +594,14 @@ const MarkmapHeader = ({
                 </button>
               </Tooltip>
 
-              {/* Share - Soft Muted Disabled */}
-              <Tooltip label="Share (coming soon)">
-                <Link to="/app/coming-soon">
-                  <button
-                    className="p-2 rounded-full bg-gray-100 text-gray-400 shadow-inner cursor-not-allowed"
-                    disabled
-                  >
-                    <PiShareNetworkBold size={20} />
-                  </button>
-                </Link>
+              {/* Share - Functional */}
+              <Tooltip label="Share Structure">
+                <button
+                  className="p-2 rounded-full bg-white text-gray-600 shadow hover:bg-gray-100 hover:text-custom-main transition"
+                  onClick={toggleShareModal}
+                >
+                  <PiShareNetworkBold size={20} />
+                </button>
               </Tooltip>
 
               {/* Profile - Minimal Elegant */}
@@ -621,7 +619,11 @@ const MarkmapHeader = ({
           </div>
         </div>
       )}
-      <ShareModal isOpen={isShareModalOpen} onClose={toggleShareModal} />
+      <ShareModal
+        isOpen={isShareModalOpen}
+        onClose={toggleShareModal}
+        structureId={structureId}
+      />
       <ImportModal
         isOpen={isImportModalOpen}
         onClose={toggleImportModal}

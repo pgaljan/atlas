@@ -3,7 +3,7 @@ import { useSelector } from "react-redux";
 
 const OnboardingHeader = () => {
   const appName =
-    useSelector((state) => state.appSettings.appSettings?.appName) || "Loading...";
+    useSelector((state) => state.appSettings.appSettings?.appName) || "Atlas";
 
   return (
     <header className="p-4 bg-custom-navbar flex items-center justify-between sticky top-0 z-50

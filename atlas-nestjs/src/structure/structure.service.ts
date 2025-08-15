@@ -175,22 +175,58 @@ export class StructureService {
     }
   }
 
-  async getStructuresByWorkspaceId(workspaceId: string) {
+  // structure.service.ts
+  async getAccessibleStructuresByWorkspace(
+    workspaceId: string,
+    currentUserId: string,
+  ) {
     try {
       const structures = await this.prisma.structure.findMany({
-        where: { workspaceId: workspaceId },
-      });
+        where: {
+          workspaceId,
+          OR: [
+            { ownerId: currentUserId },
+            { shares: { some: { userId: currentUserId } } },
+            {
+              shareInvitations: {
+                some: {
+                  inviteeId: currentUserId,
+                  status: 'accepted',
+                },
+              },
+            },
+          ],
+        },
 
-      if (!structures || structures.length === 0) {
-        throw new NotFoundException(
-          `No structures found for user with id ${workspaceId}`,
-        );
-      }
+        select: {
+          id: true,
+          name: true,
+          title: true,
+          imageUrl: true,
+          createdAt: true,
+          updatedAt: true,
+          description: true,
+          ownerId: true,
+          type: true,
+          visibility: true,
+          shares: {
+            where: { userId: currentUserId },
+            select: { permission: true },
+          },
+          shareInvitations: {
+            where: {
+              inviteeId: currentUserId,
+              status: 'accepted',
+            },
+            select: { permission: true },
+          },
+        },
+      });
 
       return structures;
     } catch (error) {
       throw new InternalServerErrorException(
-        `Failed to retrieve structures: ${error.message}`,
+        `Failed to retrieve accessible structures: ${error.message}`,
       );
     }
   }
@@ -426,7 +462,6 @@ export class StructureService {
 
       return updatedStructure;
     } catch (error) {
-      console.error(error);
       throw new InternalServerErrorException('Error updating expand state');
     }
   }
@@ -480,13 +515,6 @@ export class StructureService {
         imageUrl: true,
       },
     });
-
-    if (!summaries || summaries.length === 0) {
-      throw new NotFoundException(
-        `No structure summaries found for workspace ${workspaceId}`,
-      );
-    }
-
     return summaries;
   }
 }

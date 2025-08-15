@@ -31,12 +31,6 @@ enum WorkspaceRole {
   member
 }
 
-enum InvitationStatus {
-  pending
-  expired
-  accepted
-}
-
 enum EditorType {
   vscode
   quilleditor
@@ -48,6 +42,19 @@ enum EditorType {
 enum StructureType {
   default
   faultTree
+}
+
+enum SharePermission {
+  owner
+  editor
+  commenter
+  viewer
+}
+
+enum InvitationStatus {
+  pending
+  expired
+  accepted
 }
 
 model Workspace {
@@ -105,6 +112,11 @@ model User {
   acceptedPrivacyPolicy  PrivacyPolicy?      @relation(fields: [acceptedPrivacyPolicyId], references: [id])
   acceptedTermsOfService TermsOfService?     @relation(fields: [acceptedTermsOfServiceId], references: [id])
   StructureTemplate      StructureTemplate[]
+
+  structureShares StructureShare[]
+
+  StructureShareInvitationsSent     StructureShareInvitation[] @relation("StructureShareInvitationInviter")
+  StructureShareInvitationsReceived StructureShareInvitation[] @relation("StructureShareInvitationInvitee")
 }
 
 model Invitation {
@@ -234,6 +246,11 @@ model Structure {
   teams             Team[]              @relation("TeamStructures")
   teamId            String?
   StructureTemplate StructureTemplate[]
+
+  // Structure Sharing Relations
+  shares           StructureShare[]
+  shareLinks       StructureShareLink[]
+  shareInvitations StructureShareInvitation[]
 }
 
 model Element {
@@ -493,4 +510,62 @@ model StructureTemplate {
   @@index([structureId])
   @@index([workspaceId])
   @@index([ownerId])
+}
+
+model StructureShare {
+  id          String          @id @default(uuid())
+  structureId String
+  userId      String
+  permission  SharePermission
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  structure Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([structureId, userId])
+  // @@unique([structureId, permission], map: "unique_owner_per_structure")
+  @@index([structureId])
+  @@index([userId])
+}
+
+model StructureShareLink {
+  id          String          @id @default(uuid())
+  structureId String
+  token       String          @unique @default(uuid())
+  permission  SharePermission
+  expiresAt   DateTime?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  structure Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@index([structureId])
+  @@index([token])
+}
+
+model StructureShareInvitation {
+  id           String           @id @default(uuid())
+  structureId  String
+  inviterId    String
+  inviteeEmail String
+  inviteeId    String?
+  permission   SharePermission
+  token        String           @unique @default(uuid())
+  message      String?
+  status       InvitationStatus @default(pending)
+  expiresAt    DateTime
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  usedAt       DateTime?
+
+  structure Structure @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  inviter User? @relation("StructureShareInvitationInviter", fields: [inviterId], references: [id])
+  invitee User? @relation("StructureShareInvitationInvitee", fields: [inviteeId], references: [id])
+
+  @@index([structureId])
+  @@index([inviteeEmail])
+  @@index([token])
 }

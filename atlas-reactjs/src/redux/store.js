@@ -7,7 +7,8 @@ import rolesReducer from "./slices/roles";
 import uploadFilesReducer from "./slices/upload-files";
 import userReducer from "./slices/users";
 import structureTemplatesSlice from "./slices/structure-templates";
-import appSettingsReducer from "./slices/app-settings"; 
+import structureSharingReducer from "./slices/structure-sharing";
+import appSettingsReducer from "./slices/app-settings";
 
 const store = configureStore({
   reducer: {
@@ -19,6 +20,7 @@ const store = configureStore({
     roles: rolesReducer,
     uploadFiles: uploadFilesReducer,
     structureTemplates: structureTemplatesSlice,
+    structureShares: structureSharingReducer,
     appSettings: appSettingsReducer,
   },
 });

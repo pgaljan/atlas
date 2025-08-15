@@ -23,6 +23,7 @@ import { SubscriptionsModule } from './subscriptions/subscriptions.module';
 import { TeamMemberModule } from './team-member/team-member.module';
 import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module';
 import { UserModule } from './user/user.module';
+import { ShareStructureModule } from './share-structure/share-structure.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { UserModule } from './user/user.module';
     TermsOfServiceModule,
     AppSettingsModule,
     StructureTemplatesModule,
+    ShareStructureModule,
   ],
   controllers: [AppController],
   providers: [AppService],

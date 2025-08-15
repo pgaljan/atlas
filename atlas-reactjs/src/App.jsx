@@ -1,29 +1,35 @@
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY)
 
-import { registerLicense } from "@syncfusion/ej2-base";
-import { Suspense, lazy, useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Route, Routes, useLocation, useNavigate } from "react-router-dom";
-import Settings from "./containers/admin-portal/settings";
-import { fetchAppSettings } from "./redux/slices/app-settings";
-import AdminPrivateRoute from "./routes/AdminPrivateRoute";
-import APIKeyPrivateRoute from "./routes/APIKeyPrivateRoute";
-import PrivateRoute from "./routes/PrivateRoute";
-import PublicRoute from "./routes/PublicRoute";
-const NotFound = lazy(() => import("./components/404-notfound/NotFound"));
-const ComingSoon = lazy(() => import("./components/comming-soon"));
-const PremiumModal = lazy(() => import("./components/modals/PremiumModal"));
+import { registerLicense } from "@syncfusion/ej2-base"
+import { Suspense, lazy, useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import { Route, Routes, useLocation, useNavigate } from "react-router-dom"
+import cogoToast from "@successtar/cogo-toast"
+import Settings from "./containers/admin-portal/settings"
+import { fetchAppSettings } from "./redux/slices/app-settings"
+import AdminPrivateRoute from "./routes/AdminPrivateRoute"
+import APIKeyPrivateRoute from "./routes/APIKeyPrivateRoute"
+import PrivateRoute from "./routes/PrivateRoute"
+import PublicRoute from "./routes/PublicRoute"
+
+const NotFound = lazy(() => import("./components/404-notfound/NotFound"))
+const ComingSoon = lazy(() => import("./components/comming-soon"))
+const PremiumModal = lazy(() => import("./components/modals/PremiumModal"))
 
 // Authentication Pages
-const Login = lazy(() => import("./containers/common/login"));
-const Policy = lazy(() => import("./containers/common/privacy-policy"));
-const Terms = lazy(() => import("./containers/common/terms-of-service"));
+const Login = lazy(() => import("./containers/common/login"))
+const Policy = lazy(() => import("./containers/common/privacy-policy"))
+const Terms = lazy(() => import("./containers/common/terms-of-service"))
+const AcceptShareInvitation = lazy(() =>
+  import("./containers/common/accept-share-invitation")
+)
+const SharedStructureAccess = lazy(() =>
+  import("./containers/common/shared-structure-access")
+)
 
-const Register = lazy(() => import("./containers/common/register"));
-const ForgotPassword = lazy(() =>
-  import("./containers/common/forgot-password")
-);
-const ResetPassword = lazy(() => import("./containers/common/reset-password"));
+const Register = lazy(() => import("./containers/common/register"))
+const ForgotPassword = lazy(() => import("./containers/common/forgot-password"))
+const ResetPassword = lazy(() => import("./containers/common/reset-password"))
 
 // OAuth Callbacks
 const GoogleCallback = lazy(() =>
@@ -31,6 +37,9 @@ const GoogleCallback = lazy(() =>
 )
 const GithubCallback = lazy(() =>
   import("./containers/callbacks/github-callback")
+)
+const ShareCallback = lazy(() =>
+  import("./containers/callbacks/share-callback")
 )
 
 // Subscription Routes
@@ -117,11 +126,12 @@ const authRoutes = [
   { path: "/admin-portal", element: <AdminLogin /> },
   { path: "/privacy-policy", element: <Policy /> },
   { path: "/terms-of-service", element: <Terms /> },
-];
+]
 
 const callbackRoutes = [
   { path: "/app/google-callback", element: <GoogleCallback /> },
   { path: "/app/github-callback", element: <GithubCallback /> },
+  { path: "/app/share-callback/accept-invitation", element: <ShareCallback /> },
 ]
 
 const subscriptionRoutes = [
@@ -147,8 +157,7 @@ const userRoutes = [
   { path: "/app/s/:username/:structureId", element: <StructureRenderer /> },
   { path: "/app/coming-soon", element: <ComingSoon /> },
   { path: "/app/user-settings", element: <UserSettings /> },
-
-];
+]
 
 const adminRoutes = [
   { path: "/app/admin-portal/user-management", element: <UserTable /> },
@@ -213,8 +222,8 @@ const App = () => {
             )
           }
 
-          const newTitle = settings?.appName || "Atlas";
-          document.title = newTitle;
+          const newTitle = settings?.appName || "Atlas"
+          document.title = newTitle
 
           if (settings?.logoUrl) {
             const baseUrl = window.location.origin

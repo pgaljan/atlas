@@ -1,18 +1,18 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { Link, useNavigate } from "react-router-dom";
-import Icons from "../../../constants/icons";
-import { fetchAppSettings } from "../../../redux/slices/app-settings";
-import { loginUser } from "../../../redux/slices/auth";
+import cogoToast from "@successtar/cogo-toast"
+import Cookies from "js-cookie"
+import { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import { Link, useNavigate } from "react-router-dom"
+import Icons from "../../../constants/icons"
+import { fetchAppSettings } from "../../../redux/slices/app-settings"
+import { loginUser } from "../../../redux/slices/auth"
 import PrivacyPolicy from "../privacy-policy/index"
-import OnboardingHeader from "../../../components/common/OnboardingHeader";
+import OnboardingHeader from "../../../components/common/OnboardingHeader"
 
 const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
   const handleOAuthLogin = () => {
-    window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`;
-  };
+    window.location.href = `${import.meta.env.VITE_API_URL}/auth/${provider}`
+  }
 
   return (
     <button
@@ -22,75 +22,74 @@ const OAuthLoginButton = ({ provider, icon: Icon, label }) => {
       <Icon />
       <span>Log in with {label}</span>
     </button>
-  );
-};
+  )
+}
 
 const Login = () => {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [emailError, setEmailError] = useState("");
-  const [passwordError, setPasswordError] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [emailError, setEmailError] = useState("")
+  const [passwordError, setPasswordError] = useState("")
+  const [isSubmitting, setIsSubmitting] = useState(false)
   const [authProviders, setAuthProviders] = useState({
     local: true,
     google: true,
     github: true,
-  });
+  })
 
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
   useEffect(() => {
     const loadAuthSettings = async () => {
       try {
-        const result = await dispatch(fetchAppSettings());
+        const result = await dispatch(fetchAppSettings())
         if (fetchAppSettings.fulfilled.match(result)) {
-          const settings = result.payload;
+          const settings = result.payload
           if (settings?.authProviders) {
-            setAuthProviders(settings.authProviders);
+            setAuthProviders(settings.authProviders)
           }
         }
       } catch (error) {
-        console.error("Failed to fetch auth settings", error);
+        console.error("Failed to fetch auth settings", error)
       }
-    };
+    }
 
-    loadAuthSettings();
-  }, [dispatch]);
+    loadAuthSettings()
+  }, [dispatch])
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    if (!email) return setEmailError("Email is required");
-    if (!/\S+@\S+\.\S+/.test(email)) return setEmailError("Enter valid email");
-    if (!password) return setPasswordError("Password is required");
+  const handleSubmit = e => {
+    e.preventDefault()
+    if (!email) return setEmailError("Email is required")
+    if (!/\S+@\S+\.\S+/.test(email)) return setEmailError("Enter valid email")
+    if (!password) return setPasswordError("Password is required")
 
-    setEmailError("");
-    setPasswordError("");
-    setIsSubmitting(true);
+    setEmailError("")
+    setPasswordError("")
+    setIsSubmitting(true)
 
     dispatch(loginUser({ email, password }))
       .unwrap()
-      .then((response) => {
+      .then(response => {
         Cookies.set("atlas_access_token", response.access_token, {
           expires: 1,
-        });
-        Cookies.set("atlas_email", response.user.email, { expires: 1 });
-        Cookies.set("atlas_username", response.user.username, { expires: 1 });
-        Cookies.set("atlas_userId", response.user.id, { expires: 1 });
-        Cookies.set("workspaceId", response.user.workspaceId, { expires: 1 });
-        Cookies.set("displayName", response.user.displayName, { expires: 1 });
-        cogoToast.success("Login successful!");
-        navigate("/app/dashboard");
+        })
+        Cookies.set("atlas_email", response.user.email, { expires: 1 })
+        Cookies.set("atlas_username", response.user.username, { expires: 1 })
+        Cookies.set("atlas_userId", response.user.id, { expires: 1 })
+        Cookies.set("workspaceId", response.user.workspaceId, { expires: 1 })
+        Cookies.set("displayName", response.user.displayName, { expires: 1 })
+        cogoToast.success("Login successful!")
+        navigate("/app/dashboard")
       })
-      .catch((err) => {
-        cogoToast.error(err.message || "Login failed!");
+      .catch(err => {
+        cogoToast.error(err.message || "Login failed!")
       })
-      .finally(() => setIsSubmitting(false));
-  };
+      .finally(() => setIsSubmitting(false))
+  }
 
   return (
     <div className="bg-custom-background-white">
-      <OnboardingHeader/>
+      <OnboardingHeader />
 
       <main className="flex items-center justify-center h-screen">
         <div className="p-6 w-full max-w-[30%]">
@@ -109,7 +108,7 @@ const Login = () => {
                   type="email"
                   value={email}
                   placeholder="Enter your email"
-                  onChange={(e) => setEmail(e.target.value)}
+                  onChange={e => setEmail(e.target.value)}
                   className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
                 />
                 {emailError && (
@@ -124,7 +123,7 @@ const Login = () => {
                   type="password"
                   placeholder="Enter your password"
                   value={password}
-                  onChange={(e) => setPassword(e.target.value)}
+                  onChange={e => setPassword(e.target.value)}
                   className="w-full p-2 border-2 rounded-md focus:border-custom-main focus:outline-none"
                 />
                 {passwordError && (
@@ -191,14 +190,14 @@ const Login = () => {
               to="/privacy-policy"
               className="text-black underline hover:text-blue-700"
             >
-            Privacy Policy
+              Privacy Policy
             </Link>
             .
           </div>
         </div>
       </main>
     </div>
-  );
-};
+  )
+}
 
-export default Login;
+export default Login
