@@ -1,5 +1,5 @@
-import cogoToast from "@successtar/cogo-toast"
-import { useEffect, useState, useCallback } from "react"
+import cogoToast from "@successtar/cogo-toast";
+import { useEffect, useState, useCallback } from "react";
 import {
   FiAlertCircle,
   FiClock,
@@ -9,8 +9,8 @@ import {
   FiX,
   FiSettings,
   FiRefreshCw,
-} from "react-icons/fi"
-import { useDispatch, useSelector } from "react-redux"
+} from "react-icons/fi";
+import { useDispatch, useSelector } from "react-redux";
 import {
   fetchSharesForStructure,
   fetchCollaborators,
@@ -21,30 +21,27 @@ import {
   inviteUserToShare,
   removeCollaborator,
   updateShareRole,
-} from "../../redux/slices/structure-sharing"
-import { PERMISSION_LEVELS, PERMISSION_CONFIG } from "../../types/permissions"
+} from "../../redux/slices/structure-sharing";
+import { PERMISSION_LEVELS, PERMISSION_CONFIG } from "../../types/permissions";
 
-// Utility functions
-const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim())
-// Main ShareModal Component
+const isValidEmail = (email) =>
+  /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim());
 const ShareModal = ({ isOpen, onClose, structureId }) => {
-  const user = useSelector(state => state.auth?.user || null)
-
-  const dispatch = useDispatch()
-
-  // State management
-  const [email, setEmail] = useState("")
-  const [selectedEmails, setSelectedEmails] = useState([])
-  const [customMessage, setCustomMessage] = useState("")
+  const user = useSelector((state) => state.auth?.user || null);
+  const dispatch = useDispatch();
+  const [email, setEmail] = useState("");
+  const [selectedEmails, setSelectedEmails] = useState([]);
+  const [customMessage, setCustomMessage] = useState("");
   const [selectedPermission, setSelectedPermission] = useState(
     PERMISSION_LEVELS.EDITOR
-  )
-  const [activeTab, setActiveTab] = useState("invite")
-  const [linkPermission, setLinkPermission] = useState(PERMISSION_LEVELS.VIEWER)
-  const [emailError, setEmailError] = useState("")
-  const [refreshing, setRefreshing] = useState(false)
+  );
+  const [activeTab, setActiveTab] = useState("invite");
+  const [linkPermission, setLinkPermission] = useState(
+    PERMISSION_LEVELS.VIEWER
+  );
+  const [emailError, setEmailError] = useState("");
+  const [refreshing, setRefreshing] = useState(false);
 
-  // Redux state
   const {
     collaborators,
     pendingInvitations,
@@ -53,175 +50,159 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
     loading,
     error,
     status,
-  } = useSelector(state => state.structureShares || {})
+  } = useSelector((state) => state.structureShares || {});
 
-  // Define display data first
-  const displayCollaborators = collaborators || []
-  const displayShareLinks = (links || [])?.filter(l => l?.isActive !== false)
+  const displayCollaborators = collaborators || [];
+  const displayShareLinks = (links || [])?.filter((l) => l?.isActive !== false);
 
-  console.log("collaborators", collaborators)
-  // Fetch data when modal opens OR structure changes (but preserve existing data)
   useEffect(() => {
     if (isOpen && structureId) {
-      dispatch(fetchSharesForStructure(structureId))
-      dispatch(fetchCollaborators(structureId))
-      dispatch(fetchPendingInvitations(structureId))
-      dispatch(fetchShareableLinks(structureId))
+      dispatch(fetchSharesForStructure(structureId));
+      dispatch(fetchCollaborators(structureId));
+      dispatch(fetchPendingInvitations(structureId));
     }
-  }, [isOpen, structureId, dispatch])
+  }, [isOpen, structureId, dispatch]);
 
-  // Clear state when modal closes to ensure fresh data on reopen
   useEffect(() => {
     if (!isOpen) {
-      // Reset local state but preserve Redux data
-      setSelectedEmails([])
-      setCustomMessage("")
-      setEmail("")
-      setActiveTab("invite")
+      setSelectedEmails([]);
+      setCustomMessage("");
+      setEmail("");
+      setActiveTab("invite");
     }
-  }, [isOpen])
+  }, [isOpen]);
 
-  // Manual refresh function
   const handleRefresh = useCallback(async () => {
-    if (!structureId || refreshing) return
+    if (!structureId || refreshing) return;
 
-    setRefreshing(true)
+    setRefreshing(true);
     try {
       await Promise.all([
         dispatch(fetchPendingInvitations(structureId)),
         dispatch(fetchCollaborators(structureId)),
-      ])
-      cogoToast.success("Data refreshed!")
+      ]);
+      cogoToast.success("Data refreshed!");
     } catch (error) {
-      cogoToast.error("Failed to refresh data")
+      cogoToast.error("Failed to refresh data");
     } finally {
-      setRefreshing(false)
+      setRefreshing(false);
     }
-  }, [structureId, dispatch, refreshing])
+  }, [structureId, dispatch, refreshing]);
 
   const checkDuplicateEmail = useCallback(
-    emailToCheck => {
-      const trimmedEmail = emailToCheck.trim().toLowerCase()
+    (emailToCheck) => {
+      const trimmedEmail = emailToCheck.trim().toLowerCase();
 
-      // Find the owner email from collaborators (inviter.email)
-      const ownerInviter = displayCollaborators?.find(c => c.inviter)?.inviter
+      const ownerInviter = displayCollaborators?.find(
+        (c) => c.inviter
+      )?.inviter;
       const ownerEmail =
-        ownerInviter?.email?.toLowerCase() || user?.email?.toLowerCase()
-      // Check if trying to invite the owner (self-invitation)
+        ownerInviter?.email?.toLowerCase() || user?.email?.toLowerCase();
       if (ownerEmail && ownerEmail === trimmedEmail) {
         return {
           isDuplicate: true,
           type: "owner",
           message: `🚫 You  cannot invite the structure owner! The owner already has full access.`,
-        }
+        };
       }
 
-      // Check if already a collaborator
-      const existingCollaborator = displayCollaborators?.find(c => {
+      const existingCollaborator = displayCollaborators?.find((c) => {
         const collaboratorEmail =
           c?.inviteeEmail?.toLowerCase() ||
           c?.user?.email?.toLowerCase() ||
-          c?.email?.toLowerCase()
-        return collaboratorEmail && collaboratorEmail === trimmedEmail
-      })
+          c?.email?.toLowerCase();
+        return collaboratorEmail && collaboratorEmail === trimmedEmail;
+      });
       if (existingCollaborator) {
         return {
           isDuplicate: true,
           type: "collaborator",
           message: `👥 "${trimmedEmail}" is already a collaborator with access to this structure.`,
-        }
+        };
       }
 
-      // Check if already in shares list (accepted invitations)
-      const existingShare = shares?.find(share => {
+      const existingShare = shares?.find((share) => {
         const shareEmail =
-          share?.user?.email?.toLowerCase() || share?.email?.toLowerCase()
-        return shareEmail && shareEmail === trimmedEmail
-      })
+          share?.user?.email?.toLowerCase() || share?.email?.toLowerCase();
+        return shareEmail && shareEmail === trimmedEmail;
+      });
       if (existingShare) {
         return {
           isDuplicate: true,
           type: "share",
           message: `✅ "${trimmedEmail}" already has access to this structure.`,
-        }
+        };
       }
 
-      // Check if has pending invitation
       const pendingInvitation = pendingInvitations?.find(
-        inv => inv.inviteeEmail?.toLowerCase() === trimmedEmail
-      )
+        (inv) => inv.inviteeEmail?.toLowerCase() === trimmedEmail
+      );
       if (pendingInvitation) {
         return {
           isDuplicate: true,
           type: "pending",
           message: `⏳ Invitation already sent to "${trimmedEmail}". Check the Pending tab to manage existing invitations.`,
-        }
+        };
       }
 
-      // Check if already selected in current session
-      const isSelected = selectedEmails?.includes(trimmedEmail)
+      const isSelected = selectedEmails?.includes(trimmedEmail);
       if (isSelected) {
         return {
           isDuplicate: true,
           type: "selected",
           message: `📝 "${trimmedEmail}" is already in your invitation list below.`,
-        }
+        };
       }
 
-      return { isDuplicate: false }
+      return { isDuplicate: false };
     },
     [user, displayCollaborators, shares, selectedEmails, pendingInvitations]
-  )
+  );
 
-  const handleAddEmail = e => {
+  const handleAddEmail = (e) => {
     if (e?.key === "Enter" && isValidEmail(email)) {
-      const duplicateCheck = checkDuplicateEmail(email)
+      const duplicateCheck = checkDuplicateEmail(email);
 
       if (duplicateCheck.isDuplicate) {
-        cogoToast.warn(duplicateCheck.message)
-        setEmail("")
-        return
+        cogoToast.warn(duplicateCheck.message);
+        setEmail("");
+        return;
       }
 
-      setSelectedEmails(prev => [...prev, email.trim().toLowerCase()])
-      setEmail("")
+      setSelectedEmails((prev) => [...prev, email.trim().toLowerCase()]);
+      setEmail("");
     }
-  }
+  };
 
-  const handleCancelInvitation = async invitationId => {
+  const handleCancelInvitation = async (invitationId) => {
     try {
-      // Use removeCollaborator for pending invitations (StructureShareInvitation table)
-      await dispatch(removeCollaborator(invitationId)).unwrap()
-      cogoToast.success("Invitation cancelled successfully!")
-      // Refresh pending invitations list
-      dispatch(fetchPendingInvitations(structureId))
+      await dispatch(removeCollaborator(invitationId)).unwrap();
+      cogoToast.success("Invitation cancelled successfully!");
+      dispatch(fetchPendingInvitations(structureId));
     } catch (error) {
-      cogoToast.error(error?.message || "Failed to cancel invitation")
+      cogoToast.error(error?.message || "Failed to cancel invitation");
     }
-  }
-  console.log("user", user)
+  };
 
-  const handleRemoveEmail = emailToRemove => {
-    setSelectedEmails(prev =>
-      prev.filter(selectedEmail => selectedEmail !== emailToRemove)
-    )
-  }
+  const handleRemoveEmail = (emailToRemove) => {
+    setSelectedEmails((prev) =>
+      prev.filter((selectedEmail) => selectedEmail !== emailToRemove)
+    );
+  };
 
   const handleSendInvites = async () => {
     if (selectedEmails.length === 0) {
-      cogoToast.warn("Please add at least one email address.")
-      return
+      cogoToast.warn("Please add at least one email address.");
+      return;
     }
 
-    // Final validation before sending - check for real duplicates only
-    const invalidEmails = []
-    const validationDetails = []
+    const invalidEmails = [];
+    const validationDetails = [];
 
-    selectedEmails.forEach(email => {
-      const duplicateCheck = checkDuplicateEmail(email)
-      validationDetails.push({ email, check: duplicateCheck })
+    selectedEmails.forEach((email) => {
+      const duplicateCheck = checkDuplicateEmail(email);
+      validationDetails.push({ email, check: duplicateCheck });
 
-      // Only block if it's a real duplicate that shouldn't be sent
       if (
         duplicateCheck.isDuplicate &&
         (duplicateCheck.type === "owner" ||
@@ -229,20 +210,20 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
           duplicateCheck.type === "share" ||
           duplicateCheck.type === "pending")
       ) {
-        invalidEmails.push(email)
+        invalidEmails.push(email);
       }
-    })
+    });
 
     if (invalidEmails.length > 0) {
       const invalidDetails = validationDetails
-        .filter(detail => invalidEmails.includes(detail.email))
-        .map(detail => `${detail.email} (${detail.check.type})`)
-        .join(", ")
+        .filter((detail) => invalidEmails.includes(detail.email))
+        .map((detail) => `${detail.email} (${detail.check.type})`)
+        .join(", ");
 
       cogoToast.error(
         `Cannot send invitations to: ${invalidDetails}. Please remove these emails first.`
-      )
-      return
+      );
+      return;
     }
 
     try {
@@ -254,21 +235,21 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
             permission: selectedPermission,
             message: customMessage?.trim() || undefined,
           })
-        ).unwrap()
+        ).unwrap();
       }
 
-      cogoToast.success("Invitations sent successfully!")
-      setSelectedEmails([])
-      setCustomMessage("")
-      setActiveTab("pending")
+      cogoToast.success("Invitations sent successfully!");
+      setSelectedEmails([]);
+      setCustomMessage("");
+      setActiveTab("pending");
 
       // Refresh all data to show updates
-      dispatch(fetchPendingInvitations(structureId))
-      dispatch(fetchCollaborators(structureId))
+      dispatch(fetchPendingInvitations(structureId));
+      dispatch(fetchCollaborators(structureId));
     } catch (error) {
-      cogoToast.error(error?.message || "Failed to send invitations")
+      cogoToast.error(error?.message || "Failed to send invitations");
     }
-  }
+  };
 
   const handlePermissionChange = async (shareId, newPermission) => {
     try {
@@ -277,84 +258,82 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
           id: shareId,
           dto: { permission: newPermission },
         })
-      ).unwrap()
-      cogoToast.success("Permission updated successfully!")
+      ).unwrap();
+      cogoToast.success("Permission updated successfully!");
     } catch (error) {
-      cogoToast.error(error.message || "Failed to update permission")
+      cogoToast.error(error.message || "Failed to update permission");
     }
-  }
+  };
 
-  const handleRemoveCollaborator = async invitationId => {
+  const handleRemoveCollaborator = async (invitationId) => {
     try {
-      await dispatch(removeCollaborator(invitationId)).unwrap()
-      cogoToast.success("Invitation removed successfully!")
-      dispatch(fetchCollaborators(structureId))
+      await dispatch(removeCollaborator(invitationId)).unwrap();
+      cogoToast.success("Invitation removed successfully!");
+      dispatch(fetchCollaborators(structureId));
     } catch (error) {
-      cogoToast.error(error.message || "Failed to remove invitation")
+      cogoToast.error(error.message || "Failed to remove invitation");
     }
-  }
+  };
 
-  const handleCreateLink = async () => {
-    try {
-      const linkData = await dispatch(
-        createShareLink({
-          structureId,
-          permission: linkPermission,
-          expiresIn: "30d",
-        })
-      ).unwrap()
+  // const handleCreateLink = async () => {
+  //   try {
+  //     const linkData = await dispatch(
+  //       createShareLink({
+  //         structureId,
+  //         permission: linkPermission,
+  //         expiresIn: "30d",
+  //       })
+  //     ).unwrap()
 
-      const fullLink = `${window.location.origin}/shared/${linkData.token}`
-      await navigator.clipboard.writeText(fullLink)
-      cogoToast.success("Share link created and copied to clipboard!")
+  //     const fullLink = `${window.location.origin}/shared/${linkData.token}`
+  //     await navigator.clipboard.writeText(fullLink)
+  //     cogoToast.success("Share link created and copied to clipboard!")
 
-      // Refresh share links to show the new link
-      dispatch(fetchShareableLinks(structureId))
-    } catch (error) {
-      cogoToast.error(error?.message || "Failed to create share link")
-    }
-  }
+  //     // Refresh share links to show the new link
+  //     dispatch(fetchShareableLinks(structureId))
+  //   } catch (error) {
+  //     cogoToast.error(error?.message || "Failed to create share link")
+  //   }
+  // }
 
-  const handleCopyLink = async link => {
-    try {
-      await navigator.clipboard.writeText(link)
-      cogoToast.success("Link copied to clipboard!")
-    } catch (error) {
-      cogoToast.error("Failed to copy link")
-    }
-  }
+  // const handleCopyLink = async link => {
+  //   try {
+  //     await navigator.clipboard.writeText(link)
+  //     cogoToast.success("Link copied to clipboard!")
+  //   } catch (error) {
+  //     cogoToast.error("Failed to copy link")
+  //   }
+  // }
 
-  const handleRevokeLink = async linkId => {
-    try {
-      await dispatch(revokeShareLink(linkId)).unwrap()
-      cogoToast.success("Share link revoked successfully!")
+  // const handleRevokeLink = async linkId => {
+  //   try {
+  //     await dispatch(revokeShareLink(linkId)).unwrap()
+  //     cogoToast.success("Share link revoked successfully!")
 
-      // Refresh share links to remove the revoked link
-      dispatch(fetchShareableLinks(structureId))
-    } catch (error) {
-      cogoToast.error(error?.message || "Failed to revoke share link")
-    }
-  }
+  //     // Refresh share links to remove the revoked link
+  //     dispatch(fetchShareableLinks(structureId))
+  //   } catch (error) {
+  //     cogoToast.error(error?.message || "Failed to revoke share link")
+  //   }
+  // }
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
   const owner =
-    shares?.find(s => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
-    displayCollaborators?.find(c => c?.inviter)?.inviter ||
+    shares?.find((s) => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
+    displayCollaborators?.find((c) => c?.inviter)?.inviter ||
     user ||
-    null
+    null;
 
-  // used to compute count without double-counting if owner already present in collaborators
   const ownerIncludedInCollaborators = !!displayCollaborators?.some(
-    c => c?.inviter?.email?.toLowerCase() === owner?.email?.toLowerCase()
-  )
+    (c) => c?.inviter?.email?.toLowerCase() === owner?.email?.toLowerCase()
+  );
   const collaboratorCount =
     (displayCollaborators?.length || 0) +
-    (owner && !ownerIncludedInCollaborators ? 1 : 0)
+    (owner && !ownerIncludedInCollaborators ? 1 : 0);
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg w-11/12 max-w-4xl max-h-[90vh] overflow-hidden">
-        {/* Header */}
         <div className="flex justify-between items-center border-b p-6">
           <h2 className="text-xl font-bold">Share Structure</h2>
           <button
@@ -365,7 +344,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
           </button>
         </div>
 
-        {/* Tabs */}
         <div className="border-b">
           <nav className="flex space-x-8 px-6">
             {[
@@ -375,8 +353,8 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 id: "pending",
                 label: `Pending (${pendingInvitations?.length || 0})`,
               },
-              { id: "links", label: "Share Links" },
-            ].map(tab => (
+              // { id: "links", label: "Share Links" },
+            ]?.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
@@ -392,9 +370,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
           </nav>
         </div>
 
-        {/* Content */}
         <div className="p-6 max-h-96 overflow-y-auto">
-          {/* Invite Tab */}
           {activeTab === "invite" && (
             <div className="space-y-4">
               <div>
@@ -406,13 +382,13 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                     type="text"
                     placeholder="Add people by email and press Enter"
                     value={email}
-                    onChange={e => setEmail(e.target.value)}
+                    onChange={(e) => setEmail(e.target.value)}
                     onKeyDown={handleAddEmail}
                     className="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                   />
                   <select
                     value={selectedPermission}
-                    onChange={e => setSelectedPermission(e.target.value)}
+                    onChange={(e) => setSelectedPermission(e.target.value)}
                     className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                   >
                     <option value={PERMISSION_LEVELS.EDITOR}>
@@ -431,7 +407,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </p>
               </div>
 
-              {/* Selected Emails */}
               {selectedEmails.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -456,7 +431,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </div>
               )}
 
-              {/* Custom Message */}
               <div>
                 <label className="block text-sm font-medium text-gray-700">
                   Add a custom message (optional)
@@ -465,12 +439,11 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   rows={3}
                   placeholder="Add an optional message for invitees..."
                   value={customMessage}
-                  onChange={e => setCustomMessage(e.target.value)}
+                  onChange={(e) => setCustomMessage(e.target.value)}
                   className="w-full mt-2 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                 ></textarea>
               </div>
 
-              {/* Permission Info */}
               <div className="bg-gray-50 p-4 rounded-md">
                 <h4 className="font-medium text-gray-900 mb-2">
                   Permission Levels:
@@ -479,7 +452,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   {Object.entries(PERMISSION_CONFIG)
                     .filter(([key]) => key !== PERMISSION_LEVELS.OWNER)
                     .map(([key, config]) => {
-                      const Icon = config.icon
+                      const Icon = config.icon;
                       return (
                         <div key={key} className="flex items-center space-x-2">
                           <Icon className={`w-4 h-4 ${config.color}`} />
@@ -488,12 +461,11 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                             {config.description}
                           </span>
                         </div>
-                      )
+                      );
                     })}
                 </div>
               </div>
 
-              {/* Send Button */}
               <div className="flex justify-end">
                 <button
                   onClick={handleSendInvites}
@@ -510,7 +482,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
             </div>
           )}
 
-          {/* Collaborators Tab */}
           {activeTab === "collaborators" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -533,9 +504,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </div>
               </div>
 
-              {/* Always show content since owner should always be displayed */}
               <div className="space-y-3">
-                {/* Show Owner First - Always display */}
                 {owner && (
                   <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
                     <div className="flex items-center space-x-3">
@@ -563,7 +532,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   </div>
                 )}
 
-                {/* Show message if no other collaborators */}
                 {(!displayCollaborators ||
                   displayCollaborators.length === 0) && (
                   <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
@@ -583,17 +551,17 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   </div>
                 )}
 
-                {/* Show Other Collaborators */}
                 {displayCollaborators &&
                   displayCollaborators.length > 0 &&
                   displayCollaborators
                     ?.filter(
                       (collaborator, index, array) =>
-                        array.findIndex(c => c.id === collaborator.id) === index
+                        array.findIndex((c) => c.id === collaborator.id) ===
+                        index
                     )
                     ?.map((collaborator, index) => {
-                      const config = PERMISSION_CONFIG[collaborator.permission]
-                      const Icon = config.icon
+                      const config = PERMISSION_CONFIG[collaborator.permission];
+                      const Icon = config.icon;
                       return (
                         <div
                           key={`collaborator-${collaborator.id}-${index}`}
@@ -625,7 +593,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                               <>
                                 <select
                                   value={collaborator?.permission}
-                                  onChange={e =>
+                                  onChange={(e) =>
                                     handlePermissionChange(
                                       collaborator.id,
                                       e.target.value
@@ -657,7 +625,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                                 </select>
                                 <button
                                   onClick={() => {
-                                    handleRemoveCollaborator(collaborator?.id)
+                                    handleRemoveCollaborator(collaborator?.id);
                                   }}
                                   className="text-red-500 hover:text-red-700"
                                   title="Remove collaborator"
@@ -668,13 +636,12 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                             )}
                           </div>
                         </div>
-                      )
+                      );
                     })}
               </div>
             </div>
           )}
 
-          {/* Pending Invitations Tab */}
           {activeTab === "pending" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
@@ -714,17 +681,17 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                     ?.filter(
                       (invitation, index, array) =>
                         array.findIndex(
-                          inv =>
+                          (inv) =>
                             inv.id === invitation.id &&
                             inv.inviteeEmail === invitation.inviteeEmail
                         ) === index
                     )
                     ?.map((invitation, index) => {
-                      const config = PERMISSION_CONFIG[invitation.permission]
-                      const Icon = config.icon
+                      const config = PERMISSION_CONFIG[invitation.permission];
+                      const Icon = config.icon;
                       const isExpiringSoon =
                         new Date(invitation.expiresAt) - new Date() <
-                        24 * 60 * 60 * 1000 // Less than 24 hours
+                        24 * 60 * 60 * 1000; // Less than 24 hours
 
                       return (
                         <div
@@ -785,7 +752,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                             </button>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                 </div>
               )}
@@ -811,10 +778,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                           Users need to create an account to accept invitations
                         </li>
                         <li>Cancelled invitations cannot be recovered</li>
-                        <li className="text-green-700 font-medium">
-                          ✨ This list updates automatically when users accept
-                          invitations
-                        </li>
                       </ul>
                     </div>
                   </div>
@@ -823,8 +786,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
             </div>
           )}
 
-          {/* Share Links Tab */}
-          {activeTab === "links" && (
+          {/* {activeTab === "links" && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Shareable Links</h3>
@@ -836,7 +798,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </button>
               </div>
 
-              {/* Link Creation Form */}
               <div className="bg-gray-50 p-4 rounded-md">
                 <div className="flex items-center space-x-3">
                   <label className="text-sm font-medium text-gray-700">
@@ -867,7 +828,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </p>
               </div>
 
-              {/* Existing Links */}
               {displayShareLinks?.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
                   <FiCopy className="mx-auto w-12 h-12 mb-4" />
@@ -958,11 +918,11 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 </div>
               )}
             </div>
-          )}
+          )} */}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ShareModal
+export default ShareModal;
