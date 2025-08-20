@@ -6,6 +6,7 @@ const initialState = {
   status: "idle",
   saveStatus: "idle",
   deleteStatus: "idle",
+  testEmailStatus: "idle",
   error: null,
 };
 
@@ -50,6 +51,19 @@ export const removeAppSettings = createAsyncThunk(
   }
 );
 
+// Send test email
+export const sendTestEmail = createAsyncThunk(
+  "appSettings/sendTestEmail",
+  async (email, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.post("/app-settings/test-email", { email });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
 // Create the slice
 const appSettingsSlice = createSlice({
   name: "appSettings",
@@ -59,6 +73,7 @@ const appSettingsSlice = createSlice({
       state.status = "idle";
       state.saveStatus = "idle";
       state.deleteStatus = "idle";
+      state.testEmailStatus = "idle";
       state.error = null;
     },
   },
@@ -100,6 +115,18 @@ const appSettingsSlice = createSlice({
       })
       .addCase(removeAppSettings.rejected, (state, action) => {
         state.deleteStatus = "failed";
+        state.error = action.payload;
+      })
+      
+      // Test Email
+      .addCase(sendTestEmail.pending, (state) => {
+        state.testEmailStatus = "loading";
+      })
+      .addCase(sendTestEmail.fulfilled, (state) => {
+        state.testEmailStatus = "succeeded";
+      })
+      .addCase(sendTestEmail.rejected, (state, action) => {
+        state.testEmailStatus = "failed";
         state.error = action.payload;
       });
   },

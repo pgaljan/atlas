@@ -11,6 +11,8 @@ import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
+import { SearchDateQueryDto, SearchQueryDto } from './dto/search-query-dto';
+import { Prisma } from '@prisma/client';
 
 const MAX_CELL_LENGTH = 32767;
 
@@ -24,6 +26,15 @@ function safeCellValue(v: any): string {
 @Injectable()
 export class BackupService {
   constructor(private readonly prisma: PrismaService) {}
+
+  private getDayRangeFromDateString(dateStr: string) {
+    const base = new Date(dateStr);
+    const start = new Date(base);
+    start.setHours(0, 0, 0, 0);
+    const end = new Date(base);
+    end.setHours(23, 59, 59, 999);
+    return { start, end };
+  }
 
   private encrypt(data: Buffer): Buffer {
     try {
@@ -248,7 +259,6 @@ export class BackupService {
       ) {
         throw error;
       }
-      console.error('Unexpected error during backup creation:', error);
       throw new InternalServerErrorException('Failed to create backup');
     }
   }
@@ -355,7 +365,6 @@ export class BackupService {
         fileUrl,
       };
     } catch (error) {
-      console.error('Error creating full user backup:', error);
       throw new InternalServerErrorException(
         'Failed to create full user backup',
       );
@@ -421,8 +430,55 @@ export class BackupService {
 
       return backups;
     } catch (error) {
-      console.error('Error fetching backups:', error);
       throw new InternalServerErrorException('Failed to retrieve backups');
+    }
+  }
+
+  async searchByTitle(dto: SearchQueryDto) {
+    const sortBy = dto.sortBy ?? 'createdAt';
+    const order: Prisma.SortOrder = dto.order === 'asc' ? 'asc' : 'desc';
+
+    const where: Prisma.BackupWhereInput = {
+      ...(dto.query
+        ? { title: { contains: dto.query, mode: Prisma.QueryMode.insensitive } }
+        : {}),
+    };
+
+    try {
+      const backups = await this.prisma.backup.findMany({
+        where,
+        orderBy: { [sortBy]: order },
+      });
+
+      return { data: backups };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to search backups by title',
+      );
+    }
+  }
+
+  async searchByDate(dateStr: string, dto: SearchDateQueryDto) {
+    const sortBy = dto.sortBy ?? 'createdAt';
+    const order: Prisma.SortOrder = dto.order === 'asc' ? 'asc' : 'desc';
+
+    const { start, end } = this.getDayRangeFromDateString(dateStr);
+
+    const where: Prisma.BackupWhereInput = {
+      createdAt: { gte: start, lt: end },
+    };
+
+    try {
+      const backups = await this.prisma.backup.findMany({
+        where,
+        orderBy: { [sortBy]: order },
+      });
+
+      return { data: backups };
+    } catch (error) {
+      throw new InternalServerErrorException(
+        'Failed to search backups by date',
+      );
     }
   }
 }

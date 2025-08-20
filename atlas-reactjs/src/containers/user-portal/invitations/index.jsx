@@ -34,7 +34,7 @@ const Invitation = ({ onSubmit }) => {
 
         setIsLoading(true);
         const result = await dispatch(listInvitations(workspaceId)).unwrap();
-
+        //  console.log("result", result);
         const formattedData = result.map((invitation) => ({
           id: invitation.id,
           token: invitation.token,
@@ -206,48 +206,48 @@ const Invitation = ({ onSubmit }) => {
           </div>
         ) : (
           <>
-              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
-                {/* Token Counts */}
-                <div className="flex flex-wrap gap-3 text-sm text-gray-600 font-medium">
-                  <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
-                    Total:{" "}
-                    <span className="font-semibold text-gray-800">
-                      {tokenCounts.total}
-                    </span>
-                  </div>
-                  <div className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-lg">
-                    Pending:{" "}
-                    <span className="font-semibold">{tokenCounts.pending}</span>
-                  </div>
-                  <div className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg">
-                    Accepted:{" "}
-                    <span className="font-semibold">
-                      {tokenCounts.accepted}
-                    </span>
-                  </div>
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
+              {/* Token Counts */}
+              <div className="flex flex-wrap gap-3 text-sm text-gray-600 font-medium">
+                <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
+                  Total:{" "}
+                  <span className="font-semibold text-gray-800">
+                    {tokenCounts.total}
+                  </span>
                 </div>
-
-                {/* Action Buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <button
-                    onClick={handleGenerateToken}
-                    className="px-4 py-2 text-sm font-semibold bg-custom-main text-white rounded-lg shadow hover:bg-custom-secondary transition"
-                  >
-                    Generate Token
-                  </button>
-                  <button
-                    onClick={handleExportTokens}
-                    className="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
-                  >
-                    Export Tokens
-                  </button>
+                <div className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-lg">
+                  Pending:{" "}
+                  <span className="font-semibold">{tokenCounts.pending}</span>
+                </div>
+                <div className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg">
+                  Accepted:{" "}
+                  <span className="font-semibold">{tokenCounts.accepted}</span>
                 </div>
               </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap gap-2">
+                <button
+                  onClick={handleGenerateToken}
+                  className="px-4 py-2 text-sm font-semibold bg-custom-main text-white rounded-lg shadow hover:bg-custom-secondary transition"
+                >
+                  Generate Token
+                </button>
+                <button
+                  onClick={handleExportTokens}
+                  className="px-4 py-2 text-sm font-semibold bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition"
+                >
+                  Export Tokens
+                </button>
+              </div>
+            </div>
 
             <GenericTable
               {...updatedInvitationConfig}
               data={filteredMembers}
               searchQuery={searchQuery}
+              enableSearch={true}
+              enableDate={false}
             />
 
             {filteredMembers.length === 0 && searchQuery === "" && (

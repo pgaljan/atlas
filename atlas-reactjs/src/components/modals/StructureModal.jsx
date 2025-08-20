@@ -79,7 +79,9 @@ const StructureModal = ({ isOpen, onClose }) => {
     setShowRendererModal(false)
     const username = Cookies.get("atlas_username")
     if (structureId && username) {
-      navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`)
+      navigate(
+        `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${permission}`
+      )
     }
   }
 

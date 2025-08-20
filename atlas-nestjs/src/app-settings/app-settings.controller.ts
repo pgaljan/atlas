@@ -6,9 +6,13 @@ import {
   Param,
   HttpException,
   HttpStatus,
+  HttpCode,
+  UsePipes,
+  ValidationPipe,
 } from '@nestjs/common';
 import { AppSettingsService } from './app-settings.service';
 import { CreateUpdateAppSettingsDto } from './dto/create-update-app-settings.dto';
+import { SendTestEmailDto } from './dto/send-test-email.dto';
 
 @Controller('app-settings')
 export class AppSettingsController {
@@ -36,6 +40,29 @@ export class AppSettingsController {
       return await this.appSettingsService.removeSettings(id);
     } catch (error) {
       throw new HttpException(error.message, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+  }
+
+  @Post('test-email')
+  @HttpCode(HttpStatus.OK)
+  @UsePipes(new ValidationPipe({ whitelist: true, transform: true }))
+  async sendTestEmail(@Body() dto: SendTestEmailDto) {
+    try {
+      return await this.appSettingsService.sendTestEmail(dto.email);
+    } catch (error) {
+      if (error instanceof HttpException) {
+        throw error;
+      }
+      throw new HttpException(
+        {
+          message:
+            (error && error.message) ||
+            'An unexpected error occurred while sending the test email',
+          statusCode: HttpStatus.INTERNAL_SERVER_ERROR,
+          error: 'Internal Server Error',
+        },
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
     }
   }
 }

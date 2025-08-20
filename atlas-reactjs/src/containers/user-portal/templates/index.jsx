@@ -127,7 +127,8 @@ const Templates = () => {
           {...templatesConfig}
           data={filteredTemplates}
           searchQuery={searchQuery}
-          // buttons={buttons}
+          enableSearch={true}
+          enableDate={false}
           onSearchChange={setSearchQuery}
           actions={templatesConfig.actions.map((action) => ({
             ...action,

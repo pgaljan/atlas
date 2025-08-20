@@ -42,16 +42,13 @@ export class StructureController {
   // structure.controller.ts
   @Get('workspace/:workspaceId')
   @UseGuards(JwtAuthGuard)
-  async getAccessibleStructuresByWorkspace(
+  async getAccessibleStructuresForUser(
     @Param('workspaceId') workspaceId: string,
     @Req() req: any,
   ) {
     try {
       const structures =
-        await this.structureService.getAccessibleStructuresByWorkspace(
-          workspaceId,
-          req.user.id,
-        );
+        await this.structureService.getAccessibleStructuresForUser(req.user.id);
       return {
         message: 'Accessible structures retrieved successfully',
         structures,

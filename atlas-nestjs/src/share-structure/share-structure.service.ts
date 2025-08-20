@@ -200,10 +200,18 @@ export class StructureSharesService {
     });
     if (!inviter) throw new NotFoundException('Inviter not found');
 
+    // ✅ Check invitee must already exist
+    const existingUser = await this.prisma.user.findUnique({
+      where: { email: inviteeEmail },
+    });
+    if (!existingUser) {
+      throw new BadRequestException('Invitee must be a registered user');
+    }
+
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Start transaction: create invitation, ensure team, optionally add existing user as team member
+    // Start transaction: create invitation & ensure team
     const inv = await this.prisma.$transaction(async (tx) => {
       const createdInv = await tx.structureShareInvitation.create({
         data: {
@@ -244,45 +252,35 @@ export class StructureSharesService {
         });
       }
 
-      // If the invitee already exists as a user (inviting an existing user), add them to the team now.
-      if (inviteeEmail) {
-        const existingUser = await tx.user.findUnique({
-          where: { email: inviteeEmail },
+      // ✅ Add existing user to the team if not already added
+      try {
+        await tx.teamMember.createMany({
+          data: [
+            {
+              teamId: team.id,
+              userId: existingUser.id,
+              workspaceId: structure.workspaceId,
+              role: 'member',
+            },
+          ],
+          skipDuplicates: true,
         });
+      } catch (err) {
+        // ignore duplicate errors
+      }
 
-        if (existingUser) {
-          // create team member if not already present (unique constraint prevents duplicates)
-          try {
-            await tx.teamMember.createMany({
-              data: [
-                {
-                  teamId: team.id,
-                  userId: existingUser.id,
-                  workspaceId: structure.workspaceId,
-                  role: 'member',
-                },
-              ],
-              skipDuplicates: true,
-            });
-          } catch (err) {
-            // ignore duplicate or other errors here (teamMember unique constraint will throw if already present)
-            // optionally you can log: console.log('teamMember create skipped:', err);
-          }
-
-          // If user has no default workspace, set it
-          if (!existingUser.defaultWorkspaceId) {
-            await tx.user.update({
-              where: { id: existingUser.id },
-              data: { defaultWorkspaceId: structure.workspaceId },
-            });
-          }
-        }
+      // If user has no default workspace, set it
+      if (!existingUser.defaultWorkspaceId) {
+        await tx.user.update({
+          where: { id: existingUser.id },
+          data: { defaultWorkspaceId: structure.workspaceId },
+        });
       }
 
       return createdInv;
     });
 
-    // send email (non-blocking for DB integrity; failure doesn't roll back DB)
+    // Send email
     try {
       await this.mailerService.sendStructureShareInvitation(
         inviteeEmail,

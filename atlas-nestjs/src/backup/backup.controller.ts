@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Controller,
   Delete,
   Get,
@@ -9,6 +10,7 @@ import {
   Query,
 } from '@nestjs/common';
 import { BackupService } from './backup.service';
+import { SearchDateQueryDto, SearchQueryDto } from './dto/search-query-dto';
 
 @Controller('backup')
 export class BackupController {
@@ -18,7 +20,6 @@ export class BackupController {
     if (error instanceof HttpException) {
       throw error;
     }
-    console.error('Unexpected error:', error);
     throw new HttpException(
       error.message || defaultMessage,
       HttpStatus.INTERNAL_SERVER_ERROR,
@@ -55,7 +56,6 @@ export class BackupController {
       if (error instanceof HttpException) {
         throw error;
       }
-      console.error('Unexpected error during backup creation:', error);
       throw new HttpException(
         error.message || 'Failed to create backup',
         HttpStatus.INTERNAL_SERVER_ERROR,
@@ -135,11 +135,34 @@ export class BackupController {
       if (error instanceof HttpException) {
         throw error;
       }
-      console.error('Unexpected error during fetching backups:', error);
       throw new HttpException(
         error.message || 'Failed to retrieve the backups',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
+    }
+  }
+
+  @Get('search/title')
+  async searchByTitle(@Query() dto: SearchQueryDto) {
+    try {
+      if (!dto.query || dto.query?.trim()?.length === 0) {
+        throw new BadRequestException('query parameter is required');
+      }
+      return await this.backupService.searchByTitle(dto);
+    } catch (error) {
+      this.handleException(error, 'Failed to search backups by title');
+    }
+  }
+
+  @Get('search/date')
+  async searchByDate(@Query() dto: SearchDateQueryDto) {
+    try {
+      if (!dto.date || dto.date.trim().length === 0) {
+        throw new BadRequestException('date parameter is required');
+      }
+      return await this.backupService.searchByDate(dto.date.trim(), dto);
+    } catch (error) {
+      this.handleException(error, 'Failed to search backups by date');
     }
   }
 }

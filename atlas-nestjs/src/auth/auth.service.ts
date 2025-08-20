@@ -212,7 +212,15 @@ export class AuthService {
           },
         });
       }
-      await this.logAudit('User Login', 'User', user.id, { email: user.email });
+      
+      await this.logAudit(
+        'User Login',
+        'User',
+        user.id,
+        { email: user.email },
+        user.id,
+      );
+
       return {
         message: 'Login successful',
         user: {

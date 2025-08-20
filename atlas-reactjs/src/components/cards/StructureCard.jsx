@@ -168,6 +168,11 @@ const StructureCard = () => {
                   structure.updatedAt
                 )}`}
                 username={username}
+                permission={
+                  structure.shareInvitations?.[0]?.permission ||
+                  structure.shares?.[0]?.permission ||
+                  "owner"
+                }
                 structureId={structure.id}
                 footerSubtitle={username || "Unknown User"}
                 avatarUrl={structure.avatarUrl || "/assets/userimg.jpeg"}

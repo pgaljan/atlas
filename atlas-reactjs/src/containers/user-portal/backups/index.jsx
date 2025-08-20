@@ -9,6 +9,8 @@ import { backupConfig } from "../../../constants";
 import {
   deleteBackup,
   fetchBackupsByWorkspaceId,
+  searchBackupsByDate,
+  searchBackupsByTitle,
 } from "../../../redux/slices/backups";
 
 const Backups = ({ onSubmit }) => {
@@ -18,7 +20,10 @@ const Backups = ({ onSubmit }) => {
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [deleting, setDeleting] = useState(false)
+  const [deleting, setDeleting] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedDate, setSelectedDate] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -26,7 +31,7 @@ const Backups = ({ onSubmit }) => {
           console.error("Workspace ID is not available in cookies.");
           return;
         }
-        setLoading(true); // start loading
+        setLoading(true);
         const result = await dispatch(
           fetchBackupsByWorkspaceId(workspaceId)
         ).unwrap();
@@ -34,12 +39,54 @@ const Backups = ({ onSubmit }) => {
       } catch (err) {
         console.error("Error fetching backups:", err);
       } finally {
-        setLoading(false); // end loading
+        setLoading(false);
       }
     };
 
     fetchData();
   }, [dispatch, workspaceId]);
+
+  const handleSearch = async (query) => {
+    try {
+      setLoading(true);
+
+      if (!query) {
+        const result = await dispatch(
+          fetchBackupsByWorkspaceId(workspaceId)
+        ).unwrap();
+        setBackups(result);
+        return;
+      }
+
+      const result = await dispatch(
+        searchBackupsByTitle({ title: query, workspaceId })
+      ).unwrap();
+
+      setBackups(result?.data || []);
+    } catch (error) {
+      console.error("Search error:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleFilterByDate = async (date) => {
+    try {
+      setLoading(true);
+      if (!date) return;
+
+      const dateString = date.toISOString().split("T")[0];
+      const result = await dispatch(
+        searchBackupsByDate({ date: dateString })
+      ).unwrap();
+
+      setBackups(result?.data || []);
+    } catch (error) {
+      cogoToast.error(`Search failed: ${err?.message || err}`);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Delete Modal Handler
   const handleDelete = (item) => {
@@ -48,29 +95,33 @@ const Backups = ({ onSubmit }) => {
   };
 
   const confirmDelete = async () => {
-  if (!selectedBackup) return;
+    if (!selectedBackup) return;
 
-  setDeleting(true); // start loader
+    setDeleting(true);
 
-  try {
-    await dispatch(deleteBackup(selectedBackup.id)).unwrap();
+    try {
+      await dispatch(deleteBackup(selectedBackup.id)).unwrap();
 
-    cogoToast.success("Backup deleted successfully!");
+      cogoToast.success("Backup deleted successfully!");
 
-    setBackups((prevBackups) =>
-      prevBackups.filter((backup) => backup.id !== selectedBackup.id)
-    );
+      setBackups((prevBackups) =>
+        prevBackups.filter((backup) => backup.id !== selectedBackup.id)
+      );
+    } catch (error) {
+      cogoToast.error(
+        error?.message || "Error deleting backup. Please try again."
+      );
+    } finally {
+      setDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
 
-  } catch (error) {
-    cogoToast.error(
-      error?.message || "Error deleting backup. Please try again."
-    );
-  } finally {
-    setDeleting(false); // stop loader
-    setIsDeleteModalOpen(false); // close modal
-  }
-};
-
+  useEffect(() => {
+    if (selectedDate) {
+      handleFilterByDate();
+    }
+  }, [selectedDate]);
 
   const updatedBackupConfig = {
     ...backupConfig,
@@ -92,7 +143,24 @@ const Backups = ({ onSubmit }) => {
             </div>
           </div>
         ) : (
-          <GenericTable {...updatedBackupConfig} data={backups} />
+          <>
+            <GenericTable
+              {...updatedBackupConfig}
+              data={backups}
+              enableSearch={true}
+              enableDate={true}
+              showTitle={true}
+              searchQuery={searchQuery}
+              onSearchChange={(val) => {
+                setSearchQuery(val);
+              }}
+              onSearch={handleSearch}
+              selectedDate={selectedDate}
+              onDateChange={setSelectedDate}
+              handleFilterByDate={handleFilterByDate}
+              filterByDate="true"
+            />
+          </>
         )}
       </div>
 

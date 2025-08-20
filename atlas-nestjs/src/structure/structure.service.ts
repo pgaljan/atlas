@@ -175,61 +175,40 @@ export class StructureService {
     }
   }
 
-  // structure.service.ts
-  async getAccessibleStructuresByWorkspace(
-    workspaceId: string,
-    currentUserId: string,
-  ) {
-    try {
-      const structures = await this.prisma.structure.findMany({
-        where: {
-          workspaceId,
-          OR: [
-            { ownerId: currentUserId },
-            { shares: { some: { userId: currentUserId } } },
-            {
-              shareInvitations: {
-                some: {
-                  inviteeId: currentUserId,
-                  status: 'accepted',
-                },
-              },
-            },
-          ],
-        },
-
-        select: {
-          id: true,
-          name: true,
-          title: true,
-          imageUrl: true,
-          createdAt: true,
-          updatedAt: true,
-          description: true,
-          ownerId: true,
-          type: true,
-          visibility: true,
-          shares: {
-            where: { userId: currentUserId },
-            select: { permission: true },
-          },
+  async getAccessibleStructuresForUser(currentUserId: string) {
+  return this.prisma.structure.findMany({
+    where: {
+      OR: [
+        { ownerId: currentUserId },
+        { shares: { some: { userId: currentUserId } } },
+        {
           shareInvitations: {
-            where: {
-              inviteeId: currentUserId,
-              status: 'accepted',
-            },
-            select: { permission: true },
+            some: { inviteeId: currentUserId, status: 'accepted' },
           },
         },
-      });
+      ],
+    },
+    select: {
+      id: true,
+      name: true,
+      title: true,
+      imageUrl: true,
+      description: true,
+      updatedAt: true,
+      ownerId: true,
+      type: true,
+      visibility: true,
+      shares: {
+        where: { userId: currentUserId },
+        select: { permission: true },
+      },
+      shareInvitations: {
+        where: { inviteeId: currentUserId, status: 'accepted' },
+      },
+    },
+  });
+}
 
-      return structures;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to retrieve accessible structures: ${error.message}`,
-      );
-    }
-  }
 
   async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
     try {

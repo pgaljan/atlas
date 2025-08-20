@@ -524,7 +524,6 @@ model StructureShare {
   user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([structureId, userId])
-  // @@unique([structureId, permission], map: "unique_owner_per_structure")
   @@index([structureId])
   @@index([userId])
 }

@@ -51,12 +51,22 @@ export class UserService {
               },
             },
           },
+          auditLogs: {
+            where: { action: 'User Login' },
+            orderBy: { createdAt: 'desc' },
+            select: {
+              createdAt: true,
+            },
+          },
         },
       });
 
       return users.map((user) => ({
         ...user,
         acceptedInvitesCount: user._count?.invitationsSent || 0,
+        onboardTime: user.createdAt,
+        totalLogins: user.auditLogs.length,
+        lastLogin: user.auditLogs[0]?.createdAt || null,
       }));
     } catch (error) {
       throw new InternalServerErrorException(
@@ -65,7 +75,6 @@ export class UserService {
     }
   }
 
-  // Fetch user by ID
   async getUserById(id: string) {
     try {
       const user = await this.prisma.user.findUnique({

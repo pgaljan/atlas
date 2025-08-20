@@ -1,5 +1,8 @@
-import React, { useState } from "react";
-import { FaMinus, FaPlus } from "react-icons/fa6";
+import cogoToast from "@successtar/cogo-toast";
+import React, { useCallback, useMemo, useState } from "react";
+import DatePicker from "react-datepicker";
+import "react-datepicker/dist/react-datepicker.css";
+import { FaMinus, FaPlus } from "react-icons/fa";
 import { FiSearch } from "react-icons/fi";
 import Tooltip from "../../components/tooltip/Tooltip";
 import ModalComponent from "../modals/Modal";
@@ -8,31 +11,34 @@ const GenericTable = ({
   title,
   tabs = [],
   enableSearch = false,
+  enableDate = false,
   columns = [],
   data = [],
   emptyState = {},
   actions = null,
-  buttons = [],
   onSearchChange,
   searchQuery = "",
+  selectedDate,
+  onDateChange,
+  handleFilterByDate,
+  filterByDate = "false",
   showId,
+  onSearch,
+  showTitle = false,
 }) => {
-  const [activeTab, setActiveTab] = useState(tabs ? tabs[0]?.key : null);
+  const [activeTab, setActiveTab] = useState(tabs?.[0]?.key || null);
   const [selectedImage, setSelectedImage] = useState(null);
   const [zoomLevel, setZoomLevel] = useState(1);
 
-  const filteredData =
-    activeTab === "pending"
-      ? data.filter((item) => item.status === "pending")
-      : data;
+  const handleZoomIn = useCallback(
+    () => setZoomLevel((prev) => Math.min(prev + 0.1, 3)),
+    []
+  );
 
-  const handleZoomIn = () => {
-    setZoomLevel((prevZoom) => Math.min(prevZoom + 0.1, 3));
-  };
-
-  const handleZoomOut = () => {
-    setZoomLevel((prevZoom) => Math.max(prevZoom - 0.1, 1));
-  };
+  const handleZoomOut = useCallback(
+    () => setZoomLevel((prev) => Math.max(prev - 0.1, 1)),
+    []
+  );
 
   const getStatusText = (row) => {
     if (row.status === "accepted") return "Accepted";
@@ -40,13 +46,56 @@ const GenericTable = ({
     return isExpired ? "Expired" : "Pending";
   };
 
+  const handleActionClick = useCallback((action, row) => {
+    if (!action.disabled?.(row)) {
+      action.onClick(row);
+    } else {
+      cogoToast.warn("Accepted invitations cannot be deleted.");
+    }
+  }, []);
+
+  const filteredData = useMemo(() => {
+    if (activeTab === "pending") {
+      return data.filter((item) => item.status === "pending");
+    }
+    return data;
+  }, [activeTab, data]);
+
+  const renderEmptyState = () => (
+    <div className="flex flex-col text-center mt-[25%]">
+      <div className="flex flex-col items-center justify-center flex-grow">
+        <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
+          {emptyState.icon}
+        </div>
+        <h2 className="text-2xl font-bold text-custom-text-grey mb-4">
+          {emptyState.title}
+        </h2>
+        <p className="text-lg text-custom-text-grey">
+          {emptyState.description}
+        </p>
+      </div>
+    </div>
+  );
+
+  const renderNoResultsRow = (message) => (
+    <tr>
+      <td
+        colSpan={columns.length + (showId ? 1 : 0) + (actions ? 1 : 0)}
+        className="text-center py-10 text-custom-text-grey"
+      >
+        <div className="flex flex-col items-center justify-center">
+          <p className="text-lg text-custom-text-grey">{message}</p>
+        </div>
+      </td>
+    </tr>
+  );
+
   return (
     <>
       {/* Image Modal */}
       <ModalComponent
         isOpen={!!selectedImage}
         onClose={() => setSelectedImage(null)}
-        onSubmit={null}
         title="Image Preview"
       >
         {selectedImage && (
@@ -60,16 +109,18 @@ const GenericTable = ({
                 transition: "transform 0.3s ease",
               }}
             />
-            <div className="fixed bottom-3 right-4 p-2 flex items-center gap-2 rounded-[4px] shadow-md">
+            <div className="fixed bottom-3 right-4 p-2 flex items-center gap-2 rounded-[4px] shadow-md bg-white">
               <button
                 onClick={handleZoomIn}
-                className="text-[20px] text-black font-bold"
+                className="text-[20px] text-black font-bold hover:text-custom-main"
+                aria-label="Zoom In"
               >
                 <FaPlus />
               </button>
               <button
                 onClick={handleZoomOut}
-                className="text-[20px] text-black font-bold"
+                className="text-[20px] text-black font-bold hover:text-custom-main"
+                aria-label="Zoom Out"
               >
                 <FaMinus />
               </button>
@@ -78,26 +129,21 @@ const GenericTable = ({
         )}
       </ModalComponent>
 
-      {filteredData?.length === 0 && !searchQuery && activeTab != "pending" ? (
-        <div className="flex flex-col text-center mt-[25%]">
-          <div className="flex flex-col items-center justify-center flex-grow">
-            <div className="flex items-center justify-center bg-white rounded-full w-28 h-28 mb-4">
-              {emptyState.icon}
-            </div>
-            <h2 className="text-2xl font-bold text-custom-text-grey mb-4">
-              {emptyState.title}
-            </h2>
-            <p className="text-lg text-custom-text-grey">
-              {emptyState.description}
-            </p>
-          </div>
-        </div>
+      {filteredData?.length === 0 &&
+      !searchQuery &&
+      !selectedDate &&
+      activeTab !== "pending" ? (
+        renderEmptyState()
       ) : (
         <div className="p-8 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <h1 className="text-[24px] font-bold text-black">{title}</h1>
-          {tabs && (
+          {title && (
+            <h1 className="text-[24px] font-bold text-black">{title}</h1>
+          )}
+
+          {/* Tabs */}
+          {tabs.length > 0 && (
             <div className="flex items-center mb-3">
-              {tabs?.map((tab) => (
+              {tabs.map((tab) => (
                 <button
                   key={tab?.key}
                   className={`pr-4 py-2 font-semibold transition-colors ${
@@ -119,52 +165,79 @@ const GenericTable = ({
               ))}
             </div>
           )}
-          {enableSearch && (
-            <div className="flex items-center justify-between mb-4">
-              <div className="relative w-full max-w-md">
-                <FiSearch className="absolute top-3 left-4 text-xl text-custom-text-grey" />
-                <input
-                  type="text"
-                  placeholder="Search..."
-                  className="w-full pl-10 pr-4 py-2 max-w-[60%] border-2 rounded-lg focus:border-custom-main focus:outline-none"
-                  onChange={(e) => onSearchChange?.(e.target.value)}
-                />
-              </div>
-              <div className="flex space-x-2">
-                {buttons?.map((button, index) => (
-                  <button
-                    key={index}
-                    disabled={button?.disabled}
-                    onClick={button?.onClick}
-                    className={`px-4 py-2 rounded-lg hover:bg-opacity-90 ${
-                      button?.className || "bg-custom-main text-white"
-                    } ${
-                      button?.disabled ? "opacity-50 cursor-not-allowed" : ""
-                    }`}
-                  >
-                    {button?.label}
-                  </button>
-                ))}
-              </div>
+
+          {/* Search & Date Filters */}
+          {(enableSearch || enableDate) && (
+            <div className="flex items-center my-4 justify-between flex-wrap gap-4">
+              {/* Search */}
+              {enableSearch && (
+                <div className="flex items-center gap-4 flex-1 min-w-[250px]">
+                  {showTitle && (
+                    <span className="font-bold whitespace-nowrap">
+                      Search by Title
+                    </span>
+                  )}
+                  <div className="relative w-full flex items-center">
+                    <FiSearch className="absolute left-3 text-xl text-custom-text-grey" />
+                    <input
+                      type="text"
+                      placeholder="Search..."
+                      className="w-full pl-10 pr-4 py-2 max-w-[60%] border-2 rounded-lg focus:border-custom-main focus:outline-none"
+                      value={searchQuery}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && onSearch?.(searchQuery)
+                      }
+                      onChange={(e) => {
+                        const value = e.target.value
+                          .replace(/\s+/g, " ")
+                          .trim();
+                        onSearchChange?.(value);
+                        if (value === "") onSearch?.("");
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Date */}
+              {enableDate && filterByDate && (
+                <div className="flex items-center gap-2">
+                  <span className="font-bold whitespace-nowrap">
+                    Search by Date
+                  </span>
+                  <DatePicker
+                    selected={selectedDate}
+                    onChange={(date) => {
+                      onDateChange?.(date);
+                      handleFilterByDate?.(date);
+                    }}
+                    dateFormat="yyyy-MM-dd"
+                    placeholderText="Filter By Date"
+                    className="pl-2 py-2 border-2 rounded-lg focus:border-custom-main focus:outline-none"
+                  />
+                </div>
+              )}
             </div>
           )}
+
+          {/* Table */}
           <div className="w-full overflow-x-auto">
             <table className="min-w-[800px] w-full text-left">
               <thead>
                 <tr className="text-custom-text-heading border-b border-gray-300">
                   {showId && <th className="px-4 py-2">#Id</th>}
-                  {columns?.map((col) => (
+                  {columns.map((col) => (
                     <th key={col?.key} className="px-4 py-2 whitespace-nowrap">
                       <div className="flex items-center">
                         {col?.label}
-                        {Array?.isArray(col?.icon)
-                          ? col?.icon?.map((icon, index) => (
+                        {Array.isArray(col?.icon)
+                          ? col.icon.map((icon, index) => (
                               <span key={index} className="ml-2">
                                 {icon}
                               </span>
                             ))
                           : React.isValidElement(col?.icon) && (
-                              <span className="ml-2">{col?.icon}</span>
+                              <span className="ml-2">{col.icon}</span>
                             )}
                       </div>
                     </th>
@@ -173,112 +246,85 @@ const GenericTable = ({
                 </tr>
               </thead>
               <tbody>
-                {filteredData?.length === 0 ? (
-                  searchQuery ? (
-                    <tr>
-                      <td
-                        colSpan={
-                          columns.length + (showId ? 1 : 0) + (actions ? 1 : 0)
-                        }
-                        className="text-center py-10 text-custom-text-grey"
+                {filteredData?.length === 0
+                  ? searchQuery
+                    ? renderNoResultsRow(
+                        "No results found matching your search query."
+                      )
+                    : selectedDate
+                    ? renderNoResultsRow(
+                        "No results found for the selected date."
+                      )
+                    : activeTab === "pending" &&
+                      renderNoResultsRow(
+                        "There are currently no pending invitations."
+                      )
+                  : filteredData.map((row, rowIndex) => (
+                      <tr
+                        key={row?.id || rowIndex}
+                        className={`border-b border-gray-300 ${
+                          rowIndex % 2 === 0 ? "bg-white" : "bg-gray-100"
+                        }`}
                       >
-                        <div className="flex flex-col items-center justify-center">
-                          <p className="text-lg text-custom-text-grey">
-                            No results found matching your search query.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : activeTab === "pending" ? (
-                    <tr>
-                      <td
-                        colSpan={columns.length + (showId ? 1 : 0)}
-                        className="text-center p-6 whitespace-nowrap"
-                      >
-                        <div className="flex flex-col items-center justify-center">
-                          <p className="text-lg text-custom-text-grey">
-                            There are currently no pending invitations.
-                          </p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : null
-                ) : (
-                  filteredData?.map((row, rowIndex) => (
-                    <tr
-                      key={row?.id || rowIndex}
-                      className={`border-b border-gray-300 ${
-                        rowIndex % 2 === 0 ? "bg-white" : "bg-gray-100"
-                      }`}
-                    >
-                      {showId && (
-                        <td className="px-4 py-2">
-                          {row?.id?.substring(0, 8)}...
-                        </td>
-                      )}
-                      {columns?.map((col) => (
-                        <td
-                          key={col?.key}
-                          className="px-4 py-2 whitespace-nowrap"
-                        >
-                          <div className="flex items-center">
-                            {col?.render
-                              ? col.render(row)
-                              : col?.key === "updatedAt" ||
-                                col?.key === "createdAt"
-                              ? row[col?.key]
-                                ? new Date(row[col?.key]).toLocaleString(
-                                    "en-US",
-                                    {
-                                      month: "2-digit",
-                                      day: "2-digit",
-                                      year: "numeric",
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                      hour12: true,
-                                    }
-                                  )
-                                : "N/A"
-                              : col?.key === "status"
-                              ? getStatusText(row)
-                              : row[col?.key]}
-                          </div>
-                        </td>
-                      ))}
+                        {showId && (
+                          <td className="px-4 py-2">
+                            {row?.id?.substring(0, 8)}...
+                          </td>
+                        )}
+                        {columns.map((col) => (
+                          <td
+                            key={col?.key}
+                            className="px-4 py-2 whitespace-nowrap"
+                          >
+                            <div className="flex items-center">
+                              {col?.render
+                                ? col.render(row)
+                                : ["updatedAt", "createdAt"].includes(col?.key)
+                                ? row[col?.key]
+                                  ? new Date(row[col?.key]).toLocaleString(
+                                      "en-US",
+                                      {
+                                        month: "2-digit",
+                                        day: "2-digit",
+                                        year: "numeric",
+                                        hour: "2-digit",
+                                        minute: "2-digit",
+                                        hour12: true,
+                                      }
+                                    )
+                                  : "N/A"
+                                : col?.key === "status"
+                                ? getStatusText(row)
+                                : row[col?.key]}
+                            </div>
+                          </td>
+                        ))}
 
-                      {actions && (
-                        <td className="px-4 py-2 items-center mt-2 flex space-x-4">
-                          {actions.map((action, actionIndex) => (
-                            <Tooltip
-                              key={actionIndex}
-                              label={action.tooltip || "Action"}
-                            >
-                              <button
-                                className={`items-center flex justify-center ${
-                                  action.disabled?.(row)
-                                    ? "opacity-50 cursor-not-allowed"
-                                    : "hover:text-custom-dark"
-                                }`}
-                                onClick={() => {
-                                  if (!action.disabled?.(row)) {
-                                    action.onClick(row);
-                                  } else {
-                                    cogoToast.warn(
-                                      "Accepted invitations cannot be deleted."
-                                    );
-                                  }
-                                }}
-                                disabled={action.disabled?.(row)}
+                        {actions && (
+                          <td className="px-4 py-2 items-center flex space-x-4">
+                            {actions.map((action, idx) => (
+                              <Tooltip
+                                key={idx}
+                                label={action.tooltip || "Action"}
                               >
-                                {action.icon}
-                              </button>
-                            </Tooltip>
-                          ))}
-                        </td>
-                      )}
-                    </tr>
-                  ))
-                )}
+                                <button
+                                  className={`items-center flex justify-center ${
+                                    action.disabled?.(row)
+                                      ? "opacity-50 cursor-not-allowed"
+                                      : "hover:text-custom-dark"
+                                  }`}
+                                  onClick={() => handleActionClick(action, row)}
+                                  disabled={action.disabled?.(row)}
+                                  aria-label={action.tooltip}
+                                >
+                                  {action.icon}
+                                </button>
+                              </Tooltip>
+                            ))}
+                          </td>
+                        )}
+                      </tr>
+                    ))}
               </tbody>
             </table>
           </div>
@@ -287,4 +333,5 @@ const GenericTable = ({
     </>
   );
 };
+
 export default GenericTable;

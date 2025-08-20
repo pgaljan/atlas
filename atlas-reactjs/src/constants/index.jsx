@@ -71,7 +71,7 @@ export const invitationConfig = {
   },
   enableCheckbox: false,
   columns: [
-    { key: "email", label: "Email" },
+    // { key: "email", label: "Email" },
     { key: "token", label: "Token" },
     { label: "Invite Code", key: "inviteCode" },
     { key: "generated", label: "Generated at" },
@@ -218,11 +218,12 @@ export const mediaConfig = {
   ],
 };
 
+
 export const backupConfig = {
   title: "My Backups",
   showId: true,
   tabs: [],
-  enableSearch: false,
+  enableSearch: true,
   emptyState: {
     title: "No backups found.",
     description: "All your backups will appear here.",
@@ -230,8 +231,38 @@ export const backupConfig = {
   },
   columns: [
     { key: "title", label: "Title" },
-    { key: "fileUrl", label: "Download Link" },
-    { key: "updatedAt", label: "Created At" },
+    {
+      key: "fileUrl",
+      label: "Download Link",
+      render: (row) => {
+        if (!row.fileUrl) return "--";
+        return (
+          <a
+            href={row.fileUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            Download
+          </a>
+        );
+      },
+    },
+    {
+      key: "updatedAt",
+      label: "Created At",
+      render: (row) =>
+        row.updatedAt
+          ? new Date(row.updatedAt).toLocaleString("en-US", {
+              month: "2-digit",
+              day: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true,
+            })
+          : "N/A",
+    },
   ],
   actions: [
     {
@@ -241,6 +272,7 @@ export const backupConfig = {
     },
   ],
 };
+
 
 export const plans = [
   {

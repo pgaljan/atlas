@@ -21,10 +21,6 @@ const Login = lazy(() => import("./containers/common/login"));
 const Policy = lazy(() => import("./containers/common/privacy-policy"));
 const Terms = lazy(() => import("./containers/common/terms-of-service"));
 
-const SharedStructureAccess = lazy(() =>
-  import("./containers/common/shared-structure-access")
-);
-
 const Register = lazy(() => import("./containers/common/register"));
 const ForgotPassword = lazy(() =>
   import("./containers/common/forgot-password")

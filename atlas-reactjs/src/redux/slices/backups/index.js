@@ -43,12 +43,43 @@ export const createFullUserBackup = createAsyncThunk(
   }
 );
 
+export const searchBackupsByTitle = createAsyncThunk(
+  "backup/searchByTitle",
+  async ({ title }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get("/backup/search/title", {
+        params: { query: title },
+      });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
+
+export const searchBackupsByDate = createAsyncThunk(
+  "backup/searchByDate",
+  async ({ date }, { rejectWithValue }) => {
+    try {
+      const res = await axiosInstance.get("/backup/search/date", {
+        params: { date },
+      });
+      return res.data;
+    } catch (err) {
+      return rejectWithValue(err.response?.data || err.message);
+    }
+  }
+);
+
 // Async thunk to fetch backups by userId
 export const fetchBackupsByWorkspaceId = createAsyncThunk(
   "backup/workspace",
   async (workspaceId, { rejectWithValue }) => {
     try {
-      const response = await axiosInstance.get(`/backup/workspace/${workspaceId}`);
+      const response = await axiosInstance.get(
+        `/backup/workspace/${workspaceId}`
+      );
       return response.data;
     } catch (error) {
       return rejectWithValue(error.response?.data || error.message);
@@ -120,13 +151,40 @@ const backupSlice = createSlice({
         state.status = "failed";
         state.error = action.payload;
       })
+
+      // Search by title
+      .addCase(searchBackupsByTitle.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(searchBackupsByTitle.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.backups = action.payload;
+      })
+      .addCase(searchBackupsByTitle.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
+      // Search by date
+      .addCase(searchBackupsByDate.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(searchBackupsByDate.fulfilled, (state, action) => {
+        state.status = "succeeded";
+        state.backups = action.payload;
+      })
+      .addCase(searchBackupsByDate.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+
       // Create full user backup
       .addCase(createFullUserBackup.pending, (state) => {
         state.status = "loading";
       })
       .addCase(createFullUserBackup.fulfilled, (state, action) => {
         state.status = "succeeded";
-        state.fullBackupUrl = action.payload.fileUrl; // Store the file URL
+        state.fullBackupUrl = action.payload.fileUrl;
       })
       .addCase(createFullUserBackup.rejected, (state, action) => {
         state.status = "failed";

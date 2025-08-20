@@ -12,7 +12,7 @@ import {
 import "@syncfusion/ej2-react-navigations/styles/material.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import { useDispatch } from "react-redux"
-import { useParams } from "react-router-dom"
+import { useParams, useSearchParams } from "react-router-dom"
 import MarkmapHeader from "../../../components/markmap/markmap-layout/MarkmapHeader"
 import ConfirmationModal from "../../../components/modals/ConfirmationModal"
 import NodeModal from "../../../components/modals/NodeModal"
@@ -86,6 +86,8 @@ const Syncfusion = () => {
   const dragInProgress = useRef(false)
   const [renderType, setrenderType] = useState("")
   const { structureId } = useParams()
+  const [searchParams] = useSearchParams()
+  const permission = searchParams.get("permission")
   const [highlightedNodeId, setHighlightedNodeId] = useState(null)
   const [showWbs, setShowWbsState] = useState(false)
   const [wbsStart, setWbsStart] = useState(1)
