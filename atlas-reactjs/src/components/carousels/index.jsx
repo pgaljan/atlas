@@ -71,7 +71,9 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     setShowRendererModal(false)
     if (structureId && username) {
       ;(onUseTemplate || onClose)?.()
-      navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`)
+      navigate(
+        `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${permission}`
+      )
     }
   }
 

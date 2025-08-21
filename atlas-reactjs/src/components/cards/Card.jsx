@@ -9,6 +9,7 @@ import { deleteStructure } from "../../redux/slices/structures"
 import DeleteModal from "../modals/DeleteModal"
 import RendererModal from "../modals/RendererModal"
 import Avatar from "react-avatar"
+import { encryptPermission } from "../../utils/encryptionCrypto"
 
 const Card = ({
   title,
@@ -20,12 +21,13 @@ const Card = ({
   structureId,
   onSuccess,
   structureType = "default",
+  permission,
 }) => {
-  const dispatch = useDispatch();
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [rendererModalVisible, setRendererModalVisible] = useState(false);
-const [deleting, setDeleting] = useState(false);
+  const dispatch = useDispatch()
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
+  const [dropdownVisible, setDropdownVisible] = useState(false)
+  const [rendererModalVisible, setRendererModalVisible] = useState(false)
+  const [deleting, setDeleting] = useState(false)
 
   const handleDeleteStructure = () => {
     setDeleteModalVisible(true)
@@ -33,27 +35,32 @@ const [deleting, setDeleting] = useState(false);
   }
 
   const handleConfirmDelete = () => {
-  setDeleting(true);
-  dispatch(deleteStructure(structureId))
-    .then(() => {
-      cogoToast.success("Structure deleted successfully!");
-      setDeleteModalVisible(false);
-      onSuccess();
-    })
-    .catch(() => {
-      cogoToast.error("Failed to delete the structure.");
-    })
-    .finally(() => {
-      setDeleting(false);
-    });
-};
-
+    setDeleting(true)
+    dispatch(deleteStructure(structureId))
+      .then(() => {
+        cogoToast.success("Structure deleted successfully!")
+        setDeleteModalVisible(false)
+        onSuccess()
+      })
+      .catch(() => {
+        cogoToast.error("Failed to delete the structure.")
+      })
+      .finally(() => {
+        setDeleting(false)
+      })
+  }
 
   const dropdownRef = useOutsideClick(() => setDropdownVisible(false))
 
   const handleRendererSelect = renderer => {
     setRendererModalVisible(false)
-    window.location.href = `/app/s/${username}/${structureId}?renderer=${renderer}`
+    try {
+      const enc = encryptPermission(permission)
+      const q = encodeURIComponent(enc)
+      window.location.href = `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${q}`
+    } catch (err) {
+      cogoToast.error("Failed to open renderer (encryption error).")
+    }
   }
 
   return (
@@ -151,13 +158,12 @@ const [deleting, setDeleting] = useState(false);
       </div>
       {deleteModalVisible && (
         <DeleteModal
-  isOpen={deleteModalVisible}
-  title={"Structure"}
-  onClose={() => setDeleteModalVisible(false)}
-  onConfirm={handleConfirmDelete}
-  loading={deleting}
-/>
-
+          isOpen={deleteModalVisible}
+          title={"Structure"}
+          onClose={() => setDeleteModalVisible(false)}
+          onConfirm={handleConfirmDelete}
+          loading={deleting}
+        />
       )}
 
       <RendererModal
