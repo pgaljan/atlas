@@ -1,32 +1,32 @@
-import cogoToast from "@successtar/cogo-toast"
-import Cookies from "js-cookie"
-import { useEffect, useRef, useState } from "react"
-import { FaEdit } from "react-icons/fa"
-import { FaCirclePlus } from "react-icons/fa6"
-import { GiBrassEye } from "react-icons/gi"
-import { IoIosRemoveCircle } from "react-icons/io"
-import { IoTrash } from "react-icons/io5"
-import { PiTreeStructureFill } from "react-icons/pi"
-import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri"
-import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import useFeatureFlag from "../../hooks/useFeatureFlag"
-import useOutsideClick from "../../hooks/useOutsideClick"
+import cogoToast from "@successtar/cogo-toast";
+import Cookies from "js-cookie";
+import { useEffect, useRef, useState } from "react";
+import { FaEdit } from "react-icons/fa";
+import { FaCirclePlus } from "react-icons/fa6";
+import { GiBrassEye } from "react-icons/gi";
+import { IoIosRemoveCircle } from "react-icons/io";
+import { IoTrash } from "react-icons/io5";
+import { PiTreeStructureFill } from "react-icons/pi";
+import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri";
+import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
+import useFeatureFlag from "../../hooks/useFeatureFlag";
+import useOutsideClick from "../../hooks/useOutsideClick";
 import {
   createElement,
   deleteElement,
   fetchElementById,
   updateElement,
-} from "../../redux/slices/elements"
-import { deleteRecord, getRecordsByElement } from "../../redux/slices/records"
-import { updateStructure } from "../../redux/slices/structures"
-import { uploadFile } from "../../redux/slices/upload-files"
-import InputField from "../input-field/InputField"
-import Tooltip from "../tooltip/Tooltip"
-import AddQuillModal from "./AddQuillModal"
-import DeleteModal from "./DeleteModal"
-import ImportModal from "./ImportModal"
-import ModalComponent from "./Modal"
+} from "../../redux/slices/elements";
+import { deleteRecord, getRecordsByElement } from "../../redux/slices/records";
+import { updateStructure } from "../../redux/slices/structures";
+import { uploadFile } from "../../redux/slices/upload-files";
+import InputField from "../input-field/InputField";
+import Tooltip from "../tooltip/Tooltip";
+import AddQuillModal from "./AddQuillModal";
+import DeleteModal from "./DeleteModal";
+import ImportModal from "./ImportModal";
+import ModalComponent from "./Modal";
 
 const NodeModal = ({
   position,
@@ -40,48 +40,46 @@ const NodeModal = ({
   structureName: initialStructureName,
   structureType,
   renderType,
-  permission,
 }) => {
-  const isReadOnly = !(permission == "owner" || permission == "editor")
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const userId = Cookies.get("atlas_userId")
-  const [isLoading, setIsLoading] = useState(false)
-  const [deleteRecordId, setDeleteRecordId] = useState(null)
-  const [recordExists, setRecordExists] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [childModalVisible, setChildModalVisible] = useState(false)
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [elementValue, setElementValue] = useState("")
-  const [actionType, setActionType] = useState(null)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isEdit, setIsEdit] = useState(false)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const userId = Cookies.get("atlas_userId");
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteRecordId, setDeleteRecordId] = useState(null);
+  const [recordExists, setRecordExists] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [childModalVisible, setChildModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [elementValue, setElementValue] = useState("");
+  const [actionType, setActionType] = useState(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
   const [editStructureModalVisible, setEditStructureModalVisible] =
-    useState(false)
-  const [structureName, setStructureName] = useState(initialStructureName)
-  const [elementType, setElementType] = useState("event")
-  const [eventType, setEventType] = useState("")
-  const [gateType, setGateType] = useState("")
-  const [eventValue, setEventValue] = useState("")
-  const [eventValueType, seEventValueType] = useState("")
-  const [missionTime, setMissionTime] = useState("")
-  const [mttr, setMttr] = useState("")
-  const [description, setDescription] = useState("")
-  const [inputK, setInputK] = useState("")
-  const [outputN, setOutputN] = useState("")
-  const [deleting, setDeleting] = useState(false)
+    useState(false);
+  const [structureName, setStructureName] = useState(initialStructureName);
+  const [elementType, setElementType] = useState("event");
+  const [eventType, setEventType] = useState("");
+  const [gateType, setGateType] = useState("");
+  const [eventValue, setEventValue] = useState("");
+  const [eventValueType, seEventValueType] = useState("");
+  const [missionTime, setMissionTime] = useState("");
+  const [mttr, setMttr] = useState("");
+  const [description, setDescription] = useState("");
+  const [inputK, setInputK] = useState("");
+  const [outputN, setOutputN] = useState("");
+  const [deleting, setDeleting] = useState(false);
 
   // Feature flags
-  const canImportStructure = useFeatureFlag("Import from Excel")
-  const canTagRecord = useFeatureFlag("Rich Text Records")
+  const canImportStructure = useFeatureFlag("Import from Excel");
+  const canTagRecord = useFeatureFlag("Rich Text Records");
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action()
+      action();
     } else {
-      navigate(`?plan=upgrade-to-premium`)
+      navigate(`?plan=upgrade-to-premium`);
     }
-  }
+  };
 
   const modalRef = useOutsideClick(() => {
     if (
@@ -91,109 +89,109 @@ const NodeModal = ({
       !modalVisible &&
       !deleteModalVisible
     ) {
-      onClose()
+      onClose();
     }
-  })
+  });
 
-  const focusRef = useRef(null)
+  const focusRef = useRef(null);
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
-      cogoToast.error("Element title cannot be empty")
-      return
+      cogoToast.error("Element title cannot be empty");
+      return;
     }
 
     if (structureType !== "default" && renderType !== "markmap") {
       if (elementType === "event") {
         if (!eventType) {
-          cogoToast.warn("Please select an event type.")
-          return
+          cogoToast.warn("Please select an event type.");
+          return;
         }
 
         if (!eventValueType) {
-          cogoToast.warn("Please select an event value type.")
-          return
+          cogoToast.warn("Please select an event value type.");
+          return;
         }
 
         if (["conditional", "undeveloped"].includes(eventType)) {
           if (eventValueType === "λ") {
             cogoToast.warn(
               `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`
-            )
-            return
+            );
+            return;
           }
         }
 
         if (eventType === "basic") {
           if (eventValueType === "λ" && !missionTime) {
-            cogoToast.warn("Mission Time is required when using Rate (λ).")
-            return
+            cogoToast.warn("Mission Time is required when using Rate (λ).");
+            return;
           }
         }
       }
 
       if (elementType === "gate" && gateType === "voting-or") {
-        const isFloat = val =>
+        const isFloat = (val) =>
           val !== "" &&
           !isNaN(val) &&
           val.toString().includes(".") &&
-          parseFloat(val) > 0
+          parseFloat(val) > 0;
 
-        const isEmpty = val => val === "" || val === null
+        const isEmpty = (val) => val === "" || val === null;
 
-        const inputEmpty = isEmpty(inputK)
-        const outputEmpty = isEmpty(outputN)
+        const inputEmpty = isEmpty(inputK);
+        const outputEmpty = isEmpty(outputN);
 
         if (inputEmpty && outputEmpty) {
           cogoToast.warn(
             "Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)"
-          )
-          return
+          );
+          return;
         }
 
         if (inputEmpty) {
           cogoToast.warn(
             "Input (K) is required and must be a decimal number (e.g. 1.0)"
-          )
-          return
+          );
+          return;
         }
 
         if (outputEmpty) {
           cogoToast.warn(
             "Output (N) is required and must be a decimal number (e.g. 1.0)"
-          )
-          return
+          );
+          return;
         }
 
-        const inputValid = isFloat(inputK)
-        const outputValid = isFloat(outputN)
+        const inputValid = isFloat(inputK);
+        const outputValid = isFloat(outputN);
 
         if (!inputValid && !outputValid) {
           cogoToast.warn(
             "Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)"
-          )
-          return
+          );
+          return;
         }
 
         if (!inputValid) {
           cogoToast.warn(
             "Input (K) must be a decimal positive number (e.g. 1.0, 2.5)"
-          )
-          return
+          );
+          return;
         }
 
         if (!outputValid) {
           cogoToast.warn(
             "Output (N) must be a decimal positive number (e.g. 1.0, 2.5)"
-          )
-          return
+          );
+          return;
         }
 
-        const k = parseFloat(inputK)
-        const n = parseFloat(outputN)
+        const k = parseFloat(inputK);
+        const n = parseFloat(outputN);
 
         if (k > n) {
-          cogoToast.warn("Input (K) cannot be greater than Output (N)")
-          return
+          cogoToast.warn("Input (K) cannot be greater than Output (N)");
+          return;
         }
       }
     }
@@ -222,7 +220,7 @@ const NodeModal = ({
         elementType === "gate" && gateType === "voting-or"
           ? Number(outputN) || null
           : null,
-    }
+    };
 
     try {
       if (isEdit && elementId) {
@@ -255,186 +253,186 @@ const NodeModal = ({
                   : null,
             },
           })
-        ).unwrap()
+        ).unwrap();
 
-        cogoToast.success("Element updated successfully!")
+        cogoToast.success("Element updated successfully!");
       } else {
-        await dispatch(createElement(elementData)).unwrap()
-        cogoToast.success("Element added successfully!")
+        await dispatch(createElement(elementData)).unwrap();
+        cogoToast.success("Element added successfully!");
       }
-      setChildModalVisible(false)
-      setElementValue("")
-      onClose()
-      onSuccess()
+      setChildModalVisible(false);
+      setElementValue("");
+      onClose();
+      onSuccess();
     } catch (error) {
       cogoToast.error(
         "Error saving element: " + (error.message || "Unknown error")
-      )
+      );
     }
-  }
+  };
 
   const handleEditStructureSubmit = async () => {
     if (!structureName.trim()) {
-      cogoToast.error("Structure name cannot be empty")
-      return
+      cogoToast.error("Structure name cannot be empty");
+      return;
     }
     await dispatch(
       updateStructure({ id: structureId, updateData: { name: structureName } })
-    ).unwrap()
-    cogoToast.success("Structure name updated successfully!")
-    setEditStructureModalVisible(false)
-    onSuccess()
-  }
+    ).unwrap();
+    cogoToast.success("Structure name updated successfully!");
+    setEditStructureModalVisible(false);
+    onSuccess();
+  };
 
   const handleDeleteConfirm = async () => {
-    setDeleting(true)
+    setDeleting(true);
     try {
       if (!deleteRecordId) {
-        await dispatch(deleteElement(elementId)).unwrap()
-        cogoToast.success("Element deleted successfully!")
+        await dispatch(deleteElement(elementId)).unwrap();
+        cogoToast.success("Element deleted successfully!");
       } else {
-        await dispatch(deleteRecord(deleteRecordId)).unwrap()
-        cogoToast.success("Record deleted successfully!")
+        await dispatch(deleteRecord(deleteRecordId)).unwrap();
+        cogoToast.success("Record deleted successfully!");
       }
 
-      setDeleteModalVisible(false)
-      setDeleteRecordId(null)
-      onSuccess()
-      onClose()
+      setDeleteModalVisible(false);
+      setDeleteRecordId(null);
+      onSuccess();
+      onClose();
     } catch (error) {
-      cogoToast.error("Error deleting: " + (error.message || "Unknown error"))
+      cogoToast.error("Error deleting: " + (error.message || "Unknown error"));
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
-  const handleDeleteButtonClick = recordId => {
+  const handleDeleteButtonClick = (recordId) => {
     if (recordId) {
-      setDeleteRecordId(recordId)
+      setDeleteRecordId(recordId);
     } else {
-      setDeleteRecordId(null)
+      setDeleteRecordId(null);
     }
-    setDeleteModalVisible(true)
-  }
+    setDeleteModalVisible(true);
+  };
 
   // Fetch record to check if it exists
   useEffect(() => {
     if (elementId) {
       dispatch(getRecordsByElement(elementId))
         .unwrap()
-        .then(data => {
+        .then((data) => {
           if (data.length > 0) {
-            setRecordExists(true)
+            setRecordExists(true);
           } else {
-            setRecordExists(false)
+            setRecordExists(false);
           }
         })
-        .catch(() => setRecordExists(false))
+        .catch(() => setRecordExists(false));
     }
-  }, [elementId, dispatch])
+  }, [elementId, dispatch]);
 
   useEffect(() => {
     if (isEdit && elementId) {
-      dispatch(fetchElementById(elementId)).then(action => {
-        const element = action.payload
-        setElementValue(element.name)
-        setElementType(element.type || "event")
-        setDescription(element.description || "")
+      dispatch(fetchElementById(elementId)).then((action) => {
+        const element = action.payload;
+        setElementValue(element.name);
+        setElementType(element.type || "event");
+        setDescription(element.description || "");
 
         if (element.type === "event") {
-          setEventType(element.eventType || "")
-          setEventValue(element.eventValue || "")
-          seEventValueType(element.eventValueType || "")
-          setMissionTime(element.missionTime || "")
-          setMttr(element.mttr || "")
-          setGateType("")
-          setInputK("")
-          setOutputN("")
+          setEventType(element.eventType || "");
+          setEventValue(element.eventValue || "");
+          seEventValueType(element.eventValueType || "");
+          setMissionTime(element.missionTime || "");
+          setMttr(element.mttr || "");
+          setGateType("");
+          setInputK("");
+          setOutputN("");
         } else if (element.type === "gate") {
-          setGateType(element.gateType || "")
-          setInputK(element.inputK || "")
-          setOutputN(element.outputN || "")
-          setEventType("")
-          setEventValue("")
-          seEventValueType("")
-          setMissionTime("")
-          setMttr("")
+          setGateType(element.gateType || "");
+          setInputK(element.inputK || "");
+          setOutputN(element.outputN || "");
+          setEventType("");
+          setEventValue("");
+          seEventValueType("");
+          setMissionTime("");
+          setMttr("");
         }
-      })
+      });
     }
-  }, [isEdit, elementId, dispatch])
+  }, [isEdit, elementId, dispatch]);
 
   useEffect(() => {
     if (eventType === "undeveloped" || eventType === "conditional") {
-      if (eventValueType === "λ") seEventValueType("")
-      setMissionTime("")
+      if (eventValueType === "λ") seEventValueType("");
+      setMissionTime("");
     }
 
     if (eventType !== "basic") {
-      setMttr("")
+      setMttr("");
     }
-  }, [eventType])
-  const handleKeyPress = e => {
+  }, [eventType]);
+  const handleKeyPress = (e) => {
     if (e?.key === "Enter") {
-      handleModalSubmit()
+      handleModalSubmit();
     }
-  }
+  };
 
-  const handleViewEditRecord = actionType => {
+  const handleViewEditRecord = (actionType) => {
     switch (actionType) {
       case "add":
-        setActionType("add")
-        setElementValue(initialStructureName)
-        setModalVisible(true)
-        setIsEdit(false)
-        break
+        setActionType("add");
+        setElementValue(initialStructureName);
+        setModalVisible(true);
+        setIsEdit(false);
+        break;
       case "view":
-        setActionType("view")
-        setModalVisible(true)
-        setIsEdit(false)
-        break
+        setActionType("view");
+        setModalVisible(true);
+        setIsEdit(false);
+        break;
       case "edit":
-        setActionType("edit")
-        setModalVisible(true)
-        setIsEdit(true)
-        break
+        setActionType("edit");
+        setModalVisible(true);
+        setIsEdit(true);
+        break;
       default:
-        setModalVisible(false)
-        break
+        setModalVisible(false);
+        break;
     }
-  }
+  };
 
-  const handleKeyPressEditStructure = e => {
+  const handleKeyPressEditStructure = (e) => {
     if (e?.key === "Enter") {
-      handleEditStructureSubmit()
+      handleEditStructureSubmit();
     }
-  }
+  };
 
-  const handleFileSelection = file => {
+  const handleFileSelection = (file) => {
     if (!file) {
-      cogoToast.error("Please select a valid structure!")
-      return
+      cogoToast.error("Please select a valid structure!");
+      return;
     }
 
-    setIsImportModalOpen(false)
-    handleFileUpload(file)
-  }
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
 
-  const handleFileUpload = async file => {
+  const handleFileUpload = async (file) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
-      await dispatch(uploadFile({ file, userId, structureId })).unwrap()
+      await dispatch(uploadFile({ file, userId, structureId })).unwrap();
 
-      cogoToast.success("Structure uploaded successfully!")
+      cogoToast.success("Structure uploaded successfully!");
 
-      onSuccess()
+      onSuccess();
     } catch (err) {
-      cogoToast.error("Failed to upload structure.")
+      cogoToast.error("Failed to upload structure.");
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <>
@@ -540,8 +538,8 @@ const NodeModal = ({
                 "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               }
               onClick={() => {
-                setChildModalVisible(true)
-                setIsEdit(false)
+                setChildModalVisible(true);
+                setIsEdit(false);
               }}
             >
               <FaCirclePlus size={24} className="text-custom-main" />
@@ -555,8 +553,8 @@ const NodeModal = ({
                   "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 }
                 onClick={() => {
-                  setChildModalVisible(true)
-                  setIsEdit(true)
+                  setChildModalVisible(true);
+                  setIsEdit(true);
                 }}
               >
                 <FaEdit size={24} className="text-custom-main" />
@@ -617,7 +615,7 @@ const NodeModal = ({
               <input
                 type="text"
                 value={elementValue}
-                onChange={e => setElementValue(e.target.value)}
+                onChange={(e) => setElementValue(e.target.value)}
                 onKeyDown={handleKeyPress}
                 ref={focusRef}
                 placeholder="Enter element name"
@@ -664,7 +662,7 @@ const NodeModal = ({
                     </label>
                     <select
                       value={eventType}
-                      onChange={e => setEventType(e.target.value)}
+                      onChange={(e) => setEventType(e.target.value)}
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Event Type</option>
@@ -686,7 +684,7 @@ const NodeModal = ({
                     <input
                       type="text"
                       value={eventValue}
-                      onChange={e => setEventValue(e.target.value)}
+                      onChange={(e) => setEventValue(e.target.value)}
                       placeholder="Enter event code (e.g., E-001)"
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     />
@@ -698,7 +696,7 @@ const NodeModal = ({
                     </label>
                     <select
                       value={eventValueType}
-                      onChange={e => seEventValueType(e.target.value)}
+                      onChange={(e) => seEventValueType(e.target.value)}
                       className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">Select Value Type</option>
@@ -722,7 +720,7 @@ const NodeModal = ({
                       <input
                         type="number"
                         value={missionTime}
-                        onChange={e => setMissionTime(e.target.value)}
+                        onChange={(e) => setMissionTime(e.target.value)}
                         placeholder="Enter mission time in hours"
                         className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -736,7 +734,7 @@ const NodeModal = ({
                       <input
                         type="number"
                         value={mttr}
-                        onChange={e => setMttr(e.target.value)}
+                        onChange={(e) => setMttr(e.target.value)}
                         placeholder="Enter MTTR in hours"
                         className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                       />
@@ -799,7 +797,7 @@ const NodeModal = ({
                             type="number"
                             step="any"
                             value={inputK}
-                            onChange={e => setInputK(e.target.value)}
+                            onChange={(e) => setInputK(e.target.value)}
                             placeholder="Enter input K (e.g. 2.0)"
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
@@ -812,7 +810,7 @@ const NodeModal = ({
                             type="number"
                             step="any"
                             value={outputN}
-                            onChange={e => setOutputN(e.target.value)}
+                            onChange={(e) => setOutputN(e.target.value)}
                             placeholder="Enter input N (e.g 3.0) (≥ K)"
                             className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                           />
@@ -832,7 +830,7 @@ const NodeModal = ({
                   </label>
                   <textarea
                     value={description}
-                    onChange={e => setDescription(e.target.value)}
+                    onChange={(e) => setDescription(e.target.value)}
                     placeholder="Enter description"
                     className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
@@ -859,7 +857,7 @@ const NodeModal = ({
             disabled={!structureName.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
-            onChange={e => setStructureName(e.target.value)}
+            onChange={(e) => setStructureName(e.target.value)}
             placeholder="Enter structure name"
           />
         </ModalComponent>
@@ -881,13 +879,13 @@ const NodeModal = ({
           format={".json, .csv, .xls, .xlsx"}
           buttonText={"Import"}
           isLoading={isLoading}
-          handleFileSelection={file => handleFileSelection(file)}
+          handleFileSelection={(file) => handleFileSelection(file)}
           onSuccess={onSuccess}
           showDownloadSample={true}
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default NodeModal
+export default NodeModal;

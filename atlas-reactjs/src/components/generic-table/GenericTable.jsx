@@ -168,21 +168,21 @@ const GenericTable = ({
 
           {/* Search & Date Filters */}
           {(enableSearch || enableDate) && (
-            <div className="flex items-center my-4 justify-between flex-wrap gap-4">
+            <div className="flex flex-wrap items-center justify-between gap-6 my-4">
               {/* Search */}
               {enableSearch && (
-                <div className="flex items-center gap-4 flex-1 min-w-[250px]">
+                <div className="flex items-center gap-3">
                   {showTitle && (
                     <span className="font-bold whitespace-nowrap">
                       Search by Title
                     </span>
                   )}
-                  <div className="relative w-full flex items-center">
-                    <FiSearch className="absolute left-3 text-xl text-custom-text-grey" />
+                  <div className="relative w-full max-w-md">
+                    <FiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-xl text-custom-text-grey" />
                     <input
                       type="text"
                       placeholder="Search..."
-                      className="w-full pl-10 pr-4 py-2 max-w-[60%] border-2 rounded-lg focus:border-custom-main focus:outline-none"
+                      className="w-full pl-10 pr-4 py-2 border-2 rounded-lg focus:border-custom-main focus:outline-none"
                       value={searchQuery}
                       onKeyDown={(e) =>
                         e.key === "Enter" && onSearch?.(searchQuery)
@@ -201,19 +201,28 @@ const GenericTable = ({
 
               {/* Date */}
               {enableDate && filterByDate && (
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-3">
                   <span className="font-bold whitespace-nowrap">
                     Search by Date
                   </span>
                   <DatePicker
                     selected={selectedDate}
                     onChange={(date) => {
-                      onDateChange?.(date);
-                      handleFilterByDate?.(date);
+                      if (date) {
+                        const utcDate = new Date(
+                          Date.UTC(
+                            date.getFullYear(),
+                            date.getMonth(),
+                            date.getDate()
+                          )
+                        );
+                        onDateChange?.(utcDate);
+                        handleFilterByDate?.(utcDate);
+                      }
                     }}
                     dateFormat="yyyy-MM-dd"
                     placeholderText="Filter By Date"
-                    className="pl-2 py-2 border-2 rounded-lg focus:border-custom-main focus:outline-none"
+                    className="pl-2 py-2 border-2 rounded-lg focus:border-custom-main focus:outline-none w-48"
                   />
                 </div>
               )}

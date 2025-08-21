@@ -1,37 +1,37 @@
-import cogoToast from "@successtar/cogo-toast"
-import { useEffect, useRef, useState } from "react"
-import { FaUpload, FaPaperPlane } from "react-icons/fa"
-import { useDispatch, useSelector } from "react-redux"
-import AdminLayout from "../../../components/admin/admin-layout"
+import cogoToast from "@successtar/cogo-toast";
+import { useEffect, useRef, useState } from "react";
+import { FaUpload, FaPaperPlane } from "react-icons/fa";
+import { useDispatch, useSelector } from "react-redux";
+import AdminLayout from "../../../components/admin/admin-layout";
 import {
   fetchAppSettings,
   saveAppSettings,
   sendTestEmail,
-} from "../../../redux/slices/app-settings"
-import { uploadAnonymousFile } from "../../../redux/slices/upload-files"
+} from "../../../redux/slices/app-settings";
+import { uploadAnonymousFile } from "../../../redux/slices/upload-files";
 
 const Settings = () => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
   const testEmailStatus = useSelector(
-    state => state.appSettings.testEmailStatus
-  )
-  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png")
-  const [feedbackLink, setFeedbackLink] = useState("")
-  const [appName, setAppName] = useState("")
-  const [inviteCodeOption, setInviteCodeOption] = useState("disabled")
+    (state) => state.appSettings.testEmailStatus
+  );
+  const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png");
+  const [feedbackLink, setFeedbackLink] = useState("");
+  const [appName, setAppName] = useState("");
+  const [inviteCodeOption, setInviteCodeOption] = useState("disabled");
   const [authProviders, setAuthProviders] = useState({
     local: true,
     google: true,
     github: true,
-  })
-  const [supportEmail, setSupportEmail] = useState("")
-  const [primaryColor, setPrimaryColor] = useState("#660000")
-  const [secondaryColor, setSecondaryColor] = useState("#006666")
-  const [loading, setLoading] = useState(false)
-  const [testEmailAddress, setTestEmailAddress] = useState("")
-  const [testEmailSending, setTestEmailSending] = useState(false)
-  const colorInputRef = useRef(null)
-  const secondaryColorInputRef = useRef(null)
+  });
+  const [supportEmail, setSupportEmail] = useState("");
+  const [primaryColor, setPrimaryColor] = useState("#660000");
+  const [secondaryColor, setSecondaryColor] = useState("#006666");
+  const [loading, setLoading] = useState(false);
+  const [testEmailAddress, setTestEmailAddress] = useState("");
+  const [testEmailSending, setTestEmailSending] = useState(false);
+  const colorInputRef = useRef(null);
+  const secondaryColorInputRef = useRef(null);
   const [smtpSettings, setSmtpSettings] = useState({
     host: "",
     port: "",
@@ -40,62 +40,62 @@ const Settings = () => {
     password: "",
     fromEmail: "",
     fromName: "",
-  })
+  });
 
   const loadSettings = async () => {
     try {
-      const resultAction = await dispatch(fetchAppSettings())
+      const resultAction = await dispatch(fetchAppSettings());
       if (fetchAppSettings.fulfilled.match(resultAction)) {
-        const settings = resultAction?.payload
+        const settings = resultAction?.payload;
         if (settings) {
-          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png")
-          setAppName(settings.appName || "")
-          setSupportEmail(settings.supportEmail || "")
-          setFeedbackLink(settings.feedbackLink || "")
-          setPrimaryColor(settings.primaryColor || "#660000")
-          setSecondaryColor(settings.secondaryColor || "#006666")
-          setInviteCodeOption(settings.inviteCodeOption || "disabled")
+          setLogoUrl(settings.logoUrl || "/assets/atlas-logo.png");
+          setAppName(settings.appName || "");
+          setSupportEmail(settings.supportEmail || "");
+          setFeedbackLink(settings.feedbackLink || "");
+          setPrimaryColor(settings.primaryColor || "#660000");
+          setSecondaryColor(settings.secondaryColor || "#006666");
+          setInviteCodeOption(settings.inviteCodeOption || "disabled");
           setAuthProviders(
             settings.authProviders || {
               local: true,
               google: true,
               github: true,
             }
-          )
-          setSmtpSettings(settings.smtpSettings || {})
+          );
+          setSmtpSettings(settings.smtpSettings || {});
         }
       }
     } catch (error) {
-      console.log(error)
+      console.log(error);
     }
-  }
+  };
 
   useEffect(() => {
-    loadSettings()
-  }, [dispatch])
+    loadSettings();
+  }, [dispatch]);
 
-  const handleLogoUpload = async e => {
-    const file = e.target.files?.[0]
-    if (!file) return
+  const handleLogoUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
 
     try {
-      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap()
-      const url = uploaded.fileUrl || uploaded.url
+      const uploaded = await dispatch(uploadAnonymousFile(file)).unwrap();
+      const url = uploaded.fileUrl || uploaded.url;
 
       if (url) {
-        setLogoUrl(url)
-        cogoToast.success("Logo uploaded successfully.")
+        setLogoUrl(url);
+        cogoToast.success("Logo uploaded successfully.");
       } else {
-        cogoToast.error("No URL returned from upload.")
+        cogoToast.error("No URL returned from upload.");
       }
     } catch (err) {
-      cogoToast.error("Upload failed.")
+      cogoToast.error("Upload failed.");
     }
-  }
+  };
 
   const handleSaveAllSettings = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       await dispatch(
         saveAppSettings({
           logoUrl,
@@ -108,20 +108,20 @@ const Settings = () => {
           authProviders,
           smtpSettings,
         })
-      ).unwrap()
+      ).unwrap();
 
-      cogoToast.success("App settings saved successfully.")
-      loadSettings()
+      cogoToast.success("App settings saved successfully.");
+      loadSettings();
     } catch (err) {
-      cogoToast.error("Failed to save app settings.")
+      cogoToast.error("Failed to save app settings.");
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const openColorPicker = () => {
-    colorInputRef.current?.click()
-  }
+    colorInputRef.current?.click();
+  };
 
   return (
     <AdminLayout>
@@ -167,7 +167,7 @@ const Settings = () => {
             <input
               type="text"
               value={appName}
-              onChange={e => setAppName(e.target.value)}
+              onChange={(e) => setAppName(e.target.value)}
               placeholder="Enter app name"
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
@@ -179,7 +179,7 @@ const Settings = () => {
             <input
               type="email"
               value={supportEmail}
-              onChange={e => setSupportEmail(e.target.value)}
+              onChange={(e) => setSupportEmail(e.target.value)}
               placeholder="Enter support email"
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
@@ -191,7 +191,7 @@ const Settings = () => {
             <input
               type="url"
               value={feedbackLink}
-              onChange={e => setFeedbackLink(e.target.value)}
+              onChange={(e) => setFeedbackLink(e.target.value)}
               placeholder="https://example.com/feedback"
               className="w-full p-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
             />
@@ -200,83 +200,134 @@ const Settings = () => {
           {/* SMTP Settings */}
           <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
             <h3 className="text-xl font-semibold mb-4">SMTP Configuration</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input
-                type="text"
-                value={smtpSettings.host}
-                onChange={e =>
-                  setSmtpSettings({ ...smtpSettings, host: e.target.value })
-                }
-                placeholder="SMTP Host Server"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+            <div className="grid grid-cols-1 items-center sm:grid-cols-2 gap-4">
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="SMTP Host Server">
+                  SMTP Host Server
+                  <span className="text-md text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={smtpSettings.host}
+                  onChange={(e) =>
+                    setSmtpSettings({ ...smtpSettings, host: e.target.value })
+                  }
+                  placeholder="Enter your host server"
+                  className="p-3 w-full rounded-lg border border-gray-300"
+                />
+              </div>
 
-              <input
-                type="number"
-                value={smtpSettings.port}
-                onChange={e =>
-                  setSmtpSettings({ ...smtpSettings, port: e.target.value })
-                }
-                placeholder="Port"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="Port">
+                  Port
+                  <span className="text-md text-red-500 ml-1">*</span>
+                </label>
+                <input
+                  type="number"
+                  value={smtpSettings.port}
+                  onChange={(e) =>
+                    setSmtpSettings({ ...smtpSettings, port: e.target.value })
+                  }
+                  placeholder="Enter your port"
+                  className="w-full p-3 rounded-lg border border-gray-300"
+                />
+              </div>
 
-              <select
-                value={smtpSettings.encryption}
-                onChange={e =>
-                  setSmtpSettings({
-                    ...smtpSettings,
-                    encryption: e.target.value,
-                  })
-                }
-                className="p-3 rounded-lg border border-gray-300"
-              >
-                <option value="TLS">TLS</option>
-                <option value="SSL">SSL</option>
-              </select>
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="TLS">
+                  Certificate <span className="text-md text-red-500">*</span>
+                </label>
 
-              <input
-                type="text"
-                value={smtpSettings.username}
-                onChange={e =>
-                  setSmtpSettings({ ...smtpSettings, username: e.target.value })
-                }
-                placeholder="Username"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+                <select
+                  value={smtpSettings.encryption}
+                  onChange={(e) =>
+                    setSmtpSettings({
+                      ...smtpSettings,
+                      encryption: e.target.value,
+                    })
+                  }
+                  className=" w-full p-3 rounded-lg border border-gray-300"
+                >
+                  <option value="TLS">TLS</option>
+                  <option value="SSL">SSL</option>
+                </select>
+              </div>
 
-              <input
-                type="password"
-                value={smtpSettings.password}
-                onChange={e =>
-                  setSmtpSettings({ ...smtpSettings, password: e.target.value })
-                }
-                placeholder="Password"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="userName">
+                  {" "}
+                  Username <span className="text-md text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={smtpSettings.username}
+                  onChange={(e) =>
+                    setSmtpSettings({
+                      ...smtpSettings,
+                      username: e.target.value,
+                    })
+                  }
+                  placeholder="Username"
+                  className=" w-full p-3 rounded-lg border border-gray-300"
+                />
+              </div>
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="Password">
+                  {" "}
+                  Password <span className="text-md text-red-500 ml-1">*</span>
+                </label>
 
-              <input
-                type="email"
-                value={smtpSettings.fromEmail}
-                onChange={e =>
-                  setSmtpSettings({
-                    ...smtpSettings,
-                    fromEmail: e.target.value,
-                  })
-                }
-                placeholder="From Email"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+                <input
+                  type="password"
+                  value={smtpSettings.password}
+                  onChange={(e) =>
+                    setSmtpSettings({
+                      ...smtpSettings,
+                      password: e.target.value,
+                    })
+                  }
+                  placeholder="Password"
+                  className=" w-full p-3 rounded-lg border border-gray-300"
+                />
+              </div>
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="email">
+                  {" "}
+                  Email <span className="text-md text-red-500 ml-1">*</span>
+                </label>
 
-              <input
-                type="text"
-                value={smtpSettings.fromName}
-                onChange={e =>
-                  setSmtpSettings({ ...smtpSettings, fromName: e.target.value })
-                }
-                placeholder="From Name"
-                className="p-3 rounded-lg border border-gray-300"
-              />
+                <input
+                  type="email"
+                  value={smtpSettings.fromEmail}
+                  onChange={(e) =>
+                    setSmtpSettings({
+                      ...smtpSettings,
+                      fromEmail: e.target.value,
+                    })
+                  }
+                  placeholder="From Email"
+                  className="w-full p-3 rounded-lg border border-gray-300"
+                />
+              </div>
+              <div className="flex items-start flex-col gap-1">
+                <label htmlFor="email">
+                  {" "}
+                  Name <span className="text-md text-red-500 ml-1">*</span>
+                </label>
+
+                <input
+                  type="text"
+                  value={smtpSettings.fromName}
+                  onChange={(e) =>
+                    setSmtpSettings({
+                      ...smtpSettings,
+                      fromName: e.target.value,
+                    })
+                  }
+                  placeholder="From Name"
+                  className="w-full p-3 rounded-lg border border-gray-300"
+                />
+              </div>
             </div>
 
             <p className="text-sm text-gray-500 mt-3">
@@ -286,47 +337,54 @@ const Settings = () => {
 
             <div className="mt-6 pt-4 border-t border-gray-200">
               <h4 className="text-lg font-medium mb-3">
-                Test Email Configuration
+                Test Email Configuration{" "}
+                <span className="text-md text-red-500 ml-1">*</span>
               </h4>
               <div className="flex flex-col sm:flex-row gap-3">
                 <input
                   type="email"
                   value={testEmailAddress}
-                  onChange={e => setTestEmailAddress(e.target.value)}
+                  onChange={(e) => setTestEmailAddress(e.target.value)}
                   placeholder="Enter email address to test"
                   className="flex-grow p-3 rounded-lg border border-gray-300"
                 />
                 <button
                   onClick={async () => {
                     if (!testEmailAddress) {
-                      cogoToast.error("Please enter an email address")
-                      return
+                      cogoToast.error("Please enter an email address");
+                      return;
                     }
 
                     try {
-                      setTestEmailSending(true)
-                      await dispatch(sendTestEmail(testEmailAddress)).unwrap()
-                      cogoToast.success("Test email sent successfully!")
+                      setTestEmailSending(true);
+                      await dispatch(sendTestEmail(testEmailAddress)).unwrap();
+                      cogoToast.success("Test email sent successfully!");
                     } catch (error) {
                       cogoToast.error(
                         error?.message ||
                           "Failed to send test email. Please check your SMTP settings."
-                      )
+                      );
                     } finally {
-                      setTestEmailSending(false)
+                      setTestEmailSending(false);
                     }
                   }}
                   disabled={
                     testEmailSending ||
                     !smtpSettings.host ||
                     !smtpSettings.username ||
-                    !smtpSettings.password
+                    !smtpSettings.password ||
+                    !smtpSettings.port ||
+                    !smtpSettings.fromEmail ||
+                    !smtpSettings.fromName
                   }
                   className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white font-medium transition ${
                     testEmailSending ||
                     !smtpSettings.host ||
                     !smtpSettings.username ||
-                    !smtpSettings.password
+                    !smtpSettings.password ||
+                    !smtpSettings.port ||
+                    !smtpSettings.fromEmail ||
+                    !smtpSettings.fromName
                       ? "bg-gray-400 cursor-not-allowed"
                       : "bg-custom-main hover:bg-custom-secondary"
                   }`}
@@ -338,7 +396,8 @@ const Settings = () => {
               <p className="text-xs text-gray-500 mt-2">
                 {!smtpSettings.host ||
                 !smtpSettings.username ||
-                !smtpSettings.password
+                !smtpSettings.password ||
+                !smtpSettings.port
                   ? "Complete the SMTP configuration above before sending a test email."
                   : "Send a test email to verify your SMTP configuration is working correctly."}
               </p>
@@ -352,7 +411,7 @@ const Settings = () => {
               <input
                 type="text"
                 value={primaryColor}
-                onChange={e => setPrimaryColor(e.target.value)}
+                onChange={(e) => setPrimaryColor(e.target.value)}
                 className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
               />
               <div
@@ -365,7 +424,7 @@ const Settings = () => {
                 ref={colorInputRef}
                 type="color"
                 value={primaryColor}
-                onChange={e => setPrimaryColor(e.target.value)}
+                onChange={(e) => setPrimaryColor(e.target.value)}
                 className="hidden"
               />
             </div>
@@ -378,7 +437,7 @@ const Settings = () => {
               <input
                 type="text"
                 value={secondaryColor}
-                onChange={e => setSecondaryColor(e.target.value)}
+                onChange={(e) => setSecondaryColor(e.target.value)}
                 className="w-full p-3 pl-12 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-custom-main"
               />
               <div
@@ -391,7 +450,7 @@ const Settings = () => {
                 ref={secondaryColorInputRef}
                 type="color"
                 value={secondaryColor}
-                onChange={e => setSecondaryColor(e.target.value)}
+                onChange={(e) => setSecondaryColor(e.target.value)}
                 className="hidden"
               />
             </div>
@@ -401,7 +460,7 @@ const Settings = () => {
           <section className="bg-white p-6 rounded-xl border border-gray-200 mb-6">
             <h3 className="text-xl font-semibold mb-4">Invite Codes</h3>
             <div className="flex items-center space-x-6">
-              {["disabled", "enabled", "required"].map(option => (
+              {["disabled", "enabled", "required"].map((option) => (
                 <label
                   key={option}
                   className="flex items-center space-x-2 text-black capitalize"
@@ -411,7 +470,7 @@ const Settings = () => {
                     name="inviteCodeOption"
                     value={option}
                     checked={inviteCodeOption === option}
-                    onChange={e => setInviteCodeOption(e.target.value)}
+                    onChange={(e) => setInviteCodeOption(e.target.value)}
                     className="appearance-none w-5 h-5 border-2 border-custom-main rounded-full focus:outline-none checked:relative checked:after:content-[''] checked:after:block checked:after:w-2.5 checked:after:h-2.5 checked:after:rounded-full checked:after:bg-custom-main checked:after:absolute checked:after:top-1/2 checked:after:left-1/2 checked:after:transform checked:after:-translate-x-1/2 checked:after:-translate-y-1/2"
                   />
                   <span className="text-sm">{option}</span>
@@ -426,7 +485,7 @@ const Settings = () => {
               Authentication Providers
             </h3>
             <div className="flex items-center space-x-6">
-              {["local", "google", "github"].map(provider => (
+              {["local", "google", "github"].map((provider) => (
                 <label
                   key={provider}
                   className="flex items-center space-x-2 text-black capitalize"
@@ -434,8 +493,8 @@ const Settings = () => {
                   <input
                     type="checkbox"
                     checked={authProviders[provider]}
-                    onChange={e =>
-                      setAuthProviders(prev => ({
+                    onChange={(e) =>
+                      setAuthProviders((prev) => ({
                         ...prev,
                         [provider]: e.target.checked,
                       }))
@@ -474,7 +533,7 @@ const Settings = () => {
         </div>
       </div>
     </AdminLayout>
-  )
-}
+  );
+};
 
-export default Settings
+export default Settings;
