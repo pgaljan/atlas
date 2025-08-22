@@ -72,7 +72,7 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
     if (structureId && username) {
       ;(onUseTemplate || onClose)?.()
       navigate(
-        `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${permission}`
+        navigate(`/app/s/${username}/${structureId}?renderer=${renderer}`)
       )
     }
   }
