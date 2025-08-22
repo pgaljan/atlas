@@ -21,6 +21,10 @@ import {
 import { deleteRecord, getRecordsByElement } from "../../redux/slices/records"
 import { updateStructure } from "../../redux/slices/structures"
 import { uploadFile } from "../../redux/slices/upload-files"
+import {
+  getRoleAccessMap,
+  getRoleAndAccess,
+} from "../../utils/permissionFunctions"
 import InputField from "../input-field/InputField"
 import Tooltip from "../tooltip/Tooltip"
 import AddQuillModal from "./AddQuillModal"
@@ -42,9 +46,9 @@ const NodeModal = ({
   renderType,
   permission,
 }) => {
-  const isReadOnly = !(permission == "owner" || permission == "editor")
   const dispatch = useDispatch()
   const navigate = useNavigate()
+  const focusRef = useRef(null)
   const userId = Cookies.get("atlas_userId")
   const [isLoading, setIsLoading] = useState(false)
   const [deleteRecordId, setDeleteRecordId] = useState(null)
@@ -70,6 +74,10 @@ const NodeModal = ({
   const [inputK, setInputK] = useState("")
   const [outputN, setOutputN] = useState("")
   const [deleting, setDeleting] = useState(false)
+  const { role } = getRoleAndAccess(permission)
+  const roleAccess = getRoleAccessMap(role)
+
+  console.log(roleAccess)
 
   // Feature flags
   const canImportStructure = useFeatureFlag("Import from Excel")
@@ -95,7 +103,6 @@ const NodeModal = ({
     }
   })
 
-  const focusRef = useRef(null)
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
       cogoToast.error("Element title cannot be empty")
@@ -445,11 +452,16 @@ const NodeModal = ({
           left: position.x,
           top: position.y,
         }}
-        className="bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50"
+        className={`${
+          roleAccess.canManage || roleAccess.canEdit
+            ? "bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50"
+            : ""
+        }`}
       >
         <div className="flex flex-wrap gap-2 items-center justify-start ">
-          {wbs === "1" && (
+          {wbs === "1" && roleAccess.canManage && (
             <>
+              {/* Import Structure */}
               <Tooltip label="Import Structure">
                 <button
                   onClick={() =>
@@ -457,28 +469,25 @@ const NodeModal = ({
                       setIsImportModalOpen(true)
                     )
                   }
-                  aria-label="Import Structure"
-                  className={
-                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                  }
+                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 >
                   <PiTreeStructureFill size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
+
+              {/* Edit Structure */}
               <Tooltip label="Edit Structure">
                 <button
                   onClick={() => setEditStructureModalVisible(true)}
-                  aria-label="Edit Structure"
-                  className={
-                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                  }
+                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 >
                   <RiEditCircleFill size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
             </>
           )}
-          {wbs !== "1" && !recordExists && (
+
+          {wbs !== "1" && !recordExists && roleAccess.canEdit && (
             <Tooltip label="Add Record">
               <button
                 onClick={() =>
@@ -533,44 +542,40 @@ const NodeModal = ({
             </Tooltip>
           )} */}
 
-          <Tooltip label="Add Element">
-            <button
-              aria-label="Add Element"
-              className={
-                "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-              }
-              onClick={() => {
-                setChildModalVisible(true)
-                setIsEdit(false)
-              }}
-            >
-              <FaCirclePlus size={24} className="text-custom-main" />
-            </button>
-          </Tooltip>
-          {wbs !== "1" && (
+          {roleAccess.canEdit && (
+            <Tooltip label="Add Element">
+              <button
+                onClick={() => {
+                  setChildModalVisible(true)
+                  setIsEdit(false)
+                }}
+                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+              >
+                <FaCirclePlus size={24} className="text-custom-main" />
+              </button>
+            </Tooltip>
+          )}
+
+          {wbs !== "1" && roleAccess.canEdit && (
             <Tooltip label="Edit Element">
               <button
-                aria-label="Edit Element"
-                className={
-                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                }
                 onClick={() => {
                   setChildModalVisible(true)
                   setIsEdit(true)
                 }}
+                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
                 <FaEdit size={24} className="text-custom-main" />
               </button>
             </Tooltip>
           )}
-          {wbs !== "1" && (
+
+          {/* Delete Element */}
+          {wbs !== "1" && roleAccess.canEdit && (
             <Tooltip label="Delete Element">
               <button
-                aria-label="Delete Element"
-                className={
-                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                }
                 onClick={() => handleDeleteButtonClick(null)}
+                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
                 <IoTrash size={24} className="text-custom-main" />
               </button>
