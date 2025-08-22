@@ -1314,6 +1314,7 @@ const Syncfusion = () => {
             handleNodeUpdate()
           }}
           structureType={structureType}
+          permission={permission}
         />
       )}
       <ConfirmationModal
