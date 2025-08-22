@@ -50,7 +50,6 @@ export function decryptPermission(token) {
     const plain = decryptedBytes.toString(CryptoJS.enc.Utf8)
     return plain || null
   } catch (err) {
-    console.error("decryptPermission error:", err)
     return null
   }
 }

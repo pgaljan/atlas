@@ -56,7 +56,6 @@ const Card = ({
     setRendererModalVisible(false)
     try {
       const enc = encryptPermission(permission)
-      console.log(enc)
       const q = encodeURIComponent(enc)
       window.location.href = `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${q}`
     } catch (err) {
