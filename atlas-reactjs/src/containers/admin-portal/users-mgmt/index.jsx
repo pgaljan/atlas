@@ -21,6 +21,8 @@ import {
   updateUser,
 } from "../../../redux/slices/users"
 import Avatar from "react-avatar"
+import UserInfoModal from "../../../components/modals/UserInfoModal"
+import { BsInfoLg } from "react-icons/bs"
 
 const index = () => {
   const dispatch = useDispatch()
@@ -30,7 +32,8 @@ const index = () => {
   const [plans, setPlans] = useState([])
   const [isSortOpen, setIsSortOpen] = useState(false)
   const [selectedOption, setSelectedOption] = useState("Sort")
-
+  const [isInfoOpen, setIsInfoOpen] = useState(false)
+  const [selectedUser, setSelectedUser] = useState(null)
   const options = [
     "Personal",
     "Analyst",
@@ -134,7 +137,10 @@ const index = () => {
       cogoToast.error(error.message || "Failed to update user status")
     }
   }
-
+  const fmt = date => {
+    if (!date) return "N/A"
+    return new Date(date).toLocaleString()
+  }
   const handleExportUsers = () => {
     dispatch(exportUsers())
       .unwrap()
@@ -580,10 +586,25 @@ const index = () => {
                         {user.acceptedInvitesCount ?? 0}
                       </td>
                       <td className="px-2 py-2 flex mt-2">
+                        <Tooltip label="User info">
+                          <button
+                            onClick={() => {
+                              setSelectedUser(user)
+                              setIsInfoOpen(true)
+                            }}
+                            className="p-2 text-custom-main rounded transition hover:text-custom-main/70"
+                            aria-label={`Show info for ${
+                              user.displayName || user.username
+                            }`}
+                          >
+                            <BsInfoLg className="w-5 h-5" />
+                          </button>
+                        </Tooltip>
+
                         <Tooltip label="Edit">
                           <button
                             onClick={() => openModal(user)}
-                            className="p-2 text-custom-main rounded transition hover:text-green-600"
+                            className="p-2 text-custom-main rounded transition"
                           >
                             <TbEditCircle className="w-5 h-5" />
                           </button>
@@ -591,7 +612,7 @@ const index = () => {
                         <Tooltip label="Delete">
                           <button
                             onClick={() => openDeleteModal(user)}
-                            className="p-2 text-red-500 rounded transition hover:text-red-600"
+                            className="p-2 text-red-500 rounded transition hover:text-red-700"
                           >
                             <IoTrash className="w-5 h-5" />
                           </button>
@@ -603,6 +624,12 @@ const index = () => {
               </tbody>
             </table>
           </div>
+          <UserInfoModal
+            isOpen={isInfoOpen}
+            onClose={() => setIsInfoOpen(false)}
+            user={selectedUser}
+            fmt={fmt}
+          />
         </div>
       </div>
     </AdminLayout>

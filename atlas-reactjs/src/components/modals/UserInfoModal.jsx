@@ -11,7 +11,6 @@ const UserInfoModal = ({ isOpen, onClose, user, fmt }) => {
       />
 
       <div className="relative bg-white rounded-2xl shadow-2xl border border-gray-200 p-6 w-96 z-10 animate-fadeIn">
-        {/* Header */}
         <div className="flex items-center justify-between border-b pb-2 mb-4">
           <h3 className="font-semibold flex flex-col items-start">
             <span className="font-bold capitalize text-gray-800">
