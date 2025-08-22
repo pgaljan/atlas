@@ -4,8 +4,6 @@ const SECRET_HEX =
   import.meta.env.VITE_APP_ENCRYPTION_SECRET ||
   "e1f3c4d5a6b7c8d9e0f1a2b3c4d5e6f7a8b9c0d1e2f3a4b5c6d7e8f9a0b1c2d3"
 
-console.log("SECRET_HEX", SECRET_HEX)
-
 function ensureKey() {
   if (!SECRET_HEX || SECRET_HEX.length !== 64) {
     throw new Error(

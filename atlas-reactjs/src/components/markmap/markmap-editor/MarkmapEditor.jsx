@@ -439,6 +439,7 @@ const MarkmapEditor = ({ structureId }) => {
           undo={undo}
           redo={redo}
           onSearch={handleSearch}
+          permission={permission}
           canUndo={canUndo}
           canRedo={canRedo}
           onExportModal={handleExportModal}

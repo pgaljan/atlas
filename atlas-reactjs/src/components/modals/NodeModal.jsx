@@ -77,9 +77,6 @@ const NodeModal = ({
   const { role } = getRoleAndAccess(permission)
   const roleAccess = getRoleAccessMap(role)
 
-  console.log(roleAccess)
-
-  // Feature flags
   const canImportStructure = useFeatureFlag("Import from Excel")
   const canTagRecord = useFeatureFlag("Rich Text Records")
 
@@ -324,7 +321,6 @@ const NodeModal = ({
     setDeleteModalVisible(true)
   }
 
-  // Fetch record to check if it exists
   useEffect(() => {
     if (elementId) {
       dispatch(getRecordsByElement(elementId))
@@ -453,7 +449,7 @@ const NodeModal = ({
           top: position.y,
         }}
         className={`${
-          roleAccess.canManage || roleAccess.canEdit
+          roleAccess.canManage || roleAccess.canEdit || roleAccess.canComment
             ? "bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50"
             : ""
         }`}
@@ -487,23 +483,24 @@ const NodeModal = ({
             </>
           )}
 
-          {wbs !== "1" && !recordExists && roleAccess.canEdit && (
-            <Tooltip label="Add Record">
-              <button
-                onClick={() =>
-                  handleFeatureClick(canTagRecord, () =>
-                    handleViewEditRecord("add")
-                  )
-                }
-                aria-label="Add Record"
-                className={
-                  "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                }
-              >
-                <RiPlayListAddFill size={24} className="text-custom-main" />
-              </button>
-            </Tooltip>
-          )}
+          {(wbs !== "1" && !recordExists && roleAccess.canEdit) ||
+            (roleAccess.canComment && (
+              <Tooltip label="Add Record">
+                <button
+                  onClick={() =>
+                    handleFeatureClick(canTagRecord, () =>
+                      handleViewEditRecord("add")
+                    )
+                  }
+                  aria-label="Add Record"
+                  className={
+                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                  }
+                >
+                  <RiPlayListAddFill size={24} className="text-custom-main" />
+                </button>
+              </Tooltip>
+            ))}
 
           {recordExists && (
             <>
@@ -531,16 +528,6 @@ const NodeModal = ({
               </Tooltip>
             </>
           )}
-          {/* {wbs !== "1" && (
-            <Tooltip label="Edit Link">
-              <button
-                aria-label="Edit Link"
-                className={`hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 ${color ? `focus:ring-[custom-main]` : ""}`}
-              >
-                <BiLink size={24}  className="text-custom-main" />
-              </button>
-            </Tooltip>
-          )} */}
 
           {roleAccess.canEdit && (
             <Tooltip label="Add Element">
@@ -676,11 +663,8 @@ const NodeModal = ({
                       <option value="intermediate">Intermediate</option>
                       <option value="basic">Basic</option>
                       <option value="transfer">Transfer</option>
-                      {/* <option value="dormant">Dormant</option> */}
                       <option value="conditional">Conditional</option>
-                      {/* <option value="external">External</option> */}
                       <option value="undeveloped">Undeveloped</option>
-                      {/* <option value="house">House</option> */}
                     </select>
                   </div>
 
@@ -846,6 +830,7 @@ const NodeModal = ({
           </>
         </ModalComponent>
       )}
+
       {/* Edit Structure Modal */}
       {editStructureModalVisible && (
         <ModalComponent

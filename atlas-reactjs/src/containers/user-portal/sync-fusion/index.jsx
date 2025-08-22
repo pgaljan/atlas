@@ -920,6 +920,7 @@ const Syncfusion = () => {
             treeData={treeData}
             setShowWbs={handleSetShowWbs}
             onSearch={handleSearch}
+            permission={permission}
           />
         </div>
 
