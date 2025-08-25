@@ -920,6 +920,7 @@ const Syncfusion = () => {
             treeData={treeData}
             setShowWbs={handleSetShowWbs}
             onSearch={handleSearch}
+            permission={permission}
           />
         </div>
 
@@ -1313,6 +1314,7 @@ const Syncfusion = () => {
             handleNodeUpdate()
           }}
           structureType={structureType}
+          permission={permission}
         />
       )}
       <ConfirmationModal

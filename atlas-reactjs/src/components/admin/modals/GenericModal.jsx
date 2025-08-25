@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import Select from "react-select";
-import { fetchRoles } from "../../../redux/slices/roles";
-import InputField from "../../input-field/InputField";
+import React, { useEffect, useState } from "react"
+import { useDispatch } from "react-redux"
+import Select from "react-select"
+import { fetchRoles } from "../../../redux/slices/roles"
+import InputField from "../../input-field/InputField"
 
 const GenericModal = ({
   isOpen,
@@ -18,12 +18,12 @@ const GenericModal = ({
     email: "",
     role: "",
     password: "",
-  };
+  }
   const defaultSettingData = {
     name: "",
     contact: "",
     social: "",
-  };
+  }
 
   const [formData, setFormData] = useState(
     initialData ||
@@ -32,58 +32,57 @@ const GenericModal = ({
         : type === "setting"
         ? defaultSettingData
         : {})
-  );
+  )
 
-  // Local state to store roles and their loading/error status.
-  const [roleOptions, setRoleOptions] = useState([]);
-  const [rolesLoading, setRolesLoading] = useState(false);
-  const [rolesError, setRolesError] = useState(null);
+  const [roleOptions, setRoleOptions] = useState([])
+  const [rolesLoading, setRolesLoading] = useState(false)
+  const [rolesError, setRolesError] = useState(null)
 
-  const dispatch = useDispatch();
+  const dispatch = useDispatch()
 
   useEffect(() => {
     if (type === "user") {
-      setRolesLoading(true);
+      setRolesLoading(true)
       dispatch(fetchRoles())
         .unwrap()
-        .then((roles) => {
-          const options = roles.map((role) => ({
+        .then(roles => {
+          const options = roles.map(role => ({
             value: role.id,
             label: role.name,
-          }));
-          setRoleOptions(options);
-          setRolesLoading(false);
+          }))
+          setRoleOptions(options)
+          setRolesLoading(false)
         })
-        .catch((error) => {
-          setRolesError(error);
-          setRolesLoading(false);
-        });
+        .catch(error => {
+          setRolesError(error)
+          setRolesLoading(false)
+        })
     }
-  }, [dispatch, type]);
+  }, [dispatch, type])
 
   useEffect(() => {
     if (initialData) {
-      setFormData(initialData);
+      setFormData(initialData)
     } else if (type === "user") {
-      setFormData(defaultUserData);
+      setFormData(defaultUserData)
     }
-  }, [initialData, type]);
+  }, [initialData, type])
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  const handleChange = e => {
+    setFormData({ ...formData, [e.target.name]: e.target.value })
+  }
 
-  const handleRoleChange = (selectedOption) => {
-    setFormData({ ...formData, role: selectedOption.value });
-  };
+  const handleRoleChange = selectedOption => {
+    setFormData({ ...formData, role: selectedOption.value })
+  }
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onSubmit(formData);
-    onClose();
-  };
+  const handleSubmit = e => {
+    e.preventDefault()
+    onSubmit(formData)
+    onClose()
+  }
 
-  if (!isOpen) return null;
+  if (!isOpen) return null
 
   return (
     <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-end z-50">
@@ -122,8 +121,6 @@ const GenericModal = ({
                   Role
                 </label>
                 {rolesLoading ? (
-                  <p>Loading roles...</p>
-                ) : rolesError ? (
                   <p className="text-red-500">Failed to load roles</p>
                 ) : (
                   <Select
@@ -132,7 +129,7 @@ const GenericModal = ({
                     onChange={handleRoleChange}
                     value={
                       formData.role
-                        ? roleOptions.find((option) =>
+                        ? roleOptions.find(option =>
                             typeof formData.role === "object"
                               ? option.value === formData.role.id
                               : option.value === formData.role ||
@@ -195,7 +192,7 @@ const GenericModal = ({
         </form>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default GenericModal;
+export default GenericModal

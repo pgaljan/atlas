@@ -8,16 +8,24 @@ import useFeatureFlag from "../../hooks/useFeatureFlag"
 import { deleteStructure } from "../../redux/slices/structures"
 import DeleteModal from "./DeleteModal"
 
-const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+const RightClickMenu = ({
+  position,
+  onOptionSelect,
+  onClose,
+  structureId,
+  permission,
+  role,
+  access,
+}) => {
+  const dispatch = useDispatch()
+  const navigate = useNavigate()
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false)
 
   // Feature flag checks
-  const canExportHtml = useFeatureFlag("Export to HTML/Markdown");
-  const canExportDOC = useFeatureFlag("Export to DOC/PDF");
-  const canExportPDF = useFeatureFlag("Export to DOC/PDF");
-  const [deleting, setDeleting] = useState(false);
+  const canExportHtml = useFeatureFlag("Export to HTML/Markdown")
+  const canExportDOC = useFeatureFlag("Export to DOC/PDF")
+  const canExportPDF = useFeatureFlag("Export to DOC/PDF")
+  const [deleting, setDeleting] = useState(false)
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action()
@@ -32,7 +40,7 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
   }
 
   const handleConfirmDelete = () => {
-    setDeleting(true); // start loading
+    setDeleting(true)
 
     dispatch(deleteStructure(structureId))
       .then(() => {
@@ -42,12 +50,12 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         navigate("/app/dashboard")
       })
       .catch(() => {
-        cogoToast.error("Failed to delete the structure. Please try again.");
+        cogoToast.error("Failed to delete the structure. Please try again.")
       })
       .finally(() => {
-        setDeleting(false); // stop loading
-      });
-  };
+        setDeleting(false)
+      })
+  }
 
   const handleCloseModal = () => {
     setIsDeleteModalOpen(false)
@@ -60,7 +68,13 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         style={{ top: position.y, left: position.x }}
       >
         <button
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
+          disabled={!access.canExport}
+          className={`flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors duration-200
+    ${
+      access.canExport
+        ? "hover:bg-gray-100 text-gray-800 cursor-pointer"
+        : "text-gray-400 cursor-not-allowed bg-gray-50"
+    }`}
           onClick={() =>
             handleFeatureClick(canExportHtml, () => {
               onOptionSelect("exportHtml")
@@ -72,7 +86,13 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         </button>
 
         <button
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 w-full text-left rounded-md transition-colors duration-200"
+          disabled={!access.canExport}
+          className={`flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors duration-200
+    ${
+      access.canExport
+        ? "hover:bg-gray-100 text-gray-800 cursor-pointer"
+        : "text-gray-400 cursor-not-allowed bg-gray-50"
+    }`}
           onClick={() =>
             handleFeatureClick(canExportDOC, () => {
               onOptionSelect("exportDoc")
@@ -98,7 +118,13 @@ const RightClickMenu = ({ position, onOptionSelect, onClose, structureId }) => {
         <hr className="border-t border-gray-200 my-2" />
 
         <button
-          className="flex items-center gap-2 px-3 py-2 hover:bg-gray-100 text-red-500 w-full text-left rounded-md transition-colors duration-200"
+          disabled={!access.canManage}
+          className={`flex items-center gap-2 px-3 py-2 w-full text-left rounded-md transition-colors duration-200
+    ${
+      access.canManage
+        ? "hover:bg-gray-100 text-red-500 cursor-pointer"
+        : "text-gray-300 cursor-not-allowed bg-gray-50"
+    }`}
           onClick={handleMoveToTrash}
         >
           <FaTrash className="text-red-500" /> Move to Trash
