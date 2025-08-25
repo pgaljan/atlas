@@ -90,19 +90,27 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
       setRefreshing(false)
     }
   }, [structureId, dispatch, refreshing])
-
+  const owner =
+    shares?.find(s => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
+    displayCollaborators?.find(c => c?.inviter)?.inviter ||
+    user ||
+    null
+  const ownerEmail = owner?.email?.trim().toLowerCase() || null
+  const ownerIncludedInCollaborators = !!displayCollaborators?.some(
+    c => c?.inviter?.email?.toLowerCase() === owner?.email?.toLowerCase()
+  )
+  const collaboratorCount =
+    (displayCollaborators?.length || 0) +
+    (owner && !ownerIncludedInCollaborators ? 1 : 0)
   const checkDuplicateEmail = useCallback(
     emailToCheck => {
       const trimmedEmail = emailToCheck.trim().toLowerCase()
 
-      const ownerInviter = displayCollaborators?.find(c => c.inviter)?.inviter
-      const ownerEmail =
-        ownerInviter?.email?.toLowerCase() || user?.email?.toLowerCase()
       if (ownerEmail && ownerEmail === trimmedEmail) {
         return {
           isDuplicate: true,
           type: "owner",
-          message: `🚫 You  cannot invite the structure owner! The owner already has full access.`,
+          message: `🚫 You (${ownerEmail}).  cannot invite yourself as you already have full access as the owner.`,
         }
       }
 
@@ -117,10 +125,11 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
         return {
           isDuplicate: true,
           type: "collaborator",
-          message: `👥 "${trimmedEmail}" is already a collaborator with access to this structure.`,
+          message: `👥 "${trimmedEmail}" is already a collaborator with access.`,
         }
       }
 
+      // Already in shares
       const existingShare = shares?.find(share => {
         const shareEmail =
           share?.user?.email?.toLowerCase() || share?.email?.toLowerCase()
@@ -134,6 +143,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
         }
       }
 
+      // Pending invitation
       const pendingInvitation = pendingInvitations?.find(
         inv => inv.inviteeEmail?.toLowerCase() === trimmedEmail
       )
@@ -141,22 +151,29 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
         return {
           isDuplicate: true,
           type: "pending",
-          message: `⏳ Invitation already sent to "${trimmedEmail}". Check the Pending tab to manage existing invitations.`,
+          message: `⏳ Invitation already sent to "${trimmedEmail}". Check the Pending tab.`,
         }
       }
 
+      // Already added in UI list
       const isSelected = selectedEmails?.includes(trimmedEmail)
       if (isSelected) {
         return {
           isDuplicate: true,
           type: "selected",
-          message: `📝 "${trimmedEmail}" is already in your invitation list below.`,
+          message: `📝 "${trimmedEmail}" is already in your invitation list.`,
         }
       }
 
       return { isDuplicate: false }
     },
-    [user, displayCollaborators, shares, selectedEmails, pendingInvitations]
+    [
+      ownerEmail,
+      displayCollaborators,
+      shares,
+      selectedEmails,
+      pendingInvitations,
+    ]
   )
 
   const handleAddEmail = e => {
@@ -318,18 +335,6 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
   // }
 
   if (!isOpen) return null
-  const owner =
-    shares?.find(s => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
-    displayCollaborators?.find(c => c?.inviter)?.inviter ||
-    user ||
-    null
-
-  const ownerIncludedInCollaborators = !!displayCollaborators?.some(
-    c => c?.inviter?.email?.toLowerCase() === owner?.email?.toLowerCase()
-  )
-  const collaboratorCount =
-    (displayCollaborators?.length || 0) +
-    (owner && !ownerIncludedInCollaborators ? 1 : 0)
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
