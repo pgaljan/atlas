@@ -23,6 +23,10 @@ import RightClickMenu from "../../modals/RightClickMenu"
 import useMarkmap from "../markmap-context/MarkmapContext"
 import MarkmapHeader from "../markmap-layout/MarkmapHeader"
 import { useSearchParams } from "react-router-dom"
+import {
+  getRoleAccessMap,
+  getRoleAndAccess,
+} from "../../../utils/permissionFunctions"
 
 const MarkmapEditor = ({ structureId }) => {
   const dispatch = useDispatch()
@@ -489,6 +493,8 @@ const MarkmapEditor = ({ structureId }) => {
           position={rightClickModal.position}
           structureId={structureId}
           permission={permission}
+          role={getRoleAndAccess(permission).role}
+          access={getRoleAccessMap(getRoleAndAccess(permission).role)}
           onClose={() =>
             setRightClickModal({ visible: false, position: { x: 0, y: 0 } })
           }

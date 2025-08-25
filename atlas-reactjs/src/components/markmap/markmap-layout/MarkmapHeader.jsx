@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { BiSearch, BiUser } from "react-icons/bi"
 import { PiShareNetworkBold } from "react-icons/pi"
 import { RiDownloadCloud2Line } from "react-icons/ri"
+import RoleBadge from "@/components/common/RoleBadge"
+
 import {
   TbFileTypeZip,
   TbLayoutSidebarLeftCollapse,
@@ -76,7 +78,8 @@ const MarkmapHeader = ({
       navigate(`?plan=upgrade-to-premium`)
     }
   }
-
+  console.log("role", role)
+  console.log("access", access)
   useEffect(() => {
     if (structureId) {
       dispatch(getStructure(structureId))
@@ -424,6 +427,7 @@ const MarkmapHeader = ({
                     : "cursor-not-allowed"
                 } transition-all`}
               />
+              {permission && role !== "owner" && <RoleBadge role={role} />}
 
               <Tooltip label="Import Backups">
                 <button

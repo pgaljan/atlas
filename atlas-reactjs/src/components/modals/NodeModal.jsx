@@ -449,7 +449,9 @@ const NodeModal = ({
           top: position.y,
         }}
         className={`${
-          roleAccess.canManage || roleAccess.canEdit || roleAccess.canComment
+          roleAccess.canManage ||
+          roleAccess.canEdit ||
+          (roleAccess.canComment && wbs !== "1")
             ? "bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50"
             : ""
         }`}
@@ -483,24 +485,23 @@ const NodeModal = ({
             </>
           )}
 
-          {(wbs !== "1" && !recordExists && roleAccess.canEdit) ||
-            (roleAccess.canComment && (
-              <Tooltip label="Add Record">
-                <button
-                  onClick={() =>
-                    handleFeatureClick(canTagRecord, () =>
-                      handleViewEditRecord("add")
-                    )
-                  }
-                  aria-label="Add Record"
-                  className={
-                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                  }
-                >
-                  <RiPlayListAddFill size={24} className="text-custom-main" />
-                </button>
-              </Tooltip>
-            ))}
+          {wbs !== "1" &&
+          ((!recordExists && (roleAccess.canEdit || roleAccess.canManage)) ||
+            roleAccess.canComment) ? (
+            <Tooltip label="Add Record">
+              <button
+                onClick={() =>
+                  handleFeatureClick(canTagRecord, () =>
+                    handleViewEditRecord("add")
+                  )
+                }
+                aria-label="Add Record"
+                className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+              >
+                <RiPlayListAddFill size={24} className="text-custom-main" />
+              </button>
+            </Tooltip>
+          ) : null}
 
           {recordExists && (
             <>
