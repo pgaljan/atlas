@@ -178,7 +178,7 @@ export class MailerService {
         </a>
       </div>
       <p style="font-size: 14px; color: #777777;">
-        You need to create an Atlas account to access this structure. If you already have an account, please log in to accept this invitation.
+      Please log in to accept this invitation. If you are logged out, log back in and then accept the invitation.
       </p>
       <p style="font-size: 12px; color: #999999; margin-top: 20px;">
         If you don't want to accept this invitation, you can simply ignore this email.

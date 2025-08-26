@@ -176,39 +176,45 @@ export class StructureService {
   }
 
   async getAccessibleStructuresForUser(currentUserId: string) {
-  return this.prisma.structure.findMany({
-    where: {
-      OR: [
-        { ownerId: currentUserId },
-        { shares: { some: { userId: currentUserId } } },
-        {
-          shareInvitations: {
-            some: { inviteeId: currentUserId, status: 'accepted' },
+    return this.prisma.structure.findMany({
+      where: {
+        OR: [
+          { ownerId: currentUserId },
+          { shares: { some: { userId: currentUserId } } },
+          {
+            shareInvitations: {
+              some: { inviteeId: currentUserId, status: 'accepted' },
+            },
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        title: true,
+        imageUrl: true,
+        description: true,
+        updatedAt: true,
+        ownerId: true,
+        type: true,
+        visibility: true,
+        shares: {
+          where: { userId: currentUserId },
+          select: { permission: true },
+        },
+        shareInvitations: {
+          where: { inviteeId: currentUserId, status: 'accepted' },
+        },
+        owner: {
+          select: {
+            id: true,
+            displayName: true,
+            email: true,
           },
         },
-      ],
-    },
-    select: {
-      id: true,
-      name: true,
-      title: true,
-      imageUrl: true,
-      description: true,
-      updatedAt: true,
-      ownerId: true,
-      type: true,
-      visibility: true,
-      shares: {
-        where: { userId: currentUserId },
-        select: { permission: true },
       },
-      shareInvitations: {
-        where: { inviteeId: currentUserId, status: 'accepted' },
-      },
-    },
-  });
-}
-
+    });
+  }
 
   async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
     try {
