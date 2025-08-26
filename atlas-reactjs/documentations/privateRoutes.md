@@ -1,29 +1,57 @@
-# Private Routes
+# Private Routes Documentation
 
-Private routes require a valid login session.
+These routes require authentication. They are grouped into **User**, **Admin**, and **API Management** routes.  
 
-## Setup
-- Defined inside `src/routes/AuthenticatedRoutes.jsx`.
-- Wrapped with a `PrivateRoute` or similar component.
-- Uses `redux` or `js-cookie` for token/session validation.
+---
 
-## Example
-```jsx
-import { Navigate } from "react-router-dom";
-import Dashboard from "../pages/Dashboard";
+## User Private Routes (`<PrivateRoute>`)
 
-const PrivateRoute = ({ children }) => {
-  const isAuthenticated = Boolean(localStorage.getItem("token"));
-  return isAuthenticated ? children : <Navigate to="/login" />;
-};
+- `/app/dashboard` → Dashboard  
+- `/app/backups` → Backups  
+- `/app/templates` → Templates  
+- `/app/invitations` → Invitations  
+- `/app/upgrade-plans` → Upgrade Plans  
+- `/app/syncfusion` → Syncfusion  
+- `/app/privacy-policy` → User Privacy Policy  
+- `/app/terms-of-service` → User Terms of Service  
+- `/app/s/:username/:structureId` → Structure Renderer  
+- `/app/coming-soon` → Coming Soon  
+- `/app/user-settings` → User Settings  
 
-export const AuthenticatedRoutes = [
-  {
-    path: "/dashboard",
-    element: (
-      <PrivateRoute>
-        <Dashboard />
-      </PrivateRoute>
-    ),
-  },
-];
+---
+
+## Admin Private Routes (`<AdminPrivateRoute>`)
+
+- `/app/admin-portal/user-management` → User Management  
+- `/app/admin-portal/structure-Catalogs` → Structure Catalogs  
+- `/app/admin-portal/user-profile` → User Profile  
+- `/app/admin-portal/subscription-plan` → Subscription Management  
+- `/app/admin-portal/dashboard` → Admin Dashboard  
+- `/app/admin-portal/policy` → Privacy Policy  
+- `/app/admin-portal/terms-of-service` → Terms of Service  
+- `/app/admin-portal/settings` → Admin Settings  
+
+---
+
+## API Management Private Routes (`<APIKeyPrivateRoute>`)
+
+- `/api-management/overview` → Overview  
+- `/api-management/favorites/apis` → Favorite APIs  
+- `/api-management/favorites/activity-overview` → Activity Overview  
+- `/api-management/explore` → Explore APIs  
+- `/api-management/apis` → APIs  
+- `/api-management/try-it` → Try It  
+- `/api-management/api-templates` → API Templates  
+- `/api-management/examples` → Examples  
+- `/api-management/webhooks` → Webhooks  
+- `/api-management/support` → Support  
+- `/api-management/security/keys` → API Keys  
+- `/api-management/security/policies` → Security Policies  
+- `/api-management/security/certificates` → Security Certificates  
+
+---
+
+## Notes  
+- **PrivateRoute** → Requires user login.  
+- **AdminPrivateRoute** → Requires admin privileges.  
+- **APIKeyPrivateRoute** → Requires valid API key.

@@ -4,6 +4,8 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { BiSearch, BiUser } from "react-icons/bi"
 import { PiShareNetworkBold } from "react-icons/pi"
 import { RiDownloadCloud2Line } from "react-icons/ri"
+import RoleBadge from "@/components/common/RoleBadge"
+
 import {
   TbFileTypeZip,
   TbLayoutSidebarLeftCollapse,
@@ -31,6 +33,10 @@ import WbsModeModal from "../../modals/WbsModeModal"
 import Tooltip from "../../tooltip/Tooltip"
 import { createStructureTemplate } from "../../../redux/slices/structure-templates"
 import { restoreBackup } from "../../../redux/slices/restore-backups"
+import {
+  getRoleAccessMap,
+  getRoleAndAccess,
+} from "../../../utils/permissionFunctions"
 
 const MarkmapHeader = ({
   showWbs,
@@ -43,6 +49,7 @@ const MarkmapHeader = ({
   wbsStart,
   setWbsStart,
   renderType,
+  permission,
 }) => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
@@ -58,10 +65,10 @@ const MarkmapHeader = ({
   const [isExportModal, setIsExportModal] = useState(false)
   const [isHeaderVisible, setIsHeaderVisible] = useState(false)
   const [appName, setAppName] = useState("ATLAS")
-
+  const { role } = getRoleAndAccess(permission)
+  const access = getRoleAccessMap(role)
   const canRestoreBackup = useFeatureFlag("Structure Backup/Restore")
   const canDynamicWbs = useFeatureFlag("Dynamic WBS")
-
   const treeDataWithWbs = assignWbsNumbers(treeData, null, null, 1)
 
   const handleFeatureClick = (canAccess, action) => {
@@ -71,7 +78,8 @@ const MarkmapHeader = ({
       navigate(`?plan=upgrade-to-premium`)
     }
   }
-
+  console.log("role", role)
+  console.log("access", access)
   useEffect(() => {
     if (structureId) {
       dispatch(getStructure(structureId))
@@ -239,7 +247,7 @@ const MarkmapHeader = ({
           }
         }
       } catch (error) {
-        console.error("Error loading app settings")
+        // console.error("Error loading app settings")
       }
     }
 
@@ -410,50 +418,34 @@ const MarkmapHeader = ({
               <input
                 type="text"
                 value={title}
-                onChange={handleTitleChange}
-                onKeyDown={handleTitleKeyDown}
-                className="structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main transition-all "
+                onChange={access.canEdit ? handleTitleChange : undefined}
+                onKeyDown={access.canEdit ? handleTitleKeyDown : undefined}
+                readOnly={!access.canEdit}
+                className={`structure-title text-md font-medium w-auto max-w-20 pl-1 rounded-md py-1 text-custom-main truncate bg-slate-200 border-1 border-transparent ${
+                  access.canEdit
+                    ? "focus:border-custom-main outline-none focus:ring-2 focus:ring-custom-main"
+                    : "cursor-not-allowed"
+                } transition-all`}
               />
-
-              {/* <Tooltip label="Undo">
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Undo"
-              onClick={undo}
-              disabled={!canUndo}
-            >
-              <BiUndo
-                size={24}
-                className={canUndo ? "text-custom-main" : "text-gray-400"}
-              />
-            </button>
-          </Tooltip>
-
-          <Tooltip label="Redo">
-            <button
-              className="p-2 hover:bg-gray-100 rounded-full"
-              aria-label="Redo"
-              onClick={redo}
-              disabled={!canRedo}
-            >
-              <BiRedo
-                size={24}
-                className={canRedo ? "text-custom-main" : "text-gray-400"}
-              />
-            </button>
-            </Tooltip> */}
+              {permission && role !== "owner" && <RoleBadge role={role} />}
 
               <Tooltip label="Import Backups">
                 <button
-                  className="p-2 hover:bg-gray-100 rounded-full"
+                  className={`p-2 hover:bg-gray-100 rounded-full ${
+                    !access.canManage && "opacity-50 cursor-not-allowed"
+                  }`}
                   aria-label="Import Backups"
                   onClick={() =>
+                    access.canManage &&
                     handleFeatureClick(canRestoreBackup, toggleImportModal)
                   }
+                  disabled={!access.canManage}
                 >
                   <VscGitPullRequestCreate
                     size={24}
-                    className="text-custom-main"
+                    className={
+                      access.canManage ? "text-custom-main" : "text-gray-400"
+                    }
                   />
                 </button>
               </Tooltip>
@@ -462,23 +454,30 @@ const MarkmapHeader = ({
                 {isLoading ? (
                   <button
                     disabled={true}
-                    className="p-2 hover:bg-gray-100 rounded-full"
+                    className={`p-2 hover:bg-gray-100 rounded-full ${
+                      !access.canManage && "opacity-50 cursor-not-allowed"
+                    }`}
                     aria-label="Create Backup"
                   >
                     <Icons.LoadingIcon />
                   </button>
                 ) : (
                   <button
-                    disabled={isLoading}
+                    disabled={isLoading || !access.canManage}
                     onClick={() =>
+                      access.canManage &&
                       handleFeatureClick(canRestoreBackup, handleCreateBackup)
                     }
-                    className="p-2 hover:bg-gray-100 rounded-full"
+                    className={`p-2 hover:bg-gray-100 rounded-full ${
+                      !access.canManage && "opacity-50 cursor-not-allowed"
+                    }`}
                     aria-label="Create Backup"
                   >
                     <RiDownloadCloud2Line
                       size={26}
-                      className="text-custom-main"
+                      className={
+                        access.canManage ? "text-custom-main" : "text-gray-400"
+                      }
                     />
                   </button>
                 )}
@@ -486,9 +485,9 @@ const MarkmapHeader = ({
 
               <Tooltip label="Save">
                 <button
-                  disabled={isSaveDisabled}
+                  disabled={isSaveDisabled || !access.canEdit}
                   className={`p-3 rounded-full ${
-                    isSaveDisabled
+                    isSaveDisabled || !access.canEdit
                       ? "text-gray-400 cursor-not-allowed"
                       : "hover:bg-gray-100 text-custom-main cursor-pointer"
                   }`}
@@ -497,7 +496,7 @@ const MarkmapHeader = ({
                   <TbWorldUpload
                     size={24}
                     className={`${
-                      isSaveDisabled
+                      isSaveDisabled || !access.canEdit
                         ? "text-gray-400 cursor-not-allowed"
                         : "text-custom-main"
                     }`}
@@ -530,7 +529,11 @@ const MarkmapHeader = ({
                 </span>
 
                 <label
-                  className="relative inline-flex items-center cursor-pointer"
+                  className={`relative inline-flex items-center ${
+                    access.canEdit
+                      ? "cursor-pointer"
+                      : "cursor-not-allowed opacity-50"
+                  }`}
                   htmlFor="show-wbs-toggle"
                 >
                   <input
@@ -538,10 +541,12 @@ const MarkmapHeader = ({
                     type="checkbox"
                     checked={showWbs}
                     onChange={e =>
+                      access.canEdit &&
                       handleFeatureClick(canDynamicWbs, () =>
                         handleWbsToggle(e.target.checked)
                       )
                     }
+                    disabled={!access.canEdit}
                     className="sr-only peer"
                   />
                   <div
@@ -577,8 +582,13 @@ const MarkmapHeader = ({
               {/* Save as Template - Vibrant Primary */}
               <Tooltip label="Save as Template">
                 <button
-                  className="p-2 rounded-full bg-white text-gray-600 shadow hover:text-custom-main transition"
-                  onClick={handleSaveAsTemplate}
+                  className={`p-2 rounded-full bg-white shadow transition ${
+                    access.canManage
+                      ? "text-gray-600 hover:text-custom-main"
+                      : "text-gray-400 opacity-50 cursor-not-allowed"
+                  }`}
+                  onClick={() => access.canManage && handleSaveAsTemplate()}
+                  disabled={!access.canManage}
                 >
                   <TbTemplate size={20} />
                 </button>
@@ -587,8 +597,13 @@ const MarkmapHeader = ({
               {/* Export - Cool Gray Outline */}
               <Tooltip label="Export">
                 <button
-                  className="p-2 rounded-full border border-gray-300 bg-white text-gray-600 shadow-sm hover:bg-gray-100 hover:text-custom-main transition"
-                  onClick={() => setIsExportModal(true)}
+                  className={`p-2 rounded-full border border-gray-300 bg-white shadow-sm transition ${
+                    access.canExport
+                      ? "text-gray-600 hover:bg-gray-100 hover:text-custom-main"
+                      : "text-gray-400 opacity-50 cursor-not-allowed"
+                  }`}
+                  onClick={() => access.canExport && setIsExportModal(true)}
+                  disabled={!access.canExport}
                 >
                   <TbFileTypeZip size={20} />
                 </button>
@@ -597,8 +612,13 @@ const MarkmapHeader = ({
               {/* Share - Functional */}
               <Tooltip label="Share Structure">
                 <button
-                  className="p-2 rounded-full bg-white text-gray-600 shadow hover:bg-gray-100 hover:text-custom-main transition"
-                  onClick={toggleShareModal}
+                  className={`p-2 rounded-full bg-white shadow transition ${
+                    access.canManage
+                      ? "text-gray-600 hover:bg-gray-100 hover:text-custom-main"
+                      : "text-gray-400 opacity-50 cursor-not-allowed"
+                  }`}
+                  onClick={() => access.canManage && toggleShareModal()}
+                  disabled={!access.canManage}
                 >
                   <PiShareNetworkBold size={20} />
                 </button>

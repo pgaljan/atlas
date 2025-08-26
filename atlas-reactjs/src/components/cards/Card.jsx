@@ -22,6 +22,7 @@ const Card = ({
   onSuccess,
   structureType = "default",
   permission,
+  owner, // 👈 now used for showing shared info
 }) => {
   const dispatch = useDispatch()
   const [deleteModalVisible, setDeleteModalVisible] = useState(false)
@@ -92,7 +93,11 @@ const Card = ({
             <div className="flex items-center justify-between mt-2">
               <Link to="#" className="flex items-center space-x-2">
                 <Avatar
-                  name={Cookies.get("displayName") || "User"}
+                  name={
+                    permission !== "owner"
+                      ? owner?.displayName || "Unknown Owner"
+                      : Cookies.get("displayName") || "User"
+                  }
                   size="36"
                   round={true}
                   className="text-lg"
@@ -101,9 +106,25 @@ const Card = ({
                   <p className="text-sm font-medium text-custom-main truncate">
                     {footerTitle}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {footerSubtitle}
-                  </p>
+                  {permission !== "owner" ? (
+                    <>
+                      <p className="text-xs text-gray-500 truncate">
+                        Shared by {owner?.displayName || "Unknown"}
+                      </p>
+                      {owner?.email && (
+                        <p
+                          className="text-xs text-gray-400 truncate italic"
+                          title={owner.email}
+                        >
+                          ✉ {owner.email}
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-xs text-gray-500 truncate">
+                      {footerSubtitle}
+                    </p>
+                  )}
                 </div>
               </Link>
 
@@ -156,6 +177,7 @@ const Card = ({
           </div>
         </div>
       </div>
+
       {deleteModalVisible && (
         <DeleteModal
           isOpen={deleteModalVisible}
