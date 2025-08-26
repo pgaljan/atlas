@@ -17,12 +17,15 @@ import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions"
 import {
   deleteUser,
   exportUsers,
+  exportUserMetrics,
   fetchAllUsers,
   updateUser,
 } from "../../../redux/slices/users"
 import Avatar from "react-avatar"
 import UserInfoModal from "../../../components/modals/UserInfoModal"
 import { BsInfoLg } from "react-icons/bs"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 
 const index = () => {
   const dispatch = useDispatch()
@@ -49,6 +52,9 @@ const index = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterActive, setFilterActive] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false)
+  const [startDate, setStartDate] = useState(null)
+  const [endDate, setEndDate] = useState(null)
   const openModal = (user = null) => {
     setEditingUser(user)
     setIsOpen(true)
@@ -160,7 +166,45 @@ const index = () => {
         cogoToast.error("Failed to export users")
       })
   }
+  
+  const openMetricsModal = () => {
+    setIsMetricsModalOpen(true)
+  }
 
+  const closeMetricsModal = () => {
+    setIsMetricsModalOpen(false)
+  }
+  const formatDate = date => {
+    if (!date) return null
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }
+
+  const handleExportMetrics = () => {
+    const params = {}
+    if (startDate) params.startDate = formatDate(startDate)
+    if (endDate) params.endDate = formatDate(endDate)
+
+    dispatch(exportUserMetrics(params))
+      .unwrap()
+      .then(buffer => {
+        const blob = new Blob([buffer], { type: "application/json" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "user-metrics.json"
+        a.click()
+        window.URL.revokeObjectURL(url)
+        cogoToast.success("Metrics export successful")
+        closeMetricsModal()
+      })
+      .catch(error => {
+        cogoToast.error("Failed to export user metrics")
+      })
+  }
+  
   const handleSaveUser = async data => {
     try {
       await dispatch(registerUser(data)).unwrap()
@@ -426,6 +470,14 @@ const index = () => {
                 <MdOutlineDownloading size={20} />
                 Export Users
               </button>
+              {/* Export Metrics Button */}
+              <button
+                onClick={openMetricsModal}
+                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
+              >
+                <MdOutlineDownloading size={20} />
+                Export Metrics
+              </button>
               {/* Add User Button */}
               {/* <button
                 onClick={() => openModal()}
@@ -630,6 +682,60 @@ const index = () => {
             user={selectedUser}
             fmt={fmt}
           />
+
+          {/* Metrics Export Modal */}
+          {isMetricsModalOpen && (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
+                <h2 className="text-2xl font-bold mb-4">Export User Metrics</h2>
+                <p className="mb-4 text-gray-600">
+                  Select a date range to export user metrics data.
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Start Date</label>
+                  <DatePicker
+                    selected={startDate}
+                    onChange={date => setStartDate(date)}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholderText="Select start date"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 mb-2">End Date</label>
+                  <DatePicker
+                    selected={endDate}
+                    onChange={date => setEndDate(date)}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholderText="Select end date"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={closeMetricsModal}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleExportMetrics}
+                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                  >
+                    Export JSON
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

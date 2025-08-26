@@ -247,7 +247,7 @@ const MarkmapHeader = ({
           }
         }
       } catch (error) {
-        console.error("Error loading app settings")
+        // console.error("Error loading app settings")
       }
     }
 

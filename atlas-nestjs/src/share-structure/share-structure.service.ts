@@ -294,7 +294,6 @@ export class StructureSharesService {
 
     return inv;
   }
-
   async acceptInvitation(token: string, acceptingUserEmail: string) {
     const invitation = await this.prisma.structureShareInvitation.findUnique({
       where: { token },
@@ -317,13 +316,11 @@ export class StructureSharesService {
       throw new BadRequestException('Invitation has expired');
     }
 
-    // Find user by email instead of id
     const acceptingUser = await this.prisma.user.findUnique({
       where: { email: acceptingUserEmail },
     });
     if (!acceptingUser) throw new NotFoundException('Accepting user not found');
 
-    // Validate invitee email matches user email (case insensitive)
     if (
       invitation.inviteeEmail &&
       invitation.inviteeEmail.toLowerCase() !==
@@ -335,9 +332,11 @@ export class StructureSharesService {
     }
 
     const structureId = invitation.structureId;
+    // <-- Declare this *before* tx so it's in scope afterwards
+    const invitedPermission = invitation.permission;
 
-    return this.prisma.$transaction(async (tx) => {
-      // create or update StructureShare
+    // perform transactional updates
+    await this.prisma.$transaction(async (tx) => {
       const existingShare = await tx.structureShare.findUnique({
         where: {
           structureId_userId: { structureId, userId: acceptingUser.id },
@@ -359,7 +358,7 @@ export class StructureSharesService {
         });
       }
 
-      // Find or create team as before
+      // team logic (unchanged)
       let team = await tx.team.findFirst({
         where: {
           workspaceId: invitation.structure.workspaceId,
@@ -396,9 +395,11 @@ export class StructureSharesService {
               role: 'member',
             },
           ],
-          skipDuplicates: true, // quietly ignore duplicates (no P2002)
+          skipDuplicates: true,
         });
-      } catch (err) {}
+      } catch (err) {
+        // ignore duplicate errors
+      }
 
       if (!acceptingUser.defaultWorkspaceId) {
         await tx.user.update({
@@ -416,9 +417,20 @@ export class StructureSharesService {
           inviteeId: acceptingUser.id,
         },
       });
+    }); // end transaction
 
-      return { success: true };
+    // Fetch owner username (after tx) and return payload
+    const owner = await this.prisma.user.findUnique({
+      where: { id: invitation.structure.ownerId },
+      select: { username: true },
     });
+
+    return {
+      success: true,
+      structureId,
+      permission: invitedPermission,
+      ownerUsername: owner?.username || null,
+    };
   }
 
   async createShareLink(dto: CreateShareLinkDto, currentUserId: string) {
