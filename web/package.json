@@ -1,5 +1,5 @@
 {
-  "name": "atlas-nestjs",
+  "name": "web",
   "scripts": {
     "dev": "vite",
     "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
