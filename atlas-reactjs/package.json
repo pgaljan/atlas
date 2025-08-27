@@ -1,0 +1,9 @@
+{
+  "name": "atlas-nestjs",
+  "scripts": {
+    "dev": "vite",
+    "build": "NODE_OPTIONS=--max-old-space-size=4096 vite build",
+    "lint": "eslint .",
+    "start": "vite preview --port 3000"
+  }
+}
