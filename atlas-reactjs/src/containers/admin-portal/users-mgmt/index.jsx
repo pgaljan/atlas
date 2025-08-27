@@ -166,7 +166,7 @@ const index = () => {
         cogoToast.error("Failed to export users")
       })
   }
-  
+
   const openMetricsModal = () => {
     setIsMetricsModalOpen(true)
   }
@@ -204,7 +204,7 @@ const index = () => {
         cogoToast.error("Failed to export user metrics")
       })
   }
-  
+
   const handleSaveUser = async data => {
     try {
       await dispatch(registerUser(data)).unwrap()

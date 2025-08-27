@@ -1,5 +1,5 @@
 import { IsEnum, IsJSON, IsObject, IsOptional } from 'class-validator';
-import { EditorType } from './record.enums';
+import { EditorType, RendererType } from './record.enums';
 
 export class UpdateRecordDto {
   @IsOptional()
@@ -12,6 +12,10 @@ export class UpdateRecordDto {
   @IsOptional()
   @IsEnum(EditorType, { message: 'Invalid editor type' })
   editorType?: EditorType;
+
+  @IsOptional()
+  @IsEnum(RendererType, { message: 'Invalid renderer type' })
+  renderer?: RendererType;
 
   @IsOptional()
   @IsJSON()
