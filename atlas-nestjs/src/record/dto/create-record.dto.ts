@@ -5,14 +5,7 @@ import {
   IsObject,
   IsJSON,
 } from 'class-validator';
-
-export enum EditorType {
-  VSCODE = 'vscode',
-  MARKEDDOWN = 'markeddown',
-  QUILLEDITOR = 'quilleditor',
-  PLANTUML = 'plantuml',
-  LATEX = 'latex',
-}
+import { EditorType, RendererType } from './record.enums';
 
 export class CreateRecordDto {
   @IsNotEmpty()
@@ -25,6 +18,10 @@ export class CreateRecordDto {
   @IsOptional()
   @IsEnum(EditorType, { message: 'Invalid editor type' })
   editorType?: EditorType;
+
+  @IsOptional()
+  @IsEnum(RendererType, { message: 'Invalid renderer type' })
+  renderer?: RendererType;
 
   @IsOptional()
   @IsJSON()

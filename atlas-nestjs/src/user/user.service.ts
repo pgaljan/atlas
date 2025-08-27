@@ -289,13 +289,12 @@ export class UserService {
   }
 
   private parseAttachmentSizeBytes(att: any): number {
-    // Try several common places where size might be stored (bytes).
     const data = att?.data ?? {};
     const candidates = [
-      data.size, // bytes OR MiB (we assume bytes)
+      data.size,
       data?.meta?.size,
       data?.sizeInBytes,
-      att.size, // fallback top-level
+      att.size,
     ];
     for (const c of candidates) {
       if (typeof c === 'number' && !isNaN(c)) return c;
@@ -307,20 +306,16 @@ export class UserService {
     return 0;
   }
 
-  // --- replace your existing exportUserMetrics(...) with this ---
-  // --- replace your existing exportUserMetrics(...) with this ---
   async exportUserMetrics(dto: ExportMetricsDto): Promise<Buffer> {
     try {
       const { startDate, endDate } = dto;
 
-      // Build a createdAt where clause if date filters supplied
       const createdAtWhere: any = {};
       if (startDate) createdAtWhere.gte = new Date(startDate);
       if (endDate) createdAtWhere.lte = new Date(endDate);
 
       const applyDateFilter = !!(createdAtWhere.gte || createdAtWhere.lte);
 
-      // Fetch users (all users, minimal info)
       const users = await this.prisma.user.findMany({
         select: {
           id: true,
@@ -330,7 +325,6 @@ export class UserService {
         },
       });
 
-      // Preload related data (use createdAtWhere when applyDateFilter)
       const attachmentsWhere = applyDateFilter
         ? { createdAt: createdAtWhere }
         : {};
@@ -366,6 +360,7 @@ export class UserService {
           select: {
             id: true,
             editorType: true,
+            renderer: true,
             tags: true,
             createdAt: true,
             Element: {
@@ -382,7 +377,6 @@ export class UserService {
           where: structuresWhere,
           select: { id: true, type: true, ownerId: true, createdAt: true },
         }),
-        // StructureShare (explicit shares)
         this.prisma.structureShare.findMany({
           where: sharesWhere,
           select: {
@@ -393,16 +387,17 @@ export class UserService {
             structure: { select: { id: true, ownerId: true, createdAt: true } },
           },
         }),
-        // StructureShareInvitation (invitations)
         this.prisma.structureShareInvitation.findMany({
           where: invitationsWhere,
           select: {
             id: true,
             inviteeId: true,
+            inviteeEmail: true,
             permission: true,
             status: true,
             createdAt: true,
             usedAt: true,
+            message: true,
             structure: { select: { id: true, ownerId: true, createdAt: true } },
           },
         }),
@@ -414,7 +409,6 @@ export class UserService {
           where: auditLogsWhere,
           select: { action: true, createdAt: true, userId: true },
         }),
-        // preload elements (so we can compute elements per-user and per-day)
         this.prisma.element.findMany({
           where: applyDateFilter ? { createdAt: createdAtWhere } : {},
           select: {
@@ -425,7 +419,6 @@ export class UserService {
         }),
       ]);
 
-      // If startDate+endDate provided -> daily metrics
       if (startDate && endDate) {
         return this.generateDailyMetrics(
           users,
@@ -442,18 +435,15 @@ export class UserService {
         );
       }
 
-      // Aggregated export (no per-day split)
       const userMetrics = users.map((user) => {
-        // attachments transmitted/stored
         const userAttachments = attachments.filter((a) => a.userId === user.id);
         const totalBytes = userAttachments.reduce((sum, a) => {
           const sizeBytes = this.parseAttachmentSizeBytes(a);
           return sum + sizeBytes;
         }, 0);
         const mibTransmitted = totalBytes / (1024 * 1024);
-        const mibStored = mibTransmitted; // best-effort for aggregated export
+        const mibStored = mibTransmitted;
 
-        // structures and elements
         const userStructures = structures.filter((s) => s.ownerId === user.id);
         const structuresByType = userStructures.reduce(
           (acc, s) => {
@@ -462,24 +452,59 @@ export class UserService {
           },
           {} as Record<string, number>,
         );
-        const userElements = elements.filter(
-          (el) => el.structure?.ownerId === user.id,
-        );
+        const userElementIds = new Set<string>();
+        elements.forEach((el) => {
+          if (el.structure?.ownerId === user.id) {
+            userElementIds.add(el.id);
+          }
+        });
+        const userElements = Array.from(userElementIds)
+          .map((id) => elements.find((el) => el.id === id))
+          .filter(Boolean);
 
-        // records (by editor type) and tags
         const userRecords = records.filter((r) =>
           r.Element?.some((e) => e.structure?.ownerId === user.id),
         );
-        const recordsByType = userRecords.reduce(
+
+        const recordsByType: Record<string, any> = userRecords.reduce(
           (acc, r) => {
             acc[r.editorType] = (acc[r.editorType] || 0) + 1;
             return acc;
           },
+          {} as Record<string, any>,
+        );
+
+        const vscodeRecords = userRecords.filter(
+          (r) => r.editorType === 'vscode',
+        );
+        const vscodeRendererCounts = vscodeRecords.reduce(
+          (acc, r: any) => {
+            const rendererType = (r as any).renderer || 'none';
+            acc[rendererType] = (acc[rendererType] || 0) + 1;
+            return acc;
+          },
           {} as Record<string, number>,
         );
+
+        const rendererTypes = ['mermaid', 'markeddown', 'plantuml', 'latex'];
+        const vscodeByRenderer = rendererTypes.reduce(
+          (acc, type) => {
+            acc[type] = vscodeRendererCounts[type] || 0;
+            return acc;
+          },
+          {} as Record<string, number>,
+        );
+
+        if (recordsByType.vscode) {
+          const vscodeCount = recordsByType.vscode;
+          recordsByType.vscode = {
+            count: vscodeCount,
+            ...vscodeByRenderer,
+          };
+        }
+
         const tagCount = userRecords.filter((r) => r.tags !== null).length;
 
-        // SHARES & INVITATIONS (only these two models)
         const userShares = shares.filter(
           (s) => s.structure?.ownerId === user.id,
         );
@@ -487,7 +512,6 @@ export class UserService {
           (i) => i.structure?.ownerId === user.id,
         );
 
-        // Build canonical sharedByType with guaranteed keys
         const initShared = {
           total: 0,
           viewer: 0,
@@ -495,13 +519,21 @@ export class UserService {
           editor: 0,
           owner: 0,
         };
-        const allShareRecords = [
-          ...userShares.map((s) => ({ permission: s.permission })),
-          ...userInvitations.map((i) => ({ permission: i.permission })),
-        ];
-        const sharedByType = allShareRecords.reduce(
-          (acc: any, rec: any) => {
-            const perm = (rec.permission as string) || 'viewer';
+
+        const uniqueShareMap = new Map();
+
+        userShares.forEach((s) => {
+          const key = `${s.structure?.id || 'unknown'}-${s.permission || 'viewer'}`;
+          uniqueShareMap.set(key, s.permission || 'viewer');
+        });
+
+        userInvitations.forEach((i) => {
+          const key = `${i.structure?.id || 'unknown'}-${i.permission || 'viewer'}`;
+          uniqueShareMap.set(key, i.permission || 'viewer');
+        });
+
+        const sharedByType = Array.from(uniqueShareMap.values()).reduce(
+          (acc: any, perm: string) => {
             acc.total = (acc.total || 0) + 1;
             acc[perm] = (acc[perm] || 0) + 1;
             return acc;
@@ -509,28 +541,59 @@ export class UserService {
           { ...initShared },
         );
 
-        // Logins: self and collaborators
         const selfLogins = auditLogs.filter(
           (l) => l.userId === user.id && l.action === 'User Login',
         ).length;
 
-        // collaborator ids come from explicit shares and from inviteeId (if present)
         const collaboratorIds = new Set<string>();
         userShares.forEach((s) => {
-          if (s.userId) collaboratorIds.add(s.userId);
+          if (s.userId && s.userId !== user.id) collaboratorIds.add(s.userId);
         });
         userInvitations.forEach((i) => {
-          if (i.inviteeId) collaboratorIds.add(i.inviteeId);
+          if (i.inviteeId && i.inviteeId !== user.id)
+            collaboratorIds.add(i.inviteeId);
         });
 
-        const collaboratorLogins = auditLogs.filter(
-          (l) => collaboratorIds.has(l.userId) && l.action === 'User Login',
-        ).length;
+        const collaboratorLoginEvents = new Set<string>();
+      auditLogs.forEach((l) => {
+  if (l.userId && collaboratorIds.has(l.userId) && l.action === 'User Login') {
+    collaboratorLoginEvents.add(`${l.userId}-${l.createdAt}`);
+  }
+});
 
-        // messages to user (email tokens)
-        const emailMessages = tokens.filter(
-          (t) => t.userId === user.id && t.key === 'reset-password',
-        ).length;
+        const collaboratorLogins = collaboratorLoginEvents.size;
+
+        const userInvs = userInvitations;
+
+        const invitationsWithMessage = userInvs.filter((inv) => {
+          const m = inv.message;
+          return typeof m === 'string' && m.trim().length > 0;
+        });
+
+        const invByEmail: Record<
+          string,
+          Array<{ id: string; text: string; createdAt?: string }>
+        > = {};
+        invitationsWithMessage.forEach((inv) => {
+          const emailKey =
+            (inv.inviteeEmail && inv.inviteeEmail.trim()) ||
+            (inv.inviteeId ? `inviteeId:${inv.inviteeId}` : 'unknown');
+          if (!invByEmail[emailKey]) invByEmail[emailKey] = [];
+          invByEmail[emailKey].push({
+            id: inv.id,
+            text: inv.message!.trim(),
+            createdAt: inv.createdAt
+              ? new Date(inv.createdAt).toISOString()
+              : undefined,
+          });
+        });
+
+        const messagesToUserEmail = Object.entries(invByEmail).map(
+          ([inviteeEmail, messages]) => ({
+            inviteeEmail,
+            messages,
+          }),
+        );
 
         return {
           userId: user.id,
@@ -545,7 +608,7 @@ export class UserService {
           sharedByType,
           loginsSelf: selfLogins,
           loginsCollaborators: collaboratorLogins,
-          messagesToUserEmail: emailMessages,
+          messagesToUserEmail,
         };
       });
 
@@ -558,7 +621,6 @@ export class UserService {
     }
   }
 
-  // --- replace your existing generateDailyMetrics(...) with this ---
   private async generateDailyMetrics(
     users: any[],
     attachments: any[],
@@ -575,7 +637,6 @@ export class UserService {
     const dateRange = this.generateDateRange(startDate, endDate);
     const allUserDailyMetrics: any[] = [];
 
-    // group attachments by user for mibStored cumulative calc
     const attachmentsByUser = attachments.reduce(
       (acc: any, a: any) => {
         if (!acc[a.userId]) acc[a.userId] = [];
@@ -593,7 +654,6 @@ export class UserService {
         dayEnd.setHours(23, 59, 59, 999);
         const inDay = (d: Date) => d >= dayStart && d <= dayEnd;
 
-        // Attachments: those created that day
         const userAtts = attachmentsByUser[user.id] ?? [];
         const dayAttachments = userAtts.filter((a) => {
           const createdAt = a.createdAt ? new Date(a.createdAt) : null;
@@ -612,7 +672,6 @@ export class UserService {
         );
         const mibTransmitted = mibTransmittedBytes / (1024 * 1024);
 
-        // mibStored: cumulative attachments up to dayEnd
         const cumulativeBytes = userAtts.reduce((sum, a) => {
           const createdAt = a.createdAt ? new Date(a.createdAt) : null;
           const created =
@@ -627,7 +686,6 @@ export class UserService {
         }, 0);
         const mibStored = cumulativeBytes / (1024 * 1024);
 
-        // Structures created that day
         const dayStructures = structures.filter((s) => {
           if (s.ownerId !== user.id) return false;
           const created = s.createdAt ? new Date(s.createdAt) : null;
@@ -641,7 +699,6 @@ export class UserService {
           {} as Record<string, number>,
         );
 
-        // Elements created that day belonging to user's structures
         const dayElements = elements.filter((el) => {
           const elCreated = el.createdAt ? new Date(el.createdAt) : null;
           return (
@@ -652,7 +709,6 @@ export class UserService {
           );
         });
 
-        // Records associated with user's structures and created that day
         const dayRecords = records.filter((r) =>
           (r.Element || []).some((e: any) => {
             const struct = e.structure;
@@ -675,7 +731,6 @@ export class UserService {
         );
         const tagCount = dayRecords.filter((r) => r.tags !== null).length;
 
-        // Shares for the day (explicit shares)
         const dayShares = shares.filter((s) => {
           if (!s.structure || s.structure.ownerId !== user.id) return false;
           const created = s.createdAt ? new Date(s.createdAt) : null;
@@ -683,8 +738,6 @@ export class UserService {
           return inDay(created);
         });
 
-        // Invitations for the day:
-        // count invitation if createdAt OR usedAt falls in day (so accept events are captured)
         const dayInvitations = shareInvitations.filter((i) => {
           if (!i.structure || i.structure.ownerId !== user.id) return false;
           const created = i.createdAt ? new Date(i.createdAt) : null;
@@ -695,7 +748,6 @@ export class UserService {
           return createdIn || usedIn;
         });
 
-        // Combine shares + invitations into sharedByType (guaranteed keys)
         const initShared = {
           total: 0,
           viewer: 0,
@@ -723,7 +775,6 @@ export class UserService {
           { ...initShared },
         );
 
-        // Logins: self and collaborators (for the day)
         const selfLogins = auditLogs.filter((l) => {
           const created = l.createdAt ? new Date(l.createdAt) : null;
           return (
@@ -734,7 +785,6 @@ export class UserService {
           );
         }).length;
 
-        // collaborator ids for the day (from shares and invitees)
         const dayCollaboratorIds = new Set<string>();
         dayShares.forEach((s) => {
           if (s.userId) dayCollaboratorIds.add(s.userId);
@@ -753,7 +803,6 @@ export class UserService {
           );
         }).length;
 
-        // Emails (tokens) for that day
         const emailMessages = tokens.filter((t) => {
           const created = t.createdAt ? new Date(t.createdAt) : null;
           return (
@@ -780,8 +829,8 @@ export class UserService {
           loginsCollaborators: dayCollaboratorLogins,
           messagesToUserEmail: emailMessages,
         });
-      } // date loop
-    } // users loop
+      }
+    }
 
     return Buffer.from(JSON.stringify(allUserDailyMetrics, null, 2));
   }
@@ -795,7 +844,7 @@ export class UserService {
     last.setHours(0, 0, 0, 0);
 
     while (current <= last) {
-      dates.push(new Date(current)); // push a clone
+      dates.push(new Date(current));
       current.setDate(current.getDate() + 1);
     }
 

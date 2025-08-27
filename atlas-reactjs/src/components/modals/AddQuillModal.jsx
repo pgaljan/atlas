@@ -69,46 +69,58 @@ const AddQuillModal = ({
       try {
         const record = await dispatch(getRecordById(recordId)).unwrap()
         if (record) {
-          const { content, editorType } = record.metadata
+          const { content } = record.metadata
+          const editorType = record.editorType
+          const rendererType = record.renderer || "none"
 
-          // Set content state
+          // Set content state based on editor and renderer types
           setQuillContent(editorType === "quilleditor" ? content : "")
-          setMermaidCodeContent(editorType === "vscode" ? content : "")
-          setMarkedJsContent(editorType === "markeddown" ? content : "")
-          setPlantUmlContent(editorType === "plantuml" ? content : "")
-          setLatexContent(editorType === "latex" ? content : "")
+          
+          // For vscode editor, set content based on renderer
+          if (editorType === "vscode") {
+            if (rendererType === "mermaid") {
+              setMermaidCodeContent(content)
+            } else if (rendererType === "markeddown") {
+              setMarkedJsContent(content)
+            } else if (rendererType === "plantuml") {
+              setPlantUmlContent(content)
+            } else if (rendererType === "latex") {
+              setLatexContent(content)
+            } else {
+              // Default to mermaid if renderer is none or unknown
+              setMermaidCodeContent(content)
+            }
+          }
 
           // Set tag and initial data
           setTags(record.tags || [])
           setInitialData({
             quilleditor: editorType === "quilleditor" ? content : "",
             vscode: editorType === "vscode" ? content : "",
-            markedjs: editorType === "markeddown" ? content : "",
-            plantuml: editorType === "plantuml" ? content : "",
-            latex: editorType === "latex" ? content : "",
+            markedjs: rendererType === "markeddown" ? content : "",
+            plantuml: rendererType === "plantuml" ? content : "",
+            latex: rendererType === "latex" ? content : "",
             tags: record.tags || [],
           })
 
+          // Set editor and renderer based on record data
           if (editorType === "quilleditor") {
             setEditor("quilleditor")
             setRenderer("")
-          } else if (
-            editorType === "vscode" ||
-            editorType === "markeddown" ||
-            editorType === "plantuml" ||
-            editorType === "latex"
-          ) {
+          } else if (editorType === "vscode") {
             setEditor("vscode")
-            if (editorType === "markeddown") {
+            // Set renderer based on the renderer field or default to mermaid
+            if (rendererType === "markeddown") {
               setRenderer("markeddown")
-            } else if (editorType === "plantuml") {
+            } else if (rendererType === "plantuml") {
               setRenderer("plantuml")
-            } else if (editorType === "latex") {
+            } else if (rendererType === "latex") {
               setRenderer("latex")
             } else {
               setRenderer("mermaid")
             }
           } else {
+            // Default fallback
             setEditor("quilleditor")
             setRenderer("")
           }
@@ -231,17 +243,14 @@ const AddQuillModal = ({
   }
 
   const handleSave = async () => {
-    const editorType =
-      editor === "quilleditor"
-        ? "quilleditor"
-        : renderer === "mermaid"
-        ? "vscode"
-        : renderer === "plantuml"
-        ? "plantuml"
-        : renderer === "latex"
-        ? "latex"
-        : "markeddown"
+    // Set editorType based on the selected editor
+    const editorType = editor === "quilleditor" ? "quilleditor" : "vscode"
+    
+    // Set renderer based on the selected renderer when editor is vscode
+    // For quilleditor, renderer should be none
+    const rendererValue = editor === "quilleditor" ? "none" : renderer
 
+    // Get the current content based on editor and renderer selection
     const currentContent =
       editor === "quilleditor"
         ? quillContent
@@ -266,13 +275,17 @@ const AddQuillModal = ({
       return
     }
 
-    const parsedMetadata = { content: currentContent, editorType }
+    const parsedMetadata = { content: currentContent }
+
     const previewContent =
-      editorType === "markeddown"
+      renderer === "markeddown"
         ? getMarkedPreviewHtml(markedJsContent)
         : currentContent
-    const createRecordDto = {
+
+    const baseDto = {
       metadata: parsedMetadata,
+      editorType, // Editor type (quilleditor or vscode)
+      renderer: rendererValue, // Renderer type (none, mermaid, markeddown, plantuml, latex)
       tags,
       recordSvg:
         renderer === "mermaid"
@@ -290,26 +303,14 @@ const AddQuillModal = ({
       setIsLoading(true)
 
       if (actionType === "edit") {
-        const updateRecordDto = {
-          metadata: parsedMetadata,
-          tags,
-          recordSvg:
-            renderer === "mermaid"
-              ? mermaidSvg
-              : renderer === "plantuml"
-              ? plantUmlSvg
-              : renderer === "latex"
-              ? latexSvg
-              : renderer === "markeddown"
-              ? previewContent
-              : undefined,
-        }
-        await dispatch(updateRecord({ recordId, updateRecordDto })).unwrap()
+        await dispatch(
+          updateRecord({ recordId, updateRecordDto: baseDto })
+        ).unwrap()
         cogoToast.success("Record updated successfully!")
         await dispatch(getRecordById(recordId)).unwrap()
       } else if (actionType === "add") {
         const response = await dispatch(
-          createRecord({ elementId, createRecordDto })
+          createRecord({ elementId, createRecordDto: baseDto })
         ).unwrap()
         await dispatch(getRecordById(response.recordId)).unwrap()
         cogoToast.success("Record added successfully!")
