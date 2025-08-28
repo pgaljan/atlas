@@ -248,7 +248,7 @@ sudo ufw allow 'Nginx Full'
 1. **Clone Repos**
 
    ```bash
-   git clone https://gitlab.techcrusades.com/atlas/atlas-web-app.git
+   git clone https://github.com/pgaljan/atlas.git
    ```
 
 2. **Backend Setup**

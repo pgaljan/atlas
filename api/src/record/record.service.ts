@@ -46,6 +46,7 @@ export class RecordService {
           recordSvg: createRecordDto.recordSvg ?? null,
           Element: { connect: { id: elementid } },
           editorType: createRecordDto.editorType ?? undefined,
+          renderer: createRecordDto.renderer ?? undefined,
         },
       });
 
@@ -69,7 +70,7 @@ export class RecordService {
       throw new NotFoundException('Record not found');
     }
 
-    const { metadata, tags, editorType, recordSvg } = updateRecordDto;
+    const { metadata, tags, editorType, renderer, recordSvg } = updateRecordDto;
 
     const updateData: any = {};
 
@@ -85,6 +86,10 @@ export class RecordService {
       updateData.editorType = editorType;
     }
 
+    if (renderer !== undefined) {
+      updateData.renderer = renderer;
+    }
+
     if (recordSvg !== undefined) updateData.recordSvg = recordSvg;
 
     try {
@@ -98,6 +103,7 @@ export class RecordService {
           metadata: existingRecord.metadata,
           tags: existingRecord.tags,
           editorType: existingRecord.editorType,
+          renderer: existingRecord.renderer,
         },
         after: updateData,
       });

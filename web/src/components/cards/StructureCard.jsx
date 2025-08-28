@@ -22,7 +22,6 @@ const StructureCard = () => {
   const workspaceId = Cookies.get("workspaceId")
   const username = Cookies.get("atlas_username")
   const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-
   const toggleImportModal = () => {
     setIsImportModalOpen(prev => !prev)
   }
@@ -173,6 +172,7 @@ const StructureCard = () => {
                   structure.shares?.[0]?.permission ||
                   "owner"
                 }
+                owner={structure.owner}
                 structureId={structure.id}
                 footerSubtitle={username || "Unknown User"}
                 avatarUrl={structure.avatarUrl || "/assets/userimg.jpeg"}

@@ -1,7 +1,12 @@
 export enum EditorType {
   VSCODE = 'vscode',
-  MARKEDDOWN = 'markeddown',
   QUILLEDITOR = 'quilleditor',
+}
+
+export enum RendererType {
+  NONE = 'none',
+  MERMAID = 'mermaid',
+  MARKEDDOWN = 'markeddown',
   PLANTUML = 'plantuml',
   LATEX = 'latex',
 }

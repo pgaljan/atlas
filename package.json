@@ -10,6 +10,7 @@
     "fe:start": "cd web && vite preview --port 3000",
     "be:build": "cd api && nest build",
     "be:format": "cd api && prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
+    "be:seed": "cd api && npm run seed",
     "be:start": "cd api && nest start",
     "be:start:dev": "cd api && nodemon -P tsconfig.backend.json",
     "be:start:debug": "cd api && nest start --debug --watch",

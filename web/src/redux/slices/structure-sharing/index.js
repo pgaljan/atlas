@@ -69,10 +69,8 @@ export const fetchShareableLinks = createAsyncThunk(
       const res = await axiosInstance.get(
         `/structure-shares/links/${structureId}`
       )
-       console.log("DEBUG: fetchShareableLinks API response:", res?.data)
       return res.data
     } catch (err) {
-       console.log("DEBUG: fetchShareableLinks API response:", err)
       return rejectWithValue(err.response?.data || err.message)
     }
   }
@@ -84,7 +82,6 @@ export const createShare = createAsyncThunk(
   async (dto, { rejectWithValue }) => {
     try {
       const res = await axiosInstance.post(`/structure-shares`, dto)
-      console.log("res",res.data)
       return res.data
     } catch (err) {
       return rejectWithValue(err.response?.data || err.message)
@@ -95,7 +92,6 @@ export const updateShareRole = createAsyncThunk(
   "structureShares/update",
   async ({ id, dto }, { rejectWithValue }) => {
     try {
-      console.log("dto",dto)
       const res = await axiosInstance.patch(`/structure-shares/${id}`, dto)
       return res.data
     } catch (err) {
@@ -145,7 +141,6 @@ export const inviteUserToShare = createAsyncThunk(
 export const acceptInvitation = createAsyncThunk(
   "structureShares/acceptInvitation",
   async ({ token, email }, { rejectWithValue }) => {
-    console.log(token)
     try {
       const res = await axiosInstance.post(
         `/structure-shares/accept-invitation/${token}?email=${encodeURIComponent(

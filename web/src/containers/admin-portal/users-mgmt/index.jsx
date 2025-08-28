@@ -17,12 +17,15 @@ import { updateSubscriptionPlan } from "../../../redux/slices/subscriptions"
 import {
   deleteUser,
   exportUsers,
+  exportUserMetrics,
   fetchAllUsers,
   updateUser,
 } from "../../../redux/slices/users"
 import Avatar from "react-avatar"
 import UserInfoModal from "../../../components/modals/UserInfoModal"
 import { BsInfoLg } from "react-icons/bs"
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
 
 const index = () => {
   const dispatch = useDispatch()
@@ -49,6 +52,9 @@ const index = () => {
   const [searchTerm, setSearchTerm] = useState("")
   const [filterActive, setFilterActive] = useState(false)
   const [deleting, setDeleting] = useState(false)
+  const [isMetricsModalOpen, setIsMetricsModalOpen] = useState(false)
+  const [startDate, setStartDate] = useState(null)
+  const [endDate, setEndDate] = useState(null)
   const openModal = (user = null) => {
     setEditingUser(user)
     setIsOpen(true)
@@ -158,6 +164,44 @@ const index = () => {
       })
       .catch(error => {
         cogoToast.error("Failed to export users")
+      })
+  }
+
+  const openMetricsModal = () => {
+    setIsMetricsModalOpen(true)
+  }
+
+  const closeMetricsModal = () => {
+    setIsMetricsModalOpen(false)
+  }
+  const formatDate = date => {
+    if (!date) return null
+    const year = date.getFullYear()
+    const month = String(date.getMonth() + 1).padStart(2, "0")
+    const day = String(date.getDate()).padStart(2, "0")
+    return `${year}-${month}-${day}`
+  }
+
+  const handleExportMetrics = () => {
+    const params = {}
+    if (startDate) params.startDate = formatDate(startDate)
+    if (endDate) params.endDate = formatDate(endDate)
+
+    dispatch(exportUserMetrics(params))
+      .unwrap()
+      .then(buffer => {
+        const blob = new Blob([buffer], { type: "application/json" })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "user-metrics.json"
+        a.click()
+        window.URL.revokeObjectURL(url)
+        cogoToast.success("Metrics export successful")
+        closeMetricsModal()
+      })
+      .catch(error => {
+        cogoToast.error("Failed to export user metrics")
       })
   }
 
@@ -368,12 +412,12 @@ const index = () => {
     <AdminLayout>
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between w-full">
+          <div className="space-y-6">
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 sm:mb-0">
               Users Management
             </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              {/* Search Box */}
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap">
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                 <input
                   type="text"
@@ -383,56 +427,57 @@ const index = () => {
                   className="px-4 py-2 w-64 focus:outline-none focus:border-custom-main"
                 />
               </div>
-              {/* Status Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterActive}
-                  onChange={() => setFilterActive(prev => !prev)}
-                  className="form-checkbox h-5 w-5 text-custom-main"
-                />
-                <span className="text-gray-700">Active Only</span>
-              </label>
 
-              {/* Sort Dropdown */}
-              <div className="relative z-20" ref={sortRef}>
+              <div className="flex flex-wrap  items-center gap-3 justify-end">
+                {/* <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterActive}
+                    onChange={() => setFilterActive(prev => !prev)}
+                    className="form-checkbox h-5 w-5 text-custom-main"
+                  />
+                  <span className="text-gray-700">Active Only</span>
+                </label> */}
+
+                <div className="relative z-20" ref={sortRef}>
+                  <button
+                    className="flex items-center justify-between w-36 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 focus:border-custom-main transition"
+                    onClick={() => setIsSortOpen(!isSortOpen)}
+                  >
+                    {selectedOption}
+                    <FaChevronDown className="text-gray-500 ml-2" />
+                  </button>
+                  {isSortOpen && (
+                    <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
+                      {options.map(option => (
+                        <li
+                          key={option}
+                          className="px-4 py-2 text-black hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelect(option)}
+                        >
+                          {option}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 <button
-                  className="flex items-center justify-between w-36 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 focus:border-custom-main transition"
-                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  onClick={handleExportUsers}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
                 >
-                  {selectedOption}
-                  <FaChevronDown className="text-gray-500 ml-2" />
+                  <MdOutlineDownloading size={20} />
+                  Export Users
                 </button>
-                {isSortOpen && (
-                  <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
-                    {options.map(option => (
-                      <li
-                        key={option}
-                        className="px-4 py-2 text-black hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleSelect(option)}
-                      >
-                        {option}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
 
-              {/* Export Users Button */}
-              <button
-                onClick={handleExportUsers}
-                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
-              >
-                <MdOutlineDownloading size={20} />
-                Export Users
-              </button>
-              {/* Add User Button */}
-              {/* <button
-                onClick={() => openModal()}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-              >
-                <MdGroupAdd size={20} />
-              </button> */}
+                <button
+                  onClick={openMetricsModal}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
+                >
+                  <MdOutlineDownloading size={20} />
+                  Export Metrics
+                </button>
+              </div>
             </div>
           </div>
 
@@ -465,7 +510,7 @@ const index = () => {
                   {headers.map((header, index) => (
                     <th
                       key={index}
-                      className="px-5 py-3 text-left border-b text-black-100"
+                      className="px-5 py-6 text-left border-b text-black-100"
                     >
                       {header}
                     </th>
@@ -630,6 +675,65 @@ const index = () => {
             user={selectedUser}
             fmt={fmt}
           />
+
+          {/* Metrics Export Modal */}
+          {isMetricsModalOpen && (
+            <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg shadow-lg p-6 w-[500px]">
+                <h2 className="text-2xl font-bold mb-4">Export User Metrics</h2>
+                <p className="mb-4 text-gray-600">
+                  Select a date range to export user metrics data.
+                </p>
+
+                <div className="mb-4">
+                  <label className="block text-gray-700 mb-2">Start Date</label>
+                  <DatePicker
+                    selected={startDate}
+                    onChange={date => setStartDate(date)}
+                    selectsStart
+                    startDate={startDate}
+                    endDate={endDate}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholderText="Select start date"
+                  />
+                </div>
+
+                <div className="mb-6">
+                  <label className="block text-gray-700 mb-2">End Date</label>
+                  <DatePicker
+                    selected={endDate}
+                    onChange={date => setEndDate(date)}
+                    selectsEnd
+                    startDate={startDate}
+                    endDate={endDate}
+                    minDate={startDate}
+                    className="w-full p-2 border border-gray-300 rounded"
+                    placeholderText="Select end date"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2">
+                  <button
+                    onClick={closeMetricsModal}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleExportMetrics}
+                    disabled={!startDate}
+                    className={`px-4 py-2 rounded text-white ${
+                      startDate
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
+                  >
+                    Export JSON
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

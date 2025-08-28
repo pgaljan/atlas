@@ -4,7 +4,6 @@ import axiosInstance from "../../../middleware/axiosInstance";
 const initialState = {
   user: null,
   users: [],
-  exportedFile: null,
   status: "idle",
   error: null,
 };
@@ -138,6 +137,43 @@ export const resetPassword = createAsyncThunk(
   }
 );
 
+// Async thunk for exporting user metrics as JSON
+export const exportUserMetrics = createAsyncThunk(
+  "user/exportUserMetrics",
+  async ({ startDate, endDate }, { rejectWithValue }) => {
+    try {
+      let url = "/user/export-metrics";
+      const params = new URLSearchParams();
+      
+      if (startDate) {
+        params.append("startDate", startDate);
+      }
+      
+      if (endDate) {
+        params.append("endDate", endDate);
+      }
+      
+      if (params.toString()) {
+        url += `?${params.toString()}`;
+      }
+      
+      const response = await axiosInstance.get(url, {
+        responseType: "arraybuffer",
+      });
+      // Return the ArrayBuffer directly without storing it in Redux state
+      return response.data;
+    } catch (error) {
+      let errorPayload;
+      if (error.response?.data instanceof ArrayBuffer) {
+        errorPayload = new TextDecoder("utf-8").decode(error.response.data);
+      } else {
+        errorPayload = error.response?.data || error.message;
+      }
+      return rejectWithValue(errorPayload);
+    }
+  }
+);
+
 // User slice
 const userSlice = createSlice({
   name: "user",
@@ -212,11 +248,23 @@ const userSlice = createSlice({
       .addCase(exportUsers.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(exportUsers.fulfilled, (state, action) => {
+      .addCase(exportUsers.fulfilled, (state) => {
         state.status = "succeeded";
-        state.exportedFile = action.payload;
+        // Don't store the ArrayBuffer in Redux state
       })
       .addCase(exportUsers.rejected, (state, action) => {
+        state.status = "failed";
+        state.error = action.payload;
+      })
+      // Export user metrics
+      .addCase(exportUserMetrics.pending, (state) => {
+        state.status = "loading";
+      })
+      .addCase(exportUserMetrics.fulfilled, (state) => {
+        state.status = "succeeded";
+        // Don't store the ArrayBuffer in Redux state
+      })
+      .addCase(exportUserMetrics.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.payload;
       }) // Forgot Password

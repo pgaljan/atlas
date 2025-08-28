@@ -10,6 +10,7 @@ import {
   Param,
   Patch,
   Post,
+  Query,
   Request,
   Res,
   UnauthorizedException,
@@ -20,6 +21,7 @@ import { randomUUID } from 'crypto';
 import { Response } from 'express';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UpdateUserDto } from './dto/updateUser.dto';
+import { ExportMetricsDto } from './dto/export-metrics.dto';
 import { UserService } from './user.service';
 import { MailerService } from 'src/utils/mailer.util';
 import { PrismaService } from 'src/prisma/prisma.service';
@@ -59,6 +61,27 @@ export class UserController {
       console.error('Error in export endpoint:', error);
       throw new HttpException(
         'Failed to export users',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+  }
+
+  @Get('export-metrics')
+  async exportUserMetrics(
+    @Query() exportMetricsDto: ExportMetricsDto,
+    @Res() res: Response,
+  ) {
+    try {
+      const data = await this.userService.exportUserMetrics(exportMetricsDto);
+      res.set({
+        'Content-Type': 'application/json',
+        'Content-Disposition': 'attachment; filename="user-metrics.json"',
+      });
+      return res.send(data);
+    } catch (error) {
+      console.error('Error in export metrics endpoint:', error);
+      throw new HttpException(
+        'Failed to export user metrics',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
