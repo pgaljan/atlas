@@ -17,7 +17,7 @@ const Header = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const [logoUrl, setLogoUrl] = useState("/assets/atlas-logo.png")
-  const [appName, setAppName] = useState("loading ...")
+  const [appName, setAppName] = useState("Atlas")
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false)
   const [structureSummaries, setStructureSummaries] = useState([])
   const [searchTerm, setSearchTerm] = useState("")

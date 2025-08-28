@@ -56,15 +56,21 @@ export class AppSettingsService {
   }
 
   async getSettings() {
-    try {
-      const settings = await this.prisma.appSettings.findFirst();
-      if (!settings) throw new NotFoundException('No app settings found');
-      return settings;
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to retrieve settings: ${error.message}`,
-      );
+    const settings = await this.prisma.appSettings.findFirst();
+    if (!settings) {
+      return {
+        appName: 'Atlas',
+        primaryColor: '#660000',
+        secondaryColor: '#006666',
+        supportEmail: '',
+        feedbackLink: '',
+        logoUrl: '',
+        inviteCodeOption: 'disabled',
+        authProviders: { local: true, google: false, github: false },
+        smtpSettings: {},
+      };
     }
+    return settings;
   }
 
   async removeSettings(id: string) {
