@@ -25,7 +25,9 @@ async function bootstrap() {
     type: VersioningType.URI,
   });
 
-  await app.listen(process.env.PORT ?? 4001);
+  await app.listen(process.env.PORT ?? 4001).then(() => {
+    console.info(`Application is running on PORT: ${process.env.PORT ?? 4001}`);
+  });
 }
 
 bootstrap();

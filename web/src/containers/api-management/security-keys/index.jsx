@@ -10,13 +10,13 @@ const APIKeysPage = () => {
     {
       id: 1,
       label: "My Website",
-      key: "sk_live_7d8f3243edc4e7a0123456abcd",
+      key: "test_key_1234567890abcdef",
       created: "2024-11-02",
     },
     {
       id: 2,
       label: "Internal Dashboard",
-      key: "sk_live_21a83273a44b5f8c0123456abcd",
+      key: "test_key_abcdef1234567890",
       created: "2025-02-14",
     },
   ]);

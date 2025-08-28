@@ -149,7 +149,7 @@ sudo npm install -g pm2
 ### Backend
 
 ```bash
-cd ~/atlas/atlas-nestjs
+cd ~/atlas/api
 npm install
 cp .env   # configure DB, keys, secrets
 # Example env value
@@ -161,13 +161,13 @@ npx prisma migrate deploy
 npx prisma db seed
 
 # Start backend with PM2
-pm2 start "npm run start" --name atlas-nestjs
+pm2 start "npm run start" --name api
 ```
 
 ### Frontend
 
 ```bash
-cd ~/atlas/atlas-reactjs
+cd ~/atlas/web
 npm install
 cp .env   # configure API URL
 # Example env value
@@ -178,7 +178,7 @@ npm run build
 
 # Serve frontend using PM2 (with serve or similar)
 npm install -g serve
-pm2 start "serve -s build -l 5174" --name atlas-reactjs
+pm2 start "serve -s build -l 5174" --name web
 ```
 
 ### Save PM2 Processes

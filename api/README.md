@@ -14,7 +14,7 @@ To set up the project locally, clone the repository and install the necessary de
 
 ```bash
 $ git clone <repository_url>
-$ cd atlas-backend
+$ cd api
 $ npm install
 ```
 

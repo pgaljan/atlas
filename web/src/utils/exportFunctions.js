@@ -3,12 +3,12 @@ import * as d3 from "d3";
 import { toPng } from "html-to-image";
 import { jsPDF } from "jspdf";
 import JSZip from "jszip";
-import { extractTextForPdfPreview } from "../utils/exportFunctionHelpers";
+import { extractTextForPdfPreview } from "./exportFunctionHelpers";
 import {
   assignNodeColors,
   assignWbsNumbers,
   treeToMarkmapData,
-} from "../utils/markmapHelpers";
+} from "./markmapHelpers";
 
 export const sanitizeTreeData = (node) => {
   return {

@@ -1,3 +1,40 @@
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Node modules
+node_modules/
+config.md
+
+# Build output
+dist/
+dist-ssr/
+
+# Local environment files
+*.local
+.env
+
+# Lock files
+bun.lockb
+
+# IDEs and editors
+.vscode/
+!.vscode/extensions.json
+.idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+
 # compiled output
 /dist
 /node_modules
@@ -8,7 +45,6 @@
 
 # Lock files
 bun.lockb
-package-lock.json
 
 # Logs
 logs
