@@ -21,6 +21,8 @@ export default defineConfig(({ mode }) => ({
     "process.env": {},
   },
   server: {
+    host: process.env.VITE_HOST,
+    port: process.env.VITE_PORT,
     allowedHosts: ['dev.atlasflow.co'],
   },
 }));
