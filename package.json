@@ -4,6 +4,7 @@
   "version": "0.1",
   "type": "module",
   "scripts": {
+    "build": "concurrently 'npm run fe:build' 'npm run be:build'",
     "fe:dev": "cd web && vite",
     "fe:build": "cd web && NODE_OPTIONS=--max-old-space-size=4096 vite build",
     "fe:lint": "cd web && eslint .",
@@ -127,6 +128,7 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "@vitejs/plugin-react-swc": "^3.8.0",
+    "concurrently": "^9.2.1",
     "eslint": "^9.21.0",
     "eslint-config-prettier": "^9.0.0",
     "eslint-plugin-prettier": "^5.0.0",
