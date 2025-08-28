@@ -21,7 +21,7 @@
     "be:test:cov": "cd api && jest --coverage",
     "be:test:debug": "cd api && node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "be:test:e2e": "cd api && jest --config ./test/jest-e2e.json",
-    "postinstall": "cd api && prisma generate migrations"
+    "postinstall": "cd api && prisma generate migrations && prisma db push && npm run seed"
   },
   "dependencies": {
     "@monaco-editor/react": "^4.7.0",
