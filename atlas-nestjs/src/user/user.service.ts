@@ -555,12 +555,11 @@ export class UserService {
         });
 
         const collaboratorLoginEvents = new Set<string>();
-      auditLogs.forEach((l) => {
-  if (l.userId && collaboratorIds.has(l.userId) && l.action === 'User Login') {
-    collaboratorLoginEvents.add(`${l.userId}-${l.createdAt}`);
-  }
-});
-
+        auditLogs.forEach((l) => {
+          if (collaboratorIds.has(l.userId) && l.action === 'User Login') {
+            collaboratorLoginEvents.add(`${l.userId}-${l.createdAt}`);
+          }
+        });
         const collaboratorLogins = collaboratorLoginEvents.size;
 
         const userInvs = userInvitations;

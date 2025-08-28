@@ -412,12 +412,12 @@ const index = () => {
     <AdminLayout>
       <div className="p-2">
         <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <div className="mb-6 flex flex-col sm:flex-row sm:items-center justify-between w-full">
+          <div className="space-y-6">
             <h2 className="text-3xl font-semibold text-gray-800 mb-4 sm:mb-0">
               Users Management
             </h2>
-            <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-              {/* Search Box */}
+
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 flex-wrap">
               <div className="flex items-center border border-gray-300 rounded-lg overflow-hidden">
                 <input
                   type="text"
@@ -427,64 +427,57 @@ const index = () => {
                   className="px-4 py-2 w-64 focus:outline-none focus:border-custom-main"
                 />
               </div>
-              {/* Status Checkbox */}
-              <label className="flex items-center gap-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={filterActive}
-                  onChange={() => setFilterActive(prev => !prev)}
-                  className="form-checkbox h-5 w-5 text-custom-main"
-                />
-                <span className="text-gray-700">Active Only</span>
-              </label>
 
-              {/* Sort Dropdown */}
-              <div className="relative z-20" ref={sortRef}>
+              <div className="flex flex-wrap  items-center gap-3 justify-end">
+                {/* <label className="flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={filterActive}
+                    onChange={() => setFilterActive(prev => !prev)}
+                    className="form-checkbox h-5 w-5 text-custom-main"
+                  />
+                  <span className="text-gray-700">Active Only</span>
+                </label> */}
+
+                <div className="relative z-20" ref={sortRef}>
+                  <button
+                    className="flex items-center justify-between w-36 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 focus:border-custom-main transition"
+                    onClick={() => setIsSortOpen(!isSortOpen)}
+                  >
+                    {selectedOption}
+                    <FaChevronDown className="text-gray-500 ml-2" />
+                  </button>
+                  {isSortOpen && (
+                    <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
+                      {options.map(option => (
+                        <li
+                          key={option}
+                          className="px-4 py-2 text-black hover:bg-gray-100 cursor-pointer"
+                          onClick={() => handleSelect(option)}
+                        >
+                          {option}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </div>
+
                 <button
-                  className="flex items-center justify-between w-36 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 focus:border-custom-main transition"
-                  onClick={() => setIsSortOpen(!isSortOpen)}
+                  onClick={handleExportUsers}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
                 >
-                  {selectedOption}
-                  <FaChevronDown className="text-gray-500 ml-2" />
+                  <MdOutlineDownloading size={20} />
+                  Export Users
                 </button>
-                {isSortOpen && (
-                  <ul className="absolute left-0 w-36 mt-1 bg-white border border-gray-300 rounded-lg shadow-md">
-                    {options.map(option => (
-                      <li
-                        key={option}
-                        className="px-4 py-2 text-black hover:bg-gray-100 cursor-pointer"
-                        onClick={() => handleSelect(option)}
-                      >
-                        {option}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
 
-              {/* Export Users Button */}
-              <button
-                onClick={handleExportUsers}
-                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
-              >
-                <MdOutlineDownloading size={20} />
-                Export Users
-              </button>
-              {/* Export Metrics Button */}
-              <button
-                onClick={openMetricsModal}
-                className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
-              >
-                <MdOutlineDownloading size={20} />
-                Export Metrics
-              </button>
-              {/* Add User Button */}
-              {/* <button
-                onClick={() => openModal()}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-              >
-                <MdGroupAdd size={20} />
-              </button> */}
+                <button
+                  onClick={openMetricsModal}
+                  className="flex items-center cursor-pointer gap-2 px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition"
+                >
+                  <MdOutlineDownloading size={20} />
+                  Export Metrics
+                </button>
+              </div>
             </div>
           </div>
 
@@ -517,7 +510,7 @@ const index = () => {
                   {headers.map((header, index) => (
                     <th
                       key={index}
-                      className="px-5 py-3 text-left border-b text-black-100"
+                      className="px-5 py-6 text-left border-b text-black-100"
                     >
                       {header}
                     </th>
@@ -728,7 +721,12 @@ const index = () => {
                   </button>
                   <button
                     onClick={handleExportMetrics}
-                    className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+                    disabled={!startDate}
+                    className={`px-4 py-2 rounded text-white ${
+                      startDate
+                        ? "bg-green-600 hover:bg-green-700"
+                        : "bg-gray-400 cursor-not-allowed"
+                    }`}
                   >
                     Export JSON
                   </button>
