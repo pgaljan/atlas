@@ -1,34 +1,30 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import GenericTable from "../../../components/generic-table/GenericTable";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import InviteModal from "../../../components/modals/InviteModal";
-import { invitationConfig } from "../../../constants/index";
-import {
-  deleteInvitation,
-  listInvitations,
-} from "../../../redux/slices/invitations";
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import GenericTable from '../../../components/generic-table/GenericTable';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import InviteModal from '../../../components/modals/InviteModal';
+import { invitationConfig } from '../../../constants/index';
+import { deleteInvitation, listInvitations } from '../../../redux/slices/invitations';
 
 const Invitation = ({ onSubmit }) => {
   const dispatch = useDispatch();
-  const workspaceId = Cookies.get("workspaceId");
+  const workspaceId = Cookies.get('workspaceId');
 
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [invitations, setInvitations] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!workspaceId) {
-          console.error("Workspace ID is not available.");
+          console.error('Workspace ID is not available.');
           return;
         }
 
@@ -38,33 +34,33 @@ const Invitation = ({ onSubmit }) => {
         const formattedData = result.map((invitation) => ({
           id: invitation.id,
           token: invitation.token,
-          inviteCode: invitation.referralCode || "--",
+          inviteCode: invitation.referralCode || '--',
           email: invitation.inviteeEmail,
           status: invitation.status,
-          generated: new Date(invitation.createdAt).toLocaleString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+          generated: new Date(invitation.createdAt).toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
             hour12: true,
           }),
           accepted: invitation.usedAt
-            ? new Date(invitation.usedAt).toLocaleString("en-US", {
-                month: "2-digit",
-                day: "2-digit",
-                year: "numeric",
-                hour: "2-digit",
-                minute: "2-digit",
+            ? new Date(invitation.usedAt).toLocaleString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
                 hour12: true,
               })
-            : "--",
-          expire: new Date(invitation.expiresAt).toLocaleString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+            : '--',
+          expire: new Date(invitation.expiresAt).toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
             hour12: true,
           }),
         }));
@@ -81,8 +77,8 @@ const Invitation = ({ onSubmit }) => {
   }, [dispatch, workspaceId]);
 
   const handleDelete = (member) => {
-    if (member.status === "ACCEPTED") {
-      return cogoToast.warn("Accepted invitations cannot be deleted.");
+    if (member.status === 'ACCEPTED') {
+      return cogoToast.warn('Accepted invitations cannot be deleted.');
     }
     setSelectedMember(member);
     setIsDeleteModalOpen(true);
@@ -98,16 +94,16 @@ const Invitation = ({ onSubmit }) => {
         deleteInvitation({
           invitationId: selectedMember.id,
           workspaceId,
-        })
+        }),
       ).unwrap();
 
-      cogoToast.success("Invitation deleted successfully!");
+      cogoToast.success('Invitation deleted successfully!');
 
       setInvitations((prevMembers) =>
-        prevMembers.filter((member) => member.id !== selectedMember.id)
+        prevMembers.filter((member) => member.id !== selectedMember.id),
       );
     } catch (err) {
-      cogoToast.error(err?.message || "Failed to delete invitation.");
+      cogoToast.error(err?.message || 'Failed to delete invitation.');
     } finally {
       setDeleting(false);
       setIsLoading(false);
@@ -116,48 +112,40 @@ const Invitation = ({ onSubmit }) => {
   };
 
   const filteredMembers = invitations.filter((member) =>
-    member.email.toLowerCase().includes(searchQuery.toLowerCase())
+    member.email.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const tokenCounts = {
     total: invitations.length,
-    pending: invitations.filter((m) => m.status === "pending").length,
-    accepted: invitations.filter((m) => m.status === "accepted").length,
+    pending: invitations.filter((m) => m.status === 'pending').length,
+    accepted: invitations.filter((m) => m.status === 'accepted').length,
   };
 
   const handleExportTokens = () => {
     if (filteredMembers.length === 0) {
-      return cogoToast.warn("No invitations to export.");
+      return cogoToast.warn('No invitations to export.');
     }
 
     const csvContent = [
-      [
-        "Email",
-        "Token",
-        "Invite Code",
-        "Status",
-        "Generated At",
-        "Accepted At",
-        "Expires At",
-      ],
+      ['Email', 'Token', 'Invite Code', 'Status', 'Generated At', 'Accepted At', 'Expires At'],
       ...filteredMembers.map((m) => [
         m.email,
         m.token,
-        m.inviteCode || "--",
+        m.inviteCode || '--',
         m.status,
         m.generated,
         m.accepted,
         m.expire,
       ]),
     ]
-      .map((row) => row.join(","))
-      .join("\n");
+      .map((row) => row.join(','))
+      .join('\n');
 
-    const blob = new Blob([csvContent], { type: "text/csv" });
+    const blob = new Blob([csvContent], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
+    const a = document.createElement('a');
     a.href = url;
-    a.download = "invitations.csv";
+    a.download = 'invitations.csv';
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -169,22 +157,22 @@ const Invitation = ({ onSubmit }) => {
   const updatedInvitationConfig = {
     ...invitationConfig,
     actions: invitationConfig.actions.map((action) => {
-      if (action.tooltip === "Delete") {
+      if (action.tooltip === 'Delete') {
         return {
           ...action,
           onClick: handleDelete,
-          disabled: (member) => member.status?.toLowerCase() === "accepted",
+          disabled: (member) => member.status?.toLowerCase() === 'accepted',
         };
       }
 
-      if (action.tooltip === "Copy Token") {
+      if (action.tooltip === 'Copy Token') {
         return {
           ...action,
           onClick: (member) => {
             navigator.clipboard
               .writeText(member.token)
-              .then(() => cogoToast.success("Token copied to clipboard!"))
-              .catch(() => cogoToast.error("Failed to copy token."));
+              .then(() => cogoToast.success('Token copied to clipboard!'))
+              .catch(() => cogoToast.error('Failed to copy token.'));
           },
         };
       }
@@ -196,7 +184,7 @@ const Invitation = ({ onSubmit }) => {
   };
 
   return (
-    <Layout onSubmit={onSubmit}>
+    <>
       <div className="p-2">
         {isLoading ? (
           <div className="flex h-screen flex-col text-center p-6">
@@ -210,18 +198,13 @@ const Invitation = ({ onSubmit }) => {
               {/* Token Counts */}
               <div className="flex flex-wrap gap-3 text-sm text-gray-600 font-medium">
                 <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
-                  Total:{" "}
-                  <span className="font-semibold text-gray-800">
-                    {tokenCounts.total}
-                  </span>
+                  Total: <span className="font-semibold text-gray-800">{tokenCounts.total}</span>
                 </div>
                 <div className="bg-yellow-100 text-yellow-800 px-3 py-1.5 rounded-lg">
-                  Pending:{" "}
-                  <span className="font-semibold">{tokenCounts.pending}</span>
+                  Pending: <span className="font-semibold">{tokenCounts.pending}</span>
                 </div>
                 <div className="bg-green-100 text-green-800 px-3 py-1.5 rounded-lg">
-                  Accepted:{" "}
-                  <span className="font-semibold">{tokenCounts.accepted}</span>
+                  Accepted: <span className="font-semibold">{tokenCounts.accepted}</span>
                 </div>
               </div>
 
@@ -250,7 +233,7 @@ const Invitation = ({ onSubmit }) => {
               enableDate={false}
             />
 
-            {filteredMembers.length === 0 && searchQuery === "" && (
+            {filteredMembers.length === 0 && searchQuery === '' && (
               <div className="flex justify-center mt-3">
                 <button
                   onClick={() => setIsInviteModalOpen(true)}
@@ -265,20 +248,17 @@ const Invitation = ({ onSubmit }) => {
       </div>
 
       {isInviteModalOpen && (
-        <InviteModal
-          isOpen={isInviteModalOpen}
-          onClose={() => setIsInviteModalOpen(false)}
-        />
+        <InviteModal isOpen={isInviteModalOpen} onClose={() => setIsInviteModalOpen(false)} />
       )}
 
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        title={selectedMember?.name || "this invitation"}
+        title={selectedMember?.name || 'this invitation'}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         loading={deleting}
       />
-    </Layout>
+    </>
   );
 };
 

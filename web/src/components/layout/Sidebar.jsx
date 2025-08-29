@@ -1,52 +1,52 @@
-import { Sidebar } from "flowbite-react";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { BiSolidMessageRoundedDots } from "react-icons/bi";
-import { BsDatabaseFillCheck } from "react-icons/bs";
-import { CgTemplate } from "react-icons/cg";
-import { SiGithubactions } from "react-icons/si";
-import { FaPlusCircle, FaRocket, FaSlideshare } from "react-icons/fa";
-import { FiExternalLink, FiSettings } from "react-icons/fi";
-import { TbLayoutDashboardFilled } from "react-icons/tb";
-import { useDispatch } from "react-redux";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import useFeatureFlag from "../../hooks/useFeatureFlag";
-import { fetchAppSettings } from "../../redux/slices/app-settings";
-import { fetchCatalogsByUserTier } from "../../redux/slices/structure-catalog";
-import { fetchSubscription } from "../../redux/slices/subscriptions";
-import Carousel from "../carousels";
-import { TbTemplate } from "react-icons/tb";
-import StructureModal from "../modals/StructureModal";
-import { MdDatasetLinked } from "react-icons/md";
+import { Sidebar } from 'flowbite-react';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { BiSolidMessageRoundedDots } from 'react-icons/bi';
+import { BsDatabaseFillCheck } from 'react-icons/bs';
+import { CgTemplate } from 'react-icons/cg';
+import { SiGithubactions } from 'react-icons/si';
+import { FaPlusCircle, FaRocket, FaSlideshare } from 'react-icons/fa';
+import { FiExternalLink, FiSettings } from 'react-icons/fi';
+import { TbLayoutDashboardFilled } from 'react-icons/tb';
+import { useDispatch } from 'react-redux';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import useFeatureFlag from '../../hooks/useFeatureFlag';
+import { fetchAppSettings } from '../../redux/slices/app-settings';
+import { fetchCatalogsByUserTier } from '../../redux/slices/structure-catalog';
+import { fetchSubscription } from '../../redux/slices/subscriptions';
+import Carousel from '../carousels';
+import { TbTemplate } from 'react-icons/tb';
+import StructureModal from '../modals/StructureModal';
+import { MdDatasetLinked } from 'react-icons/md';
 
 // Define custom theme for the Sidebar
 const ownTheme = {
   root: {
-    base: "h-full",
+    base: 'h-full',
     collapsed: {
-      on: "w-16",
-      off: "w-64",
+      on: 'w-16',
+      off: 'w-64',
     },
     inner:
-      "h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 py-4 px-3 dark:bg-gray-800",
+      'h-full overflow-hidden max-h-screen h-auto overflow-x-hidden rounded bg-gray-50 py-4 px-3 dark:bg-gray-800',
   },
   item: {
-    base: "flex items-center justify-center rounded-lg p-2 text-base font-normal text-custom-main transition duration-75",
-    active: "bg-custom-main text-white",
-    hover: "hover:bg-custom-main hover:text-white group",
+    base: 'flex items-center justify-center rounded-lg p-2 text-base font-normal text-custom-main transition duration-75',
+    active: 'bg-custom-main text-white',
+    hover: 'hover:bg-custom-main hover:text-white group',
     icon: {
-      base: "h-6 w-6 flex-shrink-0 text-custom-main transition duration-75 group-hover:text-white",
-      active: "text-white",
+      base: 'h-6 w-6 flex-shrink-0 text-custom-main transition duration-75 group-hover:text-white',
+      active: 'text-white',
     },
   },
 };
 
-export function SidebarPage({ onSubmit }) {
+export function SidebarPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
-  const [feedbackLink, setFeedbackLink] = useState("");
-  const userId = Cookies.get("atlas_userId");
+  const [feedbackLink, setFeedbackLink] = useState('');
+  const userId = Cookies.get('atlas_userId');
   const [showBanner, setShowBanner] = useState(false);
   const [catalogs, setCatalogs] = useState([]);
   const [currentPlan, setCurrentPlan] = useState(null);
@@ -68,14 +68,14 @@ export function SidebarPage({ onSubmit }) {
           const settings = resultAction.payload;
           if (settings?.feedbackLink) {
             setFeedbackLink(settings.feedbackLink);
-            localStorage.setItem("appName", settings.appName);
-            localStorage.setItem("primaryColor", settings.primaryColor);
+            localStorage.setItem('appName', settings.appName);
+            localStorage.setItem('primaryColor', settings.primaryColor);
           }
         } else {
-          cogoToast.error("Failed to fetch app settings.");
+          cogoToast.error('Failed to fetch app settings.');
         }
       } catch (error) {
-        cogoToast.error("Error loading app settings.");
+        cogoToast.error('Error loading app settings.');
       }
     };
 
@@ -101,37 +101,37 @@ export function SidebarPage({ onSubmit }) {
     handleModalToggle();
   };
   // Check if the user can create a new structure
-  const canCreateStructure = useFeatureFlag("Structures");
+  const canCreateStructure = useFeatureFlag('Structures');
   // Reusable function to handle feature restrictions
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
       action();
     } else {
-      navigate("?plan=upgrade-to-premium");
+      navigate('?plan=upgrade-to-premium');
     }
   };
   const menuItems = [
     {
-      name: "Dashboard",
+      name: 'Dashboard',
       icon: TbLayoutDashboardFilled,
-      link: "/app/dashboard",
+      link: '/app/dashboard',
     },
     {
-      name: "Templates",
+      name: 'Templates',
       icon: TbTemplate,
-      link: "/app/templates", 
+      link: '/app/templates',
     },
 
     // { name: "Uploaded Files", icon: FaImages, link: "/app/uploaded-files" },
     {
-      name: "Invitations",
+      name: 'Invitations',
       icon: FaSlideshare,
-      link: "/app/invitations",
+      link: '/app/invitations',
     },
     {
-      name: "My Backups",
+      name: 'My Backups',
       icon: BsDatabaseFillCheck,
-      link: "/app/backups",
+      link: '/app/backups',
     },
 
     // {
@@ -141,9 +141,9 @@ export function SidebarPage({ onSubmit }) {
     // },
 
     {
-      name: "Settings",
+      name: 'Settings',
       icon: FiSettings,
-      link: "/app/user-settings",
+      link: '/app/user-settings',
     },
   ];
   const handleNewStructureClick = () => {
@@ -159,10 +159,7 @@ export function SidebarPage({ onSubmit }) {
   };
   return (
     <>
-      <Sidebar
-        theme={ownTheme}
-        aria-label="Sidebar with multi-level dropdown example"
-      >
+      <Sidebar theme={ownTheme} aria-label="Sidebar with multi-level dropdown example">
         <div className="relative h-full">
           <Sidebar.Items>
             <div className="flex justify-center mb-4 mt-3">
@@ -228,17 +225,9 @@ export function SidebarPage({ onSubmit }) {
           </div>
         </div>
       </Sidebar>
-      <StructureModal
-        isOpen={isModalOpen}
-        onClose={handleModalToggle}
-        onSubmit={onSubmit}
-      />
+      <StructureModal isOpen={isModalOpen} onClose={handleModalToggle} />
       {userId && showBanner && (
-        <Carousel
-          data={catalogs}
-          onClose={handleCatalogClose}
-          onUseTemplate={handleUseTemplate}
-        />
+        <Carousel data={catalogs} onClose={handleCatalogClose} onUseTemplate={handleUseTemplate} />
       )}
     </>
   );

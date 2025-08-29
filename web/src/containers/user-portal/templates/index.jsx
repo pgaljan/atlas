@@ -1,31 +1,28 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch, useSelector } from "react-redux";
-import GenericTable from "../../../components/generic-table/GenericTable";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import EditTemplateModal from "../../../components/modals/EditTemplateModal";
-import TemplatesModal from "../../../components/modals/TemplateModal";
-import { templatesConfig } from "../../../constants";
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
+import GenericTable from '../../../components/generic-table/GenericTable';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import EditTemplateModal from '../../../components/modals/EditTemplateModal';
+import TemplatesModal from '../../../components/modals/TemplateModal';
+import { templatesConfig } from '../../../constants';
 import {
   deleteStructureTemplate,
   duplicateStructureTemplate,
   fetchTemplatesByWorkspace,
   useTemplateAsStructure,
-} from "../../../redux/slices/structure-templates";
+} from '../../../redux/slices/structure-templates';
 
 const Templates = () => {
   const dispatch = useDispatch();
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const workspaceId = Cookies.get("workspaceId");
-  const { templates, status } = useSelector(
-    (state) => state.structureTemplates
-  );
+  const workspaceId = Cookies.get('workspaceId');
+  const { templates, status } = useSelector((state) => state.structureTemplates);
   const [isTemplatesModalOpen, setIsTemplatesModalOpen] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     dispatch(fetchTemplatesByWorkspace(workspaceId));
@@ -45,51 +42,51 @@ const Templates = () => {
     dispatch(deleteStructureTemplate(selectedTemplate.id))
       .unwrap()
       .then(() => {
-        cogoToast.success("Template deleted!");
+        cogoToast.success('Template deleted!');
         setIsDeleteModalOpen(false);
       })
       .catch((err) => {
-        cogoToast.error(err.message || "Delete failed");
+        cogoToast.error(err.message || 'Delete failed');
       });
   };
 
   const handleAction = (action, template) => {
     switch (action.tooltip) {
-      case "Edit Template":
+      case 'Edit Template':
         return handleEdit(template);
 
-      case "Delete Template":
+      case 'Delete Template':
         return handleDelete(template);
 
-      case "Duplicate Template":
+      case 'Duplicate Template':
         dispatch(duplicateStructureTemplate({ templateId: template.id }))
           .unwrap()
           .then(() => {
-            cogoToast.success("Template duplicated successfully!");
+            cogoToast.success('Template duplicated successfully!');
             dispatch(fetchTemplatesByWorkspace(workspaceId));
           })
           .catch((err) => {
-            cogoToast.error(err.message || "Failed to duplicate template.");
+            cogoToast.error(err.message || 'Failed to duplicate template.');
           });
         return;
 
-      case "Utilize Template":
+      case 'Utilize Template':
         dispatch(
           useTemplateAsStructure({
             templateId: template.id,
             overrides: {
               name: `${template.name} (From Template)`,
-              ownerId: Cookies.get("atlas_userId"),
+              ownerId: Cookies.get('atlas_userId'),
               workspaceId,
             },
-          })
+          }),
         )
           .unwrap()
           .then(() => {
-            cogoToast.success("Structure created from template!");
+            cogoToast.success('Structure created from template!');
           })
           .catch((err) => {
-            cogoToast.error(err.message || "Failed to utilize template.");
+            cogoToast.error(err.message || 'Failed to utilize template.');
           });
         return;
 
@@ -99,13 +96,11 @@ const Templates = () => {
   };
 
   const filteredTemplates = templates.filter((tpl) =>
-    `${tpl.name} ${tpl.description}`
-      .toLowerCase()
-      .includes(searchQuery.toLowerCase())
+    `${tpl.name} ${tpl.description}`.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   {
-    status === "loading" && (
+    status === 'loading' && (
       <div className="flex h-screen flex-col text-center p-6">
         <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
@@ -115,8 +110,8 @@ const Templates = () => {
   }
 
   return (
-    <Layout>
-      {status === "loading" && (
+    <>
+      {status === 'loading' && (
         <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
           <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
         </div>
@@ -138,7 +133,7 @@ const Templates = () => {
 
         <DeleteModal
           isOpen={isDeleteModalOpen}
-          title={selectedTemplate?.name || "this template"}
+          title={selectedTemplate?.name || 'this template'}
           onClose={() => setIsDeleteModalOpen(false)}
           onConfirm={handleConfirmDelete}
         />
@@ -162,7 +157,7 @@ const Templates = () => {
           />
         )}
       </div>
-    </Layout>
+    </>
   );
 };
 

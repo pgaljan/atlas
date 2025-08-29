@@ -1,26 +1,23 @@
-import cogoToast from "@successtar/cogo-toast";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import { useLocation } from "react-router-dom";
-import {
-  acceptTerms,
-  checkTermsStatus,
-} from "../../redux/slices/terms-of-service";
-import TermsModal from "../modals/TermsModal";
-import Header from "./Header";
-import { SidebarPage } from "./Sidebar";
-import SidebarFooter from "./SidebarFooter";
+import cogoToast from '@successtar/cogo-toast';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { useLocation, Outlet } from 'react-router-dom';
+import { acceptTerms, checkTermsStatus } from '../../redux/slices/terms-of-service';
+import TermsModal from '../modals/TermsModal';
+import Header from './Header';
+import { SidebarPage } from './Sidebar';
+import SidebarFooter from './SidebarFooter';
 
-const Layout = ({ children, onSubmit }) => {
+const Layout = () => {
   const location = useLocation();
   const dispatch = useDispatch();
   const [showTermsModal, setShowTermsModal] = useState(false);
-  const [lastUpdated, setLastUpdated] = useState("");
+  const [lastUpdated, setLastUpdated] = useState('');
   const [loading, setLoading] = useState(false);
-  const routesneeded = location.pathname === "/canvas";
+  const routesneeded = location.pathname === '/canvas';
 
   useEffect(() => {
-    const isTermsPage = location.pathname === "/app/terms-of-service";
+    const isTermsPage = location.pathname === '/app/terms-of-service';
 
     const fetchInitialData = async () => {
       const termsResult = await dispatch(checkTermsStatus());
@@ -31,11 +28,11 @@ const Layout = ({ children, onSubmit }) => {
         }
         if (terms?.updatedAt) {
           setLastUpdated(
-            new Date(terms.updatedAt).toLocaleDateString("en-US", {
-              year: "numeric",
-              month: "long",
-              day: "numeric",
-            })
+            new Date(terms.updatedAt).toLocaleDateString('en-US', {
+              year: 'numeric',
+              month: 'long',
+              day: 'numeric',
+            }),
           );
         }
       }
@@ -50,19 +47,14 @@ const Layout = ({ children, onSubmit }) => {
       const result = await dispatch(acceptTerms());
       if (acceptTerms.fulfilled.match(result)) {
         setShowTermsModal(false);
-        cogoToast.success(
-          result.payload?.message || "Terms of service accepted successfully!"
-        );
+        cogoToast.success(result.payload?.message || 'Terms of service accepted successfully!');
       } else {
         cogoToast.error(
-          result.payload ||
-            "Something went wrong while accepting the terms of service."
+          result.payload || 'Something went wrong while accepting the terms of service.',
         );
       }
     } catch (error) {
-      cogoToast.error(
-        "Failed to accept the terms of service. Please try again."
-      );
+      cogoToast.error('Failed to accept the terms of service. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -74,20 +66,17 @@ const Layout = ({ children, onSubmit }) => {
       <div className="flex flex-grow overflow-hidden">
         {!routesneeded && (
           <div className="w-64 flex flex-col justify-between bg-gray-50">
-            <SidebarPage onSubmit={onSubmit} />
+            <SidebarPage />
             <SidebarFooter />
           </div>
         )}
-        <main className="flex-1 bg-gray-200 p-2 overflow-auto">{children}</main>
+        <main className="flex-1 bg-gray-200 p-2 overflow-auto">
+          <Outlet />
+        </main>
       </div>
 
-      {/* Terms of Service Modal */}
       {showTermsModal && (
-        <TermsModal
-          loading={loading}
-          lastUpdated={lastUpdated}
-          onAccept={handleAcceptTerms}
-        />
+        <TermsModal loading={loading} lastUpdated={lastUpdated} onAccept={handleAcceptTerms} />
       )}
     </div>
   );

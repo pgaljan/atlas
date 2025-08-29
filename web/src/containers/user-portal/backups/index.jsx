@@ -1,43 +1,40 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import GenericTable from "../../../components/generic-table/GenericTable";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import { backupConfig } from "../../../constants";
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import GenericTable from '../../../components/generic-table/GenericTable';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import { backupConfig } from '../../../constants';
 import {
   deleteBackup,
   fetchBackupsByWorkspaceId,
   searchBackupsByDate,
   searchBackupsByTitle,
-} from "../../../redux/slices/backups";
+} from '../../../redux/slices/backups';
 
-const Backups = ({ onSubmit }) => {
+const Backups = () => {
   const dispatch = useDispatch();
-  const workspaceId = Cookies.get("workspaceId");
+  const workspaceId = Cookies.get('workspaceId');
   const [backups, setBackups] = useState([]);
   const [selectedBackup, setSelectedBackup] = useState(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!workspaceId) {
-          console.error("Workspace ID is not available in cookies.");
+          console.error('Workspace ID is not available in cookies.');
           return;
         }
         setLoading(true);
-        const result = await dispatch(
-          fetchBackupsByWorkspaceId(workspaceId)
-        ).unwrap();
+        const result = await dispatch(fetchBackupsByWorkspaceId(workspaceId)).unwrap();
         setBackups(result);
       } catch (err) {
-        console.error("Error fetching backups:", err);
+        console.error('Error fetching backups:', err);
       } finally {
         setLoading(false);
       }
@@ -51,20 +48,16 @@ const Backups = ({ onSubmit }) => {
       setLoading(true);
 
       if (!query) {
-        const result = await dispatch(
-          fetchBackupsByWorkspaceId(workspaceId)
-        ).unwrap();
+        const result = await dispatch(fetchBackupsByWorkspaceId(workspaceId)).unwrap();
         setBackups(result);
         return;
       }
 
-      const result = await dispatch(
-        searchBackupsByTitle({ title: query, workspaceId })
-      ).unwrap();
+      const result = await dispatch(searchBackupsByTitle({ title: query, workspaceId })).unwrap();
 
       setBackups(result?.data || []);
     } catch (error) {
-      console.error("Search error:", error);
+      console.error('Search error:', error);
     } finally {
       setLoading(false);
     }
@@ -75,10 +68,8 @@ const Backups = ({ onSubmit }) => {
       setLoading(true);
       if (!date) return;
 
-      const dateString = date.toISOString().split("T")[0];
-      const result = await dispatch(
-        searchBackupsByDate({ date: dateString })
-      ).unwrap();
+      const dateString = date.toISOString().split('T')[0];
+      const result = await dispatch(searchBackupsByDate({ date: dateString })).unwrap();
 
       setBackups(result?.data || []);
     } catch (error) {
@@ -88,7 +79,6 @@ const Backups = ({ onSubmit }) => {
     }
   };
 
-  // Delete Modal Handler
   const handleDelete = (item) => {
     setSelectedBackup(item);
     setIsDeleteModalOpen(true);
@@ -102,15 +92,11 @@ const Backups = ({ onSubmit }) => {
     try {
       await dispatch(deleteBackup(selectedBackup.id)).unwrap();
 
-      cogoToast.success("Backup deleted successfully!");
+      cogoToast.success('Backup deleted successfully!');
 
-      setBackups((prevBackups) =>
-        prevBackups.filter((backup) => backup.id !== selectedBackup.id)
-      );
+      setBackups((prevBackups) => prevBackups.filter((backup) => backup.id !== selectedBackup.id));
     } catch (error) {
-      cogoToast.error(
-        error?.message || "Error deleting backup. Please try again."
-      );
+      cogoToast.error(error?.message || 'Error deleting backup. Please try again.');
     } finally {
       setDeleting(false);
       setIsDeleteModalOpen(false);
@@ -126,7 +112,7 @@ const Backups = ({ onSubmit }) => {
   const updatedBackupConfig = {
     ...backupConfig,
     actions: backupConfig.actions.map((action) => {
-      if (action.tooltip === "Delete") {
+      if (action.tooltip === 'Delete') {
         return { ...action, onClick: handleDelete };
       }
       return action;
@@ -134,7 +120,7 @@ const Backups = ({ onSubmit }) => {
   };
 
   return (
-    <Layout onSubmit={onSubmit}>
+    <>
       <div className="p-2">
         {loading ? (
           <div className="flex h-screen flex-col text-center p-6">
@@ -164,15 +150,14 @@ const Backups = ({ onSubmit }) => {
         )}
       </div>
 
-      {/* Delete Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        title={"this item"}
+        title={'this item'}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         loading={deleting}
       />
-    </Layout>
+    </>
   );
 };
 
