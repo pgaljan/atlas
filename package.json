@@ -10,7 +10,7 @@
     "fe:lint": "cd web && eslint .",
     "fe:start": "cd web && vite preview --port 3000",
     "fe:server": "cd web && npm run server",
-    "be:build": "cd api && nest build",
+    "be:build": "cd api && npm run build",
     "be:format": "cd api && prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "be:seed": "cd api && npm run seed",
     "be:start": "cd api && nest start",
