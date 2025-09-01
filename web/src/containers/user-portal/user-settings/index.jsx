@@ -1,28 +1,23 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { FaTrash } from "react-icons/fa";
-import { TbEdit } from "react-icons/tb";
-import { useDispatch } from "react-redux";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import { uploadFile } from "../../../redux/slices/upload-files";
-import {
-  changePassword,
-  deleteUser,
-  fetchUser,
-  updateUser,
-} from "../../../redux/slices/users";
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { FaTrash } from 'react-icons/fa';
+import { TbEdit } from 'react-icons/tb';
+import { useDispatch } from 'react-redux';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import { uploadFile } from '../../../redux/slices/upload-files';
+import { changePassword, deleteUser, fetchUser, updateUser } from '../../../redux/slices/users';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const UserSettings = () => {
   const dispatch = useDispatch();
-  const userId = Cookies.get("atlas_userId");
+  const userId = Cookies.get('atlas_userId');
   const [loading, setLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [displayName, setDisplayName] = useState("");
-  const [profileImage, setProfileImage] = useState("/assets/userimg.jpeg");
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
+  const [displayName, setDisplayName] = useState('');
+  const [profileImage, setProfileImage] = useState('/assets/userimg.jpeg');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showFarewellModal, setShowFarewellModal] = useState(false);
 
@@ -32,11 +27,10 @@ const UserSettings = () => {
     (async () => {
       try {
         const user = await dispatch(fetchUser(userId)).unwrap();
-        setDisplayName(user.displayName || "");
-        setProfileImage(user.profileUrl || "/assets/userimg.jpeg");
+        setDisplayName(user.displayName || '');
+        setProfileImage(user.profileUrl || '/assets/userimg.jpeg');
       } catch (err) {
-        console.log(err);
-        cogoToast.error("Failed to load user settings.");
+        cogoToast.error(err?.message || 'Failed to load user settings.');
       } finally {
         setIsLoading(false);
       }
@@ -53,19 +47,18 @@ const UserSettings = () => {
 
       if (url) {
         setProfileImage(url);
-        cogoToast.success("Logo uploaded successfully.");
+        cogoToast.success('Logo uploaded successfully.');
       } else {
-        cogoToast.error("No URL returned from upload.");
+        cogoToast.error('No URL returned from upload.');
       }
     } catch (err) {
-      console.log(err)
-      cogoToast.error("Upload failed.");
+      cogoToast.error(err?.message || 'Upload failed.');
     }
   };
 
   const handleUpdateProfile = async () => {
     if (!displayName.trim()) {
-      return cogoToast.error("Display name is required.");
+      return cogoToast.error('Display name is required.');
     }
 
     setLoading(true);
@@ -77,13 +70,13 @@ const UserSettings = () => {
             displayName,
             profileUrl: profileImage,
           },
-        })
+        }),
       ).unwrap();
 
-      Cookies.set("displayName", updatedUser.displayName);
-      cogoToast.success("Profile updated!");
+      Cookies.set('displayName', updatedUser.displayName);
+      cogoToast.success('Profile updated!');
     } catch (err) {
-      cogoToast.error(err.message || "Failed to update profile.");
+      cogoToast.error(err?.message || 'Failed to update profile.');
     } finally {
       setLoading(false);
     }
@@ -91,7 +84,7 @@ const UserSettings = () => {
 
   const handleChangePassword = async () => {
     if (!currentPassword.trim() || !newPassword.trim()) {
-      return cogoToast.error("Please fill both password fields.");
+      return cogoToast.error('Please fill both password fields.');
     }
 
     setLoading(true);
@@ -101,42 +94,32 @@ const UserSettings = () => {
           userId,
           oldPassword: currentPassword,
           newPassword,
-        })
+        }),
       ).unwrap();
-      cogoToast.success("Password changed successfully!");
-      setCurrentPassword("");
-      setNewPassword("");
+      cogoToast.success('Password changed successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
     } catch (err) {
-      cogoToast.error(err.message || "Failed to change password.");
+      cogoToast.error(err?.message || 'Failed to change password.');
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = () => {
-    console.log("Project deleted");
     setShowConfirm(false);
   };
 
   return (
-    <Layout>
-      {isLoading ? (
-        <div className="flex h-screen flex-col text-center p-6">
-          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-          </div>
-        </div>
+    <div className="flex flex-col flex-1 h-full p-2 relative ">
+      {isLoading || loading ? (
+        <LoadingSpinner mode="overlay" message={isLoading ? 'Loading settings...' : 'Saving...'} />
       ) : (
-        <div className="p-6 sm:p-10 bg-white rounded-[18px] shadow-md min-h-[90%] space-y-8">
-          <h2 className="text-3xl font-semibold text-gray-800">
-            Settings
-          </h2>
+        <div className="p-6 sm:p-10 bg-white rounded-[18px] shadow-md flex-1 space-y-8">
+          <h2 className="text-3xl font-semibold text-gray-800">Settings</h2>
 
-          {/* Section 1: Personal Info */}
           <div className="border rounded-xl p-6 shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Personal Information
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Personal Information</h3>
 
             {/* <div className="relative w-24 h-24 mb-6 group">
               <img
@@ -172,20 +155,17 @@ const UserSettings = () => {
                 disabled={loading}
                 className={`px-6 py-2 rounded-lg text-white text-sm font-semibold transition ${
                   loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-custom-main hover:bg-custom-secondary"
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-custom-main hover:bg-custom-secondary'
                 }`}
               >
-                {loading ? "Saving..." : "Save Personal Info"}
+                {loading ? 'Saving...' : 'Save Personal Info'}
               </button>
             </div>
           </div>
 
-          {/* Section 2: Change Password */}
           <div className="border rounded-xl p-6 shadow-sm">
-            <h3 className="text-xl font-semibold text-gray-700 mb-4">
-              Change Password
-            </h3>
+            <h3 className="text-xl font-semibold text-gray-700 mb-4">Change Password</h3>
 
             <div className="mb-4">
               <label className="block font-medium mb-2">Current Password</label>
@@ -215,23 +195,19 @@ const UserSettings = () => {
                 disabled={loading}
                 className={`px-6 py-2 rounded-lg text-white text-sm font-semibold transition ${
                   loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-custom-main hover:bg-custom-secondary"
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-custom-main hover:bg-custom-secondary'
                 }`}
               >
-                {loading ? "Saving..." : "Change Password"}
+                {loading ? 'Saving...' : 'Change Password'}
               </button>
             </div>
           </div>
 
-          {/* Section 3: Delete Account */}
           <div className="border rounded-xl p-6 shadow-sm">
-            <h3 className="text-xl font-semibold text-red-600 mb-4">
-              Danger Zone
-            </h3>
+            <h3 className="text-xl font-semibold text-red-600 mb-4">Danger Zone</h3>
             <p className="text-sm text-gray-600 mb-4">
-              Deleting your account is irreversible. Please proceed with
-              caution.
+              Deleting your account is irreversible. Please proceed with caution.
             </p>
             <button
               onClick={() => setShowDeleteModal(true)}
@@ -251,29 +227,24 @@ const UserSettings = () => {
           onConfirm={async () => {
             setLoading(true);
             try {
-              await dispatch(
-                deleteUser({ userId, reason: "User requested deletion" })
-              ).unwrap();
+              await dispatch(deleteUser({ userId, reason: 'User requested deletion' })).unwrap();
 
-              // Cleanup
-              Cookies.remove("atlas_access_token");
-              Cookies.remove("atlas_userId");
-              Cookies.remove("atlas_username");
-              Cookies.remove("atlas_email");
-              Cookies.remove("workspaceId");
+              Cookies.remove('atlas_access_token');
+              Cookies.remove('atlas_userId');
+              Cookies.remove('atlas_username');
+              Cookies.remove('atlas_email');
+              Cookies.remove('workspaceId');
               localStorage.clear();
 
-              // Show toast and farewell modal
-              cogoToast.success("Account deleted successfully.");
+              cogoToast.success('Account deleted successfully.');
               setShowDeleteModal(false);
               setShowFarewellModal(true);
 
-              // Redirect after 3 seconds
               setTimeout(() => {
-                window.location.href = "/";
+                window.location.href = '/';
               }, 3000);
             } catch (err) {
-              cogoToast.error(err?.message || "Failed to delete account.");
+              cogoToast.error(err?.message || 'Failed to delete account.');
               setShowDeleteModal(false);
             } finally {
               setLoading(false);
@@ -289,8 +260,7 @@ const UserSettings = () => {
               We&apos;re sorry to see you go!
             </h2>
             <p className="text-gray-600 mb-6">
-              Your account has been permanently deleted. We hope to see you
-              again someday.
+              Your account has been permanently deleted. We hope to see you again someday.
             </p>
 
             <div className="flex justify-center gap-4">
@@ -301,7 +271,7 @@ const UserSettings = () => {
                 👋 Good bye
               </button>
               <button
-                onClick={() => (window.location.href = "/")}
+                onClick={() => (window.location.href = '/')}
                 className="px-5 py-2 text-sm font-semibold text-white bg-custom-main hover:bg-custom-secondary rounded-lg transition"
               >
                 👋 Farewell
@@ -310,7 +280,7 @@ const UserSettings = () => {
           </div>
         </div>
       )}
-    </Layout>
+    </div>
   );
 };
 

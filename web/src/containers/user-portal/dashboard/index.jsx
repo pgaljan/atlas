@@ -1,12 +1,7 @@
-import StructureCard from "../../../components/cards/StructureCard"
-import Layout from "../../../components/layout"
+import StructureCard from '../../../components/cards/StructureCard';
 
-const Dashboard = ({ onSubmit }) => {
-  return (
-    <Layout onSubmit={onSubmit}>
-      <StructureCard />
-    </Layout>
-  )
-}
+const Dashboard = () => {
+  return <StructureCard />;
+};
 
-export default Dashboard
+export default Dashboard;

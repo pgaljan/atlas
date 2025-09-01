@@ -1,16 +1,14 @@
-import { useEffect, useState } from "react";
-import Layout from "../../../components/layout";
-import { fetchTermsOfService } from "../../../redux/slices/terms-of-service";
-import { useDispatch, useSelector } from "react-redux"; // ✅ updated import
+import { useEffect, useState } from 'react';
+import { fetchTermsOfService } from '../../../redux/slices/terms-of-service';
+import { useDispatch, useSelector } from 'react-redux';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const TermsOfService = () => {
   const dispatch = useDispatch();
-  const appName = useSelector(
-    (state) => state.appSettings.appSettings?.appName || "Atlas"
-  );
+  const appName = useSelector((state) => state.appSettings.appSettings?.appName || 'Atlas');
 
-  const [content, setContent] = useState("");
-  const [lastUpdatedDate, setLastUpdatedDate] = useState("24 April 2025");
+  const [content, setContent] = useState('');
+  const [lastUpdatedDate, setLastUpdatedDate] = useState('24 April 2025');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -18,45 +16,43 @@ const TermsOfService = () => {
       setIsLoading(true);
       const resultAction = await dispatch(fetchTermsOfService());
       if (fetchTermsOfService.fulfilled.match(resultAction)) {
-        const rawContent = resultAction?.payload?.terms?.content || "";
-        const updatedContent = rawContent.replaceAll("{{appName}}", appName);
+        const rawContent = resultAction?.payload?.terms?.content || '';
+        const updatedContent = rawContent.replaceAll('{{appName}}', appName);
         setContent(updatedContent);
-        setLastUpdatedDate(resultAction.payload.terms.updatedAt || "N/A");
+        setLastUpdatedDate(resultAction.payload.terms.updatedAt || 'N/A');
       }
       setIsLoading(false);
     };
 
     fetchData();
   }, [dispatch, appName]);
-  const formattedDate = new Date(lastUpdatedDate).toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
+
+  const formattedDate = new Date(lastUpdatedDate).toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
   });
 
   return (
-    <Layout>
-      <div className="bg-white shadow rounded-[18px] p-8 m-2">
-        <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
-        <div className="text-sm text-gray-500 mb-4">
-          <span className="block">
-            Last updated: <strong>{formattedDate}</strong>
-          </span>
-        </div>
-        {isLoading ? (
-          <div className="flex h-screen flex-col text-center p-6">
-            <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-            </div>
+    <div className="relative flex flex-col h-screen bg-white shadow rounded-[18px] p-8">
+      {isLoading ? (
+        <LoadingSpinner mode="overlay" minHeight="h-full" message="Loading Terms of Service..." />
+      ) : (
+        <>
+          <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
+          <div className="text-sm text-gray-500 mb-4">
+            <span className="block">
+              Last updated: <strong>{formattedDate}</strong>
+            </span>
           </div>
-        ) : (
           <div
-            className="prose max-w-none"
+            className="prose max-w-none flex-1 overflow-auto"
+            style={{ minHeight: '200px' }}
             dangerouslySetInnerHTML={{ __html: content }}
           />
-        )}
-      </div>
-    </Layout>
+        </>
+      )}
+    </div>
   );
 };
 

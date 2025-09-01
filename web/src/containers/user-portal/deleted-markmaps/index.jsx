@@ -1,6 +1,5 @@
-import Layout from "../../../components/layout";
-import { trashConfig } from "../../../constants/index";
-import GenericTable from "../../../components/generic-table/GenericTable";
+import { trashConfig } from '../../../constants/index';
+import GenericTable from '../../../components/generic-table/GenericTable';
 
 const DeletedMarkmaps = ({ onSubmit }) => {
   const data = [
@@ -13,11 +12,9 @@ const DeletedMarkmaps = ({ onSubmit }) => {
   ];
 
   return (
-    <Layout onSubmit={onSubmit}>
-      <div className="p-2">
-        <GenericTable {...trashConfig} data={data} />
-      </div>
-    </Layout>
+    <div className="p-2">
+      <GenericTable {...trashConfig} data={data} />
+    </div>
   );
 };
 
