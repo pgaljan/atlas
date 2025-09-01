@@ -14,7 +14,9 @@ const Layout = () => {
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [lastUpdated, setLastUpdated] = useState('');
   const [loading, setLoading] = useState(false);
-  const routesneeded = location.pathname === '/canvas';
+  const renderer = new URLSearchParams(location.search).get('renderer');
+  const hideSidebar =
+    location.pathname === '/canvas' || ['markmap', 'syncfusion']?.includes(renderer);
 
   useEffect(() => {
     const isTermsPage = location.pathname === '/app/terms-of-service';
@@ -62,9 +64,9 @@ const Layout = () => {
 
   return (
     <div className="flex flex-col h-screen relative">
-      {!routesneeded && <Header />}
+      {!hideSidebar && <Header />}
       <div className="flex flex-grow overflow-hidden">
-        {!routesneeded && (
+        {!hideSidebar && (
           <div className="w-64 flex flex-col justify-between bg-gray-50">
             <SidebarPage />
             <SidebarFooter />

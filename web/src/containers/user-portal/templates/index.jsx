@@ -6,6 +6,7 @@ import GenericTable from '../../../components/generic-table/GenericTable';
 import DeleteModal from '../../../components/modals/DeleteModal';
 import EditTemplateModal from '../../../components/modals/EditTemplateModal';
 import TemplatesModal from '../../../components/modals/TemplateModal';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 import { templatesConfig } from '../../../constants';
 import {
   deleteStructureTemplate,
@@ -99,62 +100,52 @@ const Templates = () => {
     `${tpl.name} ${tpl.description}`.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
-  {
-    status === 'loading' && (
-      <div className="flex h-screen flex-col text-center p-6">
-        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      {status === 'loading' && (
-        <div className="fixed inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-        </div>
-      )}
+      <div className="p-2 flex flex-col h-full min-h-0">
+        {status === 'loading' ? (
+          <LoadingSpinner mode="overlay" message="Loading templates..." />
+        ) : (
+          <>
+            <GenericTable
+              {...templatesConfig}
+              data={filteredTemplates}
+              searchQuery={searchQuery}
+              enableSearch={true}
+              enableDate={false}
+              onSearchChange={setSearchQuery}
+              actions={templatesConfig.actions.map((action) => ({
+                ...action,
+                onClick: (template) => handleAction(action, template),
+              }))}
+            />
 
-      <div className="p-2">
-        <GenericTable
-          {...templatesConfig}
-          data={filteredTemplates}
-          searchQuery={searchQuery}
-          enableSearch={true}
-          enableDate={false}
-          onSearchChange={setSearchQuery}
-          actions={templatesConfig.actions.map((action) => ({
-            ...action,
-            onClick: (template) => handleAction(action, template),
-          }))}
-        />
+            <DeleteModal
+              isOpen={isDeleteModalOpen}
+              title={selectedTemplate?.name || 'this template'}
+              onClose={() => setIsDeleteModalOpen(false)}
+              onConfirm={handleConfirmDelete}
+            />
+            {isEditModalOpen && (
+              <EditTemplateModal
+                isOpen={isEditModalOpen}
+                onClose={() => setIsEditModalOpen(false)}
+                template={selectedTemplate}
+                onSuccess={() => dispatch(fetchTemplatesByWorkspace(workspaceId))}
+              />
+            )}
 
-        <DeleteModal
-          isOpen={isDeleteModalOpen}
-          title={selectedTemplate?.name || 'this template'}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onConfirm={handleConfirmDelete}
-        />
-        {isEditModalOpen && (
-          <EditTemplateModal
-            isOpen={isEditModalOpen}
-            onClose={() => setIsEditModalOpen(false)}
-            template={selectedTemplate}
-            onSuccess={() => dispatch(fetchTemplatesByWorkspace(workspaceId))}
-          />
-        )}
-
-        {isTemplatesModalOpen && (
-          <TemplatesModal
-            onClose={() => setIsTemplatesModalOpen(false)}
-            onCreate={() => {
-              setIsTemplatesModalOpen(false);
-              dispatch(fetchTemplatesByWorkspace(workspaceId));
-            }}
-            defaultTemplate={selectedTemplate}
-          />
+            {isTemplatesModalOpen && (
+              <TemplatesModal
+                onClose={() => setIsTemplatesModalOpen(false)}
+                onCreate={() => {
+                  setIsTemplatesModalOpen(false);
+                  dispatch(fetchTemplatesByWorkspace(workspaceId));
+                }}
+                defaultTemplate={selectedTemplate}
+              />
+            )}
+          </>
         )}
       </div>
     </>

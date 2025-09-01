@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import DeleteModal from '../../../components/modals/DeleteModal';
 import { uploadFile } from '../../../redux/slices/upload-files';
 import { changePassword, deleteUser, fetchUser, updateUser } from '../../../redux/slices/users';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const UserSettings = () => {
   const dispatch = useDispatch();
@@ -110,15 +111,11 @@ const UserSettings = () => {
   };
 
   return (
-    <>
-      {isLoading ? (
-        <div className="flex h-screen flex-col text-center p-6">
-          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-          </div>
-        </div>
+    <div className="flex flex-col flex-1 h-full p-2 relative ">
+      {isLoading || loading ? (
+        <LoadingSpinner mode="overlay" message={isLoading ? 'Loading settings...' : 'Saving...'} />
       ) : (
-        <div className="p-6 sm:p-10 bg-white rounded-[18px] shadow-md min-h-[90%] space-y-8">
+        <div className="p-6 sm:p-10 bg-white rounded-[18px] shadow-md flex-1 space-y-8">
           <h2 className="text-3xl font-semibold text-gray-800">Settings</h2>
 
           <div className="border rounded-xl p-6 shadow-sm">
@@ -283,7 +280,7 @@ const UserSettings = () => {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 };
 

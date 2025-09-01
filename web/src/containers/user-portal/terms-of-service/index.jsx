@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { fetchTermsOfService } from '../../../redux/slices/terms-of-service';
 import { useDispatch, useSelector } from 'react-redux';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const TermsOfService = () => {
   const dispatch = useDispatch();
@@ -25,6 +26,7 @@ const TermsOfService = () => {
 
     fetchData();
   }, [dispatch, appName]);
+
   const formattedDate = new Date(lastUpdatedDate).toLocaleDateString('en-US', {
     year: 'numeric',
     month: 'long',
@@ -32,21 +34,23 @@ const TermsOfService = () => {
   });
 
   return (
-    <div className="bg-white shadow rounded-[18px] p-8 m-2">
-      <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
-      <div className="text-sm text-gray-500 mb-4">
-        <span className="block">
-          Last updated: <strong>{formattedDate}</strong>
-        </span>
-      </div>
+    <div className="relative flex flex-col h-screen bg-white shadow rounded-[18px] p-8">
       {isLoading ? (
-        <div className="flex h-screen flex-col text-center p-6">
-          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-          </div>
-        </div>
+        <LoadingSpinner mode="overlay" minHeight="h-full" message="Loading Terms of Service..." />
       ) : (
-        <div className="prose max-w-none" dangerouslySetInnerHTML={{ __html: content }} />
+        <>
+          <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
+          <div className="text-sm text-gray-500 mb-4">
+            <span className="block">
+              Last updated: <strong>{formattedDate}</strong>
+            </span>
+          </div>
+          <div
+            className="prose max-w-none flex-1 overflow-auto"
+            style={{ minHeight: '200px' }}
+            dangerouslySetInnerHTML={{ __html: content }}
+          />
+        </>
       )}
     </div>
   );

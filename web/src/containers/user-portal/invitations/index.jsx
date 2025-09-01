@@ -7,6 +7,7 @@ import DeleteModal from '../../../components/modals/DeleteModal';
 import InviteModal from '../../../components/modals/InviteModal';
 import { invitationConfig } from '../../../constants/index';
 import { deleteInvitation, listInvitations } from '../../../redux/slices/invitations';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const Invitation = ({ onSubmit }) => {
   const dispatch = useDispatch();
@@ -30,13 +31,12 @@ const Invitation = ({ onSubmit }) => {
 
         setIsLoading(true);
         const result = await dispatch(listInvitations(workspaceId)).unwrap();
-        //  console.log("result", result);
         const formattedData = result.map((invitation) => ({
           id: invitation.id,
           token: invitation.token,
           inviteCode: invitation.referralCode || '--',
           email: invitation.inviteeEmail,
-          status: invitation.status,
+          status: invitation.status?.toLowerCase(),
           generated: new Date(invitation.createdAt).toLocaleString('en-US', {
             month: '2-digit',
             day: '2-digit',
@@ -88,8 +88,6 @@ const Invitation = ({ onSubmit }) => {
     if (!selectedMember) return;
     setDeleting(true);
     try {
-      setIsLoading(true);
-
       await dispatch(
         deleteInvitation({
           invitationId: selectedMember.id,
@@ -106,7 +104,6 @@ const Invitation = ({ onSubmit }) => {
       cogoToast.error(err?.message || 'Failed to delete invitation.');
     } finally {
       setDeleting(false);
-      setIsLoading(false);
       setIsDeleteModalOpen(false);
     }
   };
@@ -185,17 +182,12 @@ const Invitation = ({ onSubmit }) => {
 
   return (
     <>
-      <div className="p-2">
+      <div className="p-2 flex flex-col h-full min-h-0">
         {isLoading ? (
-          <div className="flex h-screen flex-col text-center p-6">
-            <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-            </div>
-          </div>
+          <LoadingSpinner mode="overlay" message="Loading invitations..." />
         ) : (
           <>
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6 px-4 py-3 bg-white rounded-xl shadow-sm border border-gray-200">
-              {/* Token Counts */}
               <div className="flex flex-wrap gap-3 text-sm text-gray-600 font-medium">
                 <div className="bg-gray-100 px-3 py-1.5 rounded-lg">
                   Total: <span className="font-semibold text-gray-800">{tokenCounts.total}</span>
@@ -208,7 +200,6 @@ const Invitation = ({ onSubmit }) => {
                 </div>
               </div>
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap gap-2">
                 <button
                   onClick={handleGenerateToken}

@@ -17,6 +17,7 @@ import {
   reorderPlans,
   updatePlan,
 } from '../../../redux/slices/plans';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const index = () => {
   const dispatch = useDispatch();
@@ -158,14 +159,9 @@ const index = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen flex-col text-center p-6">
-        <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-        </div>
-      </div>
+      <LoadingSpinner mode="overlay" message="Loading subscription plan..." minHeight="h-full" />
     );
   }
-
   if (tableData.length === 0) {
     return (
       <div className="flex h-screen flex-col items-center justify-center text-center p-6">

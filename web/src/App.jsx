@@ -1,4 +1,3 @@
-// src/App.jsx
 import { registerLicense } from '@syncfusion/ej2-base';
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 
@@ -8,14 +7,15 @@ import { Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import cogoToast from '@successtar/cogo-toast';
 import { fetchAppSettings } from './redux/slices/app-settings';
 
+// Layouts
+import Layout from './components/layout';
+import AdminLayout from './components/admin/admin-layout';
+
+// Route wrappers
 import PublicRoute from './routes/PublicRoute';
 import PrivateRoute from './routes/PrivateRoute';
 import AdminPrivateRoute from './routes/AdminPrivateRoute';
 import APIKeyPrivateRoute from './routes/APIKeyPrivateRoute';
-
-// Layouts
-import Layout from './components/layout';
-import AdminLayout from './components/admin/admin-layout';
 
 // Lazy imports
 const NotFound = lazy(() => import('./components/404-notfound/NotFound'));
@@ -75,6 +75,67 @@ const Support = lazy(() => import('./containers/api-management/support'));
 const APIKeys = lazy(() => import('./containers/api-management/security-keys'));
 const Policies = lazy(() => import('./containers/api-management/security-policies'));
 const Certificates = lazy(() => import('./containers/api-management/security-certificates'));
+
+// Route groups (keeps same structure as previous working version)
+const publicRoutes = [
+  { path: '/', element: <Login /> },
+  { path: '/register', element: <Register /> },
+  { path: '/reset-password', element: <ResetPassword /> },
+  { path: '/forgot-password', element: <ForgotPassword /> },
+  { path: '/admin-portal', element: <AdminLogin /> },
+  { path: '/privacy-policy', element: <Policy /> },
+  { path: '/terms-of-service', element: <Terms /> },
+  { path: '*', element: <NotFound /> },
+];
+
+const callbackRoutes = [
+  { path: '/app/google-callback', element: <GoogleCallback /> },
+  { path: '/app/github-callback', element: <GithubCallback /> },
+  { path: '/app/share-callback/accept-invitation', element: <ShareCallback /> },
+];
+
+const subscriptionRoutes = [{ path: '/subscription-plans', element: <SubscriptionPlans /> }];
+
+const userRoutes = [
+  { path: '/app/dashboard', element: <Dashboard /> },
+  { path: '/app/backups', element: <Backups /> },
+  { path: '/app/templates', element: <Templates /> },
+  { path: '/app/invitations', element: <Invitations /> },
+  { path: '/app/upgrade-plans', element: <UpgradePlans /> },
+  { path: '/app/syncfusion', element: <Syncfusion /> },
+  { path: '/app/privacy-policy', element: <UserPrivacyPolicy /> },
+  { path: '/app/terms-of-service', element: <UserTermsOfService /> },
+  { path: '/app/s/:username/:structureId', element: <StructureRenderer /> },
+  { path: '/app/coming-soon', element: <ComingSoon /> },
+  { path: '/app/user-settings', element: <UserSettings /> },
+];
+
+const adminRoutes = [
+  { path: '/app/admin-portal/user-management', element: <UserTable /> },
+  { path: '/app/admin-portal/structure-Catalogs', element: <StructureCatalogs /> },
+  { path: '/app/admin-portal/user-profile', element: <UserProfiles /> },
+  { path: '/app/admin-portal/subscription-plan', element: <SubscriptionTable /> },
+  { path: '/app/admin-portal/dashboard', element: <AdminDashboard /> },
+  { path: '/app/admin-portal/policy', element: <PrivacyPolicy /> },
+  { path: '/app/admin-portal/terms-of-service', element: <TermsofService /> },
+  { path: '/app/admin-portal/settings', element: <Settings /> },
+];
+
+const apiManagementRoutes = [
+  { path: '/api-management/overview', element: <Overview /> },
+  { path: '/api-management/favorites/apis', element: <FavoriteAPIs /> },
+  { path: '/api-management/favorites/activity-overview', element: <ActivityOverview /> },
+  { path: '/api-management/explore', element: <Explore /> },
+  { path: '/api-management/apis', element: <APIs /> },
+  { path: '/api-management/try-it', element: <TryIt /> },
+  { path: '/api-management/api-templates', element: <APITemplates /> },
+  { path: '/api-management/examples', element: <Examples /> },
+  { path: '/api-management/webhooks', element: <Webhooks /> },
+  { path: '/api-management/support', element: <Support /> },
+  { path: '/api-management/security/keys', element: <APIKeys /> },
+  { path: '/api-management/security/policies', element: <Policies /> },
+  { path: '/api-management/security/certificates', element: <Certificates /> },
+];
 
 const App = () => {
   const dispatch = useDispatch();
@@ -153,23 +214,18 @@ const App = () => {
         }
       >
         <Routes>
-          {/* Public routes (no layout) */}
-          <Route element={<PublicRoute />}>
-            <Route path="/" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/admin-portal" element={<AdminLogin />} />
-            <Route path="/privacy-policy" element={<Policy />} />
-            <Route path="/terms-of-service" element={<Terms />} />
-            <Route path="/app/google-callback" element={<GoogleCallback />} />
-            <Route path="/app/github-callback" element={<GithubCallback />} />
-            <Route path="/app/share-callback/accept-invitation" element={<ShareCallback />} />
-            <Route path="/subscription-plans" element={<SubscriptionPlans />} />
-            <Route path="*" element={<NotFound />} />
-          </Route>
+          {publicRoutes?.map(({ path, element }) => (
+            <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
+          ))}
 
-          {/* User portal routes inside main Layout */}
+          {callbackRoutes?.map(({ path, element }) => (
+            <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
+          ))}
+          {subscriptionRoutes?.map(({ path, element }) => (
+            <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
+          ))}
+
+          {/* User portal routes nested under Layout and protected by PrivateRoute */}
           <Route
             element={
               <PrivateRoute>
@@ -177,20 +233,12 @@ const App = () => {
               </PrivateRoute>
             }
           >
-            <Route path="/app/dashboard" element={<Dashboard />} />
-            <Route path="/app/backups" element={<Backups />} />
-            <Route path="/app/templates" element={<Templates />} />
-            <Route path="/app/invitations" element={<Invitations />} />
-            <Route path="/app/upgrade-plans" element={<UpgradePlans />} />
-            <Route path="/app/syncfusion" element={<Syncfusion />} />
-            <Route path="/app/privacy-policy" element={<UserPrivacyPolicy />} />
-            <Route path="/app/terms-of-service" element={<UserTermsOfService />} />
-            <Route path="/app/s/:username/:structureId" element={<StructureRenderer />} />
-            <Route path="/app/coming-soon" element={<ComingSoon />} />
-            <Route path="/app/user-settings" element={<UserSettings />} />
+            {userRoutes?.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
           </Route>
 
-          {/* Admin portal routes inside AdminLayout */}
+          {/* Admin portal routes nested under AdminLayout and protected by AdminPrivateRoute */}
           <Route
             element={
               <AdminPrivateRoute>
@@ -198,34 +246,16 @@ const App = () => {
               </AdminPrivateRoute>
             }
           >
-            <Route path="/app/admin-portal/user-management" element={<UserTable />} />
-            <Route path="/app/admin-portal/structure-Catalogs" element={<StructureCatalogs />} />
-            <Route path="/app/admin-portal/user-profile" element={<UserProfiles />} />
-            <Route path="/app/admin-portal/subscription-plan" element={<SubscriptionTable />} />
-            <Route path="/app/admin-portal/dashboard" element={<AdminDashboard />} />
-            <Route path="/app/admin-portal/policy" element={<PrivacyPolicy />} />
-            <Route path="/app/admin-portal/terms-of-service" element={<TermsofService />} />
-            <Route path="/app/admin-portal/settings" element={<Settings />} />
+            {adminRoutes?.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
           </Route>
 
-          {/* API management routes (no sidebar layout, just wrapper) */}
+          {/* API management routes (no sidebar layout, just APIKeyPrivateRoute wrapper) */}
           <Route element={<APIKeyPrivateRoute />}>
-            <Route path="/api-management/overview" element={<Overview />} />
-            <Route path="/api-management/favorites/apis" element={<FavoriteAPIs />} />
-            <Route
-              path="/api-management/favorites/activity-overview"
-              element={<ActivityOverview />}
-            />
-            <Route path="/api-management/explore" element={<Explore />} />
-            <Route path="/api-management/apis" element={<APIs />} />
-            <Route path="/api-management/try-it" element={<TryIt />} />
-            <Route path="/api-management/api-templates" element={<APITemplates />} />
-            <Route path="/api-management/examples" element={<Examples />} />
-            <Route path="/api-management/webhooks" element={<Webhooks />} />
-            <Route path="/api-management/support" element={<Support />} />
-            <Route path="/api-management/security/keys" element={<APIKeys />} />
-            <Route path="/api-management/security/policies" element={<Policies />} />
-            <Route path="/api-management/security/certificates" element={<Certificates />} />
+            {apiManagementRoutes?.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
           </Route>
         </Routes>
 

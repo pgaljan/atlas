@@ -10,6 +10,7 @@ import { restoreFullBackup } from '../../redux/slices/restore-backups';
 import { getStructuresByWorkspaceId } from '../../redux/slices/structures';
 import { formatRelativeTime } from '../../utils/timeUtils';
 import ImportModal from '../modals/ImportModal';
+import LoadingSpinner from '../loader/LoadingSpinner';
 
 const StructureCard = () => {
   const dispatch = useDispatch();
@@ -101,13 +102,9 @@ const StructureCard = () => {
     }
   };
   return (
-    <>
+    <div className="p-2 flex flex-col h-full min-h-0">
       {loading ? (
-        <div className="flex h-screen flex-col text-center p-6">
-          <div className="absolute inset-0 bg-white bg-opacity-75 z-50 flex items-center justify-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-          </div>
-        </div>
+        <LoadingSpinner mode="overlay" message="Loading structures..." />
       ) : structures.length === 0 ? (
         <div className="flex h-screen flex-col text-center p-6">
           <div className="flex flex-col items-center justify-center flex-grow">
@@ -189,7 +186,7 @@ const StructureCard = () => {
           format={'.zip'}
         />
       )}
-    </>
+    </div>
   );
 };
 

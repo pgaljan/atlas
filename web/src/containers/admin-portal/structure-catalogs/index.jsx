@@ -19,6 +19,7 @@ import {
   updateCatalogOrder,
 } from '../../../redux/slices/structure-catalog';
 import { BiCarousel } from 'react-icons/bi';
+import LoadingSpinner from '../../../components/loader/LoadingSpinner';
 
 const StructureCatalog = () => {
   const dispatch = useDispatch();
@@ -195,9 +196,7 @@ const StructureCatalog = () => {
 
   if (loading) {
     return (
-      <div className="flex h-screen items-center justify-center text-center p-6">
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
-      </div>
+      <LoadingSpinner mode="overlay" message="Loading structure catalogs..." minHeight="h-full" />
     );
   }
 
