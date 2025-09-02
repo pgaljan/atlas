@@ -213,6 +213,7 @@ model Element {
   missionTime    Float?
   mttr           Float?
   outputN        Float?
+  tags           Json?
   ElementLink    ElementLink?   @relation(fields: [elementLinkId], references: [id])
   parent         Element?       @relation("ParentChild", fields: [parentId], references: [id])
   children       Element[]      @relation("ParentChild")

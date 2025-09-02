@@ -93,6 +93,7 @@ export class ElementService {
       description,
       inputK,
       outputN,
+      tags,
     } = createElementDto;
 
     if (!structureId || !name) {
@@ -133,6 +134,7 @@ export class ElementService {
           description: description ?? null,
           inputK: inputK ?? null,
           outputN: outputN ?? null,
+          tags: tags ?? null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -158,7 +160,10 @@ export class ElementService {
         userId,
       );
 
-      return createdElement;
+      return {
+        message: 'Element created successfully',
+        element: createdElement,
+      };
     } catch (error) {
       throw new BadRequestException('Error creating element');
     }
@@ -190,6 +195,7 @@ export class ElementService {
         description,
         inputK,
         outputN,
+        tags,
       } = elementDto;
 
       if (!structureId || !name) {
@@ -224,6 +230,7 @@ export class ElementService {
             description: description ?? null,
             inputK: inputK ?? null,
             outputN: outputN ?? null,
+            tags: tags ?? null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -304,6 +311,7 @@ export class ElementService {
       description,
       inputK,
       outputN,
+      tags,
     } = updateElementDto;
 
     if (
@@ -338,6 +346,7 @@ export class ElementService {
           description,
           inputK,
           outputN,
+          tags,
           updatedAt: new Date(),
         },
       });
