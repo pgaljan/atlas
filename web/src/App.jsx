@@ -16,6 +16,7 @@ import PublicRoute from './routes/PublicRoute';
 import PrivateRoute from './routes/PrivateRoute';
 import AdminPrivateRoute from './routes/AdminPrivateRoute';
 import APIKeyPrivateRoute from './routes/APIKeyPrivateRoute';
+import { setFaviconWithFallback } from './utils/faviconFallback';
 
 // Lazy imports
 const NotFound = lazy(() => import('./components/404-notfound/NotFound'));
@@ -168,6 +169,7 @@ const App = () => {
           const baseUrl = window.location.origin;
           const resolvedLogoUrl = logoUrl.startsWith('http') ? logoUrl : `${baseUrl}${logoUrl}`;
           const faviconUrl = `${resolvedLogoUrl}?v=${Date.now()}`;
+          setFaviconWithFallback(faviconUrl, '/assets/atlas-logo.png');
 
           const existingIcons = document.querySelectorAll("link[rel~='icon']");
           existingIcons.forEach((icon) => icon.remove());

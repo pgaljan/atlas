@@ -149,11 +149,11 @@ const StructureCard = () => {
             </div> */}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {structures.map((structure) => (
+            {structures?.map((structure) => (
               <Card
                 key={structure.id}
                 title={structure.title || 'Untitled'}
-                imageUrl={structure.imageUrl || '/assets/markmap-2.png'}
+                imageUrl={structure.imageUrl || '/assets/markmap-image.png'}
                 footerTitle={`Modified ${formatRelativeTime(structure.updatedAt)}`}
                 username={username}
                 permission={
