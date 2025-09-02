@@ -8,8 +8,8 @@ const TermsOfService = () => {
   const appName = useSelector((state) => state.appSettings.appSettings?.appName || 'Atlas');
 
   const [content, setContent] = useState('');
-  const [lastUpdatedDate, setLastUpdatedDate] = useState('24 April 2025');
-  const [isLoading, setIsLoading] = useState(true);
+  const [lastUpdatedDate, setLastUpdatedDate] = useState('N/A');
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -34,9 +34,9 @@ const TermsOfService = () => {
   });
 
   return (
-    <div className="relative flex flex-col h-screen bg-white shadow rounded-[18px] p-8">
+    <div className=" flex flex-col min-h-screen bg-white shadow rounded-[18px] p-8 m-2">
       {isLoading ? (
-        <LoadingSpinner mode="overlay" minHeight="h-full" message="Loading Terms of Service..." />
+        <LoadingSpinner mode="overlay" minHeight="h-screen" message="Loading Terms of Service..." />
       ) : (
         <>
           <h1 className="text-2xl font-bold mb-4">{appName} Terms of Service</h1>
@@ -46,7 +46,7 @@ const TermsOfService = () => {
             </span>
           </div>
           <div
-            className="prose max-w-none flex-1 overflow-auto"
+            className="prose max-w-none"
             style={{ minHeight: '200px' }}
             dangerouslySetInnerHTML={{ __html: content }}
           />

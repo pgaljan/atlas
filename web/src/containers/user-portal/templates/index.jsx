@@ -59,8 +59,13 @@ const Templates = () => {
       case 'Delete Template':
         return handleDelete(template);
 
-      case 'Duplicate Template':
-        dispatch(duplicateStructureTemplate({ templateId: template.id }))
+      case 'Duplicate Template': {
+        const baseName = template.name.replace(/\s*\(\d+\)$/, '')?.trim();
+        const count = templates.filter((t) => t.name.startsWith(baseName)).length;
+        const newName = `${baseName} (${count})`;
+        dispatch(
+          duplicateStructureTemplate({ templateId: template.id, overrideData: { name: newName } }),
+        )
           .unwrap()
           .then(() => {
             cogoToast.success('Template duplicated successfully!');
@@ -70,6 +75,7 @@ const Templates = () => {
             cogoToast.error(err.message || 'Failed to duplicate template.');
           });
         return;
+      }
 
       case 'Utilize Template':
         dispatch(
