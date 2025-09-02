@@ -1,68 +1,69 @@
-import cogoToast from "@successtar/cogo-toast"
-import { useState } from "react"
-import { IoTrash } from "react-icons/io5"
-import { useDispatch } from "react-redux"
-import Cookies from "js-cookie"
-import { Link } from "react-router-dom"
-import useOutsideClick from "../../hooks/useOutsideClick"
-import { deleteStructure } from "../../redux/slices/structures"
-import DeleteModal from "../modals/DeleteModal"
-import RendererModal from "../modals/RendererModal"
-import Avatar from "react-avatar"
-import { encryptPermission } from "../../utils/encryptionCrypto"
+import cogoToast from '@successtar/cogo-toast';
+import { useState } from 'react';
+import { IoTrash } from 'react-icons/io5';
+import { useDispatch } from 'react-redux';
+import Cookies from 'js-cookie';
+import { Link } from 'react-router-dom';
+import useOutsideClick from '../../hooks/useOutsideClick';
+import { deleteStructure } from '../../redux/slices/structures';
+import DeleteModal from '../modals/DeleteModal';
+import RendererModal from '../modals/RendererModal';
+import Avatar from 'react-avatar';
+import { encryptPermission } from '../../utils/encryptionCrypto';
+import FallbackImage from '../../containers/common/FallbackImage';
 
 const Card = ({
   title,
   imageUrl,
   footerTitle,
   footerSubtitle,
-  customTextColor = "text-custom-main",
+  customTextColor = 'text-custom-main',
   username,
   structureId,
   onSuccess,
-  structureType = "default",
+  structureType = 'default',
   permission,
-  owner, // 👈 now used for showing shared info
+  owner,
 }) => {
-  const dispatch = useDispatch()
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [dropdownVisible, setDropdownVisible] = useState(false)
-  const [rendererModalVisible, setRendererModalVisible] = useState(false)
-  const [deleting, setDeleting] = useState(false)
+  const dispatch = useDispatch();
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [dropdownVisible, setDropdownVisible] = useState(false);
+  const [rendererModalVisible, setRendererModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const handleDeleteStructure = () => {
-    setDeleteModalVisible(true)
-    setDropdownVisible(false)
-  }
+    setDeleteModalVisible(true);
+    setDropdownVisible(false);
+  };
 
   const handleConfirmDelete = () => {
-    setDeleting(true)
+    setDeleting(true);
     dispatch(deleteStructure(structureId))
       .then(() => {
-        cogoToast.success("Structure deleted successfully!")
-        setDeleteModalVisible(false)
-        onSuccess()
+        cogoToast.success('Structure deleted successfully!');
+        setDeleteModalVisible(false);
+        onSuccess();
       })
       .catch(() => {
-        cogoToast.error("Failed to delete the structure.")
+        cogoToast.error('Failed to delete the structure.');
       })
       .finally(() => {
-        setDeleting(false)
-      })
-  }
+        setDeleting(false);
+      });
+  };
 
-  const dropdownRef = useOutsideClick(() => setDropdownVisible(false))
+  const dropdownRef = useOutsideClick(() => setDropdownVisible(false));
 
-  const handleRendererSelect = renderer => {
-    setRendererModalVisible(false)
+  const handleRendererSelect = (renderer) => {
+    setRendererModalVisible(false);
     try {
-      const enc = encryptPermission(permission)
-      const q = encodeURIComponent(enc)
-      window.location.href = `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${q}`
+      const enc = encryptPermission(permission);
+      const q = encodeURIComponent(enc);
+      window.location.href = `/app/s/${username}/${structureId}?renderer=${renderer}&permission=${q}`;
     } catch (err) {
-      cogoToast.error("Failed to open renderer (encryption error).")
+      cogoToast.error('Failed to open renderer (encryption error).');
     }
-  }
+  };
 
   return (
     <>
@@ -72,9 +73,10 @@ const Card = ({
             onClick={() => setRendererModalVisible(true)}
             className="w-full h-48 bg-[radial-gradient(circle,rgba(0,0,0,0.1)_1px,transparent_1px)] bg-[size:14px_14px]"
           >
-            <img
-              src={imageUrl}
+            <FallbackImage
+              src={imageUrl}  
               alt={title}
+              fallback="/assets/markmap-2.png"
               className="w-full h-full object-cover rounded-t-lg"
               loading="lazy"
             />
@@ -94,50 +96,39 @@ const Card = ({
               <Link to="#" className="flex items-center space-x-2">
                 <Avatar
                   name={
-                    permission !== "owner"
-                      ? owner?.displayName || "Unknown Owner"
-                      : Cookies.get("displayName") || "User"
+                    permission !== 'owner'
+                      ? owner?.displayName || 'Unknown Owner'
+                      : Cookies.get('displayName') || 'User'
                   }
                   size="36"
                   round={true}
                   className="text-lg"
                 />
                 <div>
-                  <p className="text-sm font-medium text-custom-main truncate">
-                    {footerTitle}
-                  </p>
-                  {permission !== "owner" ? (
+                  <p className="text-sm font-medium text-custom-main truncate">{footerTitle}</p>
+                  {permission !== 'owner' ? (
                     <>
                       <p className="text-xs text-gray-500 truncate">
-                        Shared by {owner?.displayName || "Unknown"}
+                        Shared by {owner?.displayName || 'Unknown'}
                       </p>
                       {owner?.email && (
-                        <p
-                          className="text-xs text-gray-400 truncate italic"
-                          title={owner.email}
-                        >
+                        <p className="text-xs text-gray-400 truncate italic" title={owner.email}>
                           ✉ {owner.email}
                         </p>
                       )}
                     </>
                   ) : (
-                    <p className="text-xs text-gray-500 truncate">
-                      {footerSubtitle}
-                    </p>
+                    <p className="text-xs text-gray-500 truncate">{footerSubtitle}</p>
                   )}
                 </div>
               </Link>
 
               <div className="relative z-20" ref={dropdownRef}>
                 <div
-                  onClick={() => setDropdownVisible(prev => !prev)}
+                  onClick={() => setDropdownVisible((prev) => !prev)}
                   className="w-8 h-8 rounded-full bg-custom-main text-white flex items-center justify-center cursor-pointer"
                 >
-                  <svg
-                    className="w-5 h-5"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                     <circle cx="10" cy="4" r="2" />
                     <circle cx="10" cy="10" r="2" />
                     <circle cx="10" cy="16" r="2" />
@@ -181,7 +172,7 @@ const Card = ({
       {deleteModalVisible && (
         <DeleteModal
           isOpen={deleteModalVisible}
-          title={"Structure"}
+          title={'Structure'}
           onClose={() => setDeleteModalVisible(false)}
           onConfirm={handleConfirmDelete}
           loading={deleting}
@@ -195,7 +186,7 @@ const Card = ({
         structureType={structureType}
       />
     </>
-  )
-}
+  );
+};
 
-export default Card
+export default Card;

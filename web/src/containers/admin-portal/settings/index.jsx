@@ -8,6 +8,7 @@ import {
   sendTestEmail,
 } from '../../../redux/slices/app-settings';
 import { uploadAnonymousFile } from '../../../redux/slices/upload-files';
+import FallbackImage from '../../common/FallbackImage';
 
 const Settings = () => {
   const dispatch = useDispatch();
@@ -129,11 +130,12 @@ const Settings = () => {
 
         <section className="bg-white p-6 rounded-xl shadow-sm flex flex-col sm:flex-row justify-between items-center gap-6 mb-8">
           <div className="flex items-center gap-4">
-            <img
+            <FallbackImage
               src={logoUrl}
               alt="App Logo"
               className="w-24 h-24 rounded-full p-2 object-cover border"
             />
+
             <div>
               <p className="text-lg font-medium">Current Logo</p>
               <p className="text-sm text-gray-500">Recommended: 200x200 PNG</p>
