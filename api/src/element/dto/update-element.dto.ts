@@ -1,5 +1,5 @@
 import { Type } from 'class-transformer';
-import { IsOptional, IsString, IsIn, IsInt } from 'class-validator';
+import { IsOptional, IsString, IsIn, IsInt, IsObject } from 'class-validator';
 
 export class UpdateElementDto {
   @IsString()
@@ -56,6 +56,10 @@ export class UpdateElementDto {
   @IsOptional()
   @IsInt()
   outputN?: number;
+
+  @IsOptional()
+  @IsObject()
+  tags?: { [key: string]: string };
 
   @IsOptional()
   @Type(() => Boolean)

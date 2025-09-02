@@ -6,6 +6,7 @@ import {
   IsArray,
   ValidateNested,
   IsIn,
+  IsObject,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
@@ -61,6 +62,10 @@ export class CreateElementDto {
   @IsOptional()
   @IsInt()
   outputN?: number;
+
+  @IsOptional()
+  @IsObject()
+  tags?: Record<string, string>;
 
   @IsOptional()
   @IsString()
