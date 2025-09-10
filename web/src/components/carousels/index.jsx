@@ -9,6 +9,7 @@ import { twMerge } from "tailwind-merge"
 import { restoreFullFromUrl } from "../../redux/slices/restore-backups"
 import { getStructure } from "../../redux/slices/structures"
 import RendererModal from "../modals/RendererModal"
+import FallbackImage from "../../containers/common/FallbackImage"
 
 const cn = (...inputs) => twMerge(clsx(inputs))
 
@@ -92,12 +93,10 @@ const Carousel = ({ data = [], onClose, onUseTemplate }) => {
 
           {/* Preview */}
           <div className="w-full h-[300px] md:h-[400px] bg-gray-200">
-            <img
-              src={
-                sortedData[currentIndex]?.thumbnailUrl ||
-                sortedData[currentIndex]?.fileUrl
-              }
+             <FallbackImage
+              src={sortedData[currentIndex]?.thumbnailUrl || sortedData[currentIndex]?.fileUrl}
               alt="Banner"
+              fallback="/assets/atlas-logo.png"
               className="w-full h-full object-cover"
             />
           </div>

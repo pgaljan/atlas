@@ -9,6 +9,7 @@ export default defineConfig(({ mode }) => ({
       },
     }),
   ],
+   assetsInclude: ["**/*.ttf", "**/*.woff", "**/*.woff2"],
   resolve: {
     alias: {
       "@": "/src",
@@ -21,6 +22,10 @@ export default defineConfig(({ mode }) => ({
     "process.env": {},
   },
   server: {
-    allowedHosts: ['dev.atlasflow.co'],
+    // allowedHosts: ['dev.atlasflow.co'],
+    fs: {
+      allow: ['..'],
+      strict: false
+    },
   },
 }));

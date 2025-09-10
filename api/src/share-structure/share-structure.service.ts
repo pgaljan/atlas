@@ -19,7 +19,24 @@ export class StructureSharesService {
     private readonly mailerService: MailerService,
   ) {}
 
-  // Helper to assert current user is owner of structure
+  private async logAudit(
+    action: string,
+    element: string,
+    elementId: string,
+    details: object,
+    userId?: string,
+  ) {
+    await this.prisma.auditLog.create({
+      data: {
+        action,
+        element,
+        elementId,
+        details,
+        userId: userId || null,
+      },
+    });
+  }
+
   private async ensureIsOwner(structureId: string, userId: string) {
     const structure = await this.prisma.structure.findUnique({
       where: { id: structureId },
@@ -86,7 +103,7 @@ export class StructureSharesService {
 
     const structure = await this.prisma.structure.findUnique({
       where: { id: structureId },
-      select: { ownerId: true },
+      select: { ownerId: true, name: true },
     });
     if (structure.ownerId === userId) {
       throw new BadRequestException('User is already the owner');
@@ -96,28 +113,78 @@ export class StructureSharesService {
       where: { structureId_userId: { structureId, userId } },
     });
 
+    let result;
     if (existing) {
-      return this.prisma.structureShare.update({
+      result = await this.prisma.structureShare.update({
         where: { id: existing.id },
         data: { permission },
       });
+
+      await this.logAudit(
+        'UPDATE_SHARE_INVITATION',
+        'StructureShare',
+        result.id,
+        {
+          structureId,
+          structureName: structure.name,
+          userId,
+          permission,
+          previousPermission: existing.permission,
+        },
+        currentUserId,
+      );
+    } else {
+      result = await this.prisma.structureShare.create({
+        data: { structureId, userId, permission },
+        include: { user: true },
+      });
+
+      await this.logAudit(
+        'CREATE_SHARE',
+        'StructureShare',
+        result.id,
+        {
+          structureId,
+          structureName: structure.name,
+          userId,
+          permission,
+        },
+        currentUserId,
+      );
     }
 
-    return this.prisma.structureShare.create({
-      data: { structureId, userId, permission },
-      include: { user: true },
-    });
+    return result;
   }
 
   async removeShare(shareId: string, currentUserId: string) {
     const share = await this.prisma.structureShare.findUnique({
       where: { id: shareId },
+      include: {
+        structure: {
+          select: { name: true },
+        },
+      },
     });
     if (!share) throw new NotFoundException('Share not found');
 
     await this.ensureIsOwner(share.structureId, currentUserId);
 
-    return this.prisma.structureShare.delete({ where: { id: shareId } });
+    await this.prisma.structureShare.delete({ where: { id: shareId } });
+
+    await this.logAudit(
+      'DELETE_SHARE',
+      'StructureShare',
+      shareId,
+      {
+        structureId: share.structureId,
+        structureName: share.structure.name,
+        userId: share.userId,
+        permission: share.permission,
+      },
+      currentUserId,
+    );
+
+    return { message: 'Share removed successfully' };
   }
 
   async updateShare(
@@ -127,6 +194,10 @@ export class StructureSharesService {
   ) {
     const share = await this.prisma.structureShareInvitation.findUnique({
       where: { id: shareId },
+      include: {
+        invitee: { select: { id: true, email: true, displayName: true } },
+        inviter: { select: { id: true, email: true, displayName: true } },
+      },
     });
     if (!share) throw new NotFoundException('Share not found');
 
@@ -138,10 +209,31 @@ export class StructureSharesService {
       );
     }
 
-    return this.prisma.structureShareInvitation.update({
+    const updatedShare = await this.prisma.structureShareInvitation.update({
       where: { id: shareId },
       data: { permission: dto.permission },
     });
+    await this.logAudit(
+      'UPDATE_SHARE_ROLE',
+      'StructureShareInvitation',
+      shareId,
+      {
+        structureId: share.structureId,
+        previousPermission: share.permission,
+        updatedPermission: dto.permission,
+        invitee: share.invitee
+          ? {
+              id: share.invitee.id,
+              email: share.invitee.email,
+              displayName: share.invitee.displayName,
+            }
+          : { email: share.inviteeEmail || null },
+        inviter: share.inviter || null,
+      },
+      currentUserId,
+    );
+
+    return updatedShare;
   }
 
   async transferOwnership(
@@ -165,7 +257,7 @@ export class StructureSharesService {
     });
     if (!newOwner) throw new NotFoundException('New owner user not found');
 
-    return this.prisma.$transaction(async (tx) => {
+    const result = await this.prisma.$transaction(async (tx) => {
       await tx.structure.update({
         where: { id: structureId },
         data: { ownerId: newOwnerUserId },
@@ -187,12 +279,25 @@ export class StructureSharesService {
 
       return { success: true };
     });
+
+    await this.logAudit(
+      'TRANSFER_OWNERSHIP',
+      'Structure',
+      structureId,
+      {
+        structureName: structure.name,
+        previousOwnerId: currentUserId,
+        newOwnerId: newOwnerUserId,
+      },
+      currentUserId,
+    );
+
+    return result;
   }
 
   async createInvitation(dto: InviteShareDto, inviterUserId: string) {
     const { structureId, inviteeEmail, permission, message } = dto;
 
-    // Ensure inviter is owner (throws if not)
     const structure = await this.ensureIsOwner(structureId, inviterUserId);
 
     const inviter = await this.prisma.user.findUnique({
@@ -200,7 +305,11 @@ export class StructureSharesService {
     });
     if (!inviter) throw new NotFoundException('Inviter not found');
 
-    // ✅ Check invitee must already exist
+    if (inviteeEmail.toLowerCase() === inviter.email.toLowerCase()) {
+      throw new BadRequestException(
+        'You cannot invite yourself to a structure you already own or have access to.',
+      );
+    }
     const existingUser = await this.prisma.user.findUnique({
       where: { email: inviteeEmail },
     });
@@ -280,7 +389,28 @@ export class StructureSharesService {
       return createdInv;
     });
 
-    // Send email
+    await this.logAudit(
+      'CREATE_INVITATION',
+      'StructureShareInvitation',
+      inv.id,
+      {
+        structureId,
+        structureName: structure.name,
+        inviteeEmail,
+        permission,
+        inviter: {
+          id: inviter.id,
+          email: inviter.email,
+          displayName: inviter.displayName,
+        },
+        status: inv.status,
+        invitedAt: inv.createdAt,
+        expirationDate: inv.expiresAt || null,
+        message: inv.message || null,
+      },
+      inviterUserId,
+    );
+
     try {
       await this.mailerService.sendStructureShareInvitation(
         inviteeEmail,
@@ -294,6 +424,7 @@ export class StructureSharesService {
 
     return inv;
   }
+
   async acceptInvitation(token: string, acceptingUserEmail: string) {
     const invitation = await this.prisma.structureShareInvitation.findUnique({
       where: { token },
@@ -417,9 +548,23 @@ export class StructureSharesService {
           inviteeId: acceptingUser.id,
         },
       });
-    }); // end transaction
+    });
+    await this.logAudit(
+      'ACCEPT_INVITATION',
+      'StructureShareInvitation',
+      invitation.id,
+      {
+        structureId: invitation.structureId,
+        invitedAt: invitation.createdAt,
+        structureName: invitation.structure.name,
+        permission: invitation.permission,
+        inviterId: invitation.inviterId,
+        inviterEmail: invitation.inviter?.email || null,
+        inviteeEmail: invitation.inviteeEmail,
+      },
+      acceptingUser.id,
+    );
 
-    // Fetch owner username (after tx) and return payload
     const owner = await this.prisma.user.findUnique({
       where: { id: invitation.structure.ownerId },
       select: { username: true },
@@ -437,6 +582,11 @@ export class StructureSharesService {
     const { structureId, permission, expiresAt } = dto;
     await this.ensureIsOwner(structureId, currentUserId);
 
+    const structure = await this.prisma.structure.findUnique({
+      where: { id: structureId },
+      select: { name: true },
+    });
+
     const token = uuidv4();
 
     const payload: any = {
@@ -447,7 +597,24 @@ export class StructureSharesService {
     };
     if (expiresAt) payload.expiresAt = new Date(expiresAt);
 
-    return this.prisma.structureShareLink.create({ data: payload });
+    const shareLink = await this.prisma.structureShareLink.create({
+      data: payload,
+    });
+
+    await this.logAudit(
+      'CREATE_SHARE_LINK',
+      'StructureShareLink',
+      shareLink.id,
+      {
+        structureId,
+        structureName: structure.name,
+        permission,
+        expiresAt: payload.expiresAt,
+      },
+      currentUserId,
+    );
+
+    return shareLink;
   }
 
   async validateShareLink(token: string) {
@@ -469,13 +636,33 @@ export class StructureSharesService {
   async revokeShareLink(id: string, currentUserId: string) {
     const link = await this.prisma.structureShareLink.findUnique({
       where: { id },
+      include: {
+        structure: {
+          select: { name: true },
+        },
+      },
     });
     if (!link) throw new NotFoundException('Link not found');
     await this.ensureIsOwner(link.structureId, currentUserId);
-    return this.prisma.structureShareLink.update({
+
+    const updatedLink = await this.prisma.structureShareLink.update({
       where: { id },
       data: { isActive: false },
     });
+
+    await this.logAudit(
+      'REVOKE_SHARE_LINK',
+      'StructureShareLink',
+      id,
+      {
+        structureId: link.structureId,
+        structureName: link.structure.name,
+        permission: link.permission,
+      },
+      currentUserId,
+    );
+
+    return updatedLink;
   }
 
   async getPendingInvitations(structureId: string, currentUserId: string) {
@@ -531,6 +718,19 @@ export class StructureSharesService {
     await this.prisma.structureShareInvitation.delete({
       where: { id: invitationId },
     });
+
+    await this.logAudit(
+      'DELETE_INVITATION',
+      'StructureShareInvitation',
+      invitationId,
+      {
+        structureId: invitation.structureId,
+        structureName: invitation.structure.name,
+        inviteeEmail: invitation.inviteeEmail,
+        permission: invitation.permission,
+      },
+      currentUserId,
+    );
 
     return { message: 'Invitation deleted successfully' };
   }

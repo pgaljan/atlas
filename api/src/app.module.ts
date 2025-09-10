@@ -24,10 +24,12 @@ import { TeamMemberModule } from './team-member/team-member.module';
 import { TermsOfServiceModule } from './terms-of-service/terms-of-service.module';
 import { UserModule } from './user/user.module';
 import { ShareStructureModule } from './share-structure/share-structure.module';
-
+import { TelemetryModule } from './telemetry/telemetry.module';
+import { ScheduleModule } from '@nestjs/schedule';
 @Module({
   imports: [
     ConfigModule.forRoot(),
+    ScheduleModule.forRoot(),
     UserModule,
     AuthModule,
     PrismaModule,
@@ -52,6 +54,7 @@ import { ShareStructureModule } from './share-structure/share-structure.module';
     AppSettingsModule,
     StructureTemplatesModule,
     ShareStructureModule,
+    TelemetryModule,
   ],
   controllers: [AppController],
   providers: [AppService],

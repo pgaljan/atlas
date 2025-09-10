@@ -40,6 +40,34 @@ export class AuthController {
     }
   }
 
+  @Get('validate-token')
+  async validateToken(@Req() req: ExpressRequest) {
+    const authHeader = req.headers.authorization as string | undefined;
+    const queryToken = (req.query?.token as string) || undefined;
+
+    const token = authHeader?.startsWith('Bearer ')
+      ? authHeader?.split(' ')[1]
+      : queryToken;
+
+    if (!token) {
+      throw new BadRequestException(
+        'Missing token. Provide Authorization: Bearer <token> or ?token=',
+      );
+    }
+
+    try {
+      const result = await this.authService.validateToken(token);
+      return {
+        valid: true,
+        user: result.user,
+        expiresAt: result.expiresAt,
+      };
+    } catch (error) {
+      if (error.getStatus) throw error;
+      throw new InternalServerErrorException('Token validation failed');
+    }
+  }
+
   @Post('login')
   @UseGuards(LocalAuthGuard)
   async login(@Request() req: ExpressRequest) {
@@ -78,6 +106,7 @@ export class AuthController {
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@Request() req: ExpressRequest) {
+    console.log('logout req.user =', req.user);
     try {
       await this.authService.logout(req.user);
       return {
@@ -117,7 +146,7 @@ export class AuthController {
     try {
       await this.authService.githubLogin(req.user, res);
     } catch (error) {
-      console.log(error)
+      console.log(error);
       return res.status(HttpStatus.INTERNAL_SERVER_ERROR).json({
         message: 'GitHub authentication failed',
         error: error.message,

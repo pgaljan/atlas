@@ -4,6 +4,7 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
@@ -25,7 +26,14 @@ export class AuthService {
     private configService: ConfigService,
     private invitationService: InvitationService,
   ) {}
+  private readonly TOKEN_KEYS = {
+    ADMIN: 'admin_access_token',
+    USER: 'user_access_token',
+  };
 
+  private getTokenKey(user: { isAdmin: boolean }): string {
+    return user.isAdmin ? this.TOKEN_KEYS.ADMIN : this.TOKEN_KEYS.USER;
+  }
   // Audit log method
   private async logAudit(
     action: string,
@@ -151,6 +159,75 @@ export class AuthService {
     }
   }
 
+  async validateToken(token: string) {
+    if (!token) throw new BadRequestException('Token is required');
+
+    try {
+      const payload = await this.jwtService.verifyAsync(token).catch((err) => {
+        if (
+          err?.name === 'TokenExpiredError' ||
+          /expired/i.test(err?.message)
+        ) {
+          throw new UnauthorizedException('Token expired');
+        }
+        throw new UnauthorizedException('Invalid token');
+      });
+
+      const userId = (payload as any).sub;
+      if (!userId) throw new UnauthorizedException('Invalid token payload');
+
+      const user = await this.prismaService.user.findUnique({
+        where: { id: String(userId) },
+        include: { role: true },
+      });
+
+      if (!user) throw new NotFoundException('User not found');
+      if (user.deletedAt) {
+        throw new ConflictException('This account has been deactivated');
+      }
+
+      const tokenKey = this.getTokenKey(user);
+      const tokenRecord = await this.prismaService.token.findFirst({
+        where: { value: token, key: tokenKey },
+      });
+
+      if (!tokenRecord)
+        throw new UnauthorizedException('Token not found or revoked');
+
+      if (
+        tokenRecord.expiresAt &&
+        new Date(tokenRecord.expiresAt) <= new Date()
+      ) {
+        throw new UnauthorizedException('Token expired');
+      }
+
+      return {
+        user: {
+          id: user.id,
+          email: user.email,
+          username: user.username,
+          displayName: user.displayName,
+          workspaceId: user.defaultWorkspaceId,
+          role: user.role,
+          isAdmin: user.isAdmin,
+        },
+        expiresAt: tokenRecord.expiresAt,
+      };
+    } catch (error) {
+      if (
+        error instanceof BadRequestException ||
+        error instanceof UnauthorizedException ||
+        error instanceof NotFoundException ||
+        error instanceof ConflictException
+      ) {
+        throw error;
+      }
+      throw new InternalServerErrorException(
+        'An error occurred while validating token',
+      );
+    }
+  }
+
   // Validate user method
   async validateUser(email: string, password: string) {
     try {
@@ -189,11 +266,12 @@ export class AuthService {
       const accessToken = this.jwtService.sign(payload);
       const expiresAt = new Date();
       expiresAt.setHours(expiresAt.getHours() + 24);
+      const tokenKey = this.getTokenKey(user);
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
             userId: user.id,
-            key: 'access_token',
+            key: tokenKey,
           },
         },
       });
@@ -206,13 +284,13 @@ export class AuthService {
         await this.prismaService.token.create({
           data: {
             userId: user.id,
-            key: 'access_token',
+            key: tokenKey,
             value: accessToken,
             expiresAt,
           },
         });
       }
-      
+
       await this.logAudit(
         'User Login',
         'User',
@@ -260,12 +338,12 @@ export class AuthService {
         where: { email },
         data: { password: hashedPassword },
       });
-
+      const tokenKey = this.getTokenKey(user);
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
             userId: user.id,
-            key: 'access_token',
+            key: tokenKey,
           },
         },
       });
@@ -285,7 +363,7 @@ export class AuthService {
       await this.prismaService.token.create({
         data: {
           userId: user.id,
-          key: 'access_token',
+          key: tokenKey,
           value: newAccessToken,
           expiresAt,
         },
@@ -315,13 +393,14 @@ export class AuthService {
 
   // Logout method
   async logout(user: any) {
+    const tokenKey = this.getTokenKey(user);
     try {
       // Find and delete the access token for the user
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
             userId: user.id,
-            key: 'access_token',
+            key: tokenKey,
           },
         },
       });
@@ -335,9 +414,13 @@ export class AuthService {
       }
 
       // Optionally, you can also log the audit for logout
-      await this.logAudit('User Logout', 'User', user.id, {
-        email: user.email,
-      });
+      await this.logAudit(
+        'User Logout',
+        'User',
+        user.id, // elementId
+        { email: user.email },
+        user.id, // userId
+      );
     } catch (error) {
       throw new InternalServerErrorException(
         'An unexpected error occurred during logout',

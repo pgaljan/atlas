@@ -37,7 +37,7 @@ const CustomAdminMenu = () => {
     localStorage.clear()
     sessionStorage.clear()
 
-    window.location.href = "/"
+    window.location.href = "/admin-portal"
   }
 
   return (

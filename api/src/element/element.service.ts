@@ -148,12 +148,14 @@ export class ElementService {
 
       // 5) Audit log
       await this.logAudit(
-        'CREATE',
+        'CREATE_ELEMENT',
         'Element',
         createdElement.id,
         {
           structureId,
           recordId,
+          name,
+          type,
           parentId,
           isExpanded: isExpanded ?? true,
         },
@@ -244,12 +246,14 @@ export class ElementService {
 
         // 4) Audit log for this specific nested child
         await this.logAudit(
-          'CREATE',
+          'CREATE_NESTED_ELEMENT',
           'Element',
           createdElement.id,
           {
             structureId,
             parentId,
+            name,
+            type,
             recordId,
             isExpanded: isExpanded ?? true,
           },
