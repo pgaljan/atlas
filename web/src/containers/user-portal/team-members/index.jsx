@@ -1,33 +1,31 @@
-import cogoToast from "@successtar/cogo-toast";
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import GenericTable from "../../../components/generic-table/GenericTable";
-import InputField from "../../../components/input-field/InputField";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import ModalComponent from "../../../components/modals/Modal";
-import { teamMembersConfig } from "../../../constants/index";
-import { fetchTeamMembers } from "../../../redux/slices/team-memebers";
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import GenericTable from '../../../components/generic-table/GenericTable';
+import InputField from '../../../components/input-field/InputField';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import ModalComponent from '../../../components/modals/Modal';
+import { teamMembersConfig } from '../../../constants/index';
+import { fetchTeamMembers } from '../../../redux/slices/team-memebers';
 
-const TeamMembersPage = ({ onSubmit }) => {
+const TeamMembersPage = () => {
   const dispatch = useDispatch();
-  const workspaceId = Cookies.get("workspaceId");
+  const workspaceId = Cookies.get('workspaceId');
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedMember, setSelectedMember] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [formData, setFormData] = useState({ name: "", email: "" });
+  const [formData, setFormData] = useState({ name: '', email: '' });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-   const [deleting, setDeleting] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
-  
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!workspaceId) {
-          console.error("Workspace ID is not available in cookies.");
+          console.error('Workspace ID is not available in cookies.');
           return;
         }
         setIsLoading(true);
@@ -36,24 +34,24 @@ const TeamMembersPage = ({ onSubmit }) => {
         // Map the fetched data to match the existing teamMembers state structure
         const formattedMembers = result.map((member) => ({
           id: member.id,
-          name: member.user?.displayName || member.user?.username || "Unknown",
-          email: member.user?.email || "No email",
+          name: member.user?.displayName || member.user?.username || 'Unknown',
+          email: member.user?.email || 'No email',
           userType: member.role,
           lastAccess: member.createdAt,
-          status: member.user?.status || "N/A",
-          joinDate: new Date(member.createdAt).toLocaleString("en-US", {
-            month: "2-digit",
-            day: "2-digit",
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
+          status: member.user?.status || 'N/A',
+          joinDate: new Date(member.createdAt).toLocaleString('en-US', {
+            month: '2-digit',
+            day: '2-digit',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
             hour12: true,
           }),
         }));
         setTeamMembers(formattedMembers);
       } catch (err) {
-        console.error("Error fetching team members:", err);
-        setError(err?.message || "Failed to fetch team members.");
+        console.error('Error fetching team members:', err);
+        setError(err?.message || 'Failed to fetch team members.');
         cogoToast.error(error);
       } finally {
         setIsLoading(false);
@@ -73,8 +71,8 @@ const TeamMembersPage = ({ onSubmit }) => {
   const saveEdit = () => {
     setTeamMembers((prevMembers) =>
       prevMembers.map((member) =>
-        member.id === selectedMember.id ? { ...member, ...formData } : member
-      )
+        member.id === selectedMember.id ? { ...member, ...formData } : member,
+      ),
     );
     setIsEditModalOpen(false);
   };
@@ -86,39 +84,38 @@ const TeamMembersPage = ({ onSubmit }) => {
   };
 
   const confirmDelete = async () => {
-  if (!selectedMember) return;
+    if (!selectedMember) return;
 
-  setDeleting(true);
+    setDeleting(true);
 
-  try {
-    await dispatch(
-      deleteInvitation({
-        invitationId: selectedMember.id,
-        workspaceId,
-      })
-    ).unwrap();
+    try {
+      await dispatch(
+        deleteInvitation({
+          invitationId: selectedMember.id,
+          workspaceId,
+        }),
+      ).unwrap();
 
-    cogoToast.success("Invitation deleted successfully!");
+      cogoToast.success('Invitation deleted successfully!');
 
-    setTeamMembers((prevMembers) =>
-      prevMembers.filter((member) => member.id !== selectedMember.id)
-    );
-  } catch (err) {
-    cogoToast.error(err?.message || "Failed to delete invitation.");
-  } finally {
-    setDeleting(false);
-    setIsDeleteModalOpen(false);
-  }
-};
-
+      setTeamMembers((prevMembers) =>
+        prevMembers.filter((member) => member.id !== selectedMember.id),
+      );
+    } catch (err) {
+      cogoToast.error(err?.message || 'Failed to delete invitation.');
+    } finally {
+      setDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
 
   // Attach Handlers to Actions
   const updatedTeamMembersConfig = {
     ...teamMembersConfig,
     actions: teamMembersConfig.actions.map((action) => {
-      if (action.tooltip === "Edit") {
+      if (action.tooltip === 'Edit') {
         return { ...action, onClick: handleEdit };
-      } else if (action.tooltip === "Delete") {
+      } else if (action.tooltip === 'Delete') {
         return { ...action, onClick: handleDelete };
       }
       return action;
@@ -126,7 +123,7 @@ const TeamMembersPage = ({ onSubmit }) => {
   };
 
   const handleKeyPress = (e) => {
-    if (e?.key === "Enter") {
+    if (e?.key === 'Enter') {
       saveEdit();
     }
   };
@@ -136,12 +133,11 @@ const TeamMembersPage = ({ onSubmit }) => {
   }
 
   return (
-    <Layout onSubmit={onSubmit}>
+    <>
       <div className="p-2">
         <GenericTable {...updatedTeamMembersConfig} data={teamMembers} />
       </div>
 
-      {/* Edit Modal using ModalComponent */}
       <ModalComponent
         isOpen={isEditModalOpen}
         onClose={() => setIsEditModalOpen(false)}
@@ -167,15 +163,14 @@ const TeamMembersPage = ({ onSubmit }) => {
         />
       </ModalComponent>
 
-      {/* Delete Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        title={selectedMember?.name || "this member"}
+        title={selectedMember?.name || 'this member'}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         loading={deleting}
       />
-    </Layout>
+    </>
   );
 };
 

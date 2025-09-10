@@ -1,7 +1,8 @@
-import AdminHeader from "./AdminHeader";
-import AdminSidebar from "./AdminSidebar";
+import { Outlet } from 'react-router-dom';
+import AdminHeader from './AdminHeader';
+import AdminSidebar from './AdminSidebar';
 
-const AdminLayout = ({ children }) => {
+const AdminLayout = () => {
   return (
     <div className="flex flex-col h-screen">
       <AdminHeader />
@@ -9,7 +10,9 @@ const AdminLayout = ({ children }) => {
         <div className="w-64">
           <AdminSidebar />
         </div>
-        <main className="flex-1 bg-gray-200 p-2 overflow-auto">{children}</main>
+        <main className="flex-1 bg-gray-200 p-2 overflow-auto">
+          <Outlet />
+        </main>
       </div>
     </div>
   );

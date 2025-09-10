@@ -1,37 +1,36 @@
-import cogoToast from "@successtar/cogo-toast"
-import Cookies from "js-cookie"
-import { useEffect, useRef, useState } from "react"
-import { FaEdit } from "react-icons/fa"
-import { FaCirclePlus } from "react-icons/fa6"
-import { GiBrassEye } from "react-icons/gi"
-import { IoIosRemoveCircle } from "react-icons/io"
-import { IoTrash } from "react-icons/io5"
-import { PiTreeStructureFill } from "react-icons/pi"
-import { RiEditCircleFill, RiPlayListAddFill } from "react-icons/ri"
-import { useDispatch } from "react-redux"
-import { useNavigate } from "react-router-dom"
-import useFeatureFlag from "../../hooks/useFeatureFlag"
-import useOutsideClick from "../../hooks/useOutsideClick"
+import cogoToast from '@successtar/cogo-toast';
+import Cookies from 'js-cookie';
+import { useEffect, useRef, useState } from 'react';
+import { FaEdit } from 'react-icons/fa';
+import { FaCirclePlus } from 'react-icons/fa6';
+import { GiBrassEye } from 'react-icons/gi';
+import { IoIosRemoveCircle } from 'react-icons/io';
+import { IoTrash } from 'react-icons/io5';
+import { BsTags } from 'react-icons/bs';
+
+import { PiTreeStructureFill } from 'react-icons/pi';
+import { RiEditCircleFill, RiPlayListAddFill } from 'react-icons/ri';
+import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
+import useFeatureFlag from '../../hooks/useFeatureFlag';
+import useOutsideClick from '../../hooks/useOutsideClick';
 import {
   createElement,
   deleteElement,
   fetchElementById,
   updateElement,
-} from "../../redux/slices/elements"
-import { deleteRecord, getRecordsByElement } from "../../redux/slices/records"
-import { updateStructure } from "../../redux/slices/structures"
-import { uploadFile } from "../../redux/slices/upload-files"
-import {
-  getRoleAccessMap,
-  getRoleAndAccess,
-} from "../../utils/permissionFunctions"
-import InputField from "../input-field/InputField"
-import Tooltip from "../tooltip/Tooltip"
-import AddQuillModal from "./AddQuillModal"
-import DeleteModal from "./DeleteModal"
-import ImportModal from "./ImportModal"
-import ModalComponent from "./Modal"
-
+} from '../../redux/slices/elements';
+import { deleteRecord, getRecordsByElement } from '../../redux/slices/records';
+import { updateStructure } from '../../redux/slices/structures';
+import { uploadFile } from '../../redux/slices/upload-files';
+import { getRoleAccessMap, getRoleAndAccess } from '../../utils/permissionFunctions';
+import InputField from '../input-field/InputField';
+import Tooltip from '../tooltip/Tooltip';
+import AddQuillModal from './AddQuillModal';
+import DeleteModal from './DeleteModal';
+import ImportModal from './ImportModal';
+import ModalComponent from './Modal';
+import TagsManager from './tagsManager';
 const NodeModal = ({
   position,
   onClose,
@@ -46,47 +45,52 @@ const NodeModal = ({
   renderType,
   permission,
 }) => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const focusRef = useRef(null)
-  const userId = Cookies.get("atlas_userId")
-  const [isLoading, setIsLoading] = useState(false)
-  const [deleteRecordId, setDeleteRecordId] = useState(null)
-  const [recordExists, setRecordExists] = useState(false)
-  const [modalVisible, setModalVisible] = useState(false)
-  const [childModalVisible, setChildModalVisible] = useState(false)
-  const [deleteModalVisible, setDeleteModalVisible] = useState(false)
-  const [elementValue, setElementValue] = useState("")
-  const [actionType, setActionType] = useState(null)
-  const [isImportModalOpen, setIsImportModalOpen] = useState(false)
-  const [isEdit, setIsEdit] = useState(false)
-  const [editStructureModalVisible, setEditStructureModalVisible] =
-    useState(false)
-  const [structureName, setStructureName] = useState(initialStructureName)
-  const [elementType, setElementType] = useState("event")
-  const [eventType, setEventType] = useState("")
-  const [gateType, setGateType] = useState("")
-  const [eventValue, setEventValue] = useState("")
-  const [eventValueType, seEventValueType] = useState("")
-  const [missionTime, setMissionTime] = useState("")
-  const [mttr, setMttr] = useState("")
-  const [description, setDescription] = useState("")
-  const [inputK, setInputK] = useState("")
-  const [outputN, setOutputN] = useState("")
-  const [deleting, setDeleting] = useState(false)
-  const { role } = getRoleAndAccess(permission)
-  const roleAccess = getRoleAccessMap(role)
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const focusRef = useRef(null);
+  const userId = Cookies.get('atlas_userId');
+  const [isLoading, setIsLoading] = useState(false);
+  const [deleteRecordId, setDeleteRecordId] = useState(null);
+  const [recordExists, setRecordExists] = useState(false);
+  const [modalVisible, setModalVisible] = useState(false);
+  const [childModalVisible, setChildModalVisible] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [elementValue, setElementValue] = useState('');
+  const [actionType, setActionType] = useState(null);
+  const [isImportModalOpen, setIsImportModalOpen] = useState(false);
+  const [isEdit, setIsEdit] = useState(false);
+  const [editStructureModalVisible, setEditStructureModalVisible] = useState(false);
+  const [structureName, setStructureName] = useState(initialStructureName);
+  const [elementType, setElementType] = useState(
+    renderType !== 'markmap' && structureType !== 'default' ? 'event' : null,
+  );
+  const [eventType, setEventType] = useState('');
+  const [gateType, setGateType] = useState('');
+  const [eventValue, setEventValue] = useState('');
+  const [eventValueType, seEventValueType] = useState('');
+  const [missionTime, setMissionTime] = useState('');
+  const [mttr, setMttr] = useState('');
+  const [description, setDescription] = useState('');
+  const [inputK, setInputK] = useState('');
+  const [outputN, setOutputN] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const { role } = getRoleAndAccess(permission);
+  const roleAccess = getRoleAccessMap(role);
 
-  const canImportStructure = useFeatureFlag("Import from Excel")
-  const canTagRecord = useFeatureFlag("Rich Text Records")
+  const canImportStructure = useFeatureFlag('Import from Excel');
+  const canTagRecord = useFeatureFlag('Rich Text Records');
+  const [tags, setTags] = useState([]);
+  const canTags = useFeatureFlag('Record Tagging');
+  const [showTagsPopup, setShowTagsPopup] = useState(false);
+  const [popupTags, setPopupTags] = useState([]);
 
   const handleFeatureClick = (canAccess, action) => {
     if (canAccess) {
-      action()
+      action();
     } else {
-      navigate(`?plan=upgrade-to-premium`)
+      navigate(`?plan=upgrade-to-premium`);
     }
-  }
+  };
 
   const modalRef = useOutsideClick(() => {
     if (
@@ -96,108 +100,111 @@ const NodeModal = ({
       !modalVisible &&
       !deleteModalVisible
     ) {
-      onClose()
+      onClose();
     }
-  })
+  });
+
+  const addTag = () => {
+    setTags((prev) => [...prev, { key: '', value: '', id: Date.now() }]);
+  };
+
+  const handleTagChange = (id, field, newValue) => {
+    setTags((prevTags) =>
+      prevTags.map((tag) => (tag.id === id ? { ...tag, [field]: newValue } : tag)),
+    );
+  };
+
+  const deleteTag = (id) => {
+    setTags((prev) => prev.filter((tag) => tag.id !== id));
+  };
 
   const handleModalSubmit = async () => {
     if (!elementValue.trim()) {
-      cogoToast.error("Element title cannot be empty")
-      return
+      cogoToast.error('Element title cannot be empty');
+      return;
     }
 
-    if (structureType !== "default" && renderType !== "markmap") {
-      if (elementType === "event") {
+    if (structureType !== 'default' && renderType !== 'markmap') {
+      if (elementType === 'event') {
         if (!eventType) {
-          cogoToast.warn("Please select an event type.")
-          return
+          cogoToast.warn('Please select an event type.');
+          return;
         }
 
         if (!eventValueType) {
-          cogoToast.warn("Please select an event value type.")
-          return
+          cogoToast.warn('Please select an event value type.');
+          return;
         }
 
-        if (["conditional", "undeveloped"].includes(eventType)) {
-          if (eventValueType === "λ") {
+        if (['conditional', 'undeveloped'].includes(eventType)) {
+          if (eventValueType === 'λ') {
             cogoToast.warn(
-              `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`
-            )
-            return
+              `${eventType} events cannot take Rate (λ) as value. Only Probability (P) is allowed.`,
+            );
+            return;
           }
         }
 
-        if (eventType === "basic") {
-          if (eventValueType === "λ" && !missionTime) {
-            cogoToast.warn("Mission Time is required when using Rate (λ).")
-            return
+        if (eventType === 'basic') {
+          if (eventValueType === 'λ' && !missionTime) {
+            cogoToast.warn('Mission Time is required when using Rate (λ).');
+            return;
           }
         }
       }
 
-      if (elementType === "gate" && gateType === "voting-or") {
-        const isFloat = val =>
-          val !== "" &&
-          !isNaN(val) &&
-          val.toString().includes(".") &&
-          parseFloat(val) > 0
+      if (elementType === 'gate' && gateType === 'voting-or') {
+        const isFloat = (val) =>
+          val !== '' && !isNaN(val) && val.toString().includes('.') && parseFloat(val) > 0;
 
-        const isEmpty = val => val === "" || val === null
+        const isEmpty = (val) => val === '' || val === null;
 
-        const inputEmpty = isEmpty(inputK)
-        const outputEmpty = isEmpty(outputN)
+        const inputEmpty = isEmpty(inputK);
+        const outputEmpty = isEmpty(outputN);
 
         if (inputEmpty && outputEmpty) {
           cogoToast.warn(
-            "Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)"
-          )
-          return
+            'Both Input (K) and Output (N) are required and must be decimal numbers (e.g. 1.0)',
+          );
+          return;
         }
 
         if (inputEmpty) {
-          cogoToast.warn(
-            "Input (K) is required and must be a decimal number (e.g. 1.0)"
-          )
-          return
+          cogoToast.warn('Input (K) is required and must be a decimal number (e.g. 1.0)');
+          return;
         }
 
         if (outputEmpty) {
-          cogoToast.warn(
-            "Output (N) is required and must be a decimal number (e.g. 1.0)"
-          )
-          return
+          cogoToast.warn('Output (N) is required and must be a decimal number (e.g. 1.0)');
+          return;
         }
 
-        const inputValid = isFloat(inputK)
-        const outputValid = isFloat(outputN)
+        const inputValid = isFloat(inputK);
+        const outputValid = isFloat(outputN);
 
         if (!inputValid && !outputValid) {
           cogoToast.warn(
-            "Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)"
-          )
-          return
+            'Both Input (K) and Output (N) must be decimal positive numbers (e.g. 1.0, 2.5)',
+          );
+          return;
         }
 
         if (!inputValid) {
-          cogoToast.warn(
-            "Input (K) must be a decimal positive number (e.g. 1.0, 2.5)"
-          )
-          return
+          cogoToast.warn('Input (K) must be a decimal positive number (e.g. 1.0, 2.5)');
+          return;
         }
 
         if (!outputValid) {
-          cogoToast.warn(
-            "Output (N) must be a decimal positive number (e.g. 1.0, 2.5)"
-          )
-          return
+          cogoToast.warn('Output (N) must be a decimal positive number (e.g. 1.0, 2.5)');
+          return;
         }
 
-        const k = parseFloat(inputK)
-        const n = parseFloat(outputN)
+        const k = parseFloat(inputK);
+        const n = parseFloat(outputN);
 
         if (k > n) {
-          cogoToast.warn("Input (K) cannot be greater than Output (N)")
-          return
+          cogoToast.warn('Input (K) cannot be greater than Output (N)');
+          return;
         }
       }
     }
@@ -207,26 +214,17 @@ const NodeModal = ({
       parentId,
       name: elementValue,
       type: elementType,
-      eventType: elementType === "event" ? eventType : null,
-      gateType: elementType === "gate" ? gateType : null,
-      eventValue: elementType === "event" ? eventValue : null,
-      eventValueType: elementType === "event" ? eventValueType : null,
-      missionTime:
-        elementType === "event" && eventValueType === "λ"
-          ? Number(missionTime)
-          : null,
-      mttr:
-        elementType === "event" && eventType === "basic" ? Number(mttr) : null,
+      eventType: elementType === 'event' ? eventType : null,
+      gateType: elementType === 'gate' ? gateType : null,
+      eventValue: elementType === 'event' ? eventValue : null,
+      eventValueType: elementType === 'event' ? eventValueType : null,
+      missionTime: elementType === 'event' && eventValueType === 'λ' ? Number(missionTime) : null,
+      mttr: elementType === 'event' && eventType === 'basic' ? Number(mttr) : null,
       description,
-      inputK:
-        elementType === "gate" && gateType === "voting-or"
-          ? Number(inputK) || null
-          : null,
-      outputN:
-        elementType === "gate" && gateType === "voting-or"
-          ? Number(outputN) || null
-          : null,
-    }
+      inputK: elementType === 'gate' && gateType === 'voting-or' ? Number(inputK) || null : null,
+      outputN: elementType === 'gate' && gateType === 'voting-or' ? Number(outputN) || null : null,
+      tags: tags,
+    };
 
     try {
       if (isEdit && elementId) {
@@ -236,236 +234,259 @@ const NodeModal = ({
             updateElementData: {
               name: elementValue,
               type: elementType,
-              eventType: elementType === "event" ? eventType : null,
-              gateType: elementType === "gate" ? gateType : null,
-              eventValue: elementType === "event" ? eventValue : null,
-              eventValueType: elementType === "event" ? eventValueType : null,
+              eventType: elementType === 'event' ? eventType : null,
+              gateType: elementType === 'gate' ? gateType : null,
+              eventValue: elementType === 'event' ? eventValue : null,
+              eventValueType: elementType === 'event' ? eventValueType : null,
               missionTime:
-                elementType === "event" && eventValueType === "λ"
-                  ? Number(missionTime)
-                  : null,
-              mttr:
-                elementType === "event" && eventType === "basic"
-                  ? Number(mttr)
-                  : null,
+                elementType === 'event' && eventValueType === 'λ' ? Number(missionTime) : null,
+              mttr: elementType === 'event' && eventType === 'basic' ? Number(mttr) : null,
               description,
               inputK:
-                elementType === "gate" && gateType === "voting-or"
-                  ? Number(inputK) || null
-                  : null,
+                elementType === 'gate' && gateType === 'voting-or' ? Number(inputK) || null : null,
               outputN:
-                elementType === "gate" && gateType === "voting-or"
-                  ? Number(outputN) || null
-                  : null,
+                elementType === 'gate' && gateType === 'voting-or' ? Number(outputN) || null : null,
+              tags: tags,
             },
-          })
-        ).unwrap()
+          }),
+        ).unwrap();
 
-        cogoToast.success("Element updated successfully!")
+        cogoToast.success('Element updated successfully!');
       } else {
-        await dispatch(createElement(elementData)).unwrap()
-        cogoToast.success("Element added successfully!")
+        await dispatch(createElement(elementData)).unwrap();
+        cogoToast.success('Element added successfully!');
       }
-      setChildModalVisible(false)
-      setElementValue("")
-      onClose()
-      onSuccess()
+      setChildModalVisible(false);
+      setElementValue('');
+      onClose();
+      onSuccess();
     } catch (error) {
-      cogoToast.error(
-        "Error saving element: " + (error.message || "Unknown error")
-      )
+      cogoToast.error('Error saving element: ' + (error.message || 'Unknown error'));
     }
-  }
+  };
 
+  const handleCloseModal = () => {
+    // resetElementForm();
+    setChildModalVisible(false);
+  };
   const handleEditStructureSubmit = async () => {
     if (!structureName.trim()) {
-      cogoToast.error("Structure name cannot be empty")
-      return
+      cogoToast.error('Structure name cannot be empty');
+      return;
     }
     await dispatch(
-      updateStructure({ id: structureId, updateData: { name: structureName } })
-    ).unwrap()
-    cogoToast.success("Structure name updated successfully!")
-    setEditStructureModalVisible(false)
-    onSuccess()
-  }
+      updateStructure({ id: structureId, updateData: { name: structureName } }),
+    ).unwrap();
+    cogoToast.success('Structure name updated successfully!');
+    setEditStructureModalVisible(false);
+    onSuccess();
+  };
+
+  const resetElementForm = () => {
+    setElementValue('');
+    setElementType('event');
+    setEventType('');
+    setGateType('');
+    setEventValue('');
+    seEventValueType('');
+    setMissionTime('');
+    setMttr('');
+    setDescription('');
+    setInputK('');
+    setOutputN('');
+    setTags([]);
+  };
 
   const handleDeleteConfirm = async () => {
-    setDeleting(true)
+    setDeleting(true);
     try {
       if (!deleteRecordId) {
-        await dispatch(deleteElement(elementId)).unwrap()
-        cogoToast.success("Element deleted successfully!")
+        await dispatch(deleteElement(elementId)).unwrap();
+        cogoToast.success('Element deleted successfully!');
       } else {
-        await dispatch(deleteRecord(deleteRecordId)).unwrap()
-        cogoToast.success("Record deleted successfully!")
+        await dispatch(deleteRecord(deleteRecordId)).unwrap();
+        cogoToast.success('Record deleted successfully!');
       }
 
-      setDeleteModalVisible(false)
-      setDeleteRecordId(null)
-      onSuccess()
-      onClose()
+      setDeleteModalVisible(false);
+      setDeleteRecordId(null);
+      onSuccess();
+      onClose();
     } catch (error) {
-      cogoToast.error("Error deleting: " + (error.message || "Unknown error"))
+      cogoToast.error('Error deleting: ' + (error.message || 'Unknown error'));
     } finally {
-      setDeleting(false)
+      setDeleting(false);
     }
-  }
+  };
 
-  const handleDeleteButtonClick = recordId => {
+  const handleDeleteButtonClick = (recordId) => {
     if (recordId) {
-      setDeleteRecordId(recordId)
+      setDeleteRecordId(recordId);
     } else {
-      setDeleteRecordId(null)
+      setDeleteRecordId(null);
     }
-    setDeleteModalVisible(true)
-  }
+    setDeleteModalVisible(true);
+  };
 
   useEffect(() => {
     if (elementId) {
       dispatch(getRecordsByElement(elementId))
         .unwrap()
-        .then(data => {
+        .then((data) => {
           if (data.length > 0) {
-            setRecordExists(true)
+            setRecordExists(true);
           } else {
-            setRecordExists(false)
+            setRecordExists(false);
           }
         })
-        .catch(() => setRecordExists(false))
+        .catch(() => setRecordExists(false));
     }
-  }, [elementId, dispatch])
+  }, [elementId, dispatch]);
 
   useEffect(() => {
     if (isEdit && elementId) {
-      dispatch(fetchElementById(elementId)).then(action => {
-        const element = action.payload
-        setElementValue(element.name)
-        setElementType(element.type || "event")
-        setDescription(element.description || "")
+      dispatch(fetchElementById(elementId)).then((action) => {
+        const element = action.payload;
 
-        if (element.type === "event") {
-          setEventType(element.eventType || "")
-          setEventValue(element.eventValue || "")
-          seEventValueType(element.eventValueType || "")
-          setMissionTime(element.missionTime || "")
-          setMttr(element.mttr || "")
-          setGateType("")
-          setInputK("")
-          setOutputN("")
-        } else if (element.type === "gate") {
-          setGateType(element.gateType || "")
-          setInputK(element.inputK || "")
-          setOutputN(element.outputN || "")
-          setEventType("")
-          setEventValue("")
-          seEventValueType("")
-          setMissionTime("")
-          setMttr("")
+        setElementValue(element.name);
+        setElementType(element.type || 'event');
+        setDescription(element.description || '');
+        setTags(element?.tags || []);
+
+        if (element.type === 'event') {
+          setEventType(element.eventType || '');
+          setEventValue(element.eventValue || '');
+          seEventValueType(element.eventValueType || '');
+          setMissionTime(element.missionTime || '');
+          setMttr(element.mttr || '');
+          setGateType('');
+          setInputK('');
+          setOutputN('');
+        } else if (element.type === 'gate') {
+          setGateType(element.gateType || '');
+          setInputK(element.inputK || '');
+          setOutputN(element.outputN || '');
+          setEventType('');
+          setEventValue('');
+          seEventValueType('');
+          setMissionTime('');
+          setMttr('');
         }
-      })
+      });
     }
-  }, [isEdit, elementId, dispatch])
+  }, [isEdit, elementId, dispatch]);
 
   useEffect(() => {
-    if (eventType === "undeveloped" || eventType === "conditional") {
-      if (eventValueType === "λ") seEventValueType("")
-      setMissionTime("")
+    if (eventType === 'undeveloped' || eventType === 'conditional') {
+      if (eventValueType === 'λ') seEventValueType('');
+      setMissionTime('');
     }
 
-    if (eventType !== "basic") {
-      setMttr("")
+    if (eventType !== 'basic') {
+      setMttr('');
     }
-  }, [eventType])
-  const handleKeyPress = e => {
-    if (e?.key === "Enter") {
-      handleModalSubmit()
+  }, [eventType]);
+  const handleKeyPress = (e) => {
+    if (e?.key === 'Enter') {
+      handleModalSubmit();
     }
-  }
+  };
 
-  const handleViewEditRecord = actionType => {
+  const handleViewEditRecord = (actionType) => {
     switch (actionType) {
-      case "add":
-        setActionType("add")
-        setElementValue(initialStructureName)
-        setModalVisible(true)
-        setIsEdit(false)
-        break
-      case "view":
-        setActionType("view")
-        setModalVisible(true)
-        setIsEdit(false)
-        break
-      case "edit":
-        setActionType("edit")
-        setModalVisible(true)
-        setIsEdit(true)
-        break
+      case 'add':
+        setActionType('add');
+        resetElementForm();
+        setIsEdit(false);
+        setModalVisible(true);
+        break;
+      case 'view':
+        setActionType('view');
+        setModalVisible(true);
+        setIsEdit(false);
+        break;
+      case 'edit':
+        setActionType('edit');
+        setIsEdit(true);
+        setModalVisible(true);
+
+        break;
       default:
-        setModalVisible(false)
-        break
+        setModalVisible(false);
+        setChildModalVisible(false);
+        break;
     }
-  }
+  };
 
-  const handleKeyPressEditStructure = e => {
-    if (e?.key === "Enter") {
-      handleEditStructureSubmit()
+  const handleKeyPressEditStructure = (e) => {
+    if (e?.key === 'Enter') {
+      handleEditStructureSubmit();
     }
-  }
+  };
 
-  const handleFileSelection = file => {
+  const handleFileSelection = (file) => {
     if (!file) {
-      cogoToast.error("Please select a valid structure!")
-      return
+      cogoToast.error('Please select a valid structure!');
+      return;
     }
 
-    setIsImportModalOpen(false)
-    handleFileUpload(file)
-  }
+    setIsImportModalOpen(false);
+    handleFileUpload(file);
+  };
 
-  const handleFileUpload = async file => {
+  const handleFileUpload = async (file) => {
     try {
-      setIsLoading(true)
+      setIsLoading(true);
 
-      await dispatch(uploadFile({ file, userId, structureId })).unwrap()
+      await dispatch(uploadFile({ file, userId, structureId })).unwrap();
 
-      cogoToast.success("Structure uploaded successfully!")
+      cogoToast.success('Structure uploaded successfully!');
 
-      onSuccess()
+      onSuccess();
     } catch (err) {
-      cogoToast.error("Failed to upload structure.")
+      cogoToast.error('Failed to upload structure.');
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
+
+  const handleViewTags = async (elementId) => {
+    if (!elementId) return;
+
+    try {
+      const element = await dispatch(fetchElementById(elementId)).unwrap();
+      setPopupTags(element?.tags || []);
+      setShowTagsPopup(true);
+    } catch (err) {
+      cogoToast.error('Failed to fetch tags');
+    }
+  };
 
   return (
     <>
       <div
         ref={modalRef}
         style={{
-          position: "fixed",
+          position: 'fixed',
           left: position.x,
           top: position.y,
         }}
         className={`${
           roleAccess.canManage ||
           roleAccess.canEdit ||
-          (roleAccess.canComment && wbs !== "1")
-            ? "bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50"
-            : ""
+          (roleAccess.canView && wbs !== '1') ||
+          (roleAccess.canComment && wbs !== '1')
+            ? 'bg-white border border-gray-300 rounded-lg shadow-md p-3 w-auto z-50'
+            : ''
         }`}
       >
         <div className="flex flex-wrap gap-2 items-center justify-start ">
-          {wbs === "1" && roleAccess.canManage && (
+          {wbs === '1' && roleAccess.canManage && (
             <>
-              {/* Import Structure */}
               <Tooltip label="Import Structure">
                 <button
                   onClick={() =>
-                    handleFeatureClick(canImportStructure, () =>
-                      setIsImportModalOpen(true)
-                    )
+                    handleFeatureClick(canImportStructure, () => setIsImportModalOpen(true))
                   }
                   className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
                 >
@@ -473,7 +494,6 @@ const NodeModal = ({
                 </button>
               </Tooltip>
 
-              {/* Edit Structure */}
               <Tooltip label="Edit Structure">
                 <button
                   onClick={() => setEditStructureModalVisible(true)}
@@ -485,16 +505,12 @@ const NodeModal = ({
             </>
           )}
 
-          {wbs !== "1" &&
+          {wbs !== '1' &&
           ((!recordExists && (roleAccess.canEdit || roleAccess.canManage)) ||
             roleAccess.canComment) ? (
             <Tooltip label="Add Record">
               <button
-                onClick={() =>
-                  handleFeatureClick(canTagRecord, () =>
-                    handleViewEditRecord("add")
-                  )
-                }
+                onClick={() => handleFeatureClick(canTagRecord, () => handleViewEditRecord('add'))}
                 aria-label="Add Record"
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
@@ -507,26 +523,28 @@ const NodeModal = ({
             <>
               <Tooltip label="View Record">
                 <button
-                  onClick={() => handleViewEditRecord("edit")}
+                  onClick={() => handleViewEditRecord('edit')}
                   aria-label="View Record"
                   className={
-                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
+                    'hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main'
                   }
                 >
                   <GiBrassEye size={24} className="text-custom-main" />
                 </button>
               </Tooltip>
-              <Tooltip label="Delete Record">
-                <button
-                  onClick={() => handleDeleteButtonClick(recordId)}
-                  aria-label="Delete Record"
-                  className={
-                    "hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
-                  }
-                >
-                  <IoIosRemoveCircle size={24} className="text-custom-main" />
-                </button>
-              </Tooltip>
+              {!roleAccess.canComment && !roleAccess.canView && (
+                <Tooltip label="Delete Record">
+                  <button
+                    onClick={() => handleDeleteButtonClick(recordId)}
+                    aria-label="Delete Record"
+                    className={
+                      'hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main'
+                    }
+                  >
+                    <IoIosRemoveCircle size={24} className="text-custom-main" />
+                  </button>
+                </Tooltip>
+              )}
             </>
           )}
 
@@ -534,8 +552,10 @@ const NodeModal = ({
             <Tooltip label="Add Element">
               <button
                 onClick={() => {
-                  setChildModalVisible(true)
-                  setIsEdit(false)
+                  resetElementForm();
+
+                  setChildModalVisible(true);
+                  setIsEdit(false);
                 }}
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
@@ -544,12 +564,12 @@ const NodeModal = ({
             </Tooltip>
           )}
 
-          {wbs !== "1" && roleAccess.canEdit && (
+          {wbs !== '1' && roleAccess.canEdit && (
             <Tooltip label="Edit Element">
               <button
                 onClick={() => {
-                  setChildModalVisible(true)
-                  setIsEdit(true)
+                  setChildModalVisible(true);
+                  setIsEdit(true);
                 }}
                 className="hover:bg-gray-100 rounded-full cursor-pointer p-2 focus:ring-2 focus:ring-custom-main"
               >
@@ -558,8 +578,7 @@ const NodeModal = ({
             </Tooltip>
           )}
 
-          {/* Delete Element */}
-          {wbs !== "1" && roleAccess.canEdit && (
+          {wbs !== '1' && roleAccess.canEdit && (
             <Tooltip label="Delete Element">
               <button
                 onClick={() => handleDeleteButtonClick(null)}
@@ -569,9 +588,60 @@ const NodeModal = ({
               </button>
             </Tooltip>
           )}
+          {wbs !== '1' && (
+            <div className="relative inline-block">
+              <Tooltip label="View Tags">
+                <button
+                  onClick={() => handleViewTags(elementId)}
+                  aria-label="View Tags"
+                  className="hover:bg-gray-100 rounded-full cursor-pointer p-2"
+                >
+                  <BsTags size={24} className="text-custom-main" />
+                </button>
+              </Tooltip>
+              {showTagsPopup && (
+                <div className="absolute right-0 mt-2 w-72 z-50">
+                  <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-3 animate-fadeIn scale-95 transform transition-all duration-200">
+                    <div className="flex justify-between items-center mb-2">
+                      <h3 className="text-sm font-semibold text-gray-800">✨ Tags</h3>
+                    </div>
+
+                    <div className="grid grid-cols-2 text-xs font-semibold text-gray-600 border-b pb-1 mb-1">
+                      <span>Key</span>
+                      <span>Value</span>
+                    </div>
+
+                    {popupTags?.length > 0 ? (
+                      <div className="max-h-32 overflow-y-auto custom-scroll pr-1">
+                        {popupTags.map((tag, index) => (
+                          <div
+                            key={index}
+                            className="grid grid-cols-2 text-xs text-gray-700 py-0.5 border-b last:border-0"
+                          >
+                            <span className="truncate">{tag.key}</span>
+                            <span className="truncate text-gray-500">{tag.value}</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">No tags available</p>
+                    )}
+
+                    <div className="flex justify-end mt-2">
+                      <button
+                        onClick={() => setShowTagsPopup(false)}
+                        className="px-3 py-1 text-xs rounded-md bg-custom-main text-white hover:bg-custom-secondary transition"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-
       {modalVisible && (
         <AddQuillModal
           structureId={structureId}
@@ -583,8 +653,8 @@ const NodeModal = ({
           elementId={elementId}
           isEdit={isEdit}
           actionType={actionType}
-          text={actionType === "view" ? "View" : isEdit ? "View / Edit" : "Add"}
-          submitText={actionType === "view" ? "Edit" : "Save"}
+          text={actionType === 'view' ? 'View' : isEdit ? 'View / Edit' : 'Add'}
+          submitText={actionType === 'view' ? 'Edit' : 'Save'}
           cancelText="Cancel"
           recordId={recordId}
         />
@@ -593,246 +663,284 @@ const NodeModal = ({
       {childModalVisible && (
         <ModalComponent
           isOpen={childModalVisible}
-          onClose={() => setChildModalVisible(false)}
-          title={isEdit ? "Edit Element" : "Add Element"}
+          onClose={handleCloseModal}
+          title={isEdit ? 'Edit Element' : 'Add Element'}
           onImportAsJSON={() => setIsImportModalOpen(true)}
           showBottomButton={true}
           disabled={!elementValue.trim()}
           onSubmit={handleModalSubmit}
-          submitText={isEdit ? "Edit" : "Save"}
+          submitText={isEdit ? 'Edit' : 'Save'}
           cancelText="Cancel"
+          isEdit={isEdit}
         >
           <>
-            <div className="mb-4">
-              <label className="block text-sm font-semibold text-gray-700 mb-1">
-                Element Name
-              </label>
-              <input
-                type="text"
-                value={elementValue}
-                onChange={e => setElementValue(e.target.value)}
-                onKeyDown={handleKeyPress}
-                ref={focusRef}
-                placeholder="Enter element name"
-                className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
-              />
-            </div>
-            {renderType !== "markmap" && structureType !== "default" && (
-              <div className="flex items-center gap-4 mb-4">
-                <label className="text-sm font-semibold text-gray-700 w-28">
-                  Element Type:
+            <div className="max-h-[60vh] overflow-y-auto pr-2 pl-2">
+              <div className="mb-4 ">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">
+                  Element Name
                 </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="elementType"
-                    value="event"
-                    checked={elementType === "event"}
-                    onChange={() => setElementType("event")}
-                    className="accent-custom-main"
-                  />
-                  <span className="text-gray-700">Event</span>
-                </label>
-                <label className="inline-flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="radio"
-                    name="elementType"
-                    value="gate"
-                    checked={elementType === "gate"}
-                    onChange={() => setElementType("gate")}
-                    className="accent-custom-main"
-                  />
-                  <span className="text-gray-700">Gate</span>
-                </label>
+                <input
+                  type="text"
+                  value={elementValue}
+                  onChange={(e) => setElementValue(e.target.value)}
+                  onKeyDown={handleKeyPress}
+                  ref={focusRef}
+                  placeholder="Enter element name"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+                />
               </div>
-            )}
-
-            {renderType !== "markmap" &&
-              elementType === "event" &&
-              structureType !== "default" && (
+              {renderType === 'markmap' || structureType === 'default' ? (
                 <>
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Event Type <span className="text-red-600">*</span>
-                    </label>
-                    <select
-                      value={eventType}
-                      onChange={e => setEventType(e.target.value)}
-                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  <div className="flex justify-between items-center mb-2 ">
+                    <button
+                      onClick={addTag}
+                      className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-custom-secondary focus:outline-none flex items-center"
                     >
-                      <option value="">Select Event Type</option>
-                      <option value="intermediate">Intermediate</option>
-                      <option value="basic">Basic</option>
-                      <option value="transfer">Transfer</option>
-                      <option value="conditional">Conditional</option>
-                      <option value="undeveloped">Undeveloped</option>
-                    </select>
+                      <BsTags className="h-5 w-5 mr-2" />
+                      {isEdit ? (tags?.length > 0 ? 'Edit Tags' : 'Add Tags') : 'Add Tags'}
+                    </button>
                   </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Event Value
-                    </label>
+                  {tags?.length > 0 && (
+                    <div className="mt-4 max-h-64 overflow-y-auto pr-2 border border-gray-200 rounded-md">
+                      <TagsManager
+                        tags={tags}
+                        mode={isEdit ? 'edit' : 'add'}
+                        onEditTag={handleTagChange}
+                        onDeleteTag={deleteTag}
+                        onAddTag={addTag}
+                      />
+                    </div>
+                  )}
+                </>
+              ) : null}
+              {renderType !== 'markmap' && structureType !== 'default' && (
+                <div className="flex items-center gap-4 mb-4">
+                  <label className="text-sm font-semibold text-gray-700 w-28">Element Type:</label>
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
                     <input
-                      type="text"
-                      value={eventValue}
-                      onChange={e => setEventValue(e.target.value)}
-                      placeholder="Enter event code (e.g., E-001)"
-                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      type="radio"
+                      name="elementType"
+                      value="event"
+                      checked={elementType === 'event'}
+                      onChange={() => setElementType('event')}
+                      className="accent-custom-main"
                     />
-                  </div>
-
-                  <div className="mb-4">
-                    <label className="block text-sm font-semibold text-gray-700 mb-1">
-                      Event Value Type <span className="text-red-600">*</span>
-                    </label>
-                    <select
-                      value={eventValueType}
-                      onChange={e => seEventValueType(e.target.value)}
-                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">Select Value Type</option>
-                      <option
-                        value="λ"
-                        disabled={
-                          eventType === "conditional" ||
-                          eventType === "undeveloped"
-                        }
-                      >
-                        Rate (λ)
-                      </option>
-                      <option value="P">Probability (P)</option>
-                    </select>
-                  </div>
-                  {eventValueType === "λ" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        Mission Time (t) <span className="text-red-600">*</span>
-                      </label>
-                      <input
-                        type="number"
-                        value={missionTime}
-                        onChange={e => setMissionTime(e.target.value)}
-                        placeholder="Enter mission time in hours"
-                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  )}
-                  {eventType === "basic" && (
-                    <div className="mb-4">
-                      <label className="block text-sm font-semibold text-gray-700 mb-1">
-                        MTTR (Mean Time To Repair)
-                      </label>
-                      <input
-                        type="number"
-                        value={mttr}
-                        onChange={e => setMttr(e.target.value)}
-                        placeholder="Enter MTTR in hours"
-                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      />
-                    </div>
-                  )}
-                </>
-              )}
-
-            {renderType !== "markmap" &&
-              elementType === "gate" &&
-              structureType !== "default" && (
-                <>
-                  <div className="flex items-center gap-4 mb-4">
-                    <label className="text-sm font-semibold text-gray-700 w-28">
-                      Gate Type:
-                    </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="gateType"
-                        value="AND"
-                        checked={gateType === "AND"}
-                        onChange={() => setGateType("AND")}
-                        className="accent-custom-main"
-                      />
-                      <span className="text-gray-700">AND</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="gateType"
-                        value="OR"
-                        checked={gateType === "OR"}
-                        onChange={() => setGateType("OR")}
-                        className="accent-custom-main"
-                      />
-                      <span className="text-gray-700">OR</span>
-                    </label>
-                    <label className="inline-flex items-center gap-2 cursor-pointer">
-                      <input
-                        type="radio"
-                        name="gateType"
-                        value="voting-or"
-                        checked={gateType === "voting-or"}
-                        onChange={() => setGateType("voting-or")}
-                        className="accent-custom-main"
-                      />
-                      <span className="text-gray-700">VOTE</span>
-                    </label>
-                  </div>
-
-                  {gateType === "voting-or" && (
-                    <>
-                      <div className="flex gap-4 mb-4">
-                        <div className="w-1/2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            Input (K) <span className="text-red-600">*</span>
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            value={inputK}
-                            onChange={e => setInputK(e.target.value)}
-                            placeholder="Enter input K (e.g. 2.0)"
-                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                        <div className="w-1/2">
-                          <label className="block text-sm font-semibold text-gray-700 mb-1">
-                            Output (N) <span className="text-red-600">*</span>
-                          </label>
-                          <input
-                            type="number"
-                            step="any"
-                            value={outputN}
-                            onChange={e => setOutputN(e.target.value)}
-                            placeholder="Enter input N (e.g 3.0) (≥ K)"
-                            className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                          />
-                        </div>
-                      </div>
-                    </>
-                  )}
-                </>
-              )}
-
-            {(elementType === "event" || elementType === "gate") &&
-              renderType !== "markmap" &&
-              structureType !== "default" && (
-                <div className="mb-4">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1">
-                    Description
+                    <span className="text-gray-700">Event</span>
                   </label>
-                  <textarea
-                    value={description}
-                    onChange={e => setDescription(e.target.value)}
-                    placeholder="Enter description"
-                    className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
+                  <label className="inline-flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="elementType"
+                      value="gate"
+                      checked={elementType === 'gate'}
+                      onChange={() => setElementType('gate')}
+                      className="accent-custom-main"
+                    />
+                    <span className="text-gray-700">Gate</span>
+                  </label>
                 </div>
               )}
+              {renderType !== 'markmap' &&
+                elementType === 'event' &&
+                structureType !== 'default' && (
+                  <>
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Event Type <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={eventType}
+                        onChange={(e) => setEventType(e.target.value)}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Event Type</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="basic">Basic</option>
+                        <option value="transfer">Transfer</option>
+                        <option value="conditional">Conditional</option>
+                        <option value="undeveloped">Undeveloped</option>
+                      </select>
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Event Value
+                      </label>
+                      <input
+                        type="text"
+                        value={eventValue}
+                        onChange={(e) => setEventValue(e.target.value)}
+                        placeholder="Enter event code (e.g., E-001)"
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      />
+                    </div>
+
+                    <div className="mb-4">
+                      <label className="block text-sm font-semibold text-gray-700 mb-1">
+                        Event Value Type <span className="text-red-600">*</span>
+                      </label>
+                      <select
+                        value={eventValueType}
+                        onChange={(e) => seEventValueType(e.target.value)}
+                        className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Select Value Type</option>
+                        <option
+                          value="λ"
+                          disabled={eventType === 'conditional' || eventType === 'undeveloped'}
+                        >
+                          Rate (λ)
+                        </option>
+                        <option value="P">Probability (P)</option>
+                      </select>
+                    </div>
+                    {eventValueType === 'λ' && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          Mission Time (t) <span className="text-red-600">*</span>
+                        </label>
+                        <input
+                          type="number"
+                          value={missionTime}
+                          onChange={(e) => setMissionTime(e.target.value)}
+                          placeholder="Enter mission time in hours"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+                    {eventType === 'basic' && (
+                      <div className="mb-4">
+                        <label className="block text-sm font-semibold text-gray-700 mb-1">
+                          MTTR (Mean Time To Repair)
+                        </label>
+                        <input
+                          type="number"
+                          value={mttr}
+                          onChange={(e) => setMttr(e.target.value)}
+                          placeholder="Enter MTTR in hours"
+                          className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        />
+                      </div>
+                    )}
+                  </>
+                )}
+              {renderType !== 'markmap' &&
+                elementType === 'gate' &&
+                structureType !== 'default' && (
+                  <>
+                    <div className="flex items-center gap-4 mb-4">
+                      <label className="text-sm font-semibold text-gray-700 w-28">Gate Type:</label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gateType"
+                          value="AND"
+                          checked={gateType === 'AND'}
+                          onChange={() => setGateType('AND')}
+                          className="accent-custom-main"
+                        />
+                        <span className="text-gray-700">AND</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gateType"
+                          value="OR"
+                          checked={gateType === 'OR'}
+                          onChange={() => setGateType('OR')}
+                          className="accent-custom-main"
+                        />
+                        <span className="text-gray-700">OR</span>
+                      </label>
+                      <label className="inline-flex items-center gap-2 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="gateType"
+                          value="voting-or"
+                          checked={gateType === 'voting-or'}
+                          onChange={() => setGateType('voting-or')}
+                          className="accent-custom-main"
+                        />
+                        <span className="text-gray-700">VOTE</span>
+                      </label>
+                    </div>
+
+                    {gateType === 'voting-or' && (
+                      <>
+                        <div className="flex gap-4 mb-4">
+                          <div className="w-1/2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              Input (K) <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={inputK}
+                              onChange={(e) => setInputK(e.target.value)}
+                              placeholder="Enter input K (e.g. 2.0)"
+                              className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                          <div className="w-1/2">
+                            <label className="block text-sm font-semibold text-gray-700 mb-1">
+                              Output (N) <span className="text-red-600">*</span>
+                            </label>
+                            <input
+                              type="number"
+                              step="any"
+                              value={outputN}
+                              onChange={(e) => setOutputN(e.target.value)}
+                              placeholder="Enter input N (e.g 3.0) (≥ K)"
+                              className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            />
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </>
+                )}
+              {(elementType === 'event' || elementType === 'gate') &&
+                renderType !== 'markmap' &&
+                structureType !== 'default' && (
+                  <div className="mb-4">
+                    <label className="block text-sm font-semibold text-gray-700 mb-1">
+                      Description
+                    </label>
+                    <textarea
+                      value={description}
+                      onChange={(e) => setDescription(e.target.value)}
+                      placeholder="Enter description"
+                      className="w-full px-2 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+
+                    <div className="flex justify-between items-center mt-3">
+                      <button
+                        onClick={addTag}
+                        className="px-4 py-2 text-white bg-custom-main rounded-md hover:bg-custom-secondary focus:outline-none flex items-center"
+                      >
+                        <BsTags className="h-5 w-5 mr-2" />
+                        {isEdit ? 'Edit Tags' : 'Add Tags'}
+                      </button>
+                    </div>
+
+                    {tags?.length > 0 && (
+                      <div className="mt-4  pr-2 border border-gray-200 rounded-md">
+                        <TagsManager
+                          tags={tags}
+                          mode="edit"
+                          onEditTag={handleTagChange}
+                          onDeleteTag={deleteTag}
+                          onAddTag={addTag}
+                        />
+                      </div>
+                    )}
+                  </div>
+                )}
+            </div>
           </>
         </ModalComponent>
       )}
 
-      {/* Edit Structure Modal */}
       {editStructureModalVisible && (
         <ModalComponent
           isOpen={editStructureModalVisible}
@@ -850,7 +958,7 @@ const NodeModal = ({
             disabled={!structureName.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
-            onChange={e => setStructureName(e.target.value)}
+            onChange={(e) => setStructureName(e.target.value)}
             placeholder="Enter structure name"
           />
         </ModalComponent>
@@ -858,7 +966,7 @@ const NodeModal = ({
       {deleteModalVisible && (
         <DeleteModal
           isOpen={deleteModalVisible}
-          title={deleteRecordId ? "Record" : "Element"}
+          title={deleteRecordId ? 'Record' : 'Element'}
           onClose={() => setDeleteModalVisible(false)}
           onConfirm={handleDeleteConfirm}
           loading={deleting}
@@ -868,17 +976,17 @@ const NodeModal = ({
         <ImportModal
           isOpen={isImportModalOpen}
           onClose={() => setIsImportModalOpen(false)}
-          title={"Import Structure"}
-          format={".json, .csv, .xls, .xlsx"}
-          buttonText={"Import"}
+          title={'Import Structure'}
+          format={'.json, .csv, .xls, .xlsx'}
+          buttonText={'Import'}
           isLoading={isLoading}
-          handleFileSelection={file => handleFileSelection(file)}
+          handleFileSelection={(file) => handleFileSelection(file)}
           onSuccess={onSuccess}
           showDownloadSample={true}
         />
       )}
     </>
-  )
-}
+  );
+};
 
-export default NodeModal
+export default NodeModal;

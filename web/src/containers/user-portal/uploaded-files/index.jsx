@@ -1,90 +1,79 @@
-import Cookies from "js-cookie";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import GenericTable from "../../../components/generic-table/GenericTable";
-import Layout from "../../../components/layout";
-import DeleteModal from "../../../components/modals/DeleteModal";
-import { mediaConfig } from "../../../constants";
-import { fetchMediaByUserId } from "../../../redux/slices/upload-files";
+import Cookies from 'js-cookie';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import GenericTable from '../../../components/generic-table/GenericTable';
+import DeleteModal from '../../../components/modals/DeleteModal';
+import { mediaConfig } from '../../../constants';
+import { fetchMediaByUserId } from '../../../redux/slices/upload-files';
+import cogoToast from '@successtar/cogo-toast';
 
-const UploadedFiles = ({ onSubmit }) => {
+const UploadedFiles = () => {
   const dispatch = useDispatch();
   const [files, setFiles] = useState([]);
   const [selectedFile, setSelectedFile] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const userId = Cookies.get("atlas_userId");
-    const [deleting, setDeleting] = useState(false);
+  const userId = Cookies.get('atlas_userId');
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         if (!userId) {
-          console.error("User ID is not available in cookies.");
+          cogoToast.error('User ID is not available in cookies.');
           return;
         }
 
         const result = await dispatch(fetchMediaByUserId(userId)).unwrap();
         setFiles(result);
       } catch (err) {
-        console.error("Error fetching files:", err);
+        cogoToast.error('Failed to fetch files. Please try again.');
       }
     };
 
     fetchData();
   }, [dispatch]);
 
-  // Edit Modal Handler
   const handleEdit = (file) => {
     setSelectedFile(file);
     setIsEditModalOpen(true);
   };
 
-  // Delete Modal Handler
   const handleDelete = (file) => {
     setSelectedFile(file);
     setIsDeleteModalOpen(true);
   };
 
-  // Confirm Delete
   const confirmDelete = async () => {
-  if (!selectedFile) return;
+    if (!selectedFile) return;
 
-  setDeleting(true); // Start loading
+    setDeleting(true);
 
-  try {
-    // Simulate API delay or real delete logic here
-    // e.g. await dispatch(deleteFile(selectedFile.id)).unwrap();
+    try {
+      setFiles((prevFiles) => prevFiles.filter((file) => file.id !== selectedFile.id));
 
-    // Remove from UI
-    setFiles((prevFiles) =>
-      prevFiles.filter((file) => file.id !== selectedFile.id)
-    );
+      setIsDeleteModalOpen(false);
+    } catch (err) {
+      console.error('Delete failed:', err);
+    } finally {
+      setDeleting(false);
+    }
+  };
 
-    setIsDeleteModalOpen(false); // Close modal
-  } catch (err) {
-    console.error("Delete failed:", err);
-  } finally {
-    setDeleting(false); // Stop loading
-  }
-};
-
-  // Transform files data for GenericTable
   const tableData = files.map((file) => ({
     id: file.id,
     fileUrl: file.fileUrl,
-    fileType: file.fileType || "Unknown",
+    fileType: file.fileType || 'Unknown',
     updatedAt: new Date(file.updatedAt).toLocaleString(),
     status: file.status,
   }));
 
-  // Attach Handlers to Actions
   const updatedMediaConfig = {
     ...mediaConfig,
     actions: mediaConfig.actions.map((action) => {
-      if (action.tooltip === "Edit") {
+      if (action.tooltip === 'Edit') {
         return { ...action, onClick: handleEdit };
-      } else if (action.tooltip === "Delete") {
+      } else if (action.tooltip === 'Delete') {
         return { ...action, onClick: handleDelete };
       }
       return action;
@@ -92,12 +81,11 @@ const UploadedFiles = ({ onSubmit }) => {
   };
 
   return (
-    <Layout onSubmit={onSubmit}>
+    <>
       <div className="p-2">
         <GenericTable {...updatedMediaConfig} data={tableData} />
       </div>
 
-      {/* Edit Modal (Placeholder) */}
       {isEditModalOpen && (
         <div className="modal">
           <h2>Edit File</h2>
@@ -106,15 +94,14 @@ const UploadedFiles = ({ onSubmit }) => {
         </div>
       )}
 
-      {/* Delete Modal */}
       <DeleteModal
         isOpen={isDeleteModalOpen}
-        title={"this file"}
+        title={'this file'}
         onClose={() => setIsDeleteModalOpen(false)}
         onConfirm={confirmDelete}
         loading={deleting}
       />
-    </Layout>
+    </>
   );
 };
 

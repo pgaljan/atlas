@@ -93,6 +93,7 @@ export class ElementService {
       description,
       inputK,
       outputN,
+      tags,
     } = createElementDto;
 
     if (!structureId || !name) {
@@ -133,6 +134,7 @@ export class ElementService {
           description: description ?? null,
           inputK: inputK ?? null,
           outputN: outputN ?? null,
+          tags: tags ?? null,
           createdAt: new Date(),
           updatedAt: new Date(),
         },
@@ -146,19 +148,24 @@ export class ElementService {
 
       // 5) Audit log
       await this.logAudit(
-        'CREATE',
+        'CREATE_ELEMENT',
         'Element',
         createdElement.id,
         {
           structureId,
           recordId,
+          name,
+          type,
           parentId,
           isExpanded: isExpanded ?? true,
         },
         userId,
       );
 
-      return createdElement;
+      return {
+        message: 'Element created successfully',
+        element: createdElement,
+      };
     } catch (error) {
       throw new BadRequestException('Error creating element');
     }
@@ -190,6 +197,7 @@ export class ElementService {
         description,
         inputK,
         outputN,
+        tags,
       } = elementDto;
 
       if (!structureId || !name) {
@@ -224,6 +232,7 @@ export class ElementService {
             description: description ?? null,
             inputK: inputK ?? null,
             outputN: outputN ?? null,
+            tags: tags ?? null,
             createdAt: new Date(),
             updatedAt: new Date(),
           },
@@ -237,12 +246,14 @@ export class ElementService {
 
         // 4) Audit log for this specific nested child
         await this.logAudit(
-          'CREATE',
+          'CREATE_NESTED_ELEMENT',
           'Element',
           createdElement.id,
           {
             structureId,
             parentId,
+            name,
+            type,
             recordId,
             isExpanded: isExpanded ?? true,
           },
@@ -304,6 +315,7 @@ export class ElementService {
       description,
       inputK,
       outputN,
+      tags,
     } = updateElementDto;
 
     if (
@@ -338,6 +350,7 @@ export class ElementService {
           description,
           inputK,
           outputN,
+          tags,
           updatedAt: new Date(),
         },
       });

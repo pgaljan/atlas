@@ -1,30 +1,29 @@
-import { useState } from "react";
-import HeaderTab from "../../../components/header-tab/HeaderTab";
-import Layout from "../../../components/layout";
-import General from "./pages/General";
-import Password from "./pages/Password";
-import Services from "./pages/Services&Sessions";
-import TermsAndPolicies from "./pages/Terms&Policy";
+import { useState } from 'react';
+import HeaderTab from '../../../components/header-tab/HeaderTab';
+import General from './pages/General';
+import Password from './pages/Password';
+import Services from './pages/Services&Sessions';
+import TermsAndPolicies from './pages/Terms&Policy';
 
 const Profile = () => {
   const tabs = [
-    { label: "General" },
-    { label: "Password" },
-    { label: "Services & Sessions" },
-    { label: "Terms & Policies" },
+    { label: 'General' },
+    { label: 'Password' },
+    { label: 'Services & Sessions' },
+    { label: 'Terms & Policies' },
   ];
 
-  const [activeTab, setActiveTab] = useState("General");
+  const [activeTab, setActiveTab] = useState('General');
 
   const renderContent = () => {
     switch (activeTab) {
-      case "General":
+      case 'General':
         return <General />;
-      case "Password":
+      case 'Password':
         return <Password />;
-      case "Services & Sessions":
+      case 'Services & Sessions':
         return <Services />;
-      case "Terms & Policies":
+      case 'Terms & Policies':
         return <TermsAndPolicies />;
       default:
         return null;
@@ -32,19 +31,13 @@ const Profile = () => {
   };
 
   return (
-    <Layout>
-      <div className="p-2">
-        <div className="p-14 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <h1 className="text-4xl font-bold mb-4">Me</h1>
-          <HeaderTab
-            tabs={tabs}
-            activeTab={activeTab}
-            onTabClick={setActiveTab}
-          />
-          <div>{renderContent()}</div>
-        </div>
+    <div className="p-2">
+      <div className="p-14 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
+        <h1 className="text-4xl font-bold mb-4">Me</h1>
+        <HeaderTab tabs={tabs} activeTab={activeTab} onTabClick={setActiveTab} />
+        <div>{renderContent()}</div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

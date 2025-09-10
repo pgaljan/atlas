@@ -1,19 +1,17 @@
-import cogoToast from "@successtar/cogo-toast";
-import { useEffect, useState } from "react";
-import { useDispatch } from "react-redux";
-import AdminLayout from "../../../components/admin/admin-layout";
-import HugeRTEEditor from "../../../components/editors/hugeRTE.editor";
+import cogoToast from '@successtar/cogo-toast';
+import { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import HugeRTEEditor from '../../../components/editors/hugeRTE.editor';
 import {
   fetchTermsOfService,
   saveOrUpdateTermsOfService,
-} from "../../../redux/slices/terms-of-service";
+} from '../../../redux/slices/terms-of-service';
 
 const AdminTermsService = () => {
   const dispatch = useDispatch();
-  const [termsText, setTermsText] = useState("");
+  const [termsText, setTermsText] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // Fetch the terms of service when the component mounts
   useEffect(() => {
     dispatch(fetchTermsOfService())
       .then((response) => {
@@ -22,7 +20,7 @@ const AdminTermsService = () => {
         }
       })
       .catch((error) => {
-        cogoToast.error("Error fetching terms of service: " + error.message);
+        cogoToast.error('Error fetching terms of service: ' + error.message);
       });
   }, [dispatch]);
 
@@ -34,12 +32,10 @@ const AdminTermsService = () => {
 
     dispatch(saveOrUpdateTermsOfService(termsData))
       .then((response) => {
-        cogoToast.success("Terms of service saved/updated successfully.");
+        cogoToast.success('Terms of service saved/updated successfully.');
       })
       .catch((error) => {
-        cogoToast.error(
-          "Error saving/updating terms of service: " + error.message
-        );
+        cogoToast.error('Error saving/updating terms of service: ' + error.message);
       })
       .finally(() => {
         setIsSaving(false);
@@ -47,36 +43,32 @@ const AdminTermsService = () => {
   };
 
   return (
-    <AdminLayout>
-      <div className="p-2">
-        <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            Terms Of Service
-          </h1>
+    <div className="p-2">
+      <div className="p-10 rounded-[18px] bg-custom-background-white h-auto max-h-[90%] shadow-md">
+        <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">Terms Of Service</h1>
 
-          <div className="mb-4 text-gray-500">
-            <p>Set your terms of services</p>
-          </div>
+        <div className="mb-4 text-gray-500">
+          <p>Set your terms of services</p>
+        </div>
 
-          <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6">
-            <HugeRTEEditor
-              content={termsText}
-              onEditorChange={(val) => setTermsText(val)}
-              editorClassName="h-[450px] mb-[50px]"
-            />
-          </div>
+        <div className="bg-white border border-gray-200 rounded-lg p-4 shadow-sm mb-6">
+          <HugeRTEEditor
+            content={termsText}
+            onEditorChange={(val) => setTermsText(val)}
+            editorClassName="h-[450px] mb-[50px]"
+          />
+        </div>
 
-          <div className="flex items-center justify-end">
-            <button
-              className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-custom-main text-white"
-              onClick={handleSaveTerms}
-            >
-              {isSaving ? "Saving..." : "Save Changes"}
-            </button>
-          </div>
+        <div className="flex items-center justify-end">
+          <button
+            className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg bg-custom-main text-white"
+            onClick={handleSaveTerms}
+          >
+            {isSaving ? 'Saving...' : 'Save Changes'}
+          </button>
         </div>
       </div>
-    </AdminLayout>
+    </div>
   );
 };
 

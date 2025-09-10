@@ -9,6 +9,7 @@ import userReducer from "./slices/users";
 import structureTemplatesSlice from "./slices/structure-templates";
 import structureSharingReducer from "./slices/structure-sharing";
 import appSettingsReducer from "./slices/app-settings";
+import privacyPolicyReducer from "./slices/privacy-policy"; 
 
 const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ const store = configureStore({
     structureTemplates: structureTemplatesSlice,
     structureShares: structureSharingReducer,
     appSettings: appSettingsReducer,
+     privacyPolicy: privacyPolicyReducer,
   },
 });
 

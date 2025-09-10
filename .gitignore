@@ -6,7 +6,11 @@ yarn-debug.log*
 yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
-
+# Ignore audit log exports
+api/exports/
+# Ignore telemetry history exports
+api/export-telemetry-metrics
+api/export-telemetry-matrics
 # Node modules
 node_modules/
 config.md

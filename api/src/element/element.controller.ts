@@ -9,7 +9,10 @@ import {
   Patch,
   Post,
   Put,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
+import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
 import { CreateElementDto } from './dto/create-element.dto';
 import { ReparentElementsDto } from './dto/reparent-elements.dto';
 import { UpdateElementDto } from './dto/update-element.dto';
@@ -22,7 +25,11 @@ export class ElementController {
   constructor(private readonly elementService: ElementService) {}
 
   @Post('create')
-  async createElement(@Body() createElementDto: CreateElementDto) {
+  @UseGuards(JwtAuthGuard)
+  async createElement(
+    @Body() createElementDto: CreateElementDto,
+    @Req() req: any,
+  ) {
     try {
       const { parentId, structureId } = createElementDto;
 
@@ -30,18 +37,26 @@ export class ElementController {
         throw new BadRequestException('structureId is required');
       }
 
+      const userId = req.user?.id;
+
       // If parentId is provided, treat it as nested element creation
       if (parentId) {
         const elementsArray = Array.isArray(createElementDto)
           ? createElementDto
           : [createElementDto];
-        await this.elementService.createNestedElements(parentId, elementsArray);
+        await this.elementService.createNestedElements(
+          parentId,
+          elementsArray,
+          userId,
+        );
         return { message: 'Nested elements created successfully' };
       }
 
       // Otherwise, create a standalone element
-      await this.elementService.createElement(createElementDto);
-      return { message: 'Element created successfully' };
+      await this.elementService.createElement(createElementDto, userId);
+      return {
+        message: 'Element created successfully',
+      };
     } catch (error) {
       if (
         error instanceof NotFoundException ||
@@ -71,12 +86,15 @@ export class ElementController {
   }
 
   @Patch('update/:id')
+  @UseGuards(JwtAuthGuard)
   async updateElement(
     @Param('id') id: string,
     @Body() updateElementDto: UpdateElementDto,
+    @Req() req: any,
   ) {
     try {
-      await this.elementService.updateElement(id, updateElementDto);
+      const userId = req.user?.id;
+      await this.elementService.updateElement(id, updateElementDto, userId);
       return { message: 'Element updated successfully' };
     } catch (error) {
       if (
@@ -90,9 +108,14 @@ export class ElementController {
   }
 
   @Post('reparent')
-  async reparentElements(@Body() reparentElementsDto: ReparentElementsDto) {
+  @UseGuards(JwtAuthGuard)
+  async reparentElements(
+    @Body() reparentElementsDto: ReparentElementsDto,
+    @Req() req: any,
+  ) {
     try {
-      await this.elementService.reparentElements(reparentElementsDto);
+      const userId = req.user?.id;
+      await this.elementService.reparentElements(reparentElementsDto, userId);
       return { message: 'Elements reparented successfully' };
     } catch (error) {
       if (
@@ -106,9 +129,11 @@ export class ElementController {
   }
 
   @Delete('delete/:id')
-  async deleteElement(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard)
+  async deleteElement(@Param('id') id: string, @Req() req: any) {
     try {
-      await this.elementService.deleteElement(id);
+      const userId = req.user?.id;
+      await this.elementService.deleteElement(id, userId);
       return { message: 'Element deleted successfully' };
     } catch (error) {
       if (
@@ -122,12 +147,19 @@ export class ElementController {
   }
 
   @Put('expand-state/:id')
+  @UseGuards(JwtAuthGuard)
   async updateIsExpanded(
     @Param('id') id: string,
     @Body() dto: UpdateIsExpandedDto,
+    @Req() req: any,
   ) {
     try {
-      await this.elementService.updateIsExpandedOnly(id, dto.isExpanded);
+      const userId = req.user?.id;
+      await this.elementService.updateIsExpandedOnly(
+        id,
+        dto.isExpanded,
+        userId,
+      );
       return { message: 'Expand state updated successfully' };
     } catch (error) {
       if (
@@ -141,12 +173,15 @@ export class ElementController {
   }
 
   @Put('order-index/:id')
+  @UseGuards(JwtAuthGuard)
   async updateOrderIndex(
     @Param('id') id: string,
     @Body() dto: UpdateOrderIndexDto,
+    @Req() req: any,
   ) {
     try {
-      await this.elementService.updateOrderIndex(id, dto.orderIndex);
+      const userId = req.user?.id;
+      await this.elementService.updateOrderIndex(id, dto.orderIndex, userId);
       return { message: 'Order index updated successfully' };
     } catch (error) {
       if (
