@@ -1,0 +1,569 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Workspace {
+  id                String              @id @default(uuid())
+  name              String
+  createdAt         DateTime            @default(now())
+  Backup            Backup[]
+  Invitation        Invitation[]
+  structures        Structure[]
+  StructureCatalog  StructureCatalog[]
+  StructureTemplate StructureTemplate[]
+  teams             Team[]
+  defaultFor        User[]              @relation("UserDefaultWorkspace")
+}
+
+model User {
+  id                                String                     @id @default(uuid())
+  displayName                       String?
+  username                          String                     @unique
+  email                             String                     @unique
+  roleId                            String
+  password                          String
+  isAdmin                           Boolean                    @default(false)
+  inviteCount                       Int                        @default(0)
+  commissionEarned                  Decimal                    @default(0)
+  createdAt                         DateTime                   @default(now())
+  deletedAt                         DateTime?
+  referredBy                        String?
+  profileUrl                        String?
+  defaultWorkspaceId                String?
+  lastLogin                         DateTime?                  @default(now())
+  termsAcceptedAt                   DateTime?
+  policyAcceptedAt                  DateTime?
+  status                            Status                     @default(active)
+  acceptedPrivacyPolicyId           String?
+  acceptedTermsOfServiceId          String?
+  apiKeys                           ApiKey[]
+  attachments                       Attachment[]
+  auditLogs                         AuditLog[]
+  backups                           Backup[]
+  deletionLogs                      DeletionLog[]
+  invitationsSent                   Invitation[]               @relation("UserInvitations")
+  invitedBy                         Invitation[]               @relation("UserInvited")
+  structures                        Structure[]
+  structureShares                   StructureShare[]
+  StructureShareInvitationsReceived StructureShareInvitation[] @relation("StructureShareInvitationInvitee")
+  StructureShareInvitationsSent     StructureShareInvitation[] @relation("StructureShareInvitationInviter")
+  StructureTemplate                 StructureTemplate[]
+  subscription                      Subscription?
+  Team                              Team[]
+  teamMembers                       TeamMember[]
+  tokens                            Token[]
+  acceptedPrivacyPolicy             PrivacyPolicy?             @relation(fields: [acceptedPrivacyPolicyId], references: [id])
+  acceptedTermsOfService            TermsOfService?            @relation(fields: [acceptedTermsOfServiceId], references: [id])
+  defaultWorkspace                  Workspace?                 @relation("UserDefaultWorkspace", fields: [defaultWorkspaceId], references: [id])
+  role                              Role                       @relation("UserRole", fields: [roleId], references: [id])
+  roles                             Role[]                     @relation("UserRoles")
+}
+
+model Invitation {
+  id           String           @id @default(uuid())
+  inviterId    String
+  inviteeEmail String?
+  token        String           @unique
+  expiresAt    DateTime
+  status       InvitationStatus @default(pending)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  usedAt       DateTime?
+  userId       String?
+  referralCode String           @unique
+  workspaceId  String?
+  inviter      User             @relation("UserInvitations", fields: [inviterId], references: [id])
+  user         User?            @relation("UserInvited", fields: [userId], references: [id])
+  workspace    Workspace?       @relation(fields: [workspaceId], references: [id])
+
+  @@index([inviterId])
+  @@index([status])
+}
+
+model Token {
+  id        String   @id @default(uuid())
+  userId    String
+  key       String
+  value     String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, key])
+}
+
+model Role {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  User        User[]  @relation("UserRole")
+  users       User[]  @relation("UserRoles")
+}
+
+model Team {
+  id          String       @id @default(uuid())
+  name        String
+  ownerId     String
+  workspaceId String
+  createdAt   DateTime     @default(now())
+  owner       User         @relation(fields: [ownerId], references: [id])
+  workspace   Workspace    @relation(fields: [workspaceId], references: [id])
+  members     TeamMember[]
+  structures  Structure[]  @relation("TeamStructures")
+
+  @@index([workspaceId])
+}
+
+model TeamMember {
+  id          String     @id @default(uuid())
+  teamId      String
+  userId      String
+  workspaceId String
+  role        String
+  createdAt   DateTime   @default(now())
+  structureId String?
+  Structure   Structure? @relation(fields: [structureId], references: [id])
+  team        Team       @relation(fields: [teamId], references: [id])
+  user        User       @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+  @@index([workspaceId])
+}
+
+model Subscription {
+  id        String             @id @default(uuid())
+  userId    String             @unique
+  planId    String
+  features  Json
+  startDate DateTime           @default(now())
+  endDate   DateTime
+  status    SubscriptionStatus @default(active)
+  plan      Plan               @relation(fields: [planId], references: [id])
+  user      User               @relation(fields: [userId], references: [id])
+}
+
+model Plan {
+  id            String         @id @default(uuid())
+  name          String
+  description   String
+  price         Decimal
+  features      Json
+  status        Status         @default(active)
+  order         Int            @default(0)
+  subscriptions Subscription[]
+}
+
+model Structure {
+  id                String                     @id @default(uuid())
+  title             String?
+  name              String
+  description       String?
+  ownerId           String
+  workspaceId       String                     @default("default_workspace_id")
+  imageUrl          String?
+  isExpanded        Boolean?                   @default(true)
+  markmapShowWbs    Boolean                    @default(false)
+  wbsStart          Int                        @default(1)
+  createdAt         DateTime                   @default(now())
+  updatedAt         DateTime                   @updatedAt
+  deletedAt         DateTime?
+  visibility        Visibility                 @default(private)
+  type              StructureType              @default(default)
+  teamId            String?
+  elements          Element[]
+  parsedData        ParsedContent[]
+  renderers         Renderer[]
+  owner             User                       @relation(fields: [ownerId], references: [id])
+  workspace         Workspace                  @relation(fields: [workspaceId], references: [id])
+  StructureMap      StructureMap[]
+  shares            StructureShare[]
+  shareInvitations  StructureShareInvitation[]
+  shareLinks        StructureShareLink[]
+  StructureTemplate StructureTemplate[]
+  teamMembers       TeamMember[]
+  Webhook           Webhook[]
+  teams             Team[]                     @relation("TeamStructures")
+}
+
+model Element {
+  id             String         @id @default(uuid())
+  structureId    String
+  recordId       String?
+  parentId       String?
+  name           String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  deletedAt      DateTime?
+  elementLinkId  String?
+  isExpanded     Boolean?       @default(true)
+  orderIndex     Int            @default(0)
+  type           String?
+  eventType      String?
+  gateType       String?
+  eventValue     String?
+  eventValueType String?
+  description    String?
+  inputK         Float?
+  missionTime    Float?
+  mttr           Float?
+  outputN        Float?
+  tags           Json?
+  ElementLink    ElementLink?   @relation(fields: [elementLinkId], references: [id])
+  parent         Element?       @relation("ParentChild", fields: [parentId], references: [id])
+  children       Element[]      @relation("ParentChild")
+  Record         Record?        @relation(fields: [recordId], references: [id])
+  structure      Structure      @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  sourceLinks    ElementLink[]  @relation("SourceElement")
+  targetLinks    ElementLink[]  @relation("TargetElement")
+  StructureMap   StructureMap[] @relation("MapElements")
+}
+
+model Record {
+  id         String        @id @default(uuid())
+  metadata   Json
+  tags       Json?
+  editorType EditorType    @default(vscode)
+  recordSvg  Json?
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
+  renderer   RendererType? @default(none)
+  Element    Element[]
+}
+
+model ParsedContent {
+  id             String     @id @default(uuid())
+  Guid           String     @unique @default(uuid())
+  structureId    String?
+  type           String
+  wbs            String
+  level          Int
+  element        String
+  uniqWBS        String?    @unique
+  markmapMM      String?
+  additionalData Json?
+  createdAt      DateTime   @default(now())
+  structure      Structure? @relation(fields: [structureId], references: [id])
+}
+
+model ElementLink {
+  id              String    @id @default(uuid())
+  sourceElementId String
+  targetElementId String
+  attributes      Json?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  Element         Element[]
+  sourceElement   Element   @relation("SourceElement", fields: [sourceElementId], references: [id])
+  targetElement   Element   @relation("TargetElement", fields: [targetElementId], references: [id])
+}
+
+model StructureMap {
+  id          String    @id @default(uuid())
+  structureId String
+  name        String
+  description String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  structure   Structure @relation(fields: [structureId], references: [id])
+  elements    Element[] @relation("MapElements")
+}
+
+model Backup {
+  id          String    @id @default(uuid())
+  title       String?
+  userId      String
+  backupData  Json
+  workspaceId String    @default("default_workspace_id")
+  isPublic    Boolean   @default(false)
+  fileUrl     String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id])
+  workspace   Workspace @relation(fields: [workspaceId], references: [id])
+}
+
+model DeletionLog {
+  id        String   @id @default(uuid())
+  userId    String
+  element   String
+  elementId String?
+  deletedAt DateTime @default(now())
+  reason    String?
+  status    String   @default("pending")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model Attachment {
+  id        String   @id @default(uuid())
+  fileUrl   String
+  fileType  String
+  data      Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model Renderer {
+  id             String    @id @default(uuid())
+  type           String
+  config         Json
+  customSettings Json
+  structureId    String
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  structure      Structure @relation(fields: [structureId], references: [id])
+}
+
+model ApiKey {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  userId    String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  user      User     @relation(fields: [userId], references: [id])
+}
+
+model AuditLog {
+  id        String   @id @default(uuid())
+  action    String
+  element   String?
+  elementId String?
+  details   Json
+  createdAt DateTime @default(now())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+}
+
+model ExternalIntegration {
+  id        String   @id @default(uuid())
+  name      String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Webhook {
+  id          String    @id @default(uuid())
+  url         String
+  events      String[]
+  structureId String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  structure   Structure @relation(fields: [structureId], references: [id])
+}
+
+model StructureCatalog {
+  id           String        @id @default(uuid())
+  name         String
+  description  String?
+  thumbnailUrl String?
+  fileUrl      String?
+  order        Int           @default(0)
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  workspaceId  String?
+  userTier     CatalogTier[]
+  workspace    Workspace?    @relation(fields: [workspaceId], references: [id])
+
+  @@index([workspaceId])
+}
+
+model CatalogTier {
+  id        String           @id @default(uuid())
+  catalogId String
+  tier      String
+  catalog   StructureCatalog @relation(fields: [catalogId], references: [id], onDelete: Cascade)
+
+  @@unique([catalogId, tier])
+}
+
+model PrivacyPolicy {
+  id        String   @id @default(uuid())
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User[]
+}
+
+model TermsOfService {
+  id        String   @id @default(uuid())
+  content   Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User[]
+}
+
+model AppSettings {
+  id               String   @id @default(uuid())
+  appName          String?
+  logoUrl          String?
+  supportEmail     String?
+  feedbackLink     String?
+  primaryColor     String?
+  secondaryColor   String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  authProviders    Json?
+  inviteCodeOption String?
+  smtpSettings     Json?
+}
+
+model StructureTemplate {
+  id            String        @id @default(uuid())
+  name          String
+  description   String?
+  structureJson Json
+  structureType StructureType @default(default)
+  tags          String[]
+  isPublic      Boolean       @default(false)
+  structureId   String?
+  ownerId       String
+  workspaceId   String?
+  thumbnailUrl  String?
+  fileUrl       String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  owner         User          @relation(fields: [ownerId], references: [id])
+  structure     Structure?    @relation(fields: [structureId], references: [id])
+  workspace     Workspace?    @relation(fields: [workspaceId], references: [id])
+
+  @@index([structureId])
+  @@index([workspaceId])
+  @@index([ownerId])
+}
+
+model StructureShare {
+  id          String          @id @default(uuid())
+  structureId String
+  userId      String
+  permission  SharePermission
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  structure   Structure       @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([structureId, userId])
+  @@index([structureId])
+  @@index([userId])
+}
+
+model StructureShareLink {
+  id          String          @id @default(uuid())
+  structureId String
+  token       String          @unique @default(uuid())
+  permission  SharePermission
+  expiresAt   DateTime?
+  isActive    Boolean         @default(true)
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+  structure   Structure       @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@index([structureId])
+  @@index([token])
+}
+
+model StructureShareInvitation {
+  id           String           @id @default(uuid())
+  structureId  String
+  inviterId    String
+  inviteeEmail String
+  permission   SharePermission
+  token        String           @unique @default(uuid())
+  message      String?
+  status       InvitationStatus @default(pending)
+  expiresAt    DateTime
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+  usedAt       DateTime?
+  inviteeId    String?
+  invitee      User?            @relation("StructureShareInvitationInvitee", fields: [inviteeId], references: [id])
+  inviter      User             @relation("StructureShareInvitationInviter", fields: [inviterId], references: [id])
+  structure    Structure        @relation(fields: [structureId], references: [id], onDelete: Cascade)
+
+  @@index([structureId])
+  @@index([inviteeEmail])
+  @@index([token])
+}
+
+enum SubscriptionStatus {
+  active
+  inactive
+  suspended
+  cancelled
+}
+
+enum Visibility {
+  public
+  private
+  archived
+  restricted
+}
+
+enum Status {
+  active
+  inactive
+}
+
+enum WorkspaceRole {
+  admin
+  member
+}
+
+enum EditorType {
+  vscode
+  quilleditor
+}
+
+enum RendererType {
+  none
+  mermaid
+  markeddown
+  plantuml
+  latex
+}
+
+enum StructureType {
+  default
+  faultTree
+}
+
+enum SharePermission {
+  owner
+  editor
+  commenter
+  viewer
+}
+
+enum InvitationStatus {
+  pending
+  expired
+  accepted
+}
+
+model Metric {
+  id             String   @id @default(uuid())
+  timestamp      DateTime @default(now())
+  cpu_util_pct   Float?
+  mem_used_gib   Float?
+  mem_total_gib  Float?
+  mem_util_pct   Float?     
+  disk_used_gib  Float?
+  disk_total_gib Float?
+  disk_util_pct  Float?     
+  net_rx_kib     Decimal?
+  net_tx_kib     Decimal?
+  disk_read_kib  Decimal? 
+  disk_write_kib Decimal? 
+
+  @@index([timestamp])
+}
+
