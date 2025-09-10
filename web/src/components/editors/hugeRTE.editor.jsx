@@ -197,18 +197,27 @@ const HugeRTEEditor = ({ content, onEditorChange, editorClassName }) => {
               });
 
               editor.on("Change KeyUp Paste Undo Redo", () => {
-                if (isUpdatingContent.current) return;
+  if (isUpdatingContent.current) return;
 
-                try {
-                  const newContent = editor.getContent();
-                  if (newContent !== lastSetContent.current) {
-                    onEditorChange(newContent);
-                  }
-                } catch (error) {
-                  cogoToast.error("Content change error: " + error?.message);
-                }
-              });
+  try {
+    let newContent = editor.getContent().trim();
 
+    if (
+      !newContent ||
+      newContent === "<p><br></p>" ||
+      newContent === "<p></p>" ||
+      newContent === "<div></div>"
+    ) {
+      newContent = "";
+    }
+
+    if (newContent !== lastSetContent.current) {
+      onEditorChange(newContent);
+    }
+  } catch (error) {
+    cogoToast.error("Content change error: " + error?.message);
+  }
+});
               editor.on("init", () => {
                 try {
                   isInitialized.current = true;

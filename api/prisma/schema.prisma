@@ -548,3 +548,22 @@ enum InvitationStatus {
   expired
   accepted
 }
+
+model Metric {
+  id             String   @id @default(uuid())
+  timestamp      DateTime @default(now())
+  cpu_util_pct   Float?
+  mem_used_gib   Float?
+  mem_total_gib  Float?
+  mem_util_pct   Float?     
+  disk_used_gib  Float?
+  disk_total_gib Float?
+  disk_util_pct  Float?     
+  net_rx_kib     Decimal?
+  net_tx_kib     Decimal?
+  disk_read_kib  Decimal? 
+  disk_write_kib Decimal? 
+
+  @@index([timestamp])
+}
+

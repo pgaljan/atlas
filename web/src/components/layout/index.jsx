@@ -72,7 +72,7 @@ const Layout = () => {
             <SidebarFooter />
           </div>
         )}
-        <main className="flex-1 bg-gray-200 p-2 overflow-auto">
+        <main className={`flex-1 bg-gray-200 overflow-auto ${hideSidebar ? '' : 'p-2'}`}>
           <Outlet />
         </main>
       </div>
