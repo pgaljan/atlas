@@ -29,7 +29,7 @@ const ShareCallback = () => {
 
   const { loading, error } = useSelector(state => state.structureShares || {})
 
-  // 🔹 Check authentication status on mount
+  // Check authentication status on mount
   useEffect(() => {
     const checkAuth = async () => {
       const valid = await isTokenValid()
@@ -37,19 +37,21 @@ const ShareCallback = () => {
 
       if (!valid) {
         const token = searchParams.get("token")
-        const email = searchParams.get("email")
-
-        if (token && email) {
-          // store pending invitation
+        if (token) {
+          // store pending invitation token only
           sessionStorage.setItem(
-            "pendingInvitation",
-            JSON.stringify({ token, email })
+            "pendingInvitationToken",
+            JSON.stringify({ token })
           )
           const returnUrl = encodeURIComponent(
             location.pathname + location.search
           )
           cogoToast.info("Please log in to accept this invitation")
           navigate(`/?returnUrl=${returnUrl}`, { replace: true })
+        } else {
+          // no token -> invalid link
+          setStatus("error")
+          setErrorMessage("Invalid invitation link")
         }
       }
     }
@@ -57,41 +59,35 @@ const ShareCallback = () => {
     checkAuth()
   }, [navigate, searchParams, location])
 
-  // 🔹 Restore invitation after login
+  // Restore invitation after login
   useEffect(() => {
     if (isAuthenticated === true) {
-      const pendingInvitation = sessionStorage.getItem("pendingInvitation")
-      if (pendingInvitation) {
+      const pending = sessionStorage.getItem("pendingInvitationToken")
+      if (pending) {
         try {
-          const params = JSON.parse(pendingInvitation)
+          const params = JSON.parse(pending)
           setInvitationParams(params)
 
           // Ensure we are on /share/callback, otherwise redirect back here
           if (!location.pathname.includes("/share/callback")) {
-            navigate(
-              `/share/callback?token=${params.token}&email=${encodeURIComponent(
-                params.email
-              )}`,
-              { replace: true }
-            )
+            navigate(`/share/callback?token=${params.token}`, { replace: true })
             return
           }
 
-          sessionStorage.removeItem("pendingInvitation")
+          sessionStorage.removeItem("pendingInvitationToken")
         } catch (err) {
-          // console.error("Failed to parse pending invitation", err)
+          // ignore parse error
         }
       }
     }
   }, [isAuthenticated, location, navigate])
 
-  // 🔹 Process invitation
+  // Process invitation
   useEffect(() => {
     const processInvitation = async () => {
       const token = invitationParams?.token || searchParams.get("token")
-      const email = invitationParams?.email || searchParams.get("email")
 
-      if (!token || !email) {
+      if (!token) {
         setStatus("error")
         setErrorMessage("Invalid invitation link")
         return
@@ -99,9 +95,9 @@ const ShareCallback = () => {
 
       try {
         setStatus("loading")
-        // acceptInvitation now returns { success: true, structureId, permission, ownerUsername }
+        // acceptInvitation now takes { token } and uses auth
         const result = await dispatch(
-          acceptInvitation({ token, email })
+          acceptInvitation({ token })
         ).unwrap()
 
         setStatus("success")
@@ -121,7 +117,7 @@ const ShareCallback = () => {
             id: returnedStructureId,
             ownerUsername: returnedOwnerUsername,
             permission: returnedPermission || "",
-            structureType: "default", // will be adjusted if we fetch structures below
+            structureType: "default",
           })
           setShowRendererModal(true)
           return
@@ -139,14 +135,12 @@ const ShareCallback = () => {
 
             let matched = null
 
-            // 1) If server returned structureId but no ownerUsername, find the structure by id
             if (returnedStructureId) {
               matched = (structures || []).find(
                 s => String(s.id) === String(returnedStructureId)
               )
             }
 
-            // 2) If not matched by id, fallback to explicit share/invite matching (narrow)
             if (!matched) {
               matched = (structures || []).find(s => {
                 const shares = s.shares || []
@@ -166,11 +160,9 @@ const ShareCallback = () => {
             }
 
             if (matched) {
-              // Prefer server-returned owner username (from accept-invitation)
               const ownerUsername =
                 returnedOwnerUsername || matched.owner?.username || null
 
-              // Determine permission: prefer server-returned permission
               const permFromShare = matched.shares?.find(
                 sh => String(sh.userId) === String(currentUserId)
               )?.permission
@@ -185,7 +177,6 @@ const ShareCallback = () => {
               const permission =
                 returnedPermission || permFromShare || permFromInvite || ""
 
-              // If no ownerUsername, we can't reliably build canonical URL -> abort to dashboard
               if (!ownerUsername) {
                 console.warn(
                   "Accept-invitation: owner username not available for structure",
@@ -208,11 +199,11 @@ const ShareCallback = () => {
               return
             }
           } catch (err) {
-            // console.warn("Failed to fetch structures after accept:", err)
+            // ignore
           }
         }
 
-        // If we reach here: no structure metadata found — show a neutral modal (no open)
+        // no metadata found — show neutral modal
         setSharedStructure(null)
         setShowRendererModal(true)
       } catch (err) {
@@ -237,7 +228,7 @@ const ShareCallback = () => {
     }
   }, [dispatch, navigate, searchParams, isAuthenticated, invitationParams])
 
-  // 🔹 Renderer selection handler
+  // Renderer selection handler
   const handleRendererSelect = renderer => {
     setShowRendererModal(false)
 
@@ -251,7 +242,6 @@ const ShareCallback = () => {
         const q = encodeURIComponent(enc)
         const url = `/app/s/${sharedStructure.ownerUsername}/${sharedStructure.id}?renderer=${renderer}&permission=${q}`
 
-        // replaceState to avoid back navigation loop, then reload to ensure renderer mounts cleanly
         window.history.replaceState(null, "", url)
         window.location.reload()
         return

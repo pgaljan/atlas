@@ -18,24 +18,29 @@ export class AppSettingsService {
     try {
       const existing = await this.prisma.appSettings.findFirst();
 
-      const updateData = {
-        appName: data.appName,
-        primaryColor: data.primaryColor ?? '',
-        secondaryColor: data.secondaryColor ?? '',
-        supportEmail: data.supportEmail ?? '',
-        feedbackLink: data.feedbackLink ?? '',
-        logoUrl: data.logoUrl ?? '',
-        inviteCodeOption: data.inviteCodeOption ?? 'disabled',
+      const updateData: any = {
+        appName: data.appName ?? existing?.appName ?? 'Atlas',
+        primaryColor: data.primaryColor ?? existing?.primaryColor ?? '#660000',
+        secondaryColor:
+          data.secondaryColor ?? existing?.secondaryColor ?? '#006666',
+        supportEmail: data.supportEmail ?? existing?.supportEmail ?? '',
+        feedbackLink: data.feedbackLink ?? existing?.feedbackLink ?? '',
+        logoUrl: data.logoUrl ?? existing?.logoUrl ?? '',
+        inviteCodeOption:
+          data.inviteCodeOption ?? existing?.inviteCodeOption ?? 'disabled',
         authProviders: data.authProviders
           ? JSON.parse(JSON.stringify(data.authProviders))
-          : {
+          : (existing?.authProviders ?? {
               local: true,
               google: false,
               github: false,
-            },
+            }),
         smtpSettings: data.smtpSettings
-          ? JSON.parse(JSON.stringify(data.smtpSettings))
-          : {},
+          ? {
+              ...((existing?.smtpSettings as Record<string, any>) ?? {}),
+              ...JSON.parse(JSON.stringify(data.smtpSettings)),
+            }
+          : ((existing?.smtpSettings as Record<string, any>) ?? {}),
       };
 
       if (existing) {
@@ -57,6 +62,7 @@ export class AppSettingsService {
 
   async getSettings() {
     const settings = await this.prisma.appSettings.findFirst();
+
     if (!settings) {
       return {
         appName: 'Atlas',
@@ -119,10 +125,23 @@ export class AppSettingsService {
         );
       }
 
+      const extraHeaders: Record<string, string> = {};
+      if (smtpSettings.messageStream) {
+        extraHeaders['X-PM-Message-Stream'] = smtpSettings.messageStream;
+      }
+
+      if (
+        smtpSettings.extraHeaders &&
+        typeof smtpSettings.extraHeaders === 'object'
+      ) {
+        Object.assign(extraHeaders, smtpSettings.extraHeaders);
+      }
+
       const fromAddress =
         smtpSettings.fromEmail ||
         smtpSettings.fromAddress ||
-        smtpSettings.username;
+        smtpSettings.username ||
+        smtpSettings.serverToken;
       const fromName = smtpSettings.fromName || settings.appName || 'Atlas';
 
       if (
@@ -142,10 +161,12 @@ export class AppSettingsService {
           encryption: smtpSettings.encryption,
           username: smtpSettings.username,
           password: smtpSettings.password,
+          serverToken: smtpSettings.serverToken,
           fromEmail: fromAddress.trim(),
           fromName,
           tlsRejectUnauthorized: smtpSettings.tlsRejectUnauthorized,
           perRequestTransport: true,
+          extraHeaders,
         });
 
         const info = await mailer.sendTestEmail(

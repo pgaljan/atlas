@@ -625,6 +625,7 @@ const index = () => {
                   selectsStart
                   startDate={startDate}
                   endDate={endDate}
+                   maxDate={new Date()} 
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholderText="Select start date"
                 />
@@ -638,6 +639,7 @@ const index = () => {
                   selectsEnd
                   startDate={startDate}
                   endDate={endDate}
+                   maxDate={new Date()}
                   minDate={startDate}
                   className="w-full p-2 border border-gray-300 rounded"
                   placeholderText="Select end date"

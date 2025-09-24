@@ -5,7 +5,6 @@ import {
   IsString,
   IsUrl,
   IsEnum,
-  IsObject,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
@@ -27,7 +26,7 @@ class AuthProvidersDto {
   github?: boolean;
 }
 
-class SmtpSettingsDto {
+export class SmtpSettingsDto {
   @IsString()
   @IsNotEmpty({ message: 'SMTP Host is required' })
   host: string;
@@ -47,6 +46,10 @@ class SmtpSettingsDto {
   @IsOptional()
   password?: string;
 
+  @IsString()
+  @IsOptional()
+  serverToken?: string;
+
   @IsEmail()
   @IsOptional()
   fromAddress?: string;
@@ -58,6 +61,10 @@ class SmtpSettingsDto {
   @IsString()
   @IsOptional()
   subjectPrefix?: string;
+
+  @IsString()
+  @IsOptional()
+  messageStream?: string;
 }
 
 export class CreateUpdateAppSettingsDto {

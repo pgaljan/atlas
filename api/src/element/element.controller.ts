@@ -19,8 +19,10 @@ import { UpdateElementDto } from './dto/update-element.dto';
 import { ElementService } from './element.service';
 import { UpdateIsExpandedDto } from './dto/update-is-expanded.dto';
 import { UpdateOrderIndexDto } from './dto/update-order-index.dto';
+import { StructurePermissionGuard } from 'src/auth/guards/structure-permission.guard';
 
 @Controller('element')
+@UseGuards(JwtAuthGuard, StructurePermissionGuard)
 export class ElementController {
   constructor(private readonly elementService: ElementService) {}
 

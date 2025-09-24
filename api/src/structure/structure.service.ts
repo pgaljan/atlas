@@ -1,4 +1,5 @@
 import {
+  ForbiddenException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
@@ -28,6 +29,35 @@ export class StructureService {
         children: childrenPayload ? { create: childrenPayload } : undefined,
       };
     });
+  }
+
+  private async getUserPermissionOnStructure(
+    structureId: string,
+    userId: string | null,
+  ) {
+    if (!userId) return null;
+
+    const structure = await this.prisma.structure.findUnique({
+      where: { id: structureId },
+      select: { ownerId: true },
+    });
+    if (!structure) throw new NotFoundException('Structure not found');
+
+    if (structure.ownerId === userId) return 'owner' as const;
+
+    const share = await this.prisma.structureShare.findUnique({
+      where: { structureId_userId: { structureId, userId } },
+      select: { permission: true },
+    });
+    if (share) return share.permission as any;
+
+    const invitation = await this.prisma.structureShareInvitation.findFirst({
+      where: { structureId, inviteeId: userId, status: 'accepted' },
+      select: { permission: true },
+    });
+    if (invitation) return invitation.permission as any;
+
+    return null;
   }
 
   async createStructure(createStructureDto: CreateStructureDto) {
@@ -136,43 +166,41 @@ export class StructureService {
     }
   }
 
-  async getStructure(id: string) {
-    try {
-      const structure = await this.prisma.structure.findUnique({
-        where: { id },
-        include: {
-          elements: {
-            where: { deletedAt: null },
-            orderBy: { orderIndex: 'asc' },
-            include: {
-              sourceLinks: true,
-              targetLinks: true,
-              Record: true,
-            },
+  async getStructure(id: string, userId?: string | null) {
+    const structure = await this.prisma.structure.findUnique({
+      where: { id },
+      include: {
+        elements: {
+          where: { deletedAt: null },
+          orderBy: { orderIndex: 'asc' },
+          include: {
+            sourceLinks: true,
+            targetLinks: true,
+            Record: true,
           },
         },
-      });
+      },
+    });
 
-      if (!structure) {
-        throw new NotFoundException(`Structure with id ${id} not found`);
-      }
-
-      const buildHierarchy = (
-        elements: any[],
-        parentId: string | null = null,
-      ) =>
-        elements
-          .filter((element) => element.parentId === parentId)
-          .map((element) => ({
-            ...element,
-            children: buildHierarchy(elements, element.id),
-          }));
-
-      const nestedElements = buildHierarchy(structure.elements);
-      return { ...structure, elements: nestedElements };
-    } catch (error) {
-      throw new NotFoundException(`Structure not found: ${error.message}`);
+    if (!structure) {
+      throw new NotFoundException(`Structure with id ${id} not found`);
     }
+
+    const perm = await this.getUserPermissionOnStructure(id, userId);
+    if (perm === null) {
+      throw new ForbiddenException('You do not have access to this structure');
+    }
+
+    const buildHierarchy = (elements: any[], parentId: string | null = null) =>
+      elements
+        .filter((element) => element.parentId === parentId)
+        .map((element) => ({
+          ...element,
+          children: buildHierarchy(elements, element.id),
+        }));
+
+    const nestedElements = buildHierarchy(structure.elements);
+    return { ...structure, elements: nestedElements };
   }
 
   async getAccessibleStructuresForUser(currentUserId: string) {
@@ -216,7 +244,22 @@ export class StructureService {
     });
   }
 
-  async updateStructure(id: string, updateData: Partial<CreateStructureDto>) {
+  async updateStructure(
+    id: string,
+    updateData: Partial<CreateStructureDto>,
+    userId?: string,
+  ) {
+    const structure = await this.prisma.structure.findUnique({ where: { id } });
+    if (!structure)
+      throw new NotFoundException(`Structure with id ${id} not found`);
+
+    const perm = await this.getUserPermissionOnStructure(id, userId);
+    if (!perm) {
+      throw new ForbiddenException(
+        'You no longer have access to this structure',
+      );
+    }
+
     try {
       const {
         name,
@@ -230,16 +273,8 @@ export class StructureService {
         markmapShowWbs,
       } = updateData;
 
-      const structure = await this.prisma.structure.findUnique({
-        where: { id },
-      });
-      if (!structure) {
-        throw new NotFoundException(`Structure with id ${id} not found`);
-      }
-
       const elementsToProcess = elements || [];
 
-      // Perform the update, including the imageUrl if provided
       const updatedStructure = await this.prisma.structure.update({
         where: { id },
         data: {
@@ -266,7 +301,6 @@ export class StructureService {
         },
       });
 
-      // Log the update in the AuditLog including imageUrl snapshot info
       await this.prisma.auditLog.create({
         data: {
           action: 'UPDATE',
@@ -281,7 +315,7 @@ export class StructureService {
               type: element.name,
             })),
           },
-          userId: structure.ownerId,
+          userId: userId || structure.ownerId,
         },
       });
 
@@ -292,18 +326,17 @@ export class StructureService {
       );
     }
   }
+  async deleteStructure(id: string, userId?: string) {
+    const structure = await this.prisma.structure.findUnique({
+      where: { id },
+      include: { elements: true },
+    });
 
-  async deleteStructure(id: string) {
-    try {
-      const structure = await this.prisma.structure.findUnique({
-        where: { id },
-        include: { elements: true },
-      });
+    if (!structure) {
+      throw new NotFoundException(`Structure with id ${id} not found`);
+    }
 
-      if (!structure) {
-        throw new NotFoundException(`Structure with id ${id} not found`);
-      }
-
+    if (userId && structure.ownerId === userId) {
       const elementIds = structure.elements.map((element) => element.id);
 
       await this.prisma.record.deleteMany({
@@ -311,37 +344,39 @@ export class StructureService {
       });
       await this.prisma.element.deleteMany({ where: { structureId: id } });
 
-      // Fetch user subscription
       const subscription = await this.prisma.subscription.findUnique({
         where: { userId: structure.ownerId },
       });
 
-      if (!subscription) {
-        throw new NotFoundException(
-          `Subscription for user ${structure.ownerId} not found`,
-        );
-      }
-
-      let features = subscription.features as Record<string, any>;
-
-      // Restore the "Structures" feature count
-      if (features['Structures'] !== 'Unlimited') {
-        let structureLimit = parseInt(features['Structures'], 10);
-
-        if (!isNaN(structureLimit)) {
-          features['Structures'] = (structureLimit + 1).toString();
-
-          // Update the subscription with the restored feature count
-          await this.prisma.subscription.update({
-            where: { userId: structure.ownerId },
-            data: {
-              features: features,
-            },
-          });
+      if (subscription) {
+        let features = subscription.features as Record<string, any>;
+        if (features['Structures'] !== 'Unlimited') {
+          let structureLimit = parseInt(features['Structures'], 10);
+          if (!isNaN(structureLimit)) {
+            features['Structures'] = (structureLimit + 1).toString();
+            await this.prisma.subscription.update({
+              where: { userId: structure.ownerId },
+              data: { features: features },
+            });
+          }
         }
+
+        await this.prisma.auditLog.create({
+          data: {
+            action: 'DELETE',
+            element: 'Structure',
+            elementId: structure.id.toString(),
+            details: {
+              name: structure.name,
+              description: structure.description,
+            },
+            userId: structure.ownerId,
+          },
+        });
+
+        return this.prisma.structure.delete({ where: { id } });
       }
 
-      // Log the deletion in the AuditLog
       await this.prisma.auditLog.create({
         data: {
           action: 'DELETE',
@@ -353,20 +388,66 @@ export class StructureService {
       });
 
       return this.prisma.structure.delete({ where: { id } });
-    } catch (error) {
-      throw new InternalServerErrorException(
-        `Failed to delete structure: ${error.message}`,
-      );
     }
+
+    const deletedShares = await this.prisma.structureShare.deleteMany({
+      where: {
+        structureId: id,
+        userId,
+      },
+    });
+
+    const targetUser = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { username: true },
+    });
+    const inviteeUsername = targetUser?.username ?? null;
+
+    const deletedInvitations =
+      await this.prisma.structureShareInvitation.deleteMany({
+        where: {
+          structureId: id,
+          OR: [
+            { inviteeId: userId },
+            ...(inviteeUsername ? [{ inviteeUsername }] : []),
+          ],
+        },
+      });
+
+    const deletedTeamMembers = await this.prisma.teamMember.deleteMany({
+      where: { workspaceId: structure.workspaceId, userId },
+    });
+
+    await this.prisma.auditLog.create({
+      data: {
+        action: 'REMOVE_SHARED_ACCESS_FOR_USER',
+        element: 'Structure',
+        elementId: id,
+        details: {
+          removedShares: deletedShares.count,
+          removedInvitations: deletedInvitations.count,
+          removedTeamMembers: deletedTeamMembers.count,
+          targetUserId: userId,
+        },
+        userId,
+      },
+    });
+
+    return {
+      message:
+        'Removed your access to this shared structure. The structure still exists for the owner.',
+      removedShares: deletedShares.count,
+      removedInvitations: deletedInvitations.count,
+      removedTeamMembers: deletedTeamMembers.count,
+    };
   }
-  // Batch operations
+
   async createBatchStructures(structures: CreateStructureDto[]) {
     try {
       const createdStructures = await Promise.all(
         structures.map((structure) => this.createStructure(structure)),
       );
 
-      // Log each creation in the AuditLog
       for (const createdStructure of createdStructures) {
         await this.prisma.auditLog.create({
           data: {
@@ -423,6 +504,13 @@ export class StructureService {
       throw new NotFoundException(`Structure with id ${id} not found`);
     }
 
+    const perm = await this.getUserPermissionOnStructure(id, userId);
+    if (!perm) {
+      throw new ForbiddenException(
+        'You no longer have access to this structure',
+      );
+    }
+
     try {
       const updatedStructure = await this.prisma.structure.update({
         where: { id },
@@ -451,13 +539,20 @@ export class StructureService {
     }
   }
 
-  async updateWbsStart(structureId: string, wbsStart: number) {
+  async updateWbsStart(structureId: string, wbsStart: number, userId?: string) {
     const structure = await this.prisma.structure.findUnique({
       where: { id: structureId },
     });
 
     if (!structure) {
       throw new NotFoundException(`Structure with id ${structureId} not found`);
+    }
+
+    const perm = await this.getUserPermissionOnStructure(structureId, userId);
+    if (!perm || !['owner', 'editor'].includes(perm)) {
+      throw new ForbiddenException(
+        'Insufficient permission to update WBS Start',
+      );
     }
 
     try {
@@ -478,7 +573,7 @@ export class StructureService {
             previousData: { wbsStart: structure.wbsStart },
             updatedData: { wbsStart },
           },
-          userId: structure.ownerId,
+          userId: userId || structure.ownerId,
         },
       });
 

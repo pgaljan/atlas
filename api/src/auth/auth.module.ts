@@ -21,7 +21,7 @@ import { InvitationModule } from 'src/invitations/invitations.module';
       signOptions: { expiresIn: '24h' },
     }),
     PrismaModule,
-    InvitationModule
+    InvitationModule,
   ],
   providers: [
     AuthService,
@@ -29,7 +29,7 @@ import { InvitationModule } from 'src/invitations/invitations.module';
     LocalStrategy,
     JwtStrategy,
     GoogleStrategy,
-    GitHubStrategy
+    GitHubStrategy,
   ],
   controllers: [AuthController],
 })

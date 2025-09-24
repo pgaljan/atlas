@@ -2,23 +2,18 @@ import {
   BadRequestException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
 } from '@nestjs/common';
-import { v4 as uuidv4 } from 'uuid';
 import { PrismaService } from '../prisma/prisma.service';
-import { MailerService } from '../utils/mailer.util';
-import { CreateShareLinkDto } from './dto/create-share-link-structure.dto';
 import { CreateShareDto } from './dto/create-share-structure.dto';
 import { InviteShareDto } from './dto/invite-share-structure.dto';
 import { UpdateShareDto } from './dto/update-share-structure.dto';
 
 @Injectable()
 export class StructureSharesService {
-  constructor(
-    private readonly prisma: PrismaService,
-    private readonly mailerService: MailerService,
-  ) {}
-
+  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(StructureSharesService.name);
   private async logAudit(
     action: string,
     element: string,
@@ -84,7 +79,7 @@ export class StructureSharesService {
     return this.prisma.structureShare.findMany({
       where: { structureId },
       include: {
-        user: { select: { id: true, email: true, displayName: true } },
+        user: { select: { id: true, username: true, displayName: true } },
       },
       orderBy: { createdAt: 'asc' },
     });
@@ -121,7 +116,7 @@ export class StructureSharesService {
       });
 
       await this.logAudit(
-        'UPDATE_SHARE_INVITATION',
+        'UPDATE_SHARE',
         'StructureShare',
         result.id,
         {
@@ -188,20 +183,21 @@ export class StructureSharesService {
   }
 
   async updateShare(
-    shareId: string,
+    invitationId: string,
     dto: UpdateShareDto,
     currentUserId: string,
   ) {
-    const share = await this.prisma.structureShareInvitation.findUnique({
-      where: { id: shareId },
+    const invitation = await this.prisma.structureShareInvitation.findUnique({
+      where: { id: invitationId },
       include: {
-        invitee: { select: { id: true, email: true, displayName: true } },
-        inviter: { select: { id: true, email: true, displayName: true } },
+        invitee: { select: { id: true, username: true } },
+        inviter: { select: { id: true, username: true } },
       },
     });
-    if (!share) throw new NotFoundException('Share not found');
 
-    await this.ensureIsOwner(share.structureId, currentUserId);
+    if (!invitation) throw new NotFoundException('Invitation not found');
+
+    await this.ensureIsOwner(invitation.structureId, currentUserId);
 
     if (String(dto.permission) === 'owner') {
       throw new BadRequestException(
@@ -209,31 +205,45 @@ export class StructureSharesService {
       );
     }
 
-    const updatedShare = await this.prisma.structureShareInvitation.update({
-      where: { id: shareId },
-      data: { permission: dto.permission },
-    });
+    const [updatedInvitation, updatedShare] = await this.prisma.$transaction([
+      this.prisma.structureShareInvitation.update({
+        where: { id: invitationId },
+        data: { permission: dto.permission },
+      }),
+
+      invitation.inviteeId
+        ? this.prisma.structureShare.updateMany({
+            where: {
+              structureId: invitation.structureId,
+              userId: invitation.inviteeId,
+            },
+            data: { permission: dto.permission },
+          })
+        : null,
+    ]);
+
     await this.logAudit(
-      'UPDATE_SHARE_ROLE',
+      'UPDATE_INVITATION_ROLE',
       'StructureShareInvitation',
-      shareId,
+      invitationId,
       {
-        structureId: share.structureId,
-        previousPermission: share.permission,
+        structureId: invitation.structureId,
+        previousPermission: invitation.permission,
         updatedPermission: dto.permission,
-        invitee: share.invitee
-          ? {
-              id: share.invitee.id,
-              email: share.invitee.email,
-              displayName: share.invitee.displayName,
-            }
-          : { email: share.inviteeEmail || null },
-        inviter: share.inviter || null,
+        invitee: invitation.invitee
+          ? { id: invitation.invitee.id, username: invitation.invitee.username }
+          : { username: invitation.inviteeUsername || null },
+        inviter: invitation.inviter
+          ? { id: invitation.inviter.id, username: invitation.inviter.username }
+          : null,
       },
       currentUserId,
     );
 
-    return updatedShare;
+    return {
+      updatedInvitation,
+      updatedShare: updatedShare ?? null, 
+    };
   }
 
   async transferOwnership(
@@ -296,7 +306,7 @@ export class StructureSharesService {
   }
 
   async createInvitation(dto: InviteShareDto, inviterUserId: string) {
-    const { structureId, inviteeEmail, permission, message } = dto;
+    const { structureId, inviteeUsername, permission, message } = dto;
 
     const structure = await this.ensureIsOwner(structureId, inviterUserId);
 
@@ -305,13 +315,14 @@ export class StructureSharesService {
     });
     if (!inviter) throw new NotFoundException('Inviter not found');
 
-    if (inviteeEmail.toLowerCase() === inviter.email.toLowerCase()) {
+    if (inviteeUsername.toLowerCase() === inviter.username?.toLowerCase()) {
       throw new BadRequestException(
         'You cannot invite yourself to a structure you already own or have access to.',
       );
     }
+
     const existingUser = await this.prisma.user.findUnique({
-      where: { email: inviteeEmail },
+      where: { username: inviteeUsername },
     });
     if (!existingUser) {
       throw new BadRequestException('Invitee must be a registered user');
@@ -320,20 +331,18 @@ export class StructureSharesService {
     const expiresAt = new Date();
     expiresAt.setDate(expiresAt.getDate() + 7);
 
-    // Start transaction: create invitation & ensure team
     const inv = await this.prisma.$transaction(async (tx) => {
       const createdInv = await tx.structureShareInvitation.create({
         data: {
-          structureId,
-          inviterId: inviterUserId,
-          inviteeEmail,
+          structure: { connect: { id: structureId } },
+          inviter: { connect: { id: inviterUserId } },
+          inviteeUsername,
           permission,
           message,
           expiresAt,
         },
       });
 
-      // Ensure there's a team owned by the structure owner in this workspace
       let team = await tx.team.findFirst({
         where: {
           workspaceId: structure.workspaceId,
@@ -342,7 +351,6 @@ export class StructureSharesService {
       });
 
       if (!team) {
-        // fallback: any team in workspace
         team = await tx.team.findFirst({
           where: { workspaceId: structure.workspaceId },
         });
@@ -354,14 +362,14 @@ export class StructureSharesService {
         });
         team = await tx.team.create({
           data: {
-            name: `${owner?.displayName || owner?.email || 'Workspace'} Team`,
+            name: `${owner?.displayName || owner?.username || 'Workspace'} Team`,
             ownerId: structure.ownerId,
             workspaceId: structure.workspaceId,
           },
         });
       }
 
-      // ✅ Add existing user to the team if not already added
+      // Add existingUser to the team if not already present
       try {
         await tx.teamMember.createMany({
           data: [
@@ -378,7 +386,6 @@ export class StructureSharesService {
         // ignore duplicate errors
       }
 
-      // If user has no default workspace, set it
       if (!existingUser.defaultWorkspaceId) {
         await tx.user.update({
           where: { id: existingUser.id },
@@ -396,11 +403,11 @@ export class StructureSharesService {
       {
         structureId,
         structureName: structure.name,
-        inviteeEmail,
+        inviteeUsername,
         permission,
         inviter: {
           id: inviter.id,
-          email: inviter.email,
+          username: inviter.username,
           displayName: inviter.displayName,
         },
         status: inv.status,
@@ -411,23 +418,22 @@ export class StructureSharesService {
       inviterUserId,
     );
 
-    try {
-      await this.mailerService.sendStructureShareInvitation(
-        inviteeEmail,
-        structure.name || 'Unnamed Structure',
-        inviter.displayName || inviter.email,
-        inv.token,
-        permission,
-        message,
-      );
-    } catch (emailError) {}
-
     return inv;
   }
 
-  async acceptInvitation(token: string, acceptingUserEmail: string) {
+  async acceptInvitationById(
+    invitationId: string,
+    acceptingUserId: string,
+    acceptingUsername?: string | null,
+  ) {
+    this.logger.debug('acceptInvitationById called', {
+      invitationId,
+      acceptingUserId,
+      acceptingUsernameProvided: Boolean(acceptingUsername),
+    });
+
     const invitation = await this.prisma.structureShareInvitation.findUnique({
-      where: { token },
+      where: { id: invitationId },
       include: {
         structure: {
           select: { id: true, ownerId: true, workspaceId: true, name: true },
@@ -435,6 +441,7 @@ export class StructureSharesService {
         inviter: true,
       },
     });
+
     if (!invitation) throw new NotFoundException('Invitation not found');
     if (invitation.status !== 'pending') {
       throw new BadRequestException('Invitation not pending');
@@ -447,31 +454,31 @@ export class StructureSharesService {
       throw new BadRequestException('Invitation has expired');
     }
 
-    const acceptingUser = await this.prisma.user.findUnique({
-      where: { email: acceptingUserEmail },
-    });
-    if (!acceptingUser) throw new NotFoundException('Accepting user not found');
+    if (!acceptingUsername) {
+      const u = await this.prisma.user.findUnique({
+        where: { id: acceptingUserId },
+        select: { username: true },
+      });
+      acceptingUsername = u?.username || null;
+    }
 
-    if (
-      invitation.inviteeEmail &&
-      invitation.inviteeEmail.toLowerCase() !==
-        acceptingUser.email.toLowerCase()
-    ) {
-      throw new ForbiddenException(
-        'This invitation was issued to a different email',
-      );
+    if (invitation.inviteeUsername && acceptingUsername) {
+      if (
+        invitation.inviteeUsername.toLowerCase() !==
+        acceptingUsername.toLowerCase()
+      ) {
+        throw new ForbiddenException(
+          'This invitation was issued to a different username',
+        );
+      }
     }
 
     const structureId = invitation.structureId;
-    // <-- Declare this *before* tx so it's in scope afterwards
     const invitedPermission = invitation.permission;
 
-    // perform transactional updates
     await this.prisma.$transaction(async (tx) => {
       const existingShare = await tx.structureShare.findUnique({
-        where: {
-          structureId_userId: { structureId, userId: acceptingUser.id },
-        },
+        where: { structureId_userId: { structureId, userId: acceptingUserId } },
       });
 
       if (existingShare) {
@@ -483,13 +490,12 @@ export class StructureSharesService {
         await tx.structureShare.create({
           data: {
             structureId,
-            userId: acceptingUser.id,
+            userId: acceptingUserId,
             permission: invitation.permission,
           },
         });
       }
 
-      // team logic (unchanged)
       let team = await tx.team.findFirst({
         where: {
           workspaceId: invitation.structure.workspaceId,
@@ -509,7 +515,7 @@ export class StructureSharesService {
         });
         team = await tx.team.create({
           data: {
-            name: `${owner?.displayName || owner?.email || 'Workspace'} Team`,
+            name: `${owner?.displayName || owner?.username || 'Workspace'} Team`,
             ownerId: invitation.structure.ownerId,
             workspaceId: invitation.structure.workspaceId,
           },
@@ -521,7 +527,7 @@ export class StructureSharesService {
           data: [
             {
               teamId: team.id,
-              userId: acceptingUser.id,
+              userId: acceptingUserId,
               workspaceId: invitation.structure.workspaceId,
               role: 'member',
             },
@@ -532,23 +538,26 @@ export class StructureSharesService {
         // ignore duplicate errors
       }
 
-      if (!acceptingUser.defaultWorkspaceId) {
+      const userRec = await tx.user.findUnique({
+        where: { id: acceptingUserId },
+      });
+      if (userRec && !userRec.defaultWorkspaceId) {
         await tx.user.update({
-          where: { id: acceptingUser.id },
+          where: { id: acceptingUserId },
           data: { defaultWorkspaceId: invitation.structure.workspaceId },
         });
       }
 
-      // Update invitation status & link invitee
       await tx.structureShareInvitation.update({
         where: { id: invitation.id },
         data: {
           status: 'accepted',
           usedAt: new Date(),
-          inviteeId: acceptingUser.id,
+          inviteeId: acceptingUserId,
         },
       });
     });
+
     await this.logAudit(
       'ACCEPT_INVITATION',
       'StructureShareInvitation',
@@ -559,10 +568,10 @@ export class StructureSharesService {
         structureName: invitation.structure.name,
         permission: invitation.permission,
         inviterId: invitation.inviterId,
-        inviterEmail: invitation.inviter?.email || null,
-        inviteeEmail: invitation.inviteeEmail,
+        inviterUsername: invitation.inviter?.username || null,
+        inviteeUsername: invitation.inviteeUsername,
       },
-      acceptingUser.id,
+      acceptingUserId,
     );
 
     const owner = await this.prisma.user.findUnique({
@@ -576,93 +585,6 @@ export class StructureSharesService {
       permission: invitedPermission,
       ownerUsername: owner?.username || null,
     };
-  }
-
-  async createShareLink(dto: CreateShareLinkDto, currentUserId: string) {
-    const { structureId, permission, expiresAt } = dto;
-    await this.ensureIsOwner(structureId, currentUserId);
-
-    const structure = await this.prisma.structure.findUnique({
-      where: { id: structureId },
-      select: { name: true },
-    });
-
-    const token = uuidv4();
-
-    const payload: any = {
-      structureId,
-      permission,
-      token,
-      isActive: true,
-    };
-    if (expiresAt) payload.expiresAt = new Date(expiresAt);
-
-    const shareLink = await this.prisma.structureShareLink.create({
-      data: payload,
-    });
-
-    await this.logAudit(
-      'CREATE_SHARE_LINK',
-      'StructureShareLink',
-      shareLink.id,
-      {
-        structureId,
-        structureName: structure.name,
-        permission,
-        expiresAt: payload.expiresAt,
-      },
-      currentUserId,
-    );
-
-    return shareLink;
-  }
-
-  async validateShareLink(token: string) {
-    const link = await this.prisma.structureShareLink.findUnique({
-      where: { token },
-    });
-    if (!link || !link.isActive)
-      throw new BadRequestException('Invalid or revoked link');
-    if (link.expiresAt && new Date(link.expiresAt) < new Date()) {
-      await this.prisma.structureShareLink.update({
-        where: { id: link.id },
-        data: { isActive: false },
-      });
-      throw new BadRequestException('Link expired');
-    }
-    return link;
-  }
-
-  async revokeShareLink(id: string, currentUserId: string) {
-    const link = await this.prisma.structureShareLink.findUnique({
-      where: { id },
-      include: {
-        structure: {
-          select: { name: true },
-        },
-      },
-    });
-    if (!link) throw new NotFoundException('Link not found');
-    await this.ensureIsOwner(link.structureId, currentUserId);
-
-    const updatedLink = await this.prisma.structureShareLink.update({
-      where: { id },
-      data: { isActive: false },
-    });
-
-    await this.logAudit(
-      'REVOKE_SHARE_LINK',
-      'StructureShareLink',
-      id,
-      {
-        structureId: link.structureId,
-        structureName: link.structure.name,
-        permission: link.permission,
-      },
-      currentUserId,
-    );
-
-    return updatedLink;
   }
 
   async getPendingInvitations(structureId: string, currentUserId: string) {
@@ -684,32 +606,25 @@ export class StructureSharesService {
       where: { structureId },
       include: {
         inviter: {
-          select: { id: true, email: true, displayName: true },
+          select: { id: true, username: true, displayName: true },
         },
       },
       orderBy: { createdAt: 'asc' },
     });
   }
 
-  async getShareableLinks(structureId: string, currentUserId: string) {
-    await this.ensureIsOwner(structureId, currentUserId);
-
-    return this.prisma.structureShareLink.findMany({
-      where: { structureId },
-      orderBy: { createdAt: 'desc' },
-    });
-  }
   async removeInvitation(invitationId: string, currentUserId: string) {
     const invitation = await this.prisma.structureShareInvitation.findUnique({
       where: { id: invitationId },
       include: { structure: true },
     });
 
-    if (!invitation) {
-      throw new NotFoundException('Invitation not found');
-    }
+    if (!invitation) throw new NotFoundException('Invitation not found');
 
-    if (invitation.inviterId !== currentUserId) {
+    if (
+      invitation.inviterId !== currentUserId &&
+      invitation.structure.ownerId !== currentUserId
+    ) {
       throw new ForbiddenException(
         'You are not allowed to delete this invitation',
       );
@@ -726,7 +641,7 @@ export class StructureSharesService {
       {
         structureId: invitation.structureId,
         structureName: invitation.structure.name,
-        inviteeEmail: invitation.inviteeEmail,
+        inviteeUsername: invitation.inviteeUsername,
         permission: invitation.permission,
       },
       currentUserId,
@@ -734,6 +649,7 @@ export class StructureSharesService {
 
     return { message: 'Invitation deleted successfully' };
   }
+
   async listAccessibleStructures(currentUserId: string) {
     return this.prisma.structure.findMany({
       where: {
@@ -764,6 +680,174 @@ export class StructureSharesService {
           select: { permission: true },
         },
       },
+    });
+  }
+
+  async getSharedStructures(currentUserId: string, currentUsername?: string) {
+    this.logger.debug('getSharedStructures called', {
+      currentUserId,
+      currentUsernameProvided: Boolean(currentUsername),
+    });
+
+    if (!currentUsername) {
+      const u = await this.prisma.user.findUnique({
+        where: { id: currentUserId },
+        select: { username: true },
+      });
+      currentUsername = u?.username || null;
+      this.logger.debug('Fetched currentUsername for user', {
+        currentUserId,
+        currentUsername,
+      });
+    }
+
+    const inviteeUsernameFilter = currentUsername
+      ? [{ inviteeUsername: currentUsername }]
+      : [];
+
+    return this.prisma.structure.findMany({
+      where: {
+        AND: [
+          { ownerId: { not: currentUserId } },
+          {
+            OR: [
+              { shares: { some: { userId: currentUserId } } },
+              {
+                shareInvitations: {
+                  some: {
+                    OR: [
+                      { inviteeId: currentUserId },
+                      ...inviteeUsernameFilter,
+                    ],
+                  },
+                },
+              },
+            ],
+          },
+        ],
+      },
+      select: {
+        id: true,
+        name: true,
+        title: true,
+        imageUrl: true,
+        description: true,
+        updatedAt: true,
+        ownerId: true,
+        type: true,
+        visibility: true,
+        shares: {
+          where: { userId: currentUserId },
+          select: {
+            permission: true,
+            user: { select: { id: true, username: true } },
+          },
+        },
+        shareInvitations: {
+          where: {
+            OR: [
+              { inviteeId: currentUserId },
+              ...(currentUsername
+                ? [{ inviteeUsername: currentUsername }]
+                : []),
+            ],
+          },
+          select: {
+            id: true,
+            permission: true,
+            status: true,
+            token: true,
+            inviteeUsername: true,
+            inviter: {
+              select: { id: true, username: true, displayName: true },
+            },
+            message: true,
+            expiresAt: true,
+            createdAt: true,
+          },
+        },
+        owner: {
+          select: {
+            id: true,
+            username: true,
+            displayName: true,
+            profileUrl: true,
+          },
+        },
+      },
+    });
+  }
+
+  async removeCollaboratorByUser(
+    structureId: string,
+    targetUserId: string,
+    currentUserId: string,
+  ) {
+    return this.prisma.$transaction(async (tx) => {
+      const structure = await tx.structure.findUnique({
+        where: { id: structureId },
+        select: {
+          id: true,
+          name: true,
+          workspaceId: true,
+        },
+      });
+
+      if (!structure) {
+        throw new NotFoundException('Structure not found');
+      }
+
+      const deletedShares = await tx.structureShare.deleteMany({
+        where: {
+          structureId,
+          userId: targetUserId,
+        },
+      });
+
+      const deletedInvitations = await tx.structureShareInvitation.deleteMany({
+        where: {
+          structureId,
+          inviteeId: targetUserId,
+        },
+      });
+
+      const deletedTeamMembers = await tx.teamMember.deleteMany({
+        where: {
+          workspaceId: structure.workspaceId,
+          userId: targetUserId,
+        },
+      });
+
+      const targetUser = await tx.user.findUnique({
+        where: { id: targetUserId },
+        select: { username: true },
+      });
+
+      const inviteeUsername = targetUser?.username || 'Unknown User';
+
+      await tx.auditLog.create({
+        data: {
+          action: 'REMOVE_COLLABORATOR',
+          element: 'StructureShare',
+          elementId: structureId,
+          details: {
+            structureName: structure.name,
+            targetUserId,
+            targetUsername: inviteeUsername,
+            deletedShares: deletedShares.count,
+            deletedInvitations: deletedInvitations.count,
+            deletedTeamMembers: deletedTeamMembers.count,
+          },
+          userId: currentUserId,
+        },
+      });
+
+      return {
+        message: 'Collaborator removed successfully',
+        deletedShares: deletedShares.count,
+        deletedInvitations: deletedInvitations.count,
+        deletedTeamMembers: deletedTeamMembers.count,
+      };
     });
   }
 }

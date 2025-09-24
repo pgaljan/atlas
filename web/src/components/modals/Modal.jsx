@@ -1,5 +1,5 @@
-import React, { useEffect, useRef } from "react";
-import Icons from "../../constants/icons";
+import React, { useEffect, useRef } from 'react';
+import Icons from '../../constants/icons';
 
 const ModalComponent = ({
   isOpen,
@@ -8,11 +8,12 @@ const ModalComponent = ({
   children,
   loading,
   onSubmit,
-  submitText = "Submit",
-  cancelText = "Cancel",
+  submitText = 'Submit',
+  cancelText = 'Cancel',
   showBottomButton = false,
   onImportAsJSON,
   disabled = false,
+  className = '',
 }) => {
   const focusRef = useRef(null);
 
@@ -26,25 +27,20 @@ const ModalComponent = ({
 
   return (
     <>
-      {/* Background Overlay */}
       <div className="fixed top-0 left-0 right-0 bottom-0 z-50 bg-black/50" />
 
-      {/* Modal Container */}
-      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 sm:max-w-lg w-full m-3 sm:mx-auto">
+      <div
+        className={`fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-50 sm:max-w-lg w-full m-3 sm:mx-auto ${className}`}
+      >
         <div className="w-full flex flex-col bg-white border shadow-lg rounded-xl">
-          {/* Modal Header */}
           <div className="flex justify-between items-center py-3 px-4 border-b">
             <h3 className="text-xl font-semibold text-gray-800">{title}</h3>
 
-            <button
-              className="text-gray-500 hover:text-gray-700"
-              onClick={onClose}
-            >
+            <button className="text-gray-500 hover:text-gray-700" onClick={onClose}>
               ✖
             </button>
           </div>
 
-          {/* Modal Body */}
           <div className="p-4 overflow-y-auto space-y-2">
             {React.Children.map(children, (child) => {
               if (React.isValidElement(child)) {
@@ -54,7 +50,6 @@ const ModalComponent = ({
             })}
           </div>
 
-          {/* Modal Footer (Only show when onSubmit is provided) */}
           {onSubmit && (
             <div className="flex justify-between py-3 px-4 items-center">
               <div>
@@ -89,12 +84,12 @@ const ModalComponent = ({
                     onClick={onSubmit}
                     disabled={disabled}
                     className={`py-3 px-3 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-transparent text-white focus:outline-none
-            ${
-              disabled
-                ? "bg-custom-main cursor-not-allowed opacity-50"
-                : "bg-custom-main hover:bg-custom-secondary"
-            }
-          `}
+                      ${
+                        disabled
+                          ? 'bg-custom-main cursor-not-allowed opacity-50'
+                          : 'bg-custom-main hover:bg-custom-secondary'
+                      }
+                    `}
                   >
                     {submitText}
                   </button>
@@ -105,7 +100,6 @@ const ModalComponent = ({
         </div>
       </div>
 
-      {/* Prevent Scrolling */}
       <style>{`
         body {
           overflow: hidden;

@@ -454,7 +454,7 @@ const AddQuillModal = ({
             )}
           </div>
           {/* Add Tags Button with Icon */}
-          <div className="flex justify-between items-center mb-2">
+          {/* <div className="flex justify-between items-center mb-2">
             <div className="flex items-center">
               <button
                 onClick={() => handleFeatureClick(canTags, addTag)}
@@ -465,7 +465,6 @@ const AddQuillModal = ({
             </div>
           </div>
 
-          {/* Tags Section */}
           {tags?.length > 0 && (
             <div className="mt-4">
               <div className="max-h-28 overflow-y-auto pr-3">
@@ -474,7 +473,6 @@ const AddQuillModal = ({
                     key={tag.id}
                     className="flex items-center justify-between mt-2"
                   >
-                    {/* Key Input */}
                     <div className="flex flex-col w-60 space-y-1">
                       <label
                         htmlFor={`key-${tag.id}`}
@@ -494,7 +492,6 @@ const AddQuillModal = ({
                       />
                     </div>
 
-                    {/* Value Input */}
                     <div className="flex flex-col w-60 space-y-1">
                       <label
                         htmlFor={`value-${tag?.id}`}
@@ -514,7 +511,6 @@ const AddQuillModal = ({
                       />
                     </div>
 
-                    {/* Delete Icon */}
                     <button
                       onClick={() => deleteTag(tag?.id)}
                       className="flex items-center justify-center w-8 h-8 rounded-full bg-custom-main text-white hover:bg-custom-main-dark"
@@ -525,7 +521,7 @@ const AddQuillModal = ({
                 ))}
               </div>
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Footer */}
