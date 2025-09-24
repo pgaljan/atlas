@@ -2,14 +2,21 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { StorageAccountingService } from 'src/storage/storage-accounting.service';
+import { getAttachmentBytesBigInt } from 'src/storage/storage-size.util';
 
 @Injectable()
 export class FileUploadService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(FileUploadService.name);
 
-  // Helper method to get the next order index for a given structure and parent element.
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageAccounting: StorageAccountingService,
+  ) {}
+
   private async getNextOrderIndex(
     structureId: string,
     parentId: string | null,
@@ -25,28 +32,85 @@ export class FileUploadService {
     return maxElement ? maxElement.orderIndex + 1 : 0;
   }
 
+  private async recalcStoredBytesForUser(userId: string) {
+    try {
+      const backups = await this.prisma.backup.findMany({
+        where: { userId },
+        select: { sizeBytes: true },
+      });
+      let totalBytes = backups.reduce(
+        (acc, b) => acc + (b.sizeBytes ? BigInt(b.sizeBytes) : 0n),
+        0n,
+      );
+
+      const attachments = await this.prisma.attachment.findMany({
+        where: { userId },
+        select: { sizeBytes: true },
+      });
+      totalBytes += attachments.reduce(
+        (acc, a) => acc + (a.sizeBytes ? BigInt(a.sizeBytes) : 0n),
+        0n,
+      );
+
+      await this.storageAccounting.adjustStoredBytes(userId, totalBytes);
+
+      return totalBytes;
+    } catch (err) {
+      this.logger.error(
+        `Failed to recalc stored bytes for user ${userId}: ${err}`,
+      );
+      throw new InternalServerErrorException(
+        'Failed to recalculate user stored bytes.',
+      );
+    }
+  }
+
   async saveRawFile(
     userId: string,
     file: Express.Multer.File,
     fileUrl: string,
   ) {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
-      if (!user) {
-        throw new NotFoundException('User not found');
-      }
-      return await this.prisma.attachment.create({
+      const bytes = BigInt(file?.size ?? 0);
+
+      const attachment = await this.prisma.attachment.create({
         data: {
           userId,
           fileUrl,
           fileType: file.mimetype,
+          sizeBytes: bytes,
           data: {},
         },
       });
+
+      try {
+        await this.storageAccounting.adjustStoredBytes(userId, bytes);
+      } catch (err) {
+        this.logger.error(
+          `Failed to adjust storedBytes after saveRawFile: ${err}`,
+        );
+        throw err;
+      }
+
+      try {
+        await this.prisma.storageEvent.create({
+          data: {
+            userId,
+            type: 'attachment-create',
+            bytes: bytes,
+            sign: 1,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to create storageEvent for attachment create: ${err}`,
+        );
+        // do not block the operation
+      }
+
+      return attachment;
     } catch (error) {
-      console.error('Error saving raw file:', error.message);
+      this.logger.error('Error saving raw file:', error as any);
       throw new InternalServerErrorException('Failed to save raw file.');
     }
   }
@@ -65,23 +129,52 @@ export class FileUploadService {
         throw new NotFoundException('User not found');
       }
 
-      return await this.prisma.attachment.create({
+      const bytes = BigInt(file?.size ?? 0);
+
+      const attachment = await this.prisma.attachment.create({
         data: {
           userId,
           fileUrl,
           fileType: file.mimetype,
+          sizeBytes: bytes,
           data: {},
         },
       });
+
+      try {
+         await this.recalcStoredBytesForUser(userId);
+      } catch (err) {
+        this.logger.error(
+          `Failed to adjust storedBytes after createAttachment: ${err}`,
+        );
+        throw err;
+      }
+
+      try {
+        await this.prisma.storageEvent.create({
+          data: {
+            userId,
+            type: 'attachment-create',
+            bytes: bytes,
+            sign: 1,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to create storageEvent for attachment create: ${err}`,
+        );
+        // do not block the operation
+      }
+
+      return attachment;
     } catch (error) {
-      console.error('Error creating attachment:', error.message);
+      this.logger.error('Error creating attachment:', error as any);
       throw new InternalServerErrorException('Failed to create attachment.');
     }
   }
 
   async updateStructureTitle(structureId: string, parsedData: any[]) {
     try {
-      // Find the first element where level is 1 (#)
       const titleRow = parsedData.find((row) => /^#\s*(.+)$/.test(row.element));
 
       if (!titleRow) {
@@ -90,7 +183,6 @@ export class FileUploadService {
         );
       }
 
-      // Extract the title text
       const titleMatch = titleRow.element.match(/^#\s*(.+)$/);
       const name = titleMatch ? titleMatch[1].trim() : null;
 
@@ -98,13 +190,12 @@ export class FileUploadService {
         throw new NotFoundException('Invalid title format in uploaded data.');
       }
 
-      // Update the Structure title
       return await this.prisma.structure.update({
         where: { id: structureId },
         data: { name, title: name },
       });
     } catch (error) {
-      console.error('Error updating structure title:', error.message);
+      this.logger.error('Error updating structure title:', error as any);
       throw new InternalServerErrorException(
         'Failed to update structure title.',
       );
@@ -119,7 +210,6 @@ export class FileUploadService {
     try {
       let structure: any;
 
-      // If a structure ID is provided, fetch it; otherwise create a new one.
       if (structureId) {
         structure = await this.prisma.structure.findUnique({
           where: { id: structureId },
@@ -138,10 +228,8 @@ export class FileUploadService {
         });
       }
 
-      // Stack to track the last element at each heading level.
       const levelStack: { level: number; id: string }[] = [];
 
-      // Iterate through parsed data rows to create elements.
       for (const row of parsedData) {
         const match = row.element.match(/^(#+)\s*(.*)$/);
         if (!match) continue;
@@ -149,10 +237,8 @@ export class FileUploadService {
         const level = match[1].length;
         const name = match[2].trim();
 
-        // **Skip elements where there is only a single `#` (level 1)**
         if (level === 1) continue;
 
-        // Find the correct parent by popping levels that are equal or higher.
         while (
           levelStack.length &&
           levelStack[levelStack.length - 1].level >= level
@@ -164,7 +250,6 @@ export class FileUploadService {
           ? levelStack[levelStack.length - 1].id
           : null;
 
-        // Determine the next order index for the new element.
         const orderIndex = await this.getNextOrderIndex(structure.id, parentId);
 
         const element = await this.prisma.element.create({
@@ -172,7 +257,7 @@ export class FileUploadService {
             name,
             structureId: structure.id,
             parentId,
-            orderIndex, // set the auto-incremented orderIndex
+            orderIndex,
           },
         });
 
@@ -198,16 +283,14 @@ export class FileUploadService {
           });
         }
 
-        // Push the created element into the level stack.
         levelStack.push({ level, id: element.id });
       }
 
-      // Update the structure title based on the level 1 element.
       await this.updateStructureTitle(structure.id, parsedData);
 
       return structure;
     } catch (error) {
-      console.error('Error creating structure and elements:', error.message);
+      this.logger.error('Error creating structure and elements:', error as any);
       throw new InternalServerErrorException(
         'Failed to create structure and elements.',
       );
@@ -232,18 +315,19 @@ export class FileUploadService {
         },
       });
     } catch (error) {
-      console.error('Error logging audit:', error.message);
+      this.logger.error('Error logging audit:', error as any);
       throw new InternalServerErrorException('Failed to log audit.');
     }
   }
 
   async getMediaByUserId(userId: string) {
     try {
-      return await this.prisma.attachment.findMany({
+      const media = await this.prisma.attachment.findMany({
         where: { userId },
       });
+      return media;
     } catch (error) {
-      console.error('Error fetching media by user ID:', error.message);
+      this.logger.error('Error fetching media by user ID:', error as any);
       throw new InternalServerErrorException(
         'Failed to fetch media by user ID.',
       );
@@ -260,18 +344,21 @@ export class FileUploadService {
         throw new NotFoundException('Media not found.');
       }
 
-      return await this.prisma.attachment.update({
+      const updated = await this.prisma.attachment.update({
         where: { id },
         data: {
           fileUrl: newFileUrl,
         },
       });
+
+      return updated;
     } catch (error) {
-      console.error('Error updating media:', error.message);
+      this.logger.error('Error updating media:', error as any);
       throw new InternalServerErrorException('Failed to update media.');
     }
   }
 
+ 
   async deleteMedia(id: string) {
     try {
       const media = await this.prisma.attachment.findUnique({
@@ -282,13 +369,44 @@ export class FileUploadService {
         throw new NotFoundException('Media not found.');
       }
 
-      await this.prisma.attachment.delete({
-        where: { id },
-      });
+      let sizeBytesBigInt: bigint = 0n;
+      if (media.sizeBytes !== null && media.sizeBytes !== undefined) {
+        sizeBytesBigInt = BigInt(media.sizeBytes as any);
+      } else {
+        sizeBytesBigInt = getAttachmentBytesBigInt(media);
+      }
+
+      await this.prisma.attachment.delete({ where: { id } });
+
+      if (media.userId) {
+        try {
+          await this.recalcStoredBytesForUser(media.userId);
+        } catch (err) {
+          this.logger.error(
+            `Failed to recalc storedBytes after deleteMedia (userId=${media.userId}): ${err}`,
+          );
+        }
+
+        // 2) create a storageEvent for delete (non-fatal)
+        try {
+          await this.prisma.storageEvent.create({
+            data: {
+              userId: media.userId,
+              type: 'attachment-delete',
+              bytes: sizeBytesBigInt,
+              sign: -1,
+            },
+          });
+        } catch (err) {
+          this.logger.error(
+            `Failed to create storageEvent for attachment delete: ${err}`,
+          );
+        }
+      }
 
       return { message: 'Media deleted successfully.' };
     } catch (error) {
-      console.error('Error deleting media:', error.message);
+      this.logger.error('Error deleting media:', error as any);
       throw new InternalServerErrorException('Failed to delete media.');
     }
   }
@@ -303,16 +421,47 @@ export class FileUploadService {
     }
 
     try {
-      return await this.prisma.attachment.create({
+      const bytes = BigInt(file.size ?? 0);
+      const attachment = await this.prisma.attachment.create({
         data: {
           userId: defaultAdmin.id,
           fileUrl,
           fileType: file.mimetype,
-          data: {}, 
+          sizeBytes: bytes,
+          data: {},
         },
       });
+
+      // bump storedBytes for default admin
+      try {
+       await this.recalcStoredBytesForUser(defaultAdmin.id);
+      } catch (err) {
+        this.logger.error(
+          `Failed to adjust storedBytes for anonymous upload: ${err}`,
+        );
+        throw err;
+      }
+
+      // create a storageEvent for anonymous upload (non-fatal)
+      try {
+        await this.prisma.storageEvent.create({
+          data: {
+            userId: defaultAdmin.id,
+            type: 'attachment-create',
+            bytes: bytes,
+            sign: 1,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to create storageEvent for anonymous attachment create: ${err}`,
+        );
+        // do not block the operation
+      }
+
+      return attachment;
     } catch (error) {
-      console.error('Error uploading anonymous file:', error.message);
+      this.logger.error('Error uploading anonymous file:', error as any);
       throw new InternalServerErrorException(
         'Failed to upload anonymous file.',
       );

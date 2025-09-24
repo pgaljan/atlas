@@ -3,6 +3,7 @@ import * as bodyParser from 'body-parser';
 import * as dotenv from 'dotenv';
 import { AppModule } from './app.module';
 import { VersioningType } from '@nestjs/common';
+import { BigIntSerializerInterceptor } from './common/interceptors/bigint-serializer.interceptor';
 
 dotenv.config();
 
@@ -18,7 +19,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-feature'],
     credentials: true,
   });
-
+ app.useGlobalInterceptors(new BigIntSerializerInterceptor());
   app.setGlobalPrefix('api/v1');
 
   app.enableVersioning({

@@ -119,7 +119,7 @@ const NodeModal = ({
   };
 
   const handleModalSubmit = async () => {
-    if (!elementValue.trim()) {
+    if (!elementValue?.trim()) {
       cogoToast.error('Element title cannot be empty');
       return;
     }
@@ -270,7 +270,7 @@ const NodeModal = ({
     setChildModalVisible(false);
   };
   const handleEditStructureSubmit = async () => {
-    if (!structureName.trim()) {
+    if (!structureName?.trim()) {
       cogoToast.error('Structure name cannot be empty');
       return;
     }
@@ -458,7 +458,7 @@ const NodeModal = ({
       setPopupTags(element?.tags || []);
       setShowTagsPopup(true);
     } catch (err) {
-      cogoToast.error('Failed to fetch tags');
+      cogoToast.error(err.message || 'Failed to fetch tags');
     }
   };
 
@@ -603,7 +603,7 @@ const NodeModal = ({
                 <div className="absolute right-0 mt-2 w-72 z-50">
                   <div className="bg-white rounded-xl shadow-lg border border-gray-100 p-3 animate-fadeIn scale-95 transform transition-all duration-200">
                     <div className="flex justify-between items-center mb-2">
-                      <h3 className="text-sm font-semibold text-gray-800">✨ Tags</h3>
+                      <h3 className="text-sm font-semibold text-gray-800">🏷️ Tags</h3>
                     </div>
 
                     <div className="grid grid-cols-2 text-xs font-semibold text-gray-600 border-b pb-1 mb-1">
@@ -667,7 +667,7 @@ const NodeModal = ({
           title={isEdit ? 'Edit Element' : 'Add Element'}
           onImportAsJSON={() => setIsImportModalOpen(true)}
           showBottomButton={true}
-          disabled={!elementValue.trim()}
+          disabled={!elementValue?.trim()}
           onSubmit={handleModalSubmit}
           submitText={isEdit ? 'Edit' : 'Save'}
           cancelText="Cancel"
@@ -946,7 +946,7 @@ const NodeModal = ({
           isOpen={editStructureModalVisible}
           onClose={() => setEditStructureModalVisible(false)}
           title="Edit Structure Name"
-          disabled={!structureName.trim()}
+          disabled={!structureName?.trim()}
           onSubmit={handleEditStructureSubmit}
           submitText="Update"
           cancelText="Cancel"
@@ -955,7 +955,7 @@ const NodeModal = ({
             label="Edit Structure Name"
             name="structureName"
             focusRef={focusRef}
-            disabled={!structureName.trim()}
+            disabled={!structureName?.trim()}
             value={structureName}
             onKeyDown={handleKeyPressEditStructure}
             onChange={(e) => setStructureName(e.target.value)}

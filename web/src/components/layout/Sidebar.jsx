@@ -3,6 +3,7 @@ import Cookies from 'js-cookie';
 import { useEffect, useState } from 'react';
 import { BiSolidMessageRoundedDots } from 'react-icons/bi';
 import { BsDatabaseFillCheck } from 'react-icons/bs';
+import { PiTreeStructure } from "react-icons/pi";
 import { CgTemplate } from 'react-icons/cg';
 import { SiGithubactions } from 'react-icons/si';
 import { FaPlusCircle, FaRocket, FaSlideshare } from 'react-icons/fa';
@@ -132,6 +133,11 @@ export function SidebarPage() {
       name: 'My Backups',
       icon: BsDatabaseFillCheck,
       link: '/app/backups',
+    },
+     {
+      name: 'Shared With Me',
+      icon: PiTreeStructure,
+      link: '/app/shared-with-me',
     },
 
     // {

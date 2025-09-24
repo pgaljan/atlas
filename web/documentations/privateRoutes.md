@@ -8,6 +8,7 @@ These routes require authentication. They are grouped into **User**, **Admin**, 
 
 - `/app/dashboard` → Dashboard  
 - `/app/backups` → Backups  
+- `/app/shared-with-me` → Shared With Me
 - `/app/templates` → Templates  
 - `/app/invitations` → Invitations  
 - `/app/upgrade-plans` → Upgrade Plans  

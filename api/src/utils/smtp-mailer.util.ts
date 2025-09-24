@@ -7,11 +7,11 @@ export type SmtpSettings = {
   encryption?: 'TLS' | 'SSL' | 'STARTTLS' | string;
   username?: string;
   password?: string;
+  serverToken?: string;
   fromEmail?: string;
   fromName?: string;
   tlsRejectUnauthorized?: boolean;
-  // If you plan to reuse a single transporter across many sends, set this to true and
-  // manage lifecycle differently (do not close after each send).
+  extraHeaders?: Record<string, string>;
   perRequestTransport?: boolean;
 };
 
@@ -39,9 +39,6 @@ export class SmtpMailerService {
     }
   }
 
-  /**
-   * Build SMTP transport options with safer defaults and explicit handling.
-   */
   private buildTransportOptions(smtp: SmtpSettings): SMTPTransport.Options {
     const enc = (smtp.encryption || '').toLowerCase();
 
@@ -51,28 +48,27 @@ export class SmtpMailerService {
       return Number.isInteger(parsed) && parsed > 0 ? parsed : undefined;
     };
 
-    const parsedPort = parsePort(smtp.port);
-    const defaultPort = enc === 'ssl' ? 465 : 587;
-    const port = parsedPort ?? defaultPort;
+    let port = parsePort(smtp.port) ?? (enc === 'ssl' ? 465 : 587);
+    let secure = enc === 'ssl' || port === 465;
+    const requireTLS = (enc === 'starttls' || enc === 'tls') && port !== 465;
 
-    // secure true for implicit SSL (usually port 465)
-    const secure = enc === 'ssl' || port === 465;
-
-    // Only require STARTTLS when user explicitly requests it
-    const requireTLS = enc === 'starttls' || enc === 'tls';
-
-    const auth =
-      smtp.username && smtp.password
-        ? { user: smtp.username, pass: smtp.password }
-        : undefined;
+    let auth: { user: string; pass: string } | undefined;
+    if (smtp.username && smtp.password) {
+      auth = { user: smtp.username, pass: smtp.password };
+    } else if (smtp.serverToken) {
+      auth = { user: smtp.serverToken, pass: smtp.serverToken };
+      if (!smtp.port && smtp.host?.includes('postmarkapp.com')) {
+        port = 587;
+        secure = false;
+      }
+    }
 
     const tls: any = {};
     if (smtp.tlsRejectUnauthorized === false) {
-      // only allow opt-out when explicitly specified
       tls.rejectUnauthorized = false;
     }
 
-    const options: SMTPTransport.Options = {
+    return {
       host: smtp.host,
       port,
       secure,
@@ -83,11 +79,8 @@ export class SmtpMailerService {
       greetingTimeout: 10_000,
       socketTimeout: 10_000,
     };
-
-    return options;
   }
 
-  // Treat only likely transient network errors as retryable.
   private transientErrorCodes = new Set([
     'ECONNRESET',
     'ETIMEDOUT',
@@ -97,15 +90,11 @@ export class SmtpMailerService {
   private isTransientError(err: any) {
     if (!err) return false;
     if (err.code && this.transientErrorCodes.has(err.code)) return true;
-    // Some transports embed SMTP response codes in `responseCode` and they can be transient
     if (err.responseCode && [421, 450, 451, 452].includes(err.responseCode))
       return true;
     return false;
   }
 
-  /**
-   * Send mail with exponential backoff + jitter for transient failures.
-   */
   private async sendEmailWithRetry(
     mailOptions: nodemailer.SendMailOptions,
     maxRetries = 3,
@@ -121,7 +110,6 @@ export class SmtpMailerService {
         lastErr = err;
         const transient = this.isTransientError(err);
         if (!transient || attempt === maxRetries) {
-          // if not transient, or last attempt -> throw
           throw err;
         }
         const delay = baseDelayMs * Math.pow(2, attempt - 1);
@@ -130,7 +118,6 @@ export class SmtpMailerService {
       }
     }
 
-    // If we fallthrough (shouldn't), throw last
     throw lastErr || new Error('Unknown error sending email');
   }
 
@@ -142,7 +129,6 @@ export class SmtpMailerService {
       .replace(/^(https?:\/\/|smtp:\/\/)/i, '')
       .replace(/:.*$/, '');
 
-    // Allow 'localhost' explicitly
     if (clean === 'localhost') return true;
 
     // Strict IPv4 (0-255 per octet)
@@ -188,12 +174,7 @@ export class SmtpMailerService {
     `;
   }
 
-  /**
-   * Send a single test email using configured SMTP settings.
-   * Throws sanitized errors suitable for showing to end-users; full details should be logged server-side.
-   */
   async sendTestEmail(to: string, fromAddress: string, fromName?: string) {
-    // validate
     if (!this.isValidEmail(to)) {
       throw new Error('Invalid recipient email format');
     }
@@ -219,23 +200,25 @@ export class SmtpMailerService {
 
     const textFallback = `Atlas — SMTP Test Email\n\nThis is a test email sent at ${timestampISO} to verify SMTP settings.`;
 
+    const headers = this.settings.extraHeaders ?? {};
+
     const mailOptions: nodemailer.SendMailOptions = {
       from: fromName ? `"${fromName}" <${fromAddress}>` : fromAddress,
       to,
       subject: `${this.settings.fromName ?? 'Atlas'} — SMTP Test Email`,
       text: textFallback,
       html: this.getEmailTemplate('#4a90e2', 'SMTP Test Email', content),
+      headers,
     };
 
     try {
-      // verify connection/auth before sending to give clearer failure messages
       try {
         await this.transporter.verify();
       } catch (verifyErr: any) {
         const code = verifyErr?.code;
         if (code === 'EAUTH') {
           throw new Error(
-            'Authentication failed when verifying SMTP credentials. Check username/password.',
+            'Authentication failed when verifying SMTP credentials. Check username/password (or server token).',
           );
         }
         if (code === 'ECONNREFUSED' || code === 'ENOTFOUND') {
@@ -243,7 +226,6 @@ export class SmtpMailerService {
             'Unable to connect to SMTP server. Check host and port.',
           );
         }
-        // Generic message for other verification failures; full verifyErr should be logged server-side.
         throw new Error(
           'Failed to verify SMTP connection. See server logs for details.',
         );
@@ -251,7 +233,6 @@ export class SmtpMailerService {
 
       const info = await this.sendEmailWithRetry(mailOptions, 3, 500);
 
-      // Close only if this instance was created for per-request usage.
       if (
         this.settings.perRequestTransport !== false &&
         typeof this.transporter.close === 'function'
@@ -271,7 +252,9 @@ export class SmtpMailerService {
         throw new Error('Connection timed out — check host, port and network.');
       }
       if (code === 'EAUTH') {
-        throw new Error('Authentication failed — check username and password.');
+        throw new Error(
+          'Authentication failed — check username and password (or server token).',
+        );
       }
       if (code === 'ENOTFOUND') {
         throw new Error('SMTP host not found — check the hostname.');

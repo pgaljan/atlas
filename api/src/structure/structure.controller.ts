@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpException,
   HttpStatus,
@@ -39,7 +40,6 @@ export class StructureController {
     }
   }
 
-  // structure.controller.ts
   @Get('workspace/:workspaceId')
   @UseGuards(JwtAuthGuard)
   async getAccessibleStructuresForUser(
@@ -62,24 +62,33 @@ export class StructureController {
   }
 
   @Get(':id')
-  async getStructure(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard)
+  async getStructure(@Param('id') id: string, @Req() req: any) {
     try {
-      return await this.structureService.getStructure(id);
+      return await this.structureService.getStructure(id, req.user.id);
     } catch (error) {
+      if (
+        error instanceof ForbiddenException ||
+        error instanceof NotFoundException
+      ) {
+        throw error;
+      }
       throw new HttpException(
-        `Structure not found: ${error.message}`,
-        HttpStatus.NOT_FOUND,
+        `Failed retrieving structure: ${error.message || 'Unknown error'}`,
+        HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
   }
 
   @Patch('update/:id')
+  @UseGuards(JwtAuthGuard)
   async updateStructure(
     @Param('id') id: string,
     @Body() updateData: Partial<CreateStructureDto>,
+    @Req() req: any,
   ) {
     try {
-      await this.structureService.updateStructure(id, updateData);
+      await this.structureService.updateStructure(id, updateData, req.user.id);
       return { message: 'Structure updated successfully' };
     } catch (error) {
       throw new HttpException(
@@ -90,9 +99,10 @@ export class StructureController {
   }
 
   @Delete('delete/:id')
-  async deleteStructure(@Param('id') id: string) {
+  @UseGuards(JwtAuthGuard)
+  async deleteStructure(@Param('id') id: string, @Req() req: any) {
     try {
-      await this.structureService.deleteStructure(id);
+      await this.structureService.deleteStructure(id, req.user.id);
       return { message: 'Structure deleted successfully' };
     } catch (error) {
       throw new HttpException(
@@ -144,12 +154,18 @@ export class StructureController {
   }
 
   @Put('expand-state/:id')
+  @UseGuards(JwtAuthGuard)
   async updateStructureExpandState(
     @Param('id') id: string,
     @Body() dto: UpdateIsExpandedDto,
+    @Req() req: any,
   ) {
     try {
-      await this.structureService.updateIsExpandedOnly(id, dto.isExpanded);
+      await this.structureService.updateIsExpandedOnly(
+        id,
+        dto.isExpanded,
+        req.user.id,
+      );
       return { message: 'Expand state updated successfully' };
     } catch (error) {
       if (
@@ -163,14 +179,17 @@ export class StructureController {
   }
 
   @Put('wbs-start/:id')
+  @UseGuards(JwtAuthGuard)
   async updateWbsStart(
     @Param('id') id: string,
     @Body() body: { wbsStart: number },
+    @Req() req: any,
   ) {
     try {
       const updated = await this.structureService.updateWbsStart(
         id,
         body.wbsStart,
+        req.user.id,
       );
       return {
         message: 'WBS Start updated successfully',

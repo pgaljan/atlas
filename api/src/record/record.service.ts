@@ -30,7 +30,11 @@ export class RecordService {
     });
   }
 
-  async createRecord(elementid: string, createRecordDto: CreateRecordDto) {
+  async createRecord(
+    elementid: string,
+    createRecordDto: CreateRecordDto,
+    userId: string,
+  ) {
     const element = await this.prisma.element.findUnique({
       where: { id: elementid },
     });
@@ -51,9 +55,13 @@ export class RecordService {
       });
 
       // Log the audit for create action
-      await this.logAudit('CREATE', 'Record', newRecord.id.toString(), {
-        data: createRecordDto,
-      });
+      await this.logAudit(
+        'CREATE',
+        'Record',
+        newRecord.id.toString(),
+        { data: createRecordDto },
+        userId,
+      );
 
       return newRecord;
     } catch (error) {
@@ -61,7 +69,11 @@ export class RecordService {
     }
   }
 
-  async updateRecord(recordId: string, updateRecordDto: UpdateRecordDto) {
+  async updateRecord(
+    recordId: string,
+    updateRecordDto: UpdateRecordDto,
+    userId?: string,
+  ) {
     const existingRecord = await this.prisma.record.findUnique({
       where: { id: recordId },
     });
@@ -98,15 +110,21 @@ export class RecordService {
         data: updateData,
       });
 
-      await this.logAudit('UPDATE', 'Record', updatedRecord.id.toString(), {
-        before: {
-          metadata: existingRecord.metadata,
-          tags: existingRecord.tags,
-          editorType: existingRecord.editorType,
-          renderer: existingRecord.renderer,
+      await this.logAudit(
+        'UPDATE',
+        'Record',
+        updatedRecord.id.toString(),
+        {
+          before: {
+            metadata: existingRecord.metadata,
+            tags: existingRecord.tags,
+            editorType: existingRecord.editorType,
+            renderer: existingRecord.renderer,
+          },
+          after: updateData,
         },
-        after: updateData,
-      });
+        userId || null,
+      );
 
       return updatedRecord;
     } catch (error) {
@@ -142,7 +160,7 @@ export class RecordService {
     });
   }
 
-  async deleteRecord(recordid: string) {
+  async deleteRecord(recordid: string, userId?: string) {
     const record = await this.prisma.record.findUnique({
       where: { id: recordid },
     });
@@ -157,9 +175,15 @@ export class RecordService {
       });
 
       // Log the audit for delete action
-      await this.logAudit('DELETE', 'Record', deletedRecord.id.toString(), {
-        deletedRecord,
-      });
+      await this.logAudit(
+        'DELETE',
+        'Record',
+        deletedRecord.id.toString(),
+        {
+          deletedRecord,
+        },
+        userId,
+      );
 
       return deletedRecord;
     } catch (error) {

@@ -1,8 +1,10 @@
+// src/backup/backup.service.ts
 import {
   BadRequestException,
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import * as AdmZip from 'adm-zip';
 import * as crypto from 'crypto';
@@ -13,6 +15,12 @@ import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
 import { SearchDateQueryDto, SearchQueryDto } from './dto/search-query-dto';
 import { Prisma } from '@prisma/client';
+import {
+  getAttachmentBytesBigInt,
+  getBackupBytesBigInt,
+  bigIntBytesToMiBNumber,
+} from '../storage/storage-size.util';
+import { StorageAccountingService } from '../storage/storage-accounting.service';
 
 const MAX_CELL_LENGTH = 32767;
 
@@ -25,7 +33,12 @@ function safeCellValue(v: any): string {
 
 @Injectable()
 export class BackupService {
-  constructor(private readonly prisma: PrismaService) {}
+  private readonly logger = new Logger(BackupService.name);
+
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storageAccounting: StorageAccountingService,
+  ) {}
 
   private getDayRangeFromDateString(dateStr: string) {
     const base = new Date(dateStr);
@@ -55,7 +68,7 @@ export class BackupService {
   private async logAudit(
     action: string,
     element: string,
-    elementid: string,
+    elementId: string,
     details: object,
     userId?: string,
   ) {
@@ -63,13 +76,47 @@ export class BackupService {
       data: {
         action,
         element,
-        elementId: elementid,
-        details: details,
+        elementId,
+        details,
         userId: userId || null,
       },
     });
   }
 
+  // src/backup/backup.service.ts
+  private async recalcStoredBytes(userId: string): Promise<bigint> {
+    const [backups, attachments] = await Promise.all([
+      this.prisma.backup.findMany({
+        where: { userId },
+        select: { sizeBytes: true },
+      }),
+      this.prisma.attachment.findMany({
+        where: { userId },
+        select: { sizeBytes: true },
+      }),
+    ]);
+
+    const totalBytes =
+      backups.reduce(
+        (acc, b) => acc + (b.sizeBytes ? BigInt(b.sizeBytes) : 0n),
+        0n,
+      ) +
+      attachments.reduce(
+        (acc, a) => acc + (a.sizeBytes ? BigInt(a.sizeBytes) : 0n),
+        0n,
+      );
+
+    // Atomically set absolute value
+    await this.storageAccounting.setStoredBytes(userId, totalBytes);
+
+    this.logger.log(
+      `Recalculated storedBytes for user ${userId}: ${totalBytes} bytes`,
+    );
+
+    return totalBytes;
+  }
+
+  /** Create backup of user structures, elements, and records */
   async createBackup(
     userId: string,
     structureId?: string,
@@ -82,101 +129,87 @@ export class BackupService {
           structures: {
             where: structureId ? { id: structureId } : {},
             include: {
-              elements: {
-                include: {
-                  Record: true,
-                },
-              },
+              elements: { include: { Record: true } },
               StructureMap: true,
             },
           },
         },
       });
 
-      if (!user) {
+      if (!user)
         throw new NotFoundException(`User with ID ${userId} not found`);
-      }
-
-      if (structureId && user.structures.length === 0) {
+      if (structureId && user.structures.length === 0)
         throw new NotFoundException(
-          `Structure with ID ${structureId} not found for the user`,
+          `Structure with ID ${structureId} not found for user`,
         );
-      }
 
-      // Prepare data for backup
-      const structuresSheet = user.structures.map((structure: any) => ({
-        id: structure.id,
-        name: structure.name,
-        title: structure.title,
-        description: structure.description,
-        ownerId: structure.ownerId,
-        workspaceId: structure.workspaceId,
-        imageUrl: structure.imageUrl || '',
-        isExpanded: structure.isExpanded,
-        markmapShowWbs: structure.markmapShowWbs,
-        wbsStart: structure.wbsStart,
-        visibility: structure.visibility,
-        type: structure.type,
-        createdAt: structure.createdAt,
-        updatedAt: structure.updatedAt,
-        deletedAt: structure.deletedAt || null,
+      const structuresSheet = user.structures.map((s: any) => ({
+        id: s.id,
+        name: s.name,
+        title: s.title,
+        description: s.description,
+        ownerId: s.ownerId,
+        workspaceId: s.workspaceId,
+        imageUrl: s.imageUrl || '',
+        isExpanded: s.isExpanded,
+        markmapShowWbs: s.markmapShowWbs,
+        wbsStart: s.wbsStart,
+        visibility: s.visibility,
+        type: s.type,
+        createdAt: s.createdAt,
+        updatedAt: s.updatedAt,
+        deletedAt: s.deletedAt || null,
       }));
 
-      // Elements sheet
-      const elementsSheet = user.structures.flatMap((structure: any) =>
-        structure.elements.map((element: any) => ({
-          id: element.id,
-          name: element.name,
-          structureId: element.structureId,
-          recordId: element.recordId || null,
-          parentId: element.parentId || null,
-          elementLinkId: element.elementLinkId || null,
-          orderIndex: element.orderIndex,
-          isExpanded: element.isExpanded,
-          type: element.type || null,
-          eventType: element.eventType || null,
-          gateType: element.gateType || null,
-          eventValue: element.eventValue != null ? element.eventValue : null,
-          eventValueType: element.eventValueType || null,
-          mttr: element.mttr != null ? element.mttr : null,
-          missionTime: element.missionTime != null ? element.missionTime : null,
-          description: element.description || null,
-          inputK: element.inputK != null ? element.inputK : null,
-          outputN: element.outputN != null ? element.outputN : null,
-          createdAt: element.createdAt,
-          updatedAt: element.updatedAt,
-          deletedAt: element.deletedAt || null,
+      const elementsSheet = user.structures.flatMap((s: any) =>
+        s.elements.map((e: any) => ({
+          id: e.id,
+          name: e.name,
+          structureId: e.structureId,
+          recordId: e.recordId || null,
+          parentId: e.parentId || null,
+          elementLinkId: e.elementLinkId || null,
+          orderIndex: e.orderIndex,
+          isExpanded: e.isExpanded,
+          type: e.type || null,
+          eventType: e.eventType || null,
+          gateType: e.gateType || null,
+          eventValue: e.eventValue ?? null,
+          eventValueType: e.eventValueType || null,
+          mttr: e.mttr ?? null,
+          missionTime: e.missionTime ?? null,
+          description: e.description || null,
+          inputK: e.inputK ?? null,
+          outputN: e.outputN ?? null,
+          createdAt: e.createdAt,
+          updatedAt: e.updatedAt,
+          deletedAt: e.deletedAt || null,
         })),
       );
 
-      // Records sheet: include all fields from the Record model.
-      const recordsSheet = user.structures.flatMap((structure: any) =>
-        structure.elements.flatMap((element: any) =>
-          element.Record
+      const recordsSheet = user.structures.flatMap((s: any) =>
+        s.elements.flatMap((e: any) =>
+          e.Record
             ? [
                 {
-                  id: element.Record.id,
-                  metadata: safeCellValue(element.Record.metadata),
-                  tags: element.Record.tags
-                    ? safeCellValue(element.Record.tags)
+                  id: e.Record.id,
+                  metadata: safeCellValue(e.Record.metadata),
+                  tags: e.Record.tags ? safeCellValue(e.Record.tags) : null,
+                  editorType: e.Record.editorType,
+                  recordSvg: e.Record.recordSvg
+                    ? safeCellValue(e.Record.recordSvg)
                     : null,
-                  editorType: element.Record.editorType,
-                  recordSvg: element.Record.recordSvg
-                    ? safeCellValue(element.Record.recordSvg)
-                    : null,
-                  createdAt: element.Record.createdAt,
-                  updatedAt: element.Record.updatedAt,
+                  createdAt: e.Record.createdAt,
+                  updatedAt: e.Record.updatedAt,
                 },
               ]
             : [],
         ),
       );
 
-      // Rest of the backup logic remains unchanged
       const backupDir = path.resolve(__dirname, '../../public/backups');
-      if (!fs.existsSync(backupDir)) {
+      if (!fs.existsSync(backupDir))
         fs.mkdirSync(backupDir, { recursive: true });
-      }
 
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(
@@ -201,7 +234,11 @@ export class BackupService {
       const structure = user.structures[0];
 
       // Generate file name using structure name and timestamp
-      const timestamp = new Date();
+      const timestamp = new Date()
+        .toISOString()
+        .replace('T', '_')
+        .replace(/\..+/, '')
+        .replace(/:/g, '-');
       const filename = `${structure.title || structure.name}.${timestamp}.zip`;
 
       const encryptedFilePath = path.resolve(
@@ -217,20 +254,22 @@ export class BackupService {
 
       fs.unlinkSync(encryptedFilePath);
 
-      const protocol = (process.env.PROTOCOL || 'http')?.replace(/:\/*$/, '');
+      const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
       const baseUrl = (process.env.BASE_URL || 'localhost:4001')
         .replace(/^https?:\/+/, '')
         .replace(/^\/|\/$/, '');
-
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
       const title = `${structure.title || structure.name}-${timestamp}`;
 
       const validWorkspaceId = workspaceId || user.defaultWorkspaceId;
-      if (!validWorkspaceId) {
+      if (!validWorkspaceId)
         throw new InternalServerErrorException(
           'No valid workspaceId provided for backup creation',
         );
-      }
+
+      // Get the file size in bytes
+      const stats = fs.statSync(zipFilePath);
+      const sizeBytes = BigInt(stats.size);
 
       const backup = await this.prisma.backup.create({
         data: {
@@ -239,76 +278,83 @@ export class BackupService {
           backupData: { filePath: zipFilePath },
           fileUrl,
           workspaceId: validWorkspaceId,
+          sizeBytes,
         },
       });
 
-      // Log the audit for backup creation
-      await this.logAudit('create', 'backup', backup.id, {
-        fileUrl,
-        userId,
-      });
+      // Update stored bytes centrally
+      try {
+        await this.storageAccounting.adjustStoredBytes(userId, sizeBytes);
+      } catch (err) {
+        this.logger.error(
+          `Failed to adjust storedBytes after creating backup: ${err}`,
+        );
+        throw err;
+      }
 
-      return {
-        message: 'Backup created successfully',
-        fileUrl,
-      };
+      // after sizeBytes is known and after backup record created
+      try {
+        // create a storage event so exported metrics count this upload
+        await this.prisma.storageEvent.create({
+          data: {
+            userId,
+            type: 'backup-create',
+            bytes: sizeBytes, // BigInt
+            sign: 1, // positive for upload
+          },
+        });
+      } catch (err) {
+        // don't block backup operation if storage event creation fails,
+        // but log for later debugging
+        this.logger.error(
+          `Failed to create storageEvent for backup create: ${err}`,
+        );
+      }
+
+      await this.logAudit('create', 'backup', backup.id, { fileUrl, userId });
+
+      return { message: 'Backup created successfully', fileUrl };
     } catch (error) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
-      ) {
+      )
         throw error;
-      }
+      this.logger.error('createBackup error', error);
       throw new InternalServerErrorException('Failed to create backup');
     }
   }
 
+  /** Full user backup (all structures) */
   async createFullUserBackup(userId: string) {
     try {
-      // Fetch user along with all structures, elements, and related records
       const user = await this.prisma.user.findUnique({
         where: { id: userId },
         include: {
           structures: {
             include: {
-              elements: {
-                include: { Record: true },
-              },
+              elements: { include: { Record: true } },
               StructureMap: true,
             },
           },
         },
       });
-
-      if (!user) {
+      if (!user)
         throw new NotFoundException(`User with ID ${userId} not found`);
-      }
-
-      // Validate the workspace ID
       const validWorkspaceId = user.defaultWorkspaceId;
-      if (!validWorkspaceId) {
+      if (!validWorkspaceId)
         throw new InternalServerErrorException(
           'No valid workspaceId found for the user',
         );
-      }
 
-      // Prepare the backup data (all structures for the user)
-      const backupData = {
-        structures: user.structures,
-      };
-
-      // Convert backup data to JSON and encrypt it
-      const jsonData = JSON.stringify(backupData, null, 2);
-      const jsonBuffer = Buffer.from(jsonData);
+      const backupData = { structures: user.structures };
+      const jsonBuffer = Buffer.from(JSON.stringify(backupData, null, 2));
       const encryptedBuffer = this.encrypt(jsonBuffer);
 
-      // Prepare backup directory
       const backupDir = path.resolve(__dirname, '../../public/backups');
-      if (!fs.existsSync(backupDir)) {
+      if (!fs.existsSync(backupDir))
         fs.mkdirSync(backupDir, { recursive: true });
-      }
 
-      // Generate filenames
       const timestamp = new Date()
         .toISOString()
         .replace('T', '_')
@@ -324,23 +370,21 @@ export class BackupService {
         `${filePrefix}-${timestamp}.zip`,
       );
 
-      // Write encrypted data to a temporary file
       fs.writeFileSync(encryptedFilePath, encryptedBuffer);
-
-      // Compress the encrypted backup into a ZIP file
       const zip = new AdmZip();
       zip.addLocalFile(encryptedFilePath);
       zip.writeZip(zipFilePath);
-
-      // Remove the temporary encrypted file
       fs.unlinkSync(encryptedFilePath);
 
-      // Construct public URL for the backup file
       const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
       const baseUrl = (process.env.BASE_URL || 'localhost:4001')
         .replace(/^https?:\/+/, '')
         .replace(/^\/|\/$/, '');
       const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
+
+      // Get the file size in bytes
+      const stats = fs.statSync(zipFilePath);
+      const sizeBytes = BigInt(stats.size);
 
       // Create a backup record in the database, providing a valid workspaceId
       const title = `${filePrefix}-${timestamp}`;
@@ -351,20 +395,46 @@ export class BackupService {
           backupData: { filePath: zipFilePath },
           fileUrl,
           workspaceId: validWorkspaceId,
+          sizeBytes,
         },
       });
 
-      // Log the audit for full backup creation
+      // Update stored bytes centrally
+      try {
+        await this.storageAccounting.adjustStoredBytes(userId, sizeBytes);
+      } catch (err) {
+        this.logger.error(
+          `Failed to adjust storedBytes after creating full user backup: ${err}`,
+        );
+        throw err;
+      }
+
+      // after sizeBytes is known and after backup record created
+      try {
+        // create a storage event so exported metrics count this upload
+        await this.prisma.storageEvent.create({
+          data: {
+            userId,
+            type: 'backup-create',
+            bytes: sizeBytes, // BigInt
+            sign: 1, // positive for upload
+          },
+        });
+      } catch (err) {
+        // don't block backup operation if storage event creation fails,
+        // but log for later debugging
+        this.logger.error(
+          `Failed to create storageEvent for full-user backup create: ${err}`,
+        );
+      }
+
       await this.logAudit('create', 'full-user-backup', backup.id, {
         fileUrl,
         userId,
       });
-
-      return {
-        message: 'Full user backup created successfully',
-        fileUrl,
-      };
+      return { message: 'Full user backup created successfully', fileUrl };
     } catch (error) {
+      this.logger.error('createFullUserBackup error', error);
       throw new InternalServerErrorException(
         'Failed to create full user backup',
       );
@@ -404,20 +474,45 @@ export class BackupService {
         throw new NotFoundException(`Backup with ID ${backupId} not found`);
       }
 
+      // Remove the backup file
       const backupData = backup.backupData as { filePath: string };
       if (fs.existsSync(backupData.filePath)) {
         fs.unlinkSync(backupData.filePath);
       }
 
+      // Delete backup record from DB
       await this.prisma.backup.delete({ where: { id: backupId } });
 
-      // Log the audit for backup deletion
+      // Recalculate stored bytes for the user
+      await this.recalcStoredBytes(backup.userId);
+
+      // Create storage event for metrics
+      try {
+        const sizeBytes = backup.sizeBytes
+          ? BigInt(backup.sizeBytes)
+          : getBackupBytesBigInt(backup);
+        await this.prisma.storageEvent.create({
+          data: {
+            userId: backup.userId,
+            type: 'backup-delete',
+            bytes: sizeBytes,
+            sign: -1,
+          },
+        });
+      } catch (err) {
+        this.logger.error(
+          `Failed to create storageEvent for backup delete: ${err}`,
+        );
+      }
+
+      // Log audit
       await this.logAudit('delete', 'backup', backupId, {
         userId: backup.userId,
       });
 
       return { message: `Backup with ID ${backupId} deleted successfully` };
     } catch (error) {
+      this.logger.error('deleteBackup error', error);
       throw new InternalServerErrorException('Failed to delete the backup');
     }
   }
