@@ -45,6 +45,7 @@ model User {
   attachments                       Attachment[]
   auditLogs                         AuditLog[]
   backups                           Backup[]
+  storedBytes                       BigInt                     @default(0)
   deletionLogs                      DeletionLog[]
   invitationsSent                   Invitation[]               @relation("UserInvitations")
   invitedBy                         Invitation[]               @relation("UserInvited")
@@ -62,6 +63,7 @@ model User {
   defaultWorkspace                  Workspace?                 @relation("UserDefaultWorkspace", fields: [defaultWorkspaceId], references: [id])
   role                              Role                       @relation("UserRole", fields: [roleId], references: [id])
   roles                             Role[]                     @relation("UserRoles")
+  StorageEvent                      StorageEvent[]
 }
 
 model Invitation {
@@ -184,7 +186,6 @@ model Structure {
   StructureMap      StructureMap[]
   shares            StructureShare[]
   shareInvitations  StructureShareInvitation[]
-  shareLinks        StructureShareLink[]
   StructureTemplate StructureTemplate[]
   teamMembers       TeamMember[]
   Webhook           Webhook[]
@@ -282,6 +283,7 @@ model Backup {
   workspaceId String    @default("default_workspace_id")
   isPublic    Boolean   @default(false)
   fileUrl     String?
+  sizeBytes   BigInt?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
   user        User      @relation(fields: [userId], references: [id])
@@ -305,6 +307,7 @@ model Attachment {
   id        String   @id @default(uuid())
   fileUrl   String
   fileType  String
+  sizeBytes BigInt?
   data      Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -456,41 +459,26 @@ model StructureShare {
   @@index([userId])
 }
 
-model StructureShareLink {
-  id          String          @id @default(uuid())
-  structureId String
-  token       String          @unique @default(uuid())
-  permission  SharePermission
-  expiresAt   DateTime?
-  isActive    Boolean         @default(true)
-  createdAt   DateTime        @default(now())
-  updatedAt   DateTime        @updatedAt
-  structure   Structure       @relation(fields: [structureId], references: [id], onDelete: Cascade)
-
-  @@index([structureId])
-  @@index([token])
-}
-
 model StructureShareInvitation {
-  id           String           @id @default(uuid())
-  structureId  String
-  inviterId    String
-  inviteeEmail String
-  permission   SharePermission
-  token        String           @unique @default(uuid())
-  message      String?
-  status       InvitationStatus @default(pending)
-  expiresAt    DateTime
-  createdAt    DateTime         @default(now())
-  updatedAt    DateTime         @updatedAt
-  usedAt       DateTime?
-  inviteeId    String?
-  invitee      User?            @relation("StructureShareInvitationInvitee", fields: [inviteeId], references: [id])
-  inviter      User             @relation("StructureShareInvitationInviter", fields: [inviterId], references: [id])
-  structure    Structure        @relation(fields: [structureId], references: [id], onDelete: Cascade)
+  id              String           @id @default(uuid())
+  structureId     String
+  inviterId       String
+  inviteeUsername String
+  permission      SharePermission
+  token           String           @unique @default(uuid())
+  message         String?
+  status          InvitationStatus @default(pending)
+  expiresAt       DateTime
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  usedAt          DateTime?
+  inviteeId       String?
+  invitee         User?            @relation("StructureShareInvitationInvitee", fields: [inviteeId], references: [id])
+  inviter         User             @relation("StructureShareInvitationInviter", fields: [inviterId], references: [id])
+  structure       Structure        @relation(fields: [structureId], references: [id], onDelete: Cascade)
 
   @@index([structureId])
-  @@index([inviteeEmail])
+  @@index([inviteeUsername])
   @@index([token])
 }
 
@@ -555,15 +543,28 @@ model Metric {
   cpu_util_pct   Float?
   mem_used_gib   Float?
   mem_total_gib  Float?
-  mem_util_pct   Float?     
+  mem_util_pct   Float?
   disk_used_gib  Float?
   disk_total_gib Float?
-  disk_util_pct  Float?     
+  disk_util_pct  Float?
   net_rx_kib     Decimal?
   net_tx_kib     Decimal?
-  disk_read_kib  Decimal? 
-  disk_write_kib Decimal? 
+  disk_read_kib  Decimal?
+  disk_write_kib Decimal?
 
   @@index([timestamp])
 }
 
+model StorageEvent {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String
+  bytes     BigInt
+  sign      Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([createdAt])
+}

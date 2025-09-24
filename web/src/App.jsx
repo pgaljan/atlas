@@ -16,7 +16,9 @@ import PublicRoute from './routes/PublicRoute';
 import PrivateRoute from './routes/PrivateRoute';
 import AdminPrivateRoute from './routes/AdminPrivateRoute';
 import APIKeyPrivateRoute from './routes/APIKeyPrivateRoute';
+import LearnerPrivateRoutes from './routes/LearnerPrivateRoutes';
 import { setFaviconWithFallback } from './utils/faviconFallback';
+import LearnerPlatformLayout from './components/learner-platform/learner-layout/LearnerPlatformLayout';
 
 // Lazy imports
 const NotFound = lazy(() => import('./components/404-notfound/NotFound'));
@@ -43,6 +45,7 @@ const SubscriptionPlans = lazy(() => import('./containers/common/subscription-pl
 const Dashboard = lazy(() => import('./containers/user-portal/dashboard'));
 const Syncfusion = lazy(() => import('./containers/user-portal/sync-fusion'));
 const Backups = lazy(() => import('./containers/user-portal/backups'));
+const SharedStructures = lazy(() => import('./containers/user-portal/shared-structures'));
 const Templates = lazy(() => import('./containers/user-portal/templates'));
 const Invitations = lazy(() => import('./containers/user-portal/invitations'));
 const UserSettings = lazy(() => import('./containers/user-portal/user-settings'));
@@ -77,6 +80,15 @@ const APIKeys = lazy(() => import('./containers/api-management/security-keys'));
 const Policies = lazy(() => import('./containers/api-management/security-policies'));
 const Certificates = lazy(() => import('./containers/api-management/security-certificates'));
 
+// Learner Platform
+const LearnerMyPath = lazy(() => import('./containers/learner-platform/learner-my-path'));
+const LearnerCanvas = lazy(() => import('./containers/learner-platform/learner-my-canvas'));
+const LearnerQuarters = lazy(() => import('./containers/learner-platform/learner-my-quarters'));
+const LearnerMessages = lazy(() => import('./containers/learner-platform/learner-messages'));
+const LeanerAccountSettings = lazy(
+  () => import('./containers/learner-platform/learner-my-account'),
+);
+
 // Route groups (keeps same structure as previous working version)
 const publicRoutes = [
   { path: '/', element: <Login /> },
@@ -100,6 +112,7 @@ const subscriptionRoutes = [{ path: '/subscription-plans', element: <Subscriptio
 const userRoutes = [
   { path: '/app/dashboard', element: <Dashboard /> },
   { path: '/app/backups', element: <Backups /> },
+  { path: '/app/shared-with-me', element: <SharedStructures /> },
   { path: '/app/templates', element: <Templates /> },
   { path: '/app/invitations', element: <Invitations /> },
   { path: '/app/upgrade-plans', element: <UpgradePlans /> },
@@ -136,6 +149,13 @@ const apiManagementRoutes = [
   { path: '/api-management/security/keys', element: <APIKeys /> },
   { path: '/api-management/security/policies', element: <Policies /> },
   { path: '/api-management/security/certificates', element: <Certificates /> },
+];
+const learnerPlatformRoutes = [
+  { path: '/learner/dashboard', element: <LearnerMyPath /> },
+  { path: '/learner/my-canvas', element: <LearnerCanvas /> },
+  { path: '/learner/my-quarters', element: <LearnerQuarters /> },
+  { path: '/learner/messages', element: <LearnerMessages /> },
+  { path: '/learner/account-settings', element: <LeanerAccountSettings /> },
 ];
 
 const App = () => {
@@ -256,6 +276,25 @@ const App = () => {
           {/* API management routes (no sidebar layout, just APIKeyPrivateRoute wrapper) */}
           <Route element={<APIKeyPrivateRoute />}>
             {apiManagementRoutes?.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
+          </Route>
+
+          <Route
+            element={
+              <LearnerPrivateRoutes>
+                <LearnerPlatformLayout />
+              </LearnerPrivateRoutes>
+            }
+          >
+            {learnerPlatformRoutes?.map(({ path, element }) => (
+              <Route key={path} path={path} element={element} />
+            ))}
+          </Route>
+
+          {/* Learner platform routes */}
+          <Route element={<LearnerPrivateRoutes />}>
+            {learnerPlatformRoutes?.map(({ path, element }) => (
               <Route key={path} path={path} element={element} />
             ))}
           </Route>

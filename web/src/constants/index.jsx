@@ -1,241 +1,233 @@
-import { BsDatabaseFillCheck } from "react-icons/bs";
-import { FaSlideshare } from "react-icons/fa";
-import { HiUsers } from "react-icons/hi2";
-import { IoDuplicateOutline, IoTrash } from "react-icons/io5";
-import {
-  MdOutlineCopyAll,
-  MdOutlineRestore,
-  MdPermMedia,
-} from "react-icons/md";
-import { PiTreeStructure } from "react-icons/pi";
-import { TbEditCircle, TbTemplate, TbTrashOff } from "react-icons/tb";
-import Icons from "./icons";
+import { BsDatabaseFillCheck } from 'react-icons/bs';
+import { FaSlideshare } from 'react-icons/fa';
+import { HiUsers } from 'react-icons/hi2';
+import { IoDuplicateOutline, IoTrash } from 'react-icons/io5';
+import { MdOutlineCopyAll, MdOutlineRestore, MdPermMedia } from 'react-icons/md';
+import { PiTreeStructure } from 'react-icons/pi';
+import { TbEditCircle, TbTemplate, TbTrashOff } from 'react-icons/tb';
+import Icons from './icons';
 
 export const teamMembersConfig = {
-  title: "Team Members",
+  title: 'Team Members',
   showId: true,
   tabs: [
-    { key: "users", label: "Users" },
-    { key: "pending", label: "Pending Invitations" },
+    { key: 'users', label: 'Users' },
+    { key: 'pending', label: 'Pending Invitations' },
   ],
   enableSearch: true,
   emptyState: {
-    title: "No team members found.",
-    description: "Invite members to display here.",
+    title: 'No team members found.',
+    description: 'Invite members to display here.',
     icon: <HiUsers className="text-5xl text-custom-main" />,
   },
   enableCheckbox: false,
   columns: [
-    { key: "name", label: "Display Name" },
-    { key: "email", label: "Email" },
-    { key: "userType", label: "Role" },
-    { key: "status", label: "Status" },
-    { key: "joinDate", label: "Date Joined" },
+    { key: 'name', label: 'Display Name' },
+    { key: 'email', label: 'Email' },
+    { key: 'userType', label: 'Role' },
+    { key: 'status', label: 'Status' },
+    { key: 'joinDate', label: 'Date Joined' },
   ],
   actions: [
     {
       icon: <TbEditCircle className="w-6 h-6" color="#000000" />,
-      tooltip: "Edit",
+      tooltip: 'Edit',
     },
     {
       icon: <IoTrash className="w-6 h-6" color="red" />,
-      tooltip: "Delete",
+      tooltip: 'Delete',
     },
   ],
   buttons: [
     {
-      label: "All",
-      onClick: () => console.log("All clicked"),
-      className: "bg-custom-main text-white",
+      label: 'All',
+      onClick: () => console.log('All clicked'),
+      className: 'bg-custom-main text-white',
     },
     {
-      label: "Member",
-      onClick: () => console.log("Member clicked"),
-      className: "bg-custom-navbar-active text-white",
+      label: 'Member',
+      onClick: () => console.log('Member clicked'),
+      className: 'bg-custom-navbar-active text-white',
     },
   ],
 };
 
 export const invitationConfig = {
-  title: "Invitations",
+  title: 'Invitations',
   showId: false,
   tabs: [
-    { key: "members", label: "All Invitations" },
-    { key: "pending", label: "Pending Invitations" },
+    { key: 'members', label: 'All Invitations' },
+    { key: 'pending', label: 'Pending Invitations' },
   ],
   enableSearch: true,
   emptyState: {
-    title: "No Invitations found.",
-    description: "Invite members to display here.",
+    title: 'No Invitations found.',
+    description: 'Invite members to display here.',
     icon: <FaSlideshare className="text-5xl text-custom-main" />,
   },
   enableCheckbox: false,
   columns: [
     // { key: "email", label: "Email" },
-    { key: "token", label: "Token" },
-    { label: "Invite Code", key: "inviteCode" },
-    { key: "generated", label: "Generated at" },
-    { key: "accepted", label: "Accepted at" },
-    { key: "expire", label: "Expires at" },
-    { key: "status", label: "Status" },
+    { key: 'token', label: 'Token' },
+    { label: 'Invite Code', key: 'inviteCode' },
+    { key: 'generated', label: 'Generated at' },
+    { key: 'accepted', label: 'Accepted at' },
+    { key: 'expire', label: 'Expires at' },
+    { key: 'status', label: 'Status' },
   ],
   actions: [
     {
       icon: <MdOutlineCopyAll className="w-5 h-5 text-gray-700" />,
-      tooltip: "Copy Token",
+      tooltip: 'Copy Token',
     },
     {
       icon: <IoTrash className="w-6 h-6 text-red-600" />,
-      tooltip: "Delete",
+      tooltip: 'Delete',
     },
   ],
 };
 
 export const templatesConfig = {
-  title: "Templates",
+  title: 'Templates',
   showId: false,
   enableSearch: true,
   emptyState: {
-    title: "No Templates Found",
-    description: "Start by creating your first template.",
+    title: 'No Templates Found',
+    description: 'Start by creating your first template.',
     icon: <TbTemplate className="text-5xl text-custom-main" />,
   },
   enableCheckbox: false,
   columns: [
     {
-      key: "thumbnail",
-      label: "Preview",
+      key: 'thumbnail',
+      label: 'Preview',
       render: (template) => {
         return (
           <img
-            src={
-              template.structureJson?.imageUrl ||
-              "/assets/placeholder-template.png"
-            }
+            src={template.structureJson?.imageUrl || '/assets/placeholder-template.png'}
             alt="Template Thumbnail"
             className="w-14 h-14 rounded-md object-cover border"
           />
         );
       },
     },
-    { key: "name", label: "Name" },
+    { key: 'name', label: 'Name' },
     {
-      key: "description",
-      label: "Description",
-      render: (template) => template?.description || "-",
+      key: 'description',
+      label: 'Description',
+      render: (template) => template?.description || '-',
     },
     {
-      key: "type",
-      label: "Template Type",
+      key: 'type',
+      label: 'Template Type',
       render: (template) => (
         <span className="capitalize text-sm text-custom-text-grey">
-          {template.structureType || template.structureJson?.type || "Unknown"}
+          {template.structureType || template.structureJson?.type || 'Unknown'}
         </span>
       ),
     },
     {
-      key: "createdAt",
-      label: "Created At",
+      key: 'createdAt',
+      label: 'Created At',
       render: (template) =>
-        new Date(template.createdAt).toLocaleDateString("en-US", {
-          month: "short",
-          day: "2-digit",
-          year: "numeric",
+        new Date(template.createdAt).toLocaleDateString('en-US', {
+          month: 'short',
+          day: '2-digit',
+          year: 'numeric',
         }),
     },
   ],
   actions: [
     {
-      tooltip: "Utilize Template",
+      tooltip: 'Utilize Template',
       icon: <PiTreeStructure className="w-6 h-6 text-green-600" />,
     },
     {
-      tooltip: "Duplicate Template",
+      tooltip: 'Duplicate Template',
       icon: <IoDuplicateOutline className="w-5 h-5 text-blue-500" />,
     },
     {
-      tooltip: "Edit Template",
+      tooltip: 'Edit Template',
       icon: <TbEditCircle className="w-5 h-5" />,
     },
     {
-      tooltip: "Delete Template",
+      tooltip: 'Delete Template',
       icon: <IoTrash className="w-6 h-6 text-red-600" />,
     },
   ],
 };
 
 export const trashConfig = {
-  title: "Deleted Markmaps",
+  title: 'Deleted Markmaps',
   showId: true,
   tabs: [],
   enableSearch: false,
   emptyState: {
-    title: "No deleted markmaps found.",
-    description: "deleted markmaps will appear here.",
+    title: 'No deleted markmaps found.',
+    description: 'deleted markmaps will appear here.',
     icon: <TbTrashOff className="text-5xl text-custom-main" />,
   },
   columns: [
-    { key: "name", label: "Structure Name" },
-    { key: "deletedBy", label: "Deleted By" },
-    { key: "deletedAt", label: "Deleted At" },
+    { key: 'name', label: 'Structure Name' },
+    { key: 'deletedBy', label: 'Deleted By' },
+    { key: 'deletedAt', label: 'Deleted At' },
   ],
   actions: [
     {
       icon: <MdOutlineRestore className="w-6 h-6" color="#000000" />,
-      tooltip: "Restore",
+      tooltip: 'Restore',
     },
     {
       icon: <IoTrash className="w-6 h-6" color="red" />,
-      tooltip: "Delete",
+      tooltip: 'Delete',
     },
   ],
 };
 
 export const mediaConfig = {
-  title: "Uploaded Files",
+  title: 'Uploaded Files',
   showId: true,
   tabs: [],
   enableSearch: false,
   emptyState: {
-    title: "No uploaded files found.",
-    description: "all your uploaded files will appear here.",
+    title: 'No uploaded files found.',
+    description: 'all your uploaded files will appear here.',
     icon: <MdPermMedia className="text-5xl text-custom-main" />,
   },
   columns: [
-    { key: "fileUrl", label: "Media File" },
-    { key: "fileType", label: "File Type" },
-    { key: "updatedAt", label: "Upload Date" },
+    { key: 'fileUrl', label: 'Media File' },
+    { key: 'fileType', label: 'File Type' },
+    { key: 'updatedAt', label: 'Upload Date' },
   ],
   actions: [
     {
       icon: <TbEditCircle className="w-6 h-6" color="#000000" />,
-      tooltip: "Edit",
+      tooltip: 'Edit',
     },
     {
       icon: <IoTrash className="w-6 h-6" color="red" />,
-      tooltip: "Delete",
+      tooltip: 'Delete',
     },
   ],
 };
 
-
 export const backupConfig = {
-  title: "My Backups",
+  title: 'My Backups',
   showId: true,
   tabs: [],
   enableSearch: true,
   emptyState: {
-    title: "No backups found.",
-    description: "All your backups will appear here.",
+    title: 'No backups found.',
+    description: 'All your backups will appear here.',
     icon: <BsDatabaseFillCheck className="text-5xl text-custom-main" />,
   },
   columns: [
-    { key: "title", label: "Title" },
+    { key: 'title', label: 'Title' },
     {
-      key: "fileUrl",
-      label: "Download Link",
+      key: 'fileUrl',
+      label: 'Download Link',
       render: (row) => {
-        if (!row.fileUrl) return "--";
+        if (!row.fileUrl) return '--';
         return (
           <a
             href={row.fileUrl}
@@ -249,232 +241,221 @@ export const backupConfig = {
       },
     },
     {
-      key: "updatedAt",
-      label: "Created At",
+      key: 'updatedAt',
+      label: 'Created At',
       render: (row) =>
         row.updatedAt
-          ? new Date(row.updatedAt).toLocaleString("en-US", {
-              month: "2-digit",
-              day: "2-digit",
-              year: "numeric",
-              hour: "2-digit",
-              minute: "2-digit",
+          ? new Date(row.updatedAt).toLocaleString('en-US', {
+              month: '2-digit',
+              day: '2-digit',
+              year: 'numeric',
+              hour: '2-digit',
+              minute: '2-digit',
               hour12: true,
             })
-          : "N/A",
+          : 'N/A',
     },
   ],
   actions: [
     {
       icon: <IoTrash className="w-6 h-6" color="red" />,
-      tooltip: "Delete",
-      onClick: (item) => console.log("Delete clicked for:", item),
+      tooltip: 'Delete',
+      onClick: (item) => console.log('Delete clicked for:', item),
     },
   ],
 };
 
-
 export const plans = [
   {
-    name: "Free",
-    price: "Free",
-    description: "For individuals who want to get started with mind mapping.",
+    name: 'Free',
+    price: 'Free',
+    description: 'For individuals who want to get started with mind mapping.',
     features: [
-      "Up to 3 mind maps",
-      "Unlimited collaborators",
-      "Templates",
-      "Presentations",
-      "Focus mode",
-      "MeisterTask integration",
-      "Apps for iOS & Android",
+      'Up to 3 mind maps',
+      'Unlimited collaborators',
+      'Templates',
+      'Presentations',
+      'Focus mode',
+      'MeisterTask integration',
+      'Apps for iOS & Android',
     ],
-    buttonText: "Get started",
-    featureHeading: "Free includes:",
+    buttonText: 'Get started',
+    featureHeading: 'Free includes:',
   },
   {
-    name: "Personal",
-    price: "$6.50",
-    description: "For individuals who want more flexibility and customization.",
+    name: 'Personal',
+    price: '$6.50',
+    description: 'For individuals who want more flexibility and customization.',
     features: [
-      "Unlimited mind maps",
-      "Up to 2 attachments",
-      "7-day version history",
-      "File exports",
-      "Print mind maps",
-      "Microsoft Teams integration",
+      'Unlimited mind maps',
+      'Up to 2 attachments',
+      '7-day version history',
+      'File exports',
+      'Print mind maps',
+      'Microsoft Teams integration',
     ],
-    buttonText: "Get started",
-    featureHeading: "Includes Free, plus:",
+    buttonText: 'Get started',
+    featureHeading: 'Includes Free, plus:',
   },
   {
-    name: "Pro",
-    price: "$10.50",
-    description:
-      "For small teams who want to brainstorm and collaborate together.",
+    name: 'Pro',
+    price: '$10.50',
+    description: 'For small teams who want to brainstorm and collaborate together.',
     features: [
-      "Unlimited attachments",
-      "Unlimited version history",
-      "Multiple admins",
-      "Google Workspace integration",
-      "MS exports",
-      "Custom branding",
-      "Custom color scheme",
+      'Unlimited attachments',
+      'Unlimited version history',
+      'Multiple admins',
+      'Google Workspace integration',
+      'MS exports',
+      'Custom branding',
+      'Custom color scheme',
     ],
-    buttonText: "Get started",
+    buttonText: 'Get started',
     icon: <Icons.ProCardIcon className="w-[128px] h-[128px]" />,
     highlight: true,
-    featureHeading: "Includes Personal, plus:",
+    featureHeading: 'Includes Personal, plus:',
   },
   {
-    name: "Business",
-    price: "$15.50",
-    description:
-      "For organizations that need advanced security and quick, dedicated support.",
+    name: 'Business',
+    price: '$15.50',
+    description: 'For organizations that need advanced security and quick, dedicated support.',
     features: [
-      "Group sharing",
-      "Compliance exports and backups",
-      "SAML SSO (contact Sales)",
-      "Advanced settings",
-      "Automated access approval",
-      "Dedicated Customer Success Manager",
-      "Personalized onboarding",
+      'Group sharing',
+      'Compliance exports and backups',
+      'SAML SSO (contact Sales)',
+      'Advanced settings',
+      'Automated access approval',
+      'Dedicated Customer Success Manager',
+      'Personalized onboarding',
     ],
-    buttonText: "Get started",
-    featureHeading: "Includes Pro, plus:",
+    buttonText: 'Get started',
+    featureHeading: 'Includes Pro, plus:',
   },
 ];
 
 export const services = [
   {
-    name: "Google",
+    name: 'Google',
     description:
-      "Connect your Google account to log in via Google, use your avatar, and easily access Google services.",
-    action: "Configure",
+      'Connect your Google account to log in via Google, use your avatar, and easily access Google services.',
+    action: 'Configure',
     icon: <Icons.GoogleServiceIcon className="w-8 h-8 " />,
   },
   {
-    name: "Microsoft",
+    name: 'Microsoft',
     description:
-      "This app allows you to log in to your MeisterLabs products with your Microsoft account.",
-    action: "Connect",
+      'This app allows you to log in to your MeisterLabs products with your Microsoft account.',
+    action: 'Connect',
     icon: <Icons.MicrosoftIcon className="w-8 h-18" />,
   },
   {
-    name: "Apple",
+    name: 'Apple',
     description:
-      "This app allows you to log in to your MeisterLabs products with your Apple account.",
-    action: "Connect",
+      'This app allows you to log in to your MeisterLabs products with your Apple account.',
+    action: 'Connect',
     icon: <Icons.AppleIcon className="w-8  h-8 " />,
   },
   {
-    name: "Biggerplate",
+    name: 'Biggerplate',
     description:
-      "This app allows you to log in to your Meister products with your Biggerplate account.",
-    action: "Connect",
+      'This app allows you to log in to your Meister products with your Biggerplate account.',
+    action: 'Connect',
     icon: <Icons.BiggerPlateIcon className="w-8 h-8 " />,
   },
 ];
 
 export const personalDetailConfig = {
   tabs: [
-    { label: "General" },
-    { label: "Email" },
-    { label: "Services & Sessions" },
-    { label: "Terms & Policies" },
+    { label: 'General' },
+    { label: 'Email' },
+    { label: 'Services & Sessions' },
+    { label: 'Terms & Policies' },
   ],
   fields: [
     {
-      label: "Name",
-      name: "name",
-      placeholder: "Enter your name",
-      value: "Engr Kashan",
+      label: 'Name',
+      name: 'name',
+      placeholder: 'Enter your name',
+      value: 'Engr Kashan',
     },
     {
-      label: "Username",
-      name: "username",
-      placeholder: "Enter your username",
-      value: "",
+      label: 'Username',
+      name: 'username',
+      placeholder: 'Enter your username',
+      value: '',
     },
     {
-      label: "Website",
-      name: "website",
-      placeholder: "Enter your website",
-      value: "",
+      label: 'Website',
+      name: 'website',
+      placeholder: 'Enter your website',
+      value: '',
     },
     {
-      label: "Description",
-      name: "description",
-      placeholder: "Enter a description",
-      value: "",
+      label: 'Description',
+      name: 'description',
+      placeholder: 'Enter a description',
+      value: '',
     },
   ],
   avatar: {
-    image: "/path-to-avatar.jpg",
-    label: "My Avatar",
-    description: "Your photo should be cool and may use transparency.",
+    image: '/path-to-avatar.jpg',
+    label: 'My Avatar',
+    description: 'Your photo should be cool and may use transparency.',
   },
-  buttons: [{ label: "Save changes", className: "bg-custom-main text-white" }],
+  buttons: [{ label: 'Save changes', className: 'bg-custom-main text-white' }],
 };
 
 export const dummyFaqs = [
   {
     question: "What should I do when my board isn't loading?",
-    answer: "Try refreshing the page or checking your internet connection.",
+    answer: 'Try refreshing the page or checking your internet connection.',
   },
   {
-    question:
-      "Where can I find my invoices and how can I change some information on them?",
-    answer:
-      "Invoices are available in your billing section under account settings.",
+    question: 'Where can I find my invoices and how can I change some information on them?',
+    answer: 'Invoices are available in your billing section under account settings.',
   },
   {
     question: "Why can't I log in to my account?",
-    answer:
-      "Ensure your credentials are correct and reset your password if needed.",
+    answer: 'Ensure your credentials are correct and reset your password if needed.',
   },
   {
-    question: "Why do I have unexpected charges?",
-    answer: "Review your billing details in the account settings.",
+    question: 'Why do I have unexpected charges?',
+    answer: 'Review your billing details in the account settings.',
   },
   {
-    question:
-      "Where can I find my invoices and how can I change some information on them?",
-    answer:
-      "Invoices are available in your billing section under account settings.",
+    question: 'Where can I find my invoices and how can I change some information on them?',
+    answer: 'Invoices are available in your billing section under account settings.',
   },
 
   {
     question: "What should I do when my board isn't loading?",
-    answer: "Try refreshing the page or checking your internet connection.",
+    answer: 'Try refreshing the page or checking your internet connection.',
   },
   {
-    question: "How do I convert members to guests?",
-    answer: "Go to team settings and update the member roles.",
-  },
-
-  {
-    question: "How do I add content to my board?",
-    answer:
-      "Use the toolbar to add text, images, or sticky notes to your board.",
+    question: 'How do I convert members to guests?',
+    answer: 'Go to team settings and update the member roles.',
   },
 
   {
-    question: "Why can’t I log in to my account?",
-    answer:
-      "Ensure your credentials are correct and reset your password if needed.",
+    question: 'How do I add content to my board?',
+    answer: 'Use the toolbar to add text, images, or sticky notes to your board.',
+  },
+
+  {
+    question: 'Why can’t I log in to my account?',
+    answer: 'Ensure your credentials are correct and reset your password if needed.',
   },
   {
-    question: "Why do I have unexpected charges?",
-    answer: "Review your billing details in the account settings.",
+    question: 'Why do I have unexpected charges?',
+    answer: 'Review your billing details in the account settings.',
   },
   {
-    question: "How do I add content to my board?",
-    answer:
-      "Use the toolbar to add text, images, or sticky notes to your board.",
+    question: 'How do I add content to my board?',
+    answer: 'Use the toolbar to add text, images, or sticky notes to your board.',
   },
   {
-    question: "How do I convert members to guests?",
-    answer: "Go to team settings and update the member roles.",
+    question: 'How do I convert members to guests?',
+    answer: 'Go to team settings and update the member roles.',
   },
 ];
 
@@ -831,162 +812,221 @@ It is a pity, but markdown does **not** work in here for most markdown parsers.
 
 export const mockAPIs = [
   {
-    name: "MarkMap Renderer",
-    createdAt: "06/27/2025 10:45:00",
-    status: "Active",
-    format: "REST JSON",
-    provider: "ATLAS Platform",
-    latency: "350ms",
-    uptime: "99.98%",
-    category: "Visualization",
-    updated: "2 days ago",
-    collection: "Mind Mapping",
+    name: 'MarkMap Renderer',
+    createdAt: '06/27/2025 10:45:00',
+    status: 'Active',
+    format: 'REST JSON',
+    provider: 'ATLAS Platform',
+    latency: '350ms',
+    uptime: '99.98%',
+    category: 'Visualization',
+    updated: '2 days ago',
+    collection: 'Mind Mapping',
   },
   {
-    name: "Syncfusion Chart Engine",
-    createdAt: "06/15/2025 14:10:00",
-    status: "Active",
-    format: "REST JSON",
-    provider: "ATLAS Platform",
-    latency: "420ms",
-    uptime: "100%",
-    category: "Data Visualization",
-    updated: "1 week ago",
-    collection: "Syncfusion Suite",
+    name: 'Syncfusion Chart Engine',
+    createdAt: '06/15/2025 14:10:00',
+    status: 'Active',
+    format: 'REST JSON',
+    provider: 'ATLAS Platform',
+    latency: '420ms',
+    uptime: '100%',
+    category: 'Data Visualization',
+    updated: '1 week ago',
+    collection: 'Syncfusion Suite',
   },
   {
-    name: "PDF Generator API",
-    createdAt: "06/10/2025 09:25:00",
-    status: "Active",
-    format: "REST JSON",
-    provider: "ATLAS Platform",
-    latency: "510ms",
-    uptime: "99.9%",
-    category: "Documents",
-    updated: "3 days ago",
-    collection: "Syncfusion Suite",
+    name: 'PDF Generator API',
+    createdAt: '06/10/2025 09:25:00',
+    status: 'Active',
+    format: 'REST JSON',
+    provider: 'ATLAS Platform',
+    latency: '510ms',
+    uptime: '99.9%',
+    category: 'Documents',
+    updated: '3 days ago',
+    collection: 'Syncfusion Suite',
   },
   {
-    name: "Atlas Auth API",
-    createdAt: "06/01/2025 11:00:00",
-    status: "Active",
-    format: "REST JSON",
-    provider: "ATLAS Platform",
-    latency: "290ms",
-    uptime: "100%",
-    category: "Authentication",
-    updated: "1 day ago",
-    collection: "Platform Services",
+    name: 'Atlas Auth API',
+    createdAt: '06/01/2025 11:00:00',
+    status: 'Active',
+    format: 'REST JSON',
+    provider: 'ATLAS Platform',
+    latency: '290ms',
+    uptime: '100%',
+    category: 'Authentication',
+    updated: '1 day ago',
+    collection: 'Platform Services',
   },
   {
-    name: "Mindmap Export Service",
-    createdAt: "05/28/2025 16:45:00",
-    status: "Active",
-    format: "REST JSON",
-    provider: "ATLAS Platform",
-    latency: "400ms",
-    uptime: "99.95%",
-    category: "Visualization",
-    updated: "5 days ago",
-    collection: "Mind Mapping",
+    name: 'Mindmap Export Service',
+    createdAt: '05/28/2025 16:45:00',
+    status: 'Active',
+    format: 'REST JSON',
+    provider: 'ATLAS Platform',
+    latency: '400ms',
+    uptime: '99.95%',
+    category: 'Visualization',
+    updated: '5 days ago',
+    collection: 'Mind Mapping',
   },
 ];
 
 export const apiCategories = [
   {
-    name: "Visualization",
-    description: "Render and export mindmaps, charts, and graphs visually.",
+    name: 'Visualization',
+    description: 'Render and export mindmaps, charts, and graphs visually.',
   },
   {
-    name: "Data Visualization",
-    description: "Display tables, grids, charts using Syncfusion components.",
+    name: 'Data Visualization',
+    description: 'Display tables, grids, charts using Syncfusion components.',
   },
   {
-    name: "Authentication",
-    description: "Manage users, tokens, and secure endpoints.",
+    name: 'Authentication',
+    description: 'Manage users, tokens, and secure endpoints.',
   },
   {
-    name: "Documents",
-    description: "Create, export, and manipulate PDFs and documents.",
+    name: 'Documents',
+    description: 'Create, export, and manipulate PDFs and documents.',
   },
 ];
 
 export const topCollections = [
   {
-    name: "Mind Mapping",
-    description: "APIs to render, update, and export MarkMap mindmaps.",
-    icon: "🧠",
+    name: 'Mind Mapping',
+    description: 'APIs to render, update, and export MarkMap mindmaps.',
+    icon: '🧠',
   },
   {
-    name: "Syncfusion Suite",
-    description: "Integrate charts, PDF tools, and UI widgets easily.",
-    icon: "📊",
+    name: 'Syncfusion Suite',
+    description: 'Integrate charts, PDF tools, and UI widgets easily.',
+    icon: '📊',
   },
   {
-    name: "Platform Services",
-    description: "Core ATLAS services like auth, usage, and workspace APIs.",
-    icon: "🧩",
+    name: 'Platform Services',
+    description: 'Core ATLAS services like auth, usage, and workspace APIs.',
+    icon: '🧩',
   },
   {
-    name: "Dev Utilities",
-    description: "Helper APIs for previews, file conversion, and testing.",
-    icon: "🛠️",
+    name: 'Dev Utilities',
+    description: 'Helper APIs for previews, file conversion, and testing.',
+    icon: '🛠️',
   },
 ];
 
 export const policies = [
   {
-    title: "API Key Confidentiality",
+    title: 'API Key Confidentiality',
     description:
-      "Your ATLAS API keys (e.g., for MarkMap or Syncfusion rendering) must be kept confidential. Do not expose them in frontend code or public repositories.",
+      'Your ATLAS API keys (e.g., for MarkMap or Syncfusion rendering) must be kept confidential. Do not expose them in frontend code or public repositories.',
   },
   {
-    title: "Token Expiration & Rotation",
+    title: 'Token Expiration & Rotation',
     description:
-      "Rotate your tokens regularly and remove unused keys from the API Keys section of your ATLAS workspace dashboard.",
+      'Rotate your tokens regularly and remove unused keys from the API Keys section of your ATLAS workspace dashboard.',
   },
   {
-    title: "Role-Based Access Control",
+    title: 'Role-Based Access Control',
     description:
-      "ATLAS supports role-based access across organizations, ensuring users can only perform actions permitted by their role (e.g., Viewer, Editor, Admin).",
+      'ATLAS supports role-based access across organizations, ensuring users can only perform actions permitted by their role (e.g., Viewer, Editor, Admin).',
   },
   {
-    title: "Rate Limiting & Abuse Protection",
+    title: 'Rate Limiting & Abuse Protection',
     description:
-      "ATLAS APIs are protected with rate limits to prevent misuse. Exceeding limits may result in throttling or temporary blocking.",
+      'ATLAS APIs are protected with rate limits to prevent misuse. Exceeding limits may result in throttling or temporary blocking.',
   },
   {
-    title: "Secure Transmission (HTTPS)",
+    title: 'Secure Transmission (HTTPS)',
     description:
-      "All ATLAS API calls (including mindmap rendering and data sync) are encrypted via HTTPS to ensure secure data transmission.",
+      'All ATLAS API calls (including mindmap rendering and data sync) are encrypted via HTTPS to ensure secure data transmission.',
   },
   {
-    title: "Logging & Auditing",
+    title: 'Logging & Auditing',
     description:
-      "API usage is logged and auditable via your ATLAS account. For any suspicious access or incident tracking, audit logs can be reviewed on request.",
+      'API usage is logged and auditable via your ATLAS account. For any suspicious access or incident tracking, audit logs can be reviewed on request.',
   },
 ];
 
 export const api = {
-  name: "MarkMap API",
-  category: "Visualization",
-  provider: "ATLAS Platform",
-  latency: "540ms",
-  uptime: "99.98%",
-  updated: "3 days ago",
+  name: 'MarkMap API',
+  category: 'Visualization',
+  provider: 'ATLAS Platform',
+  latency: '540ms',
+  uptime: '99.98%',
+  updated: '3 days ago',
   description:
-    "The MarkMap API allows developers to convert markdown content into interactive mindmaps. Ideal for note-taking apps, visual documentation, and knowledge sharing.",
-  format: "REST JSON",
-  version: "v2.1.0",
-  status: "Active",
-  baseUrl: "https://api.atlas.dev/v1/markmap/render",
-  auth: "Bearer Token",
-  rateLimit: "1000 requests / day",
-  docs: "https://docs.atlas.dev/markmap-api",
-  errorFormat: "JSON (RFC 7807)",
+    'The MarkMap API allows developers to convert markdown content into interactive mindmaps. Ideal for note-taking apps, visual documentation, and knowledge sharing.',
+  format: 'REST JSON',
+  version: 'v2.1.0',
+  status: 'Active',
+  baseUrl: 'https://api.atlas.dev/v1/markmap/render',
+  auth: 'Bearer Token',
+  rateLimit: '1000 requests / day',
+  docs: 'https://docs.atlas.dev/markmap-api',
+  errorFormat: 'JSON (RFC 7807)',
   useCases: [
-    "Generate real-time mindmaps from markdown",
-    "Integrate visual notes into LMS or productivity tools",
-    "Create dynamic knowledge-sharing experiences",
+    'Generate real-time mindmaps from markdown',
+    'Integrate visual notes into LMS or productivity tools',
+    'Create dynamic knowledge-sharing experiences',
   ],
+};
+
+// src/mocks/learnerMock.js
+export const learnerProfile = {
+  name: 'Ayesha Khan',
+  email: 'ayesha.k@example.com',
+  title: 'Data Analyst',
+  location: 'Minneapolis, MN',
+};
+
+export const learnerPositions = [
+  {
+    id: 'pos-1',
+    company: 'Microsoft',
+    title: 'Data Analyst',
+    startDate: '2024-12',
+    endDate: '',
+    currentlyWorking: true,
+    location: 'Minneapolis, MN',
+    description: 'Worked on analytics for product engagement and retention.',
+    accomplishments: ['Revenue Growth', 'Team Leadership', 'Process Improvement'],
+    tasks: ['Project Management', 'Data Analysis', 'Strategic Planning'],
+    tools: ['Excel', 'Salesforce', 'PowerBI', 'SQL'],
+    competencies: ['Leadership', 'Communication', 'Problem Solving'],
+    priorities: ['Customer Satisfaction', 'Market Expansion', 'Cost Reduction', 'Innovation'],
+  },
+  {
+    id: 'pos-2',
+    company: 'Acme Corp',
+    title: 'Frontend Developer',
+    startDate: '2020-01',
+    endDate: '2023-06',
+    currentlyWorking: false,
+    location: 'Remote',
+    description: 'Built UI components and onboarding flows.',
+    accomplishments: ['Feature Launch', 'Cross-team Collaboration'],
+    tasks: ['Component Design', 'Code Reviews', 'Performance Tuning'],
+    tools: ['React', 'TypeScript', 'Figma'],
+    competencies: ['Attention to Detail', 'Collaboration'],
+    priorities: ['Product Quality', 'Customer Feedback'],
+  },
+];
+
+export const learnerEducation = [
+  {
+    id: 'edu-1',
+    institution: 'State University',
+    degree: 'B.Sc. Computer Science',
+    field: 'Computer Science',
+    startDate: '2016-09',
+    endDate: '2020-06',
+    description: 'Studied software engineering and UX.',
+  },
+];
+
+export default {
+  learnerProfile,
+  learnerPositions,
+  learnerEducation,
 };

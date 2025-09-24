@@ -3,17 +3,26 @@ import {
   Injectable,
   InternalServerErrorException,
   NotFoundException,
+  Logger,
 } from '@nestjs/common';
 import * as bcrypt from 'bcryptjs';
 import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/updateUser.dto';
 import { ExportMetricsDto } from './dto/export-metrics.dto';
+import {
+  bigIntBytesToMiBNumber,
+  getAttachmentBytesBigInt,
+  getBackupBytesBigInt,
+} from 'src/storage/storage-size.util';
 
 @Injectable()
 export class UserService {
   constructor(private readonly prisma: PrismaService) {}
-
+  private readonly logger = new Logger(UserService.name);
+  private bigintReplacer(_key: string, value: any): any {
+    return typeof value === 'bigint' ? value.toString() : value;
+  }
   async getAllUsers() {
     try {
       const users = await this.prisma.user.findMany({
@@ -288,31 +297,29 @@ export class UserService {
     }
   }
 
-  private parseAttachmentSizeBytes(att: any): number {
-    const data = att?.data ?? {};
-    const candidates = [
-      data.size,
-      data?.meta?.size,
-      data?.sizeInBytes,
-      att.size,
-    ];
-    for (const c of candidates) {
-      if (typeof c === 'number' && !isNaN(c)) return c;
-      if (typeof c === 'string' && c.trim() !== '') {
-        const n = Number(c);
-        if (!isNaN(n)) return n;
-      }
-    }
-    return 0;
-  }
-
   async exportUserMetrics(dto: ExportMetricsDto): Promise<Buffer> {
     try {
       const { startDate, endDate } = dto;
 
+      const isValidDate = (d: any) =>
+        d instanceof Date && !Number.isNaN(d.getTime());
+      const parseSafeDate = (v?: string | Date) => {
+        if (!v) return null;
+        const d = v instanceof Date ? v : new Date(v);
+        return isValidDate(d) ? d : null;
+      };
+      const safeTrimAndLimit = (s?: string, max = 1000) => {
+        if (typeof s !== 'string') return '';
+        const t = s.trim();
+        return t.length > max ? t.slice(0, max) + '...' : t;
+      };
+
       const createdAtWhere: any = {};
-      if (startDate) createdAtWhere.gte = new Date(startDate);
-      if (endDate) createdAtWhere.lte = new Date(endDate);
+      const start = parseSafeDate(startDate);
+      const end = parseSafeDate(endDate);
+
+      if (start) createdAtWhere.gte = start;
+      if (end) createdAtWhere.lte = end;
 
       const applyDateFilter = !!(createdAtWhere.gte || createdAtWhere.lte);
 
@@ -322,12 +329,14 @@ export class UserService {
           displayName: true,
           role: { select: { name: true } },
           subscription: { select: { plan: { select: { name: true } } } },
+          storedBytes: true,
         },
       });
 
       const attachmentsWhere = applyDateFilter
         ? { createdAt: createdAtWhere }
         : {};
+      const backupsWhere = applyDateFilter ? { createdAt: createdAtWhere } : {};
       const recordsWhere = applyDateFilter ? { createdAt: createdAtWhere } : {};
       const structuresWhere = applyDateFilter
         ? { createdAt: createdAtWhere }
@@ -350,11 +359,23 @@ export class UserService {
         tokens,
         auditLogs,
         elements,
+        backups,
+        storageEvents,
       ] = await Promise.all([
         this.prisma.attachment.findMany({
           where: attachmentsWhere,
-          select: { id: true, userId: true, data: true, createdAt: true },
+          select: {
+            id: true,
+            userId: true,
+            data: true,
+            fileUrl: true,
+            fileType: true,
+            sizeBytes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
         }),
+
         this.prisma.record.findMany({
           where: recordsWhere,
           select: {
@@ -373,10 +394,12 @@ export class UserService {
             },
           },
         }),
+
         this.prisma.structure.findMany({
           where: structuresWhere,
           select: { id: true, type: true, ownerId: true, createdAt: true },
         }),
+
         this.prisma.structureShare.findMany({
           where: sharesWhere,
           select: {
@@ -387,37 +410,131 @@ export class UserService {
             structure: { select: { id: true, ownerId: true, createdAt: true } },
           },
         }),
+
         this.prisma.structureShareInvitation.findMany({
           where: invitationsWhere,
           select: {
             id: true,
             inviteeId: true,
-            inviteeEmail: true,
+            inviteeUsername: true,
             permission: true,
             status: true,
             createdAt: true,
             usedAt: true,
             message: true,
+            inviterId: true,
             structure: { select: { id: true, ownerId: true, createdAt: true } },
           },
         }),
+
         this.prisma.token.findMany({
           where: tokensWhere,
           select: { id: true, userId: true, key: true, createdAt: true },
         }),
+
         this.prisma.auditLog.findMany({
           where: auditLogsWhere,
-          select: { action: true, createdAt: true, userId: true },
+          select: {
+            action: true,
+            createdAt: true,
+            userId: true,
+            elementId: true,
+            element: true,
+            details: true,
+          },
         }),
+
         this.prisma.element.findMany({
           where: applyDateFilter ? { createdAt: createdAtWhere } : {},
           select: {
             id: true,
+            tags: true,
             structure: { select: { id: true, ownerId: true, createdAt: true } },
+            createdAt: true,
+            updatedAt: true,
+          },
+        }),
+
+        this.prisma.backup.findMany({
+          where: backupsWhere,
+          select: {
+            id: true,
+            userId: true,
+            backupData: true,
+            fileUrl: true,
+            sizeBytes: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        }),
+
+        this.prisma.storageEvent.findMany({
+          where: applyDateFilter ? { createdAt: createdAtWhere } : {},
+          select: {
+            id: true,
+            userId: true,
+            bytes: true,
+            sign: true,
+            type: true,
             createdAt: true,
           },
         }),
       ]);
+
+      const elementCreatorById: Record<string, string | null> = {};
+      const elementCreatorTs: Record<string, number> = {};
+      const lastTagEditorByElement: Record<string, string | null> = {};
+      const lastTagEditorTs: Record<string, number> = {};
+
+      for (const log of auditLogs || []) {
+        if (!log || !log.elementId) continue;
+        const eid = log.elementId;
+        const elType = (log.element || '').toString();
+        if (elType !== 'Element') continue;
+
+        const ts = log.createdAt
+          ? new Date(log.createdAt).getTime()
+          : Date.now();
+        const action = (log.action || '').toString();
+
+        if (action === 'CREATE_ELEMENT' || action === 'CREATE_NESTED_ELEMENT') {
+          if (
+            !elementCreatorById[eid] ||
+            ts < (elementCreatorTs[eid] || Infinity)
+          ) {
+            elementCreatorById[eid] = log.userId || null;
+            elementCreatorTs[eid] = ts;
+          }
+        }
+
+        if (action === 'UPDATE') {
+          try {
+            const det: any = log.details;
+            const updatedData = det?.updatedData;
+            if (
+              updatedData &&
+              Object.prototype.hasOwnProperty.call(updatedData, 'tags')
+            ) {
+              if (
+                !lastTagEditorByElement[eid] ||
+                ts > (lastTagEditorTs[eid] || 0)
+              ) {
+                lastTagEditorByElement[eid] = log.userId || null;
+                lastTagEditorTs[eid] = ts;
+              }
+            }
+          } catch {
+            // ignore malformed details
+          }
+        }
+      }
+
+      const eventsByUser: Record<string, any[]> = {};
+      for (const ev of storageEvents || []) {
+        if (!ev || !ev.userId) continue;
+        if (!eventsByUser[ev.userId]) eventsByUser[ev.userId] = [];
+        eventsByUser[ev.userId].push(ev);
+      }
 
       if (startDate && endDate) {
         return this.generateDailyMetrics(
@@ -430,19 +547,55 @@ export class UserService {
           tokens,
           auditLogs,
           elements,
+          backups,
+          storageEvents,
           new Date(startDate),
           new Date(endDate),
+          elementCreatorById,
+          elementCreatorTs,
+          lastTagEditorByElement,
+          lastTagEditorTs,
         );
+      }
+
+      const creditedUserByElement: Record<string, string | null> = {};
+      for (const el of elements || []) {
+        const elId = el.id;
+        const tagEditor = lastTagEditorByElement[elId] ?? null;
+        const creator = elementCreatorById[elId] ?? null;
+        const ownerFallback = el.structure?.ownerId ?? null;
+
+        creditedUserByElement[elId] = creator || ownerFallback;
       }
 
       const userMetrics = users.map((user) => {
         const userAttachments = attachments.filter((a) => a.userId === user.id);
-        const totalBytes = userAttachments.reduce((sum, a) => {
-          const sizeBytes = this.parseAttachmentSizeBytes(a);
-          return sum + sizeBytes;
-        }, 0);
-        const mibTransmitted = totalBytes / (1024 * 1024);
-        const mibStored = mibTransmitted;
+        const userBackups = backups.filter((b) => b.userId === user.id);
+
+        const events = eventsByUser[user.id] ?? [];
+        let totalUploadsBytes = 0n;
+        for (const ev of events) {
+          const b = BigInt((ev.bytes as any) ?? 0);
+          const s = typeof ev.sign === 'number' ? ev.sign : 1;
+          if (s === 1) totalUploadsBytes += b;
+        }
+        const totalBytesFromFiles =
+          userAttachments.reduce(
+            (sum: bigint, a) => sum + getAttachmentBytesBigInt(a),
+            0n,
+          ) +
+          userBackups.reduce(
+            (sum: bigint, b) => sum + getBackupBytesBigInt(b),
+            0n,
+          );
+        const effectiveUploads =
+          totalUploadsBytes > 0n ? totalUploadsBytes : totalBytesFromFiles;
+        const mibTransmitted = bigIntBytesToMiBNumber(effectiveUploads, 2);
+
+        const storedBytesBigInt = user.storedBytes
+          ? BigInt(user.storedBytes)
+          : 0n;
+        const mibStored = bigIntBytesToMiBNumber(storedBytesBigInt, 2);
 
         const userStructures = structures.filter((s) => s.ownerId === user.id);
         const structuresByType = userStructures.reduce(
@@ -452,58 +605,66 @@ export class UserService {
           },
           {} as Record<string, number>,
         );
-        const userElementIds = new Set<string>();
-        elements.forEach((el) => {
-          if (el.structure?.ownerId === user.id) {
-            userElementIds.add(el.id);
-          }
+
+        const creditedElements = elements.filter((el) => {
+          const elId = el.id;
+          const credited =
+            creditedUserByElement[elId] ?? el.structure?.ownerId ?? null;
+          return credited === user.id;
         });
-        const userElements = Array.from(userElementIds)
-          .map((id) => elements.find((el) => el.id === id))
-          .filter(Boolean);
+        const userElementsCount = creditedElements.length;
 
         const userRecords = records.filter((r) =>
           r.Element?.some((e) => e.structure?.ownerId === user.id),
         );
-
-        const recordsByType: Record<string, any> = userRecords.reduce(
+        const recordsByType = userRecords.reduce(
           (acc, r) => {
             acc[r.editorType] = (acc[r.editorType] || 0) + 1;
             return acc;
           },
-          {} as Record<string, any>,
-        );
-
-        const vscodeRecords = userRecords.filter(
-          (r) => r.editorType === 'vscode',
-        );
-        const vscodeRendererCounts = vscodeRecords.reduce(
-          (acc, r: any) => {
-            const rendererType = (r as any).renderer || 'none';
-            acc[rendererType] = (acc[rendererType] || 0) + 1;
-            return acc;
-          },
           {} as Record<string, number>,
         );
 
-        const rendererTypes = ['mermaid', 'markeddown', 'plantuml', 'latex'];
-        const vscodeByRenderer = rendererTypes.reduce(
-          (acc, type) => {
-            acc[type] = vscodeRendererCounts[type] || 0;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
+        const tagCount = elements.reduce((sum: number, el) => {
+          if (!el || !el.id) return sum;
+          const tagsVal = (el as any).tags;
+          if (tagsVal == null) return sum;
 
-        if (recordsByType.vscode) {
-          const vscodeCount = recordsByType.vscode;
-          recordsByType.vscode = {
-            count: vscodeCount,
-            ...vscodeByRenderer,
-          };
-        }
+          const tagEditor = lastTagEditorByElement[el.id] ?? null;
+          const creator = elementCreatorById[el.id] ?? null;
+          const ownerFallback = el.structure?.ownerId ?? null;
+          const credited = tagEditor || creator || ownerFallback;
 
-        const tagCount = userRecords.filter((r) => r.tags !== null).length;
+          if (credited !== user.id) return sum;
+
+          // parse tagsVal robustly
+          if (Array.isArray(tagsVal)) return sum + tagsVal.length;
+          if (typeof tagsVal === 'object') {
+            try {
+              return sum + Object.keys(tagsVal).length;
+            } catch {
+              return sum;
+            }
+          }
+          if (typeof tagsVal === 'string') {
+            const s = tagsVal.trim();
+            if (!s) return sum;
+            try {
+              const parsed = JSON.parse(s);
+              if (Array.isArray(parsed)) return sum + parsed.length;
+              if (typeof parsed === 'object')
+                return sum + Object.keys(parsed).length;
+            } catch {
+              const parts = s
+                .split(',')
+                .map((p) => p.trim())
+                .filter(Boolean);
+              if (parts.length > 0) return sum + parts.length;
+              return sum + 1;
+            }
+          }
+          return sum;
+        }, 0);
 
         const userShares = shares.filter(
           (s) => s.structure?.ownerId === user.id,
@@ -512,25 +673,19 @@ export class UserService {
           (i) => i.structure?.ownerId === user.id,
         );
 
-        const initShared = {
-          total: 0,
-          viewer: 0,
-          commenter: 0,
-          editor: 0,
-          owner: 0,
-        };
-
-        const uniqueShareMap = new Map();
-
-        userShares.forEach((s) => {
-          const key = `${s.structure?.id || 'unknown'}-${s.permission || 'viewer'}`;
-          uniqueShareMap.set(key, s.permission || 'viewer');
-        });
-
-        userInvitations.forEach((i) => {
-          const key = `${i.structure?.id || 'unknown'}-${i.permission || 'viewer'}`;
-          uniqueShareMap.set(key, i.permission || 'viewer');
-        });
+        const uniqueShareMap = new Map<string, string>();
+        userShares.forEach((s) =>
+          uniqueShareMap.set(
+            `${s.structure?.id}-${s.permission}`,
+            s.permission,
+          ),
+        );
+        userInvitations.forEach((i) =>
+          uniqueShareMap.set(
+            `${i.structure?.id}-${i.permission}`,
+            i.permission,
+          ),
+        );
 
         const sharedByType = Array.from(uniqueShareMap.values()).reduce(
           (acc: any, perm: string) => {
@@ -538,7 +693,7 @@ export class UserService {
             acc[perm] = (acc[perm] || 0) + 1;
             return acc;
           },
-          { ...initShared },
+          { total: 0, viewer: 0, commenter: 0, editor: 0, owner: 0 },
         );
 
         const selfLogins = auditLogs.filter(
@@ -562,37 +717,83 @@ export class UserService {
         });
         const collaboratorLogins = collaboratorLoginEvents.size;
 
-        const userInvs = userInvitations;
-
-        const invitationsWithMessage = userInvs.filter((inv) => {
-          const m = inv.message;
-          return typeof m === 'string' && m.trim().length > 0;
-        });
-
-        const invByEmail: Record<
-          string,
-          Array<{ id: string; text: string; createdAt?: string }>
-        > = {};
-        invitationsWithMessage.forEach((inv) => {
-          const emailKey =
-            (inv.inviteeEmail && inv.inviteeEmail.trim()) ||
-            (inv.inviteeId ? `inviteeId:${inv.inviteeId}` : 'unknown');
-          if (!invByEmail[emailKey]) invByEmail[emailKey] = [];
-          invByEmail[emailKey].push({
-            id: inv.id,
-            text: inv.message!.trim(),
-            createdAt: inv.createdAt
-              ? new Date(inv.createdAt).toISOString()
-              : undefined,
-          });
-        });
-
-        const messagesToUserEmail = Object.entries(invByEmail).map(
-          ([inviteeEmail, messages]) => ({
-            inviteeEmail,
-            messages,
-          }),
+        const invitationsWithMessage = userInvitations.filter(
+          (inv) =>
+            typeof inv.message === 'string' && inv.message.trim().length > 0,
         );
+
+        const isLikelyEmail = (s?: string) =>
+          typeof s === 'string' && /\S+@\S+\.\S+/.test(s);
+
+        const grouped: Record<
+          string,
+          {
+            recipient: string;
+            recipientType: 'email' | 'platform' | 'unknown';
+            messages: Array<{
+              id: string;
+              text: string;
+              createdAt?: string;
+              inviterId?: string;
+              structureId?: string;
+            }>;
+          }
+        > = {};
+
+        for (const inv of invitationsWithMessage) {
+          const text = safeTrimAndLimit(inv.message);
+          const createdAtIso = inv.createdAt
+            ? new Date(inv.createdAt).toISOString()
+            : undefined;
+
+          if (inv.inviteeUsername && inv.inviteeUsername.trim()) {
+            const uname = inv.inviteeUsername.trim();
+            const recipientType = isLikelyEmail(uname) ? 'email' : 'platform';
+            const key = `recipient:${recipientType}:${uname}`;
+            if (!grouped[key]) {
+              grouped[key] = { recipient: uname, recipientType, messages: [] };
+            }
+            grouped[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          } else if (inv.inviteeId) {
+            const key = `recipient:platform:${inv.inviteeId}`;
+            if (!grouped[key])
+              grouped[key] = {
+                recipient: inv.inviteeId,
+                recipientType: 'platform',
+                messages: [],
+              };
+            grouped[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          } else {
+            const key = `recipient:unknown:${inv.id}`;
+            if (!grouped[key])
+              grouped[key] = {
+                recipient: 'unknown',
+                recipientType: 'unknown',
+                messages: [],
+              };
+            grouped[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          }
+        }
+
+        const messagesToUserEmail = Object.values(grouped);
 
         return {
           userId: user.id,
@@ -601,7 +802,7 @@ export class UserService {
           mibTransmitted: parseFloat(mibTransmitted.toFixed(2)),
           mibStored: parseFloat(mibStored.toFixed(2)),
           structuresByType,
-          elements: userElements.length,
+          elements: userElementsCount,
           recordsByType,
           tagCount,
           sharedByType,
@@ -611,9 +812,9 @@ export class UserService {
         };
       });
 
-      return Buffer.from(JSON.stringify(userMetrics, null, 2));
+      return Buffer.from(JSON.stringify(userMetrics, this.bigintReplacer, 2));
     } catch (error) {
-      console.error('Error in exportUserMetrics:', error);
+      this.logger.error('Error in exportUserMetrics', error);
       throw new InternalServerErrorException(
         `Failed to export user metrics: ${error?.message || error?.toString()}`,
       );
@@ -630,11 +831,23 @@ export class UserService {
     tokens: any[],
     auditLogs: any[],
     elements: any[],
+    backups: any[],
+    storageEvents: any[],
     startDate: Date,
     endDate: Date,
+    elementCreatorById: Record<string, string | null>,
+    elementCreatorTs: Record<string, number>,
+    lastTagEditorByElement: Record<string, string | null>,
+    lastTagEditorTs: Record<string, number>,
   ): Promise<Buffer> {
     const dateRange = this.generateDateRange(startDate, endDate);
     const allUserDailyMetrics: any[] = [];
+
+    const safeTrimAndLimit = (s?: string, max = 1000) => {
+      if (typeof s !== 'string') return '';
+      const t = s.trim();
+      return t.length > max ? t.slice(0, max) + '...' : t;
+    };
 
     const attachmentsByUser = attachments.reduce(
       (acc: any, a: any) => {
@@ -645,7 +858,39 @@ export class UserService {
       {} as Record<string, any[]>,
     );
 
+    const backupsByUser = backups.reduce(
+      (acc: any, b: any) => {
+        if (!acc[b.userId]) acc[b.userId] = [];
+        acc[b.userId].push(b);
+        return acc;
+      },
+      {} as Record<string, any[]>,
+    );
+
+    const eventsByUser: Record<string, any[]> = {};
+    for (const ev of storageEvents || []) {
+      if (!ev || !ev.userId) continue;
+      if (!eventsByUser[ev.userId]) eventsByUser[ev.userId] = [];
+      eventsByUser[ev.userId].push(ev);
+    }
+
+    for (const uid of Object.keys(eventsByUser)) {
+      eventsByUser[uid].sort(
+        (a, b) =>
+          new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
+      );
+    }
+
+    const elementsById: Record<string, any> = {};
+    for (const el of elements || []) {
+      elementsById[el.id] = el;
+    }
+
     for (const user of users) {
+      const userAtts = attachmentsByUser[user.id] ?? [];
+      const userBackups = backupsByUser[user.id] ?? [];
+      const userEvents = eventsByUser[user.id] ?? [];
+
       for (const date of dateRange) {
         const dayStart = new Date(date);
         dayStart.setHours(0, 0, 0, 0);
@@ -653,99 +898,289 @@ export class UserService {
         dayEnd.setHours(23, 59, 59, 999);
         const inDay = (d: Date) => d >= dayStart && d <= dayEnd;
 
-        const userAtts = attachmentsByUser[user.id] ?? [];
-        const dayAttachments = userAtts.filter((a) => {
-          const createdAt = a.createdAt ? new Date(a.createdAt) : null;
-          if (!createdAt || isNaN(createdAt.getTime())) {
-            const dataCreated = a?.data?.createdAt
-              ? new Date(a.data.createdAt)
-              : null;
-            if (!dataCreated || isNaN(dataCreated.getTime())) return false;
-            return inDay(dataCreated);
-          }
-          return inDay(createdAt);
-        });
-        const mibTransmittedBytes = dayAttachments.reduce(
-          (sum, a) => sum + this.parseAttachmentSizeBytes(a),
-          0,
-        );
-        const mibTransmitted = mibTransmittedBytes / (1024 * 1024);
+        let dayUploadsBytes = 0n;
 
-        const cumulativeBytes = userAtts.reduce((sum, a) => {
-          const createdAt = a.createdAt ? new Date(a.createdAt) : null;
-          const created =
-            createdAt && !isNaN(createdAt.getTime())
-              ? createdAt
-              : a?.data?.createdAt
+        for (const ev of userEvents) {
+          const created = ev.createdAt ? new Date(ev.createdAt) : null;
+          if (!created || Number.isNaN(created.getTime())) continue;
+          const sign = typeof ev.sign === 'number' ? ev.sign : 1;
+          if (inDay(created) && sign === 1) {
+            try {
+              dayUploadsBytes += BigInt((ev.bytes as any) ?? 0);
+            } catch (e) {
+              // ignore parse errors
+            }
+          }
+        }
+
+        if (dayUploadsBytes === 0n) {
+          const dayAttachments = userAtts.filter((a) => {
+            const createdAt = a.createdAt ? new Date(a.createdAt) : null;
+            if (!createdAt || Number.isNaN(createdAt.getTime())) {
+              const dataCreated = a?.data?.createdAt
                 ? new Date(a.data.createdAt)
                 : null;
-          if (!created || isNaN(created.getTime())) return sum;
-          if (created <= dayEnd) return sum + this.parseAttachmentSizeBytes(a);
-          return sum;
-        }, 0);
-        const mibStored = cumulativeBytes / (1024 * 1024);
+              if (!dataCreated || Number.isNaN(dataCreated.getTime()))
+                return false;
+              return inDay(dataCreated);
+            }
+            return inDay(createdAt);
+          });
 
-        const dayStructures = structures.filter((s) => {
-          if (s.ownerId !== user.id) return false;
-          const created = s.createdAt ? new Date(s.createdAt) : null;
-          return created && !isNaN(created.getTime()) && inDay(created);
-        });
+          const dayBackups = userBackups.filter((b) => {
+            const createdAt = b.createdAt ? new Date(b.createdAt) : null;
+            if (!createdAt || Number.isNaN(createdAt.getTime())) {
+              const dataCreated = b?.backupData?.createdAt
+                ? new Date(b.backupData.createdAt)
+                : null;
+              if (!dataCreated || Number.isNaN(dataCreated.getTime()))
+                return false;
+              return inDay(dataCreated);
+            }
+            return inDay(createdAt);
+          });
+
+          dayUploadsBytes =
+            dayAttachments.reduce(
+              (sum: bigint, a: any) => sum + getAttachmentBytesBigInt(a),
+              0n,
+            ) +
+            dayBackups.reduce(
+              (sum: bigint, b: any) => sum + getBackupBytesBigInt(b),
+              0n,
+            );
+        }
+
+        const mibTransmitted = bigIntBytesToMiBNumber(dayUploadsBytes, 2);
+
+        let mibStored = 0;
+        if (userEvents && userEvents.length > 0) {
+          let baseline = 0n;
+          for (const ev of userEvents) {
+            const created = ev.createdAt ? new Date(ev.createdAt) : null;
+            if (!created || Number.isNaN(created.getTime())) continue;
+            if (created < dayStart) {
+              const s = typeof ev.sign === 'number' ? ev.sign : 1;
+              try {
+                baseline += BigInt(s) * BigInt((ev.bytes as any) ?? 0);
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+          if (baseline < 0n) baseline = 0n;
+
+          let running = baseline;
+          let maxDuringDay = running;
+          for (const ev of userEvents) {
+            const created = ev.createdAt ? new Date(ev.createdAt) : null;
+            if (!created || Number.isNaN(created.getTime())) continue;
+            if (created >= dayStart && created <= dayEnd) {
+              const s = typeof ev.sign === 'number' ? ev.sign : 1;
+              try {
+                running += BigInt(s) * BigInt((ev.bytes as any) ?? 0);
+                if (running > maxDuringDay) maxDuringDay = running;
+              } catch {
+                // ignore parse errors
+              }
+            }
+          }
+          if (running > maxDuringDay) maxDuringDay = running;
+          if (maxDuringDay < 0n) maxDuringDay = 0n;
+          mibStored = bigIntBytesToMiBNumber(maxDuringDay, 2);
+        } else {
+          let cumulativeBytesBigInt = 0n;
+          for (const att of userAtts) {
+            const createdAt = att.createdAt ? new Date(att.createdAt) : null;
+            const created =
+              createdAt && !Number.isNaN(createdAt.getTime())
+                ? createdAt
+                : att?.data?.createdAt
+                  ? new Date(att.data.createdAt)
+                  : null;
+            if (!created || Number.isNaN(created.getTime())) continue;
+            if (created <= dayEnd)
+              cumulativeBytesBigInt += getAttachmentBytesBigInt(att);
+          }
+          for (const b of userBackups) {
+            const createdAt = b.createdAt ? new Date(b.createdAt) : null;
+            const created =
+              createdAt && !Number.isNaN(createdAt.getTime())
+                ? createdAt
+                : b?.backupData?.createdAt
+                  ? new Date(b.backupData.createdAt)
+                  : null;
+            if (!created || Number.isNaN(created.getTime())) continue;
+            if (created <= dayEnd)
+              cumulativeBytesBigInt += getBackupBytesBigInt(b);
+            const deletedAt = b?.backupData?.deletedAt
+              ? new Date(b.backupData.deletedAt)
+              : null;
+            if (
+              deletedAt &&
+              !Number.isNaN(deletedAt.getTime()) &&
+              deletedAt <= dayEnd
+            ) {
+              cumulativeBytesBigInt -= getBackupBytesBigInt(b);
+            }
+          }
+          if (cumulativeBytesBigInt < 0n) cumulativeBytesBigInt = 0n;
+          mibStored = bigIntBytesToMiBNumber(cumulativeBytesBigInt, 2);
+        }
+
+        const dayStructures = structures.filter(
+          (s) =>
+            s.ownerId === user.id &&
+            s.createdAt &&
+            (() => {
+              const c = new Date(s.createdAt);
+              return !Number.isNaN(c.getTime()) && inDay(c);
+            })(),
+        );
         const structuresByType = dayStructures.reduce(
-          (acc, s) => {
+          (acc: any, s: any) => {
             acc[s.type || 'default'] = (acc[s.type || 'default'] || 0) + 1;
             return acc;
           },
           {} as Record<string, number>,
         );
 
-        const dayElements = elements.filter((el) => {
-          const elCreated = el.createdAt ? new Date(el.createdAt) : null;
-          return (
-            el.structure?.ownerId === user.id &&
-            elCreated &&
-            !isNaN(elCreated.getTime()) &&
-            inDay(elCreated)
-          );
-        });
+        const dayElementsCreatedByUser = Object.values(elementsById).filter(
+          (el: any) => {
+            if (!el || !el.id) return false;
+            const createdAt = el.createdAt ? new Date(el.createdAt) : null;
+            const createTsFromAudit = elementCreatorTs[el.id];
+            if (createTsFromAudit) {
+              const t = new Date(createTsFromAudit);
+              return elementCreatorById[el.id] === user.id && inDay(t);
+            }
+            return (
+              (elementCreatorById[el.id] === user.id ||
+                (elementCreatorById[el.id] == null &&
+                  el.structure?.ownerId === user.id)) &&
+              createdAt &&
+              inDay(createdAt)
+            );
+          },
+        );
+
+        const dayElementsCount = dayElementsCreatedByUser.length;
 
         const dayRecords = records.filter((r) =>
           (r.Element || []).some((e: any) => {
             const struct = e.structure;
-            if (!struct || struct.ownerId !== user.id) return false;
+            if (!struct) return false;
             const created = r.createdAt
               ? new Date(r.createdAt)
               : struct.createdAt
                 ? new Date(struct.createdAt)
                 : null;
-            if (!created || isNaN(created.getTime())) return false;
-            return inDay(created);
+            return (
+              created &&
+              !Number.isNaN(created.getTime()) &&
+              inDay(created) &&
+              (elementCreatorById[e.id] === user.id ||
+                struct.ownerId === user.id)
+            );
           }),
         );
         const recordsByType = dayRecords.reduce(
-          (acc, r) => {
+          (acc: any, r: any) => {
             acc[r.editorType] = (acc[r.editorType] || 0) + 1;
             return acc;
           },
           {} as Record<string, number>,
         );
-        const tagCount = dayRecords.filter((r) => r.tags !== null).length;
 
-        const dayShares = shares.filter((s) => {
-          if (!s.structure || s.structure.ownerId !== user.id) return false;
-          const created = s.createdAt ? new Date(s.createdAt) : null;
-          if (!created || isNaN(created.getTime())) return false;
-          return inDay(created);
-        });
+        const dayTagCount = Object.values(elementsById).reduce(
+          (sum: number, el: any) => {
+            if (!el || !el.id) return sum;
+            const tagsVal = el.tags;
+            if (tagsVal == null) return sum;
 
-        const dayInvitations = shareInvitations.filter((i) => {
-          if (!i.structure || i.structure.ownerId !== user.id) return false;
-          const created = i.createdAt ? new Date(i.createdAt) : null;
-          const used = i.usedAt ? new Date(i.usedAt) : null;
-          const createdIn =
-            created && !isNaN(created.getTime()) && inDay(created);
-          const usedIn = used && !isNaN(used.getTime()) && inDay(used);
-          return createdIn || usedIn;
-        });
+            const lastEditor = lastTagEditorByElement[el.id] ?? null;
+            const lastEditorTs = lastTagEditorTs[el.id] ?? null;
+            const creator = elementCreatorById[el.id] ?? null;
+            const creatorTs = elementCreatorTs[el.id] ?? null;
+            const ownerFallback = el.structure?.ownerId ?? null;
+
+            let contributedThisDay = false;
+            if (lastEditor && lastEditor === user.id && lastEditorTs) {
+              const t = new Date(lastEditorTs);
+              if (inDay(t)) contributedThisDay = true;
+            }
+            if (
+              !contributedThisDay &&
+              creator &&
+              creator === user.id &&
+              creatorTs
+            ) {
+              const t = new Date(creatorTs);
+              if (inDay(t)) contributedThisDay = true;
+            }
+            if (!contributedThisDay) {
+              const createdAt = el.createdAt ? new Date(el.createdAt) : null;
+              const credited = creator || ownerFallback;
+              if (credited === user.id && createdAt && inDay(createdAt))
+                contributedThisDay = true;
+            }
+            if (!contributedThisDay) return sum;
+
+            if (Array.isArray(tagsVal)) return sum + tagsVal.length;
+            if (typeof tagsVal === 'object') {
+              try {
+                return sum + Object.keys(tagsVal).length;
+              } catch {
+                return sum;
+              }
+            }
+            if (typeof tagsVal === 'string') {
+              const s = tagsVal.trim();
+              if (!s) return sum;
+              try {
+                const parsed = JSON.parse(s);
+                if (Array.isArray(parsed)) return sum + parsed.length;
+                if (typeof parsed === 'object')
+                  return sum + Object.keys(parsed).length;
+              } catch {
+                const parts = s
+                  .split(',')
+                  .map((p) => p.trim())
+                  .filter(Boolean);
+                if (parts.length > 0) return sum + parts.length;
+                return sum + 1;
+              }
+            }
+            return sum;
+          },
+          0,
+        );
+
+        const dayShares = shares.filter(
+          (s) =>
+            s.structure &&
+            s.structure.ownerId === user.id &&
+            s.createdAt &&
+            (() => {
+              const c = new Date(s.createdAt);
+              return !Number.isNaN(c.getTime()) && inDay(c);
+            })(),
+        );
+        const dayInvitations = shareInvitations.filter(
+          (i) =>
+            i.structure &&
+            i.structure.ownerId === user.id &&
+            ((i.createdAt &&
+              (() => {
+                const c = new Date(i.createdAt);
+                return !Number.isNaN(c.getTime()) && inDay(c);
+              })()) ||
+              (i.usedAt &&
+                (() => {
+                  const u = new Date(i.usedAt);
+                  return !Number.isNaN(u.getTime()) && inDay(u);
+                })())),
+        );
 
         const initShared = {
           total: 0,
@@ -766,7 +1201,7 @@ export class UserService {
         ];
         const daySharedByType = dayAllShareRecords.reduce(
           (acc: any, rec: any) => {
-            const perm = (rec.permission as string) || 'viewer';
+            const perm = rec.permission || 'viewer';
             acc.total = (acc.total || 0) + 1;
             acc[perm] = (acc[perm] || 0) + 1;
             return acc;
@@ -775,12 +1210,9 @@ export class UserService {
         );
 
         const selfLogins = auditLogs.filter((l) => {
-          const created = l.createdAt ? new Date(l.createdAt) : null;
+          const c = l.createdAt ? new Date(l.createdAt) : null;
           return (
-            l.userId === user.id &&
-            l.action === 'User Login' &&
-            created &&
-            inDay(created)
+            l.userId === user.id && l.action === 'User Login' && c && inDay(c)
           );
         }).length;
 
@@ -791,26 +1223,102 @@ export class UserService {
         dayInvitations.forEach((i) => {
           if (i.inviteeId) dayCollaboratorIds.add(i.inviteeId);
         });
-
         const dayCollaboratorLogins = auditLogs.filter((l) => {
-          const created = l.createdAt ? new Date(l.createdAt) : null;
+          const c = l.createdAt ? new Date(l.createdAt) : null;
           return (
-            created &&
-            inDay(created) &&
+            c &&
+            inDay(c) &&
             l.action === 'User Login' &&
             dayCollaboratorIds.has(l.userId)
           );
         }).length;
 
         const emailMessages = tokens.filter((t) => {
-          const created = t.createdAt ? new Date(t.createdAt) : null;
+          const c = t.createdAt ? new Date(t.createdAt) : null;
           return (
-            t.userId === user.id &&
-            t.key === 'reset-password' &&
-            created &&
-            inDay(created)
+            t.userId === user.id && t.key === 'reset-password' && c && inDay(c)
           );
         }).length;
+
+        const dayInvWithMessage = dayInvitations.filter(
+          (i) => typeof i.message === 'string' && i.message.trim().length > 0,
+        );
+
+        const isLikelyEmail = (s?: string) =>
+          typeof s === 'string' && /\S+@\S+\.\S+/.test(s);
+
+        const groupedDay: Record<
+          string,
+          {
+            recipient: string;
+            recipientType: 'email' | 'platform' | 'unknown';
+            messages: Array<{
+              id: string;
+              text: string;
+              createdAt?: string;
+              inviterId?: string;
+              structureId?: string;
+            }>;
+          }
+        > = {};
+
+        for (const inv of dayInvWithMessage) {
+          const text = safeTrimAndLimit(inv.message);
+          const createdAtIso = inv.createdAt
+            ? new Date(inv.createdAt).toISOString()
+            : undefined;
+
+          if (inv.inviteeUsername && inv.inviteeUsername.trim()) {
+            const uname = inv.inviteeUsername.trim();
+            const recipientType = isLikelyEmail(uname) ? 'email' : 'platform';
+            const key = `recipient:${recipientType}:${uname}`;
+            if (!groupedDay[key])
+              groupedDay[key] = {
+                recipient: uname,
+                recipientType,
+                messages: [],
+              };
+            groupedDay[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          } else if (inv.inviteeId) {
+            const key = `recipient:platform:${inv.inviteeId}`;
+            if (!groupedDay[key])
+              groupedDay[key] = {
+                recipient: inv.inviteeId,
+                recipientType: 'platform',
+                messages: [],
+              };
+            groupedDay[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          } else {
+            const key = `recipient:unknown:${inv.id}`;
+            if (!groupedDay[key])
+              groupedDay[key] = {
+                recipient: 'unknown',
+                recipientType: 'unknown',
+                messages: [],
+              };
+            groupedDay[key].messages.push({
+              id: inv.id,
+              text,
+              createdAt: createdAtIso,
+              inviterId: inv.inviterId,
+              structureId: inv.structure?.id,
+            });
+          }
+        }
+
+        const messagesToUserEmail = Object.values(groupedDay);
 
         allUserDailyMetrics.push({
           userId: user.id,
@@ -820,18 +1328,20 @@ export class UserService {
           mibTransmitted: parseFloat(mibTransmitted.toFixed(2)),
           mibStored: parseFloat(mibStored.toFixed(2)),
           structuresByType,
-          elements: dayElements.length,
+          elements: dayElementsCount,
           recordsByType,
-          tagCount,
+          tagCount: dayTagCount,
           sharedByType: daySharedByType,
           loginsSelf: selfLogins,
           loginsCollaborators: dayCollaboratorLogins,
-          messagesToUserEmail: emailMessages,
+          messagesToUserEmail,
         });
       }
     }
 
-    return Buffer.from(JSON.stringify(allUserDailyMetrics, null, 2));
+    return Buffer.from(
+      JSON.stringify(allUserDailyMetrics, this.bigintReplacer, 2),
+    );
   }
 
   private generateDateRange(start: Date, end: Date): Date[] {
@@ -846,7 +1356,6 @@ export class UserService {
       dates.push(new Date(current));
       current.setDate(current.getDate() + 1);
     }
-
     return dates;
   }
 }

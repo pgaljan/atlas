@@ -180,7 +180,7 @@ const MarkmapEditor = ({ structureId }) => {
       )
       setTreeData(treeWithWbsAndLevels)
     } catch (error) {
-      cogoToast.error("Failed to reparent element.")
+      cogoToast.error(error.message || "Failed to reparent element.")
     }
   }
 
@@ -289,7 +289,7 @@ const MarkmapEditor = ({ structureId }) => {
 
       setTreeData(treeWithLevels)
     } catch (error) {
-      cogoToast.error("Failed to fetch structure data")
+      cogoToast.error(error?.message || "Failed to fetch structure data")
     } finally {
       setIsLoading(false)
     }

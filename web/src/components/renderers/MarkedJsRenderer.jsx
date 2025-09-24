@@ -53,7 +53,7 @@ const MarkJsRenderer = ({ content, onEditorChange }) => {
   };
 
   return (
-    <div className="relative flex flex-row h-[480px]">
+  <div className="relative flex flex-row h-[70vh] max-h-[60vh] overflow-hidden">
       {isEditorLoading && <CustomLoader />}
       <div
         className={`w-[30%] min-w-[540px] ${
@@ -74,7 +74,7 @@ const MarkJsRenderer = ({ content, onEditorChange }) => {
       </div>
 
       <div
-        className={`flex-1 flex flex-col overflow-hidden pl-2 max-h-screen box-border transition-opacity duration-300 ${
+        className={`flex-1 flex flex-col pl-2 max-h-screen box-border transition-opacity duration-300 ${
           isEditorLoading ? "opacity-0" : "opacity-100"
         }`}
       >

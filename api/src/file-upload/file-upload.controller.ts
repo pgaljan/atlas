@@ -9,6 +9,7 @@ import {
   Post,
   Request,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -20,8 +21,10 @@ import { extname, join } from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as XLSX from 'xlsx';
 import { FileUploadService } from './file-upload.service';
+import { StructurePermissionGuard } from 'src/auth/guards/structure-permission.guard';
 
 @Controller('file')
+@UseGuards(StructurePermissionGuard)
 export class FileUploadController {
   constructor(
     private readonly fileUploadService: FileUploadService,

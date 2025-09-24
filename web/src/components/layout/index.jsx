@@ -16,7 +16,10 @@ const Layout = () => {
   const [loading, setLoading] = useState(false);
   const renderer = new URLSearchParams(location.search).get('renderer');
   const hideSidebar =
-    location.pathname === '/canvas' || ['markmap', 'syncfusion']?.includes(renderer);
+  location.pathname === '/canvas' ||
+  location.pathname.startsWith('/app/s/') ||
+  ['markmap', 'syncfusion'].includes(renderer);
+
 
   useEffect(() => {
     const isTermsPage = location.pathname === '/app/terms-of-service';

@@ -38,6 +38,8 @@ const Settings = () => {
     password: '',
     fromEmail: '',
     fromName: '',
+    serverToken: '',
+    messageStream: '',
   });
 
   const loadSettings = async () => {
@@ -60,7 +62,18 @@ const Settings = () => {
               github: true,
             },
           );
-          setSmtpSettings(settings.smtpSettings || {});
+          // CHANGED: populate serverToken and messageStream if present
+          setSmtpSettings({
+            host: settings.smtpSettings?.host || '',
+            port: settings.smtpSettings?.port || '',
+            encryption: settings.smtpSettings?.encryption || 'TLS',
+            username: settings.smtpSettings?.username || '',
+            password: settings.smtpSettings?.password || '',
+            fromEmail: settings.smtpSettings?.fromEmail || '',
+            fromName: settings.smtpSettings?.fromName || '',
+            serverToken: settings.smtpSettings?.serverToken || '',
+            messageStream: settings.smtpSettings?.messageStream || '',
+          });
         }
       }
     } catch (error) {
@@ -88,6 +101,31 @@ const Settings = () => {
       }
     } catch (err) {
       cogoToast.error('Upload failed.');
+    }
+  };
+  const handleSendTestEmail = async () => {
+    if (!testEmailAddress) {
+      cogoToast.error('Please enter an email address');
+      return;
+    }
+
+    try {
+      setTestEmailSending(true);
+
+      await dispatch(
+        saveAppSettings({
+          smtpSettings,
+        }),
+      ).unwrap();
+
+      await dispatch(sendTestEmail(testEmailAddress)).unwrap();
+      cogoToast.success('Test email sent successfully!');
+    } catch (error) {
+      cogoToast.error(
+        error?.message || 'Failed to send test email. Please check your SMTP settings.',
+      );
+    } finally {
+      setTestEmailSending(false);
     }
   };
 
@@ -120,6 +158,13 @@ const Settings = () => {
   const openColorPicker = () => {
     colorInputRef.current?.click();
   };
+
+  const canSendTest =
+    !!smtpSettings.host &&
+    !!smtpSettings.port &&
+    !!smtpSettings.fromEmail &&
+    !!smtpSettings.fromName &&
+    ((smtpSettings.username && smtpSettings.password) || smtpSettings.serverToken);
 
   return (
     <div className="p-2">
@@ -270,6 +315,51 @@ const Settings = () => {
                 className=" w-full p-3 rounded-lg border border-gray-300"
               />
             </div>
+
+            <div className="flex items-start flex-col gap-1">
+              <label htmlFor="serverToken">
+                Server Token <span className="text-md text-gray-500 ml-1">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={smtpSettings.serverToken}
+                onChange={(e) =>
+                  setSmtpSettings({
+                    ...smtpSettings,
+                    serverToken: e.target.value,
+                  })
+                }
+                placeholder="Enter server token (e.g. Postmark token)"
+                className=" w-full p-3 rounded-lg border border-gray-300"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                If provided, token will be used as username and password when sending emails.
+              </p>
+            </div>
+
+            <div className="flex items-start flex-col gap-1">
+              <label htmlFor="messageStream">
+                Message Stream <span className="text-md text-gray-500 ml-1">(optional)</span>
+              </label>
+              <input
+                type="text"
+                value={smtpSettings.messageStream}
+                onChange={(e) =>
+                  setSmtpSettings({
+                    ...smtpSettings,
+                    messageStream: e.target.value,
+                  })
+                }
+                placeholder="e.g. outbound"
+                className=" w-full p-3 rounded-lg border border-gray-300"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                When provided, a header{' '}
+                <code className="font-mono">X-PM-Message-Stream: &lt;value&gt;</code> will be
+                attached to outgoing messages.
+              </p>
+            </div>
+
             <div className="flex items-start flex-col gap-1">
               <label htmlFor="email">
                 {' '}
@@ -327,42 +417,10 @@ const Settings = () => {
                 className="flex-grow p-3 rounded-lg border border-gray-300"
               />
               <button
-                onClick={async () => {
-                  if (!testEmailAddress) {
-                    cogoToast.error('Please enter an email address');
-                    return;
-                  }
-
-                  try {
-                    setTestEmailSending(true);
-                    await dispatch(sendTestEmail(testEmailAddress)).unwrap();
-                    cogoToast.success('Test email sent successfully!');
-                  } catch (error) {
-                    cogoToast.error(
-                      error?.message ||
-                        'Failed to send test email. Please check your SMTP settings.',
-                    );
-                  } finally {
-                    setTestEmailSending(false);
-                  }
-                }}
-                disabled={
-                  testEmailSending ||
-                  !smtpSettings.host ||
-                  !smtpSettings.username ||
-                  !smtpSettings.password ||
-                  !smtpSettings.port ||
-                  !smtpSettings.fromEmail ||
-                  !smtpSettings.fromName
-                }
+                onClick={handleSendTestEmail}
+                disabled={!canSendTest || testEmailSending}
                 className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-white font-medium transition ${
-                  testEmailSending ||
-                  !smtpSettings.host ||
-                  !smtpSettings.username ||
-                  !smtpSettings.password ||
-                  !smtpSettings.port ||
-                  !smtpSettings.fromEmail ||
-                  !smtpSettings.fromName
+                  !canSendTest || testEmailSending
                     ? 'bg-gray-400 cursor-not-allowed'
                     : 'bg-custom-main hover:bg-custom-secondary'
                 }`}
@@ -373,9 +431,9 @@ const Settings = () => {
             </div>
             <p className="text-xs text-gray-500 mt-2">
               {!smtpSettings.host ||
-              !smtpSettings.username ||
-              !smtpSettings.password ||
-              !smtpSettings.port
+              !smtpSettings.port ||
+              !smtpSettings.fromEmail ||
+              !smtpSettings.fromName
                 ? 'Complete the SMTP configuration above before sending a test email.'
                 : 'Send a test email to verify your SMTP configuration is working correctly.'}
             </p>

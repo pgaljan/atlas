@@ -4,6 +4,7 @@ import {
   Controller,
   Delete,
   Get,
+  Header,
   Param,
   Patch,
   Post,
@@ -12,7 +13,6 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/guards/jwt-auth.guard';
-import { CreateShareLinkDto } from './dto/create-share-link-structure.dto';
 import { CreateShareDto } from './dto/create-share-structure.dto';
 import { InviteShareDto } from './dto/invite-share-structure.dto';
 import { UpdateShareDto } from './dto/update-share-structure.dto';
@@ -78,34 +78,13 @@ export class StructureSharesController {
     return this.sharesService.createInvitation(dto, currentUserId);
   }
 
-  @Post('accept-invitation/:token')
-  async acceptInvitation(
-    @Param('token') token: string,
-    @Query('email') email: string,
-  ) {
-    if (!email) {
-      throw new BadRequestException('Email is required');
-    }
-    return this.sharesService.acceptInvitation(token, email);
-  }
-
-  @Post('links')
+  @Post('accept-invitation/:id')
   @UseGuards(JwtAuthGuard)
-  async createShareLink(@Body() dto: CreateShareLinkDto, @Req() req: any) {
+  async acceptInvitation(@Param('id') id: string, @Req() req: any) {
     const currentUserId = req.user?.id;
-    return this.sharesService.createShareLink(dto, currentUserId);
-  }
-
-  @Get('links/validate/:token')
-  async validateLink(@Param('token') token: string) {
-    return this.sharesService.validateShareLink(token);
-  }
-
-  @Patch('links/revoke/:id')
-  @UseGuards(JwtAuthGuard)
-  async revokeLink(@Param('id') id: string, @Req() req: any) {
-    const currentUserId = req.user?.id;
-    return this.sharesService.revokeShareLink(id, currentUserId);
+    if (!currentUserId)
+      throw new BadRequestException('Authenticated user required');
+    return this.sharesService.acceptInvitationById(id, currentUserId);
   }
 
   @Get('pending/:structureId')
@@ -128,24 +107,39 @@ export class StructureSharesController {
     return this.sharesService.getCollaborators(structureId, currentUserId);
   }
 
-  @Get('links/:structureId')
-  @UseGuards(JwtAuthGuard)
-  async listShareableLinks(
-    @Param('structureId') structureId: string,
-    @Req() req: any,
-  ) {
-    const currentUserId = req.user?.id;
-    return this.sharesService.getShareableLinks(structureId, currentUserId);
-  }
   @Delete('invitation/:id')
   @UseGuards(JwtAuthGuard)
   async removeInvitation(@Param('id') id: string, @Req() req: any) {
     const currentUserId = req.user?.id;
     return this.sharesService.removeInvitation(id, currentUserId);
   }
+
   @Get('my-structures')
   @UseGuards(JwtAuthGuard)
   async listMyStructures(@Req() req: any) {
     return this.sharesService.listAccessibleStructures(req.user.id);
+  }
+
+  @Get('shared-structures')
+  @UseGuards(JwtAuthGuard)
+  async getSharedStructures(@Req() req: any) {
+    const currentUserId = req.user?.id;
+
+    return this.sharesService.getSharedStructures(currentUserId);
+  }
+
+  @Delete('collaborator/:structureId/:userId')
+  @UseGuards(JwtAuthGuard)
+  async removeCollaboratorByUser(
+    @Param('structureId') structureId: string,
+    @Param('userId') userId: string,
+    @Req() req: any,
+  ) {
+    const currentUserId = req.user?.id;
+    return this.sharesService.removeCollaboratorByUser(
+      structureId,
+      userId,
+      currentUserId,
+    );
   }
 }

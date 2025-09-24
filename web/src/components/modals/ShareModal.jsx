@@ -1,350 +1,306 @@
-import cogoToast from "@successtar/cogo-toast"
-import { useEffect, useState, useCallback } from "react"
-import {
-  FiAlertCircle,
-  FiClock,
-  FiCopy,
-  FiTrash2,
-  FiUser,
-  FiX,
-  FiSettings,
-  FiRefreshCw,
-} from "react-icons/fi"
-import { useDispatch, useSelector } from "react-redux"
+import cogoToast from '@successtar/cogo-toast';
+import { useEffect, useState, useCallback } from 'react';
+import { FiAlertCircle, FiClock, FiRefreshCw } from 'react-icons/fi';
+import { useDispatch, useSelector } from 'react-redux';
 import {
   fetchSharesForStructure,
   fetchCollaborators,
-  fetchShareableLinks,
-  createShareLink,
-  revokeShareLink,
   fetchPendingInvitations,
   inviteUserToShare,
   removeCollaborator,
+  removeShare,
+  removeCollaboratorByUser,
   updateShareRole,
-} from "../../redux/slices/structure-sharing"
-import { PERMISSION_LEVELS, PERMISSION_CONFIG } from "../../types/permissions"
+} from '../../redux/slices/structure-sharing';
+import { PERMISSION_LEVELS, PERMISSION_CONFIG } from '../../types/permissions';
 
-// Utility functions
-const isValidEmail = email => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email?.trim())
-// Main ShareModal Component
+const isValidUsername = (u) => /^[a-zA-Z0-9._-]{3,30}$/.test(u?.trim());
+
 const ShareModal = ({ isOpen, onClose, structureId }) => {
-  const user = useSelector(state => state.auth?.user || null)
+  const user = useSelector((state) => state.auth?.user || null);
+  const dispatch = useDispatch();
 
-  const dispatch = useDispatch()
-
-  // State management
-  const [email, setEmail] = useState("")
-  const [selectedEmails, setSelectedEmails] = useState([])
-  const [customMessage, setCustomMessage] = useState("")
-  const [selectedPermission, setSelectedPermission] = useState(
-    PERMISSION_LEVELS.EDITOR
-  )
-  const [activeTab, setActiveTab] = useState("invite")
-  const [linkPermission, setLinkPermission] = useState(PERMISSION_LEVELS.VIEWER)
-  const [emailError, setEmailError] = useState("")
-  const [refreshing, setRefreshing] = useState(false)
+  const [username, setUsername] = useState('');
+  const [selectedUsernames, setSelectedUsernames] = useState([]);
+  const [customMessage, setCustomMessage] = useState('');
+  const [selectedPermission, setSelectedPermission] = useState(PERMISSION_LEVELS.EDITOR);
+  const [activeTab, setActiveTab] = useState('invite');
+  const [refreshing, setRefreshing] = useState(false);
 
   const {
-    collaborators,
-    pendingInvitations,
-    links,
-    shares,
+    collaborators = [],
+    pendingInvitations = [],
+    shares = [],
     loading,
-    error,
-    status,
-  } = useSelector(state => state.structureShares || {})
+  } = useSelector((state) => state.structureShares || {});
 
-  const displayCollaborators = collaborators || []
-  const displayShareLinks = (links || [])?.filter(l => l?.isActive !== false)
+  const displayCollaborators = Array.isArray(collaborators) ? collaborators : [];
 
+  // Fetch shares, collaborators, and pending invitations when modal opens
   useEffect(() => {
     if (isOpen && structureId) {
-      dispatch(fetchSharesForStructure(structureId))
-      dispatch(fetchCollaborators(structureId))
-      dispatch(fetchPendingInvitations(structureId))
+      dispatch(fetchSharesForStructure(structureId));
+      dispatch(fetchCollaborators(structureId));
+      dispatch(fetchPendingInvitations(structureId));
     }
-  }, [isOpen, structureId, dispatch])
+  }, [isOpen, structureId, dispatch]);
 
+  // Reset modal state when closed
   useEffect(() => {
     if (!isOpen) {
-      setSelectedEmails([])
-      setCustomMessage("")
-      setEmail("")
-      setActiveTab("invite")
+      setSelectedUsernames([]);
+      setCustomMessage('');
+      setUsername('');
+      setActiveTab('invite');
     }
-  }, [isOpen])
+  }, [isOpen]);
 
-  const handleRefresh = useCallback(async () => {
-    if (!structureId || refreshing) return
+  const handleRefresh = useCallback(
+    async (showToast = true) => {
+      if (!structureId || refreshing) return;
+      setRefreshing(true);
+      try {
+        await Promise.all([
+          dispatch(fetchPendingInvitations(structureId)),
+          dispatch(fetchCollaborators(structureId)),
+          dispatch(fetchSharesForStructure(structureId)),
+        ]);
+        if (showToast) cogoToast.success('Data refreshed!');
+      } catch (error) {
+        cogoToast.error('Failed to refresh data');
+      } finally {
+        setRefreshing(false);
+      }
+    },
+    [structureId, dispatch, refreshing],
+  );
 
-    setRefreshing(true)
-    try {
-      await Promise.all([
-        dispatch(fetchPendingInvitations(structureId)),
-        dispatch(fetchCollaborators(structureId)),
-      ])
-      cogoToast.success("Data refreshed!")
-    } catch (error) {
-      cogoToast.error("Failed to refresh data")
-    } finally {
-      setRefreshing(false)
-    }
-  }, [structureId, dispatch, refreshing])
+  // Determine owner
   const owner =
-    shares?.find(s => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
-    displayCollaborators?.find(c => c?.inviter)?.inviter ||
+    shares?.find((s) => s?.permission === PERMISSION_LEVELS.OWNER)?.user ||
+    displayCollaborators?.find((c) => c?.inviter)?.inviter ||
     user ||
-    null
-  const ownerEmail = owner?.email?.trim().toLowerCase() || null
-  const ownerIncludedInCollaborators = !!displayCollaborators?.some(
-    c => c?.inviter?.email?.toLowerCase() === owner?.email?.toLowerCase()
-  )
-  const collaboratorCount =
-    (displayCollaborators?.length || 0) +
-    (owner && !ownerIncludedInCollaborators ? 1 : 0)
-  const checkDuplicateEmail = useCallback(
-    emailToCheck => {
-      const trimmedEmail = emailToCheck.trim().toLowerCase()
+    null;
+  const ownerUsername = owner?.username?.trim().toLowerCase() || null;
 
-      if (ownerEmail && ownerEmail === trimmedEmail) {
+  // Check for duplicates before adding a username
+  const checkDuplicateUsername = useCallback(
+    (uToCheck) => {
+      const trimmed = uToCheck.trim().toLowerCase();
+
+      if (ownerUsername && ownerUsername === trimmed) {
         return {
           isDuplicate: true,
-          type: "owner",
-          message: `🚫 You (${ownerEmail}).  cannot invite yourself as you already have full access as the owner.`,
-        }
+          type: 'owner',
+          message: `🚫 You (${ownerUsername}) cannot invite the owner.`,
+        };
       }
 
-      const existingCollaborator = displayCollaborators?.find(c => {
-        const collaboratorEmail =
-          c?.inviteeEmail?.toLowerCase() ||
-          c?.user?.email?.toLowerCase() ||
-          c?.email?.toLowerCase()
-        return collaboratorEmail && collaboratorEmail === trimmedEmail
-      })
+      const existingCollaborator = displayCollaborators?.find((c) => {
+        const collaboratorName = (c?.inviteeUsername || c?.user?.username || '').toLowerCase();
+        return collaboratorName === trimmed;
+      });
       if (existingCollaborator) {
         return {
           isDuplicate: true,
-          type: "collaborator",
-          message: `👥 "${trimmedEmail}" is already a collaborator with access.`,
-        }
+          type: 'collaborator',
+          message: `👥 "${trimmed}" is already a collaborator.`,
+        };
       }
 
-      // Already in shares
-      const existingShare = shares?.find(share => {
-        const shareEmail =
-          share?.user?.email?.toLowerCase() || share?.email?.toLowerCase()
-        return shareEmail && shareEmail === trimmedEmail
-      })
+      const existingShare = shares?.find((share) => {
+        const shareName = (share?.user?.username || '').toLowerCase();
+        return shareName === trimmed;
+      });
       if (existingShare) {
         return {
           isDuplicate: true,
-          type: "share",
-          message: `✅ "${trimmedEmail}" already has access to this structure.`,
-        }
+          type: 'share',
+          message: `✅ "${trimmed}" already has access.`,
+        };
       }
 
-      // Pending invitation
-      const pendingInvitation = pendingInvitations?.find(
-        inv => inv.inviteeEmail?.toLowerCase() === trimmedEmail
-      )
-      if (pendingInvitation) {
+      const pending = pendingInvitations?.find(
+        (inv) => (inv.inviteeUsername || '').toLowerCase() === trimmed,
+      );
+      if (pending) {
         return {
           isDuplicate: true,
-          type: "pending",
-          message: `⏳ Invitation already sent to "${trimmedEmail}". Check the Pending tab.`,
-        }
+          type: 'pending',
+          message: `⏳ Invitation already sent to "${trimmed}".`,
+        };
       }
 
-      // Already added in UI list
-      const isSelected = selectedEmails?.includes(trimmedEmail)
+      const isSelected = selectedUsernames?.includes(trimmed);
       if (isSelected) {
         return {
           isDuplicate: true,
-          type: "selected",
-          message: `📝 "${trimmedEmail}" is already in your invitation list.`,
-        }
+          type: 'selected',
+          message: `📝 "${trimmed}" is already in your invite list.`,
+        };
       }
 
-      return { isDuplicate: false }
+      return { isDuplicate: false };
     },
-    [
-      ownerEmail,
-      displayCollaborators,
-      shares,
-      selectedEmails,
-      pendingInvitations,
-    ]
-  )
+    [ownerUsername, displayCollaborators, shares, selectedUsernames, pendingInvitations],
+  );
 
-  const handleAddEmail = e => {
-    if (e?.key === "Enter" && isValidEmail(email)) {
-      const duplicateCheck = checkDuplicateEmail(email)
+  const handleAddUsername = (e) => {
+    if (e?.key === 'Enter' && isValidUsername(username)) {
+      const duplicateCheck = checkDuplicateUsername(username);
 
       if (duplicateCheck.isDuplicate) {
-        cogoToast.warn(duplicateCheck.message)
-        setEmail("")
-        return
+        cogoToast.warn(duplicateCheck.message);
+        setUsername('');
+        return;
       }
 
-      setSelectedEmails(prev => [...prev, email.trim().toLowerCase()])
-      setEmail("")
+      setSelectedUsernames((prev) => [...prev, username.trim().toLowerCase()]);
+      setUsername('');
     }
-  }
+  };
 
-  const handleCancelInvitation = async invitationId => {
+  const handleCancelInvitation = async (invitationId) => {
     try {
-      await dispatch(removeCollaborator(invitationId)).unwrap()
-      cogoToast.success("Invitation cancelled successfully!")
-      dispatch(fetchPendingInvitations(structureId))
+      await dispatch(removeCollaborator(invitationId)).unwrap();
+      cogoToast.success('Invitation cancelled successfully!');
+      (dispatch(fetchPendingInvitations(structureId)),
+        dispatch(fetchCollaborators(structureId)),
+        dispatch(fetchSharesForStructure(structureId)));
     } catch (error) {
-      cogoToast.error(error?.message || "Failed to cancel invitation")
+      cogoToast.error(error?.message || 'Failed to cancel invitation');
     }
-  }
+  };
 
-  const handleRemoveEmail = emailToRemove => {
-    setSelectedEmails(prev =>
-      prev.filter(selectedEmail => selectedEmail !== emailToRemove)
-    )
-  }
+  const handleRemoveAcceptedCollaborator = async (shareId) => {
+    try {
+      await dispatch(removeShare(shareId)).unwrap();
+      cogoToast.success('Collaborator removed successfully!');
+      (dispatch(fetchPendingInvitations(structureId)),
+        dispatch(fetchCollaborators(structureId)),
+        dispatch(fetchSharesForStructure(structureId)));
+    } catch (error) {
+      cogoToast.error(error?.message || 'Failed to remove collaborator');
+    }
+  };
+
+  const handleRemoveCollaboratorByUser = async (userId) => {
+    try {
+      await dispatch(removeCollaboratorByUser({ structureId, userId })).unwrap();
+      cogoToast.success('Collaborator removed successfully!');
+      (dispatch(fetchPendingInvitations(structureId)),
+        dispatch(fetchCollaborators(structureId)),
+        dispatch(fetchSharesForStructure(structureId)));
+    } catch (error) {
+      cogoToast.error(error?.message || 'Failed to remove collaborator');
+    }
+  };
+
+  const handleRemoveRow = async (row) => {
+    if (row?.user && row?.id) {
+      await handleRemoveAcceptedCollaborator(row.id);
+      return;
+    }
+
+    if (row?.inviteeId) {
+      await handleRemoveCollaboratorByUser(row.inviteeId);
+      return;
+    }
+
+    if (row?.userId) {
+      await handleRemoveCollaboratorByUser(row.userId);
+      return;
+    }
+
+    if (row?.id) {
+      await handleCancelInvitation(row.id);
+      return;
+    }
+
+    cogoToast.error(
+      'Unable to determine collaborator type to remove. Provide shareId, inviteeId, or invitation id.',
+    );
+  };
+
+  const handleRemoveUsername = (u) => {
+    setSelectedUsernames((prev) => prev.filter((s) => s !== u));
+  };
 
   const handleSendInvites = async () => {
-    if (selectedEmails.length === 0) {
-      cogoToast.warn("Please add at least one email address.")
-      return
+    if (selectedUsernames.length === 0) {
+      cogoToast.warn('Please add at least one username.');
+      return;
     }
 
-    const invalidEmails = []
-    const validationDetails = []
+    const invalid = [];
+    const validationDetails = [];
 
-    selectedEmails.forEach(email => {
-      const duplicateCheck = checkDuplicateEmail(email)
-      validationDetails.push({ email, check: duplicateCheck })
-
-      if (
-        duplicateCheck.isDuplicate &&
-        (duplicateCheck.type === "owner" ||
-          duplicateCheck.type === "collaborator" ||
-          duplicateCheck.type === "share" ||
-          duplicateCheck.type === "pending")
-      ) {
-        invalidEmails.push(email)
+    selectedUsernames.forEach((u) => {
+      const check = checkDuplicateUsername(u);
+      validationDetails.push({ username: u, check });
+      if (check.isDuplicate && ['owner', 'collaborator', 'share', 'pending'].includes(check.type)) {
+        invalid.push(u);
       }
-    })
+    });
 
-    if (invalidEmails.length > 0) {
+    if (invalid.length > 0) {
       const invalidDetails = validationDetails
-        .filter(detail => invalidEmails.includes(detail.email))
-        .map(detail => `${detail.email} (${detail.check.type})`)
-        .join(", ")
-
-      cogoToast.error(
-        `Cannot send invitations to: ${invalidDetails}. Please remove these emails first.`
-      )
-      return
+        .filter((d) => invalid.includes(d.username))
+        .map((d) => `${d.username} (${d.check.type})`)
+        .join(', ');
+      cogoToast.error(`Cannot send invitations to: ${invalidDetails}. Remove them first.`);
+      return;
     }
 
     try {
-      for (const email of selectedEmails) {
+      for (const u of selectedUsernames) {
         await dispatch(
           inviteUserToShare({
             structureId,
-            inviteeEmail: email,
+            inviteeUsername: u,
             permission: selectedPermission,
             message: customMessage?.trim() || undefined,
-          })
-        ).unwrap()
+          }),
+        ).unwrap();
       }
 
-      cogoToast.success("Invitations sent successfully!")
-      setSelectedEmails([])
-      setCustomMessage("")
-      setActiveTab("pending")
+      cogoToast.success('Invitations sent successfully!');
+      setSelectedUsernames([]);
+      setCustomMessage('');
+      setActiveTab('pending');
 
-      // Refresh all data to show updates
-      dispatch(fetchPendingInvitations(structureId))
-      dispatch(fetchCollaborators(structureId))
+      (dispatch(fetchPendingInvitations(structureId)),
+        dispatch(fetchCollaborators(structureId)),
+        dispatch(fetchSharesForStructure(structureId)));
     } catch (error) {
-      cogoToast.error(error?.message || "Failed to send invitations")
+      cogoToast.error(error?.message || 'Failed to send invitations');
     }
-  }
+  };
 
-  const handlePermissionChange = async (shareId, newPermission) => {
+  const handlePermissionChange = async (shareOrInvitationId, newPermission) => {
     try {
       await dispatch(
         updateShareRole({
-          id: shareId,
+          id: shareOrInvitationId,
           dto: { permission: newPermission },
-        })
-      ).unwrap()
-      cogoToast.success("Permission updated successfully!")
+        }),
+      ).unwrap();
+      cogoToast.success('Permission updated successfully!');
+      dispatch(fetchCollaborators(structureId));
+      dispatch(fetchSharesForStructure(structureId));
     } catch (error) {
-      cogoToast.error(error.message || "Failed to update permission")
+      cogoToast.error(error.message || 'Failed to update permission');
     }
-  }
+  };
 
-  const handleRemoveCollaborator = async invitationId => {
-    try {
-      await dispatch(removeCollaborator(invitationId)).unwrap()
-      cogoToast.success("Invitation removed successfully!")
-      dispatch(fetchCollaborators(structureId))
-    } catch (error) {
-      cogoToast.error(error.message || "Failed to remove invitation")
-    }
-  }
-
-  // const handleCreateLink = async () => {
-  //   try {
-  //     const linkData = await dispatch(
-  //       createShareLink({
-  //         structureId,
-  //         permission: linkPermission,
-  //         expiresIn: "30d",
-  //       })
-  //     ).unwrap()
-
-  //     const fullLink = `${window.location.origin}/shared/${linkData.token}`
-  //     await navigator.clipboard.writeText(fullLink)
-  //     cogoToast.success("Share link created and copied to clipboard!")
-
-  //     // Refresh share links to show the new link
-  //     dispatch(fetchShareableLinks(structureId))
-  //   } catch (error) {
-  //     cogoToast.error(error?.message || "Failed to create share link")
-  //   }
-  // }
-
-  // const handleCopyLink = async link => {
-  //   try {
-  //     await navigator.clipboard.writeText(link)
-  //     cogoToast.success("Link copied to clipboard!")
-  //   } catch (error) {
-  //     cogoToast.error("Failed to copy link")
-  //   }
-  // }
-
-  // const handleRevokeLink = async linkId => {
-  //   try {
-  //     await dispatch(revokeShareLink(linkId)).unwrap()
-  //     cogoToast.success("Share link revoked successfully!")
-
-  //     // Refresh share links to remove the revoked link
-  //     dispatch(fetchShareableLinks(structureId))
-  //   } catch (error) {
-  //     cogoToast.error(error?.message || "Failed to revoke share link")
-  //   }
-  // }
-
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50">
       <div className="bg-white rounded-lg w-11/12 max-w-4xl max-h-[90vh] overflow-hidden">
         <div className="flex justify-between items-center border-b p-6">
           <h2 className="text-xl font-bold">Share Structure</h2>
-          <button
-            className="text-gray-500 hover:text-gray-700"
-            onClick={onClose}
-          >
+          <button className="text-gray-500 hover:text-gray-700" onClick={onClose}>
             ✖
           </button>
         </div>
@@ -352,21 +308,17 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
         <div className="border-b">
           <nav className="flex space-x-8 px-6">
             {[
-              { id: "invite", label: "Invite People" },
-              { id: "collaborators", label: "Collaborators" },
-              {
-                id: "pending",
-                label: `Pending (${pendingInvitations?.length || 0})`,
-              },
-              // { id: "links", label: "Share Links" },
-            ]?.map(tab => (
+              { id: 'invite', label: 'Invite People' },
+              { id: 'collaborators', label: 'Collaborators' },
+              { id: 'pending', label: `Pending (${pendingInvitations?.length || 0})` },
+            ]?.map((tab) => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.id
-                    ? "border-custom-main text-custom-main"
-                    : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    ? 'border-custom-main text-custom-main'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                 }`}
               >
                 {tab.label}
@@ -376,24 +328,24 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
         </div>
 
         <div className="p-6 max-h-96 overflow-y-auto">
-          {activeTab === "invite" && (
+          {activeTab === 'invite' && (
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">
-                  Invite by email
+                  Invite by username
                 </label>
                 <div className="flex items-center mt-2 space-x-2">
                   <input
                     type="text"
-                    placeholder="Add people by email and press Enter"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    onKeyDown={handleAddEmail}
+                    placeholder="Add people by username and press Enter (e.g. jdoe)"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    onKeyDown={handleAddUsername}
                     className="flex-grow border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                   />
                   <select
                     value={selectedPermission}
-                    onChange={e => setSelectedPermission(e.target.value)}
+                    onChange={(e) => setSelectedPermission(e.target.value)}
                     className="border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                   >
                     <option value={PERMISSION_LEVELS.EDITOR}>
@@ -408,24 +360,24 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   </select>
                 </div>
                 <p className="text-sm text-gray-500 mt-2">
-                  Press <b>Enter</b> to add an email.
+                  Press <b>Enter</b> to add a username.
                 </p>
               </div>
 
-              {selectedEmails.length > 0 && (
+              {selectedUsernames.length > 0 && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     People to invite:
                   </label>
                   <div className="flex flex-wrap gap-2">
-                    {selectedEmails.map((email, index) => (
+                    {selectedUsernames.map((u, index) => (
                       <div
-                        key={`selected-email-${index}-${email}`}
+                        key={`selected-username-${index}-${u}`}
                         className="flex items-center bg-blue-100 text-blue-800 px-3 py-1 rounded-full"
                       >
-                        <span>{email}</span>
+                        <span>{u}</span>
                         <button
-                          onClick={() => handleRemoveEmail(email)}
+                          onClick={() => handleRemoveUsername(u)}
                           className="ml-2 text-red-500 hover:text-red-700"
                         >
                           ✖
@@ -444,29 +396,25 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   rows={3}
                   placeholder="Add an optional message for invitees..."
                   value={customMessage}
-                  onChange={e => setCustomMessage(e.target.value)}
+                  onChange={(e) => setCustomMessage(e.target.value)}
                   className="w-full mt-2 border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:border-custom-main"
                 ></textarea>
               </div>
 
               <div className="bg-gray-50 p-4 rounded-md">
-                <h4 className="font-medium text-gray-900 mb-2">
-                  Permission Levels:
-                </h4>
+                <h4 className="font-medium text-gray-900 mb-2">Permission Levels:</h4>
                 <div className="space-y-2 text-sm">
                   {Object.entries(PERMISSION_CONFIG)
                     .filter(([key]) => key !== PERMISSION_LEVELS.OWNER)
                     .map(([key, config]) => {
-                      const Icon = config.icon
+                      const Icon = config.icon;
                       return (
                         <div key={key} className="flex items-center space-x-2">
                           <Icon className={`w-4 h-4 ${config.color}`} />
                           <span className="font-medium">{config.label}:</span>
-                          <span className="text-gray-600">
-                            {config.description}
-                          </span>
+                          <span className="text-gray-600">{config.description}</span>
                         </div>
-                      )
+                      );
                     })}
                 </div>
               </div>
@@ -474,20 +422,20 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
               <div className="flex justify-end">
                 <button
                   onClick={handleSendInvites}
-                  disabled={selectedEmails.length === 0 || loading?.mutations}
+                  disabled={selectedUsernames.length === 0 || loading?.mutations}
                   className={`px-4 py-2 rounded-md font-medium ${
-                    selectedEmails.length > 0 && !loading?.mutations
-                      ? "bg-custom-main text-white hover:bg-custom-secondary"
-                      : "bg-gray-300 text-gray-500 cursor-not-allowed"
+                    selectedUsernames.length > 0 && !loading?.mutations
+                      ? 'bg-custom-main text-white hover:bg-custom-secondary'
+                      : 'bg-gray-300 text-gray-500 cursor-not-allowed'
                   }`}
                 >
-                  {loading?.mutations ? "Sending..." : "Send Invitations"}
+                  {loading?.mutations ? 'Sending...' : 'Send Invitations'}
                 </button>
               </div>
             </div>
           )}
 
-          {activeTab === "collaborators" && (
+          {activeTab === 'collaborators' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Current Collaborators</h3>
@@ -498,95 +446,55 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                     className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
                     title="Refresh collaborators"
                   >
-                    <FiRefreshCw
-                      className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-                    />
+                    <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                     <span>Refresh</span>
                   </button>
                   <span className="text-sm text-gray-500">
-                    {collaboratorCount} collaborator(s)
+                    {displayCollaborators?.length || 0} collaborator(s)
                   </span>
                 </div>
               </div>
 
               <div className="space-y-3">
-                {owner && (
-                  <div className="flex items-center justify-between p-4 border-2 rounded-lg bg-gradient-to-r from-blue-50 to-indigo-50 border-blue-200">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-                        <FiUser className="w-5 h-5 text-white" />
-                      </div>
-                      <div>
-                        <div className="flex items-center space-x-2">
-                          <p className="font-semibold text-blue-900">
-                            {owner?.displayName || owner?.email || "You"}
-                          </p>
-                          <span className="bg-blue-100 text-blue-800 text-xs font-medium px-2 py-1 rounded-full">
-                            OWNER
-                          </span>
-                        </div>
-                        <p className="text-sm text-blue-700">{owner?.email}</p>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-                        <FiSettings className="w-4 h-4 mr-1" />
-                        Full Access
-                      </span>
-                    </div>
-                  </div>
-                )}
-
-                {(!displayCollaborators ||
-                  displayCollaborators.length === 0) && (
-                  <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-lg">
-                    <FiUser className="mx-auto w-12 h-12 mb-4 text-gray-400" />
-                    <p className="font-medium mb-2">
-                      No collaborators invited yet
-                    </p>
-                    <p className="text-sm mb-4">
-                      Start collaborating by inviting team members!
-                    </p>
-                    <button
-                      onClick={() => setActiveTab("invite")}
-                      className="px-4 py-2 bg-custom-main text-white rounded-md hover:bg-custom-secondary transition-colors"
-                    >
-                      Invite People
-                    </button>
-                  </div>
-                )}
-
                 {displayCollaborators &&
                   displayCollaborators.length > 0 &&
                   displayCollaborators
                     ?.filter(
                       (collaborator, index, array) =>
-                        array.findIndex(c => c.id === collaborator.id) === index
+                        array.findIndex((c) => c.id === collaborator.id) === index,
                     )
                     ?.map((collaborator, index) => {
-                      const config = PERMISSION_CONFIG[collaborator.permission]
-                      const Icon = config.icon
+                      const isShareRow = !!collaborator?.user;
+                      const usernameDisplay =
+                        collaborator?.inviteeUsername ||
+                        collaborator?.user?.username ||
+                        collaborator?.username ||
+                        'Unknown';
+                      const permission = collaborator?.permission || PERMISSION_LEVELS.VIEWER;
+                      const config =
+                        PERMISSION_CONFIG[permission] ||
+                        PERMISSION_CONFIG[PERMISSION_LEVELS.VIEWER];
+                      const Icon = config.icon;
+
                       return (
                         <div
-                          key={`collaborator-${collaborator.id}-${index}`}
+                          key={`collaborator-${collaborator.id || index}-${usernameDisplay}`}
                           className="flex items-center justify-between p-4 border rounded-lg"
                         >
-                          <div className="flex items-center space-x-3">
+                          <div className="flex items-center space-x-3 min-w-0">
                             <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
-                              <FiUser className="w-5 h-5 text-gray-600" />
+                              <Icon className="w-5 h-5 text-gray-600" />
                             </div>
                             <div>
-                              <p className="font-medium">
-                                {collaborator?.inviteeEmail}
-                              </p>
+                              <p className="font-medium truncate">{usernameDisplay}</p>
                               <p className="text-sm text-gray-500">
-                                {collaborator?.inviteeEmail}
+                                {isShareRow ? 'Has access' : 'Invitation'}
                               </p>
                             </div>
                           </div>
+
                           <div className="flex items-center space-x-3">
-                            {collaborator?.permission ===
-                            PERMISSION_LEVELS.OWNER ? (
+                            {collaborator?.permission === PERMISSION_LEVELS.OWNER ? (
                               <span
                                 className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bgColor} ${config.color}`}
                               >
@@ -596,57 +504,45 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                             ) : (
                               <>
                                 <select
-                                  value={collaborator?.permission}
-                                  onChange={e =>
-                                    handlePermissionChange(
-                                      collaborator.id,
-                                      e.target.value
-                                    )
+                                  value={permission}
+                                  onChange={(e) =>
+                                    handlePermissionChange(collaborator.id, e.target.value)
                                   }
                                   className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-custom-main"
                                 >
                                   <option value={PERMISSION_LEVELS.EDITOR}>
-                                    {
-                                      PERMISSION_CONFIG[
-                                        PERMISSION_LEVELS.EDITOR
-                                      ].label
-                                    }
+                                    {PERMISSION_CONFIG[PERMISSION_LEVELS.EDITOR].label}
                                   </option>
                                   <option value={PERMISSION_LEVELS.COMMENTER}>
-                                    {
-                                      PERMISSION_CONFIG[
-                                        PERMISSION_LEVELS.COMMENTER
-                                      ].label
-                                    }
+                                    {PERMISSION_CONFIG[PERMISSION_LEVELS.COMMENTER].label}
                                   </option>
                                   <option value={PERMISSION_LEVELS.VIEWER}>
-                                    {
-                                      PERMISSION_CONFIG[
-                                        PERMISSION_LEVELS.VIEWER
-                                      ].label
-                                    }
+                                    {PERMISSION_CONFIG[PERMISSION_LEVELS.VIEWER].label}
                                   </option>
                                 </select>
+
                                 <button
-                                  onClick={() => {
-                                    handleRemoveCollaborator(collaborator?.id)
-                                  }}
+                                  onClick={() => handleRemoveRow(collaborator)}
                                   className="text-red-500 hover:text-red-700"
-                                  title="Remove collaborator"
+                                  title={
+                                    isShareRow
+                                      ? 'Remove collaborator'
+                                      : 'Cancel invitation / Remove'
+                                  }
                                 >
-                                  <FiTrash2 className="w-4 h-4" />
+                                  <FiAlertCircle className="w-4 h-4" />
                                 </button>
                               </>
                             )}
                           </div>
                         </div>
-                      )
+                      );
                     })}
               </div>
             </div>
           )}
 
-          {activeTab === "pending" && (
+          {activeTab === 'pending' && (
             <div className="space-y-4">
               <div className="flex justify-between items-center">
                 <h3 className="text-lg font-medium">Pending Invitations</h3>
@@ -657,13 +553,11 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                     className="flex items-center space-x-1 text-sm text-gray-500 hover:text-gray-700 transition-colors disabled:opacity-50"
                     title="Refresh pending invitations"
                   >
-                    <FiRefreshCw
-                      className={`w-4 h-4 ${refreshing ? "animate-spin" : ""}`}
-                    />
+                    <FiRefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
                     <span>Refresh</span>
                   </button>
                   <span className="text-sm text-gray-500">
-                    {pendingInvitations?.length} pending invitation(s)
+                    {pendingInvitations?.length || 0} pending invitation(s)
                   </span>
                 </div>
               </div>
@@ -673,7 +567,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                   <FiClock className="mx-auto w-12 h-12 mb-4" />
                   <p>No pending invitations.</p>
                   <button
-                    onClick={() => setActiveTab("invite")}
+                    onClick={() => setActiveTab('invite')}
                     className="mt-2 text-custom-main hover:text-custom-secondary"
                   >
                     Send New Invitations
@@ -685,43 +579,34 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                     ?.filter(
                       (invitation, index, array) =>
                         array.findIndex(
-                          inv =>
+                          (inv) =>
                             inv.id === invitation.id &&
-                            inv.inviteeEmail === invitation.inviteeEmail
-                        ) === index
+                            inv.inviteeUsername === invitation.inviteeUsername,
+                        ) === index,
                     )
                     ?.map((invitation, index) => {
-                      const config = PERMISSION_CONFIG[invitation.permission]
-                      const Icon = config.icon
+                      const config =
+                        PERMISSION_CONFIG[invitation.permission] ||
+                        PERMISSION_CONFIG[PERMISSION_LEVELS.VIEWER];
+                      const Icon = config.icon;
                       const isExpiringSoon =
-                        new Date(invitation.expiresAt) - new Date() <
-                        24 * 60 * 60 * 1000 // Less than 24 hours
+                        new Date(invitation.expiresAt) - new Date() < 24 * 60 * 60 * 1000;
 
                       return (
                         <div
-                          key={`pending-invitation-${invitation.id || index}-${
-                            invitation.inviteeEmail
-                          }-${index}`}
-                          className={`flex items-center justify-between p-4 border rounded-lg ${
-                            isExpiringSoon
-                              ? "border-yellow-300 bg-yellow-50"
-                              : ""
-                          }`}
+                          key={`pending-invitation-${invitation.id || index}-${invitation.inviteeUsername}-${index}`}
+                          className={`flex items-start justify-between p-4 border rounded-lg ${isExpiringSoon ? 'border-yellow-300 bg-yellow-50' : ''}`}
                         >
-                          <div className="flex items-center space-x-3">
-                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center">
+                          <div className="flex items-start space-x-3 min-w-0">
+                            <div className="w-10 h-10 bg-gray-200 rounded-full flex items-center justify-center flex-shrink-0">
                               <FiClock className="w-5 h-5 text-gray-600" />
                             </div>
-                            <div>
-                              <p className="font-medium">
-                                {invitation.inviteeEmail}
-                              </p>
+
+                            <div className="min-w-0">
+                              <p className="font-medium truncate">{invitation.inviteeUsername}</p>
                               <div className="flex items-center space-x-2 text-sm text-gray-500">
                                 <span>
-                                  Invited{" "}
-                                  {new Date(
-                                    invitation.createdAt
-                                  ).toLocaleDateString()}
+                                  Invited {new Date(invitation.createdAt).toLocaleDateString()}
                                 </span>
                                 {isExpiringSoon && (
                                   <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
@@ -730,57 +615,51 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                                   </span>
                                 )}
                               </div>
+
                               {invitation.message && (
-                                <p className="text-sm text-gray-600 mt-1 italic">
+                                <p className="text-sm text-gray-600 mt-1 italic break-words max-w-[60ch]">
                                   "{invitation.message}"
                                 </p>
                               )}
                             </div>
                           </div>
-                          <div className="flex items-center space-x-3">
+
+                          <div className="flex items-center space-x-3 flex-shrink-0 ml-4">
                             <span
-                              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bgColor} ${config.color}`}
+                              className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${config.bgColor} ${config.color} whitespace-nowrap`}
                             >
                               <Icon className="w-4 h-4 mr-1" />
                               {config.label}
                             </span>
 
                             <button
-                              onClick={() =>
-                                handleCancelInvitation(invitation.id)
-                              }
+                              onClick={() => handleCancelInvitation(invitation.id)}
                               className="text-red-500 hover:text-red-700"
                               title="Cancel invitation"
                             >
-                              <FiX className="w-4 h-4" />
+                              ✖
                             </button>
                           </div>
                         </div>
-                      )
+                      );
                     })}
                 </div>
               )}
 
-              {/* Auto-refresh indicator */}
               <div className="flex items-center justify-center text-xs text-gray-400 mt-4">
                 <FiRefreshCw className="w-3 h-3 mr-1 animate-spin" />
                 Refresh to see latest updates...
               </div>
 
-              {/* Info box about pending invitations */}
               {pendingInvitations?.length > 0 && (
                 <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                   <div className="flex items-start space-x-2">
                     <FiAlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
                     <div className="text-sm text-blue-800">
-                      <p className="font-medium mb-1">
-                        About pending invitations:
-                      </p>
+                      <p className="font-medium mb-1">About pending invitations:</p>
                       <ul className="list-disc list-inside space-y-1 text-blue-700">
                         <li>Invitations expire after 7 days</li>
-                        <li>
-                          Users need to create an account to accept invitations
-                        </li>
+                        <li>Users need to create an account to accept invitations</li>
                         <li>Cancelled invitations cannot be recovered</li>
                       </ul>
                     </div>
@@ -789,144 +668,10 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
               )}
             </div>
           )}
-
-          {/* {activeTab === "links" && (
-            <div className="space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-lg font-medium">Shareable Links</h3>
-                <button
-                  onClick={handleCreateLink}
-                  className="px-4 py-2 bg-custom-main text-white rounded-md hover:bg-custom-secondary"
-                >
-                  Create Link
-                </button>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-md">
-                <div className="flex items-center space-x-3">
-                  <label className="text-sm font-medium text-gray-700">
-                    Permission:
-                  </label>
-                  <select
-                    value={linkPermission}
-                    onChange={e => setLinkPermission(e.target.value)}
-                    className="border border-gray-300 rounded-md px-3 py-1 text-sm focus:outline-none focus:border-custom-main"
-                  >
-                    <option value={PERMISSION_LEVELS.VIEWER}>
-                      {PERMISSION_CONFIG[PERMISSION_LEVELS.VIEWER].label}
-                    </option>
-                    <option value={PERMISSION_LEVELS.COMMENTER}>
-                      {PERMISSION_CONFIG[PERMISSION_LEVELS.COMMENTER].label}
-                    </option>
-                    <option value={PERMISSION_LEVELS.EDITOR}>
-                      {PERMISSION_CONFIG[PERMISSION_LEVELS.EDITOR].label}
-                    </option>
-                  </select>
-                </div>
-                <p className="text-sm text-gray-500 mt-2">
-                  Anyone with this link will have{" "}
-                  <span className="font-medium">
-                    {PERMISSION_CONFIG[linkPermission].label.toLowerCase()}
-                  </span>{" "}
-                  access to your structure.
-                </p>
-              </div>
-
-              {displayShareLinks?.length === 0 ? (
-                <div className="text-center py-8 text-gray-500">
-                  <FiCopy className="mx-auto w-12 h-12 mb-4" />
-                  <p>No shareable links created yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {displayShareLinks
-                    ?.filter(
-                      (link, index, array) =>
-                        array.findIndex(
-                          l =>
-                            l.id === link.id ||
-                            (l.token === link.token && l.id === link.id)
-                        ) === index
-                    )
-                    .map((link, index) => {
-                      const config = PERMISSION_CONFIG[link.permission]
-                      const Icon = config.icon
-                      const fullLink = `${window.location.origin}/shared/${link.token}`
-                      const createdAt = link.createdAt
-                        ? new Date(link.createdAt).toLocaleDateString("en-US", {
-                            year: "numeric",
-                            month: "short",
-                            day: "numeric",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
-                        : "Unknown"
-
-                      return (
-                        <div
-                          key={`share-link-${link.id || index}-${
-                            link.token
-                          }-${index}`}
-                          className="flex items-center justify-between p-4 border rounded-lg"
-                        >
-                          <div className="flex items-center space-x-3 flex-grow">
-                            <Icon className={`w-5 h-5 ${config.color}`} />
-                            <div className="flex-grow">
-                              <div className="flex items-center space-x-2 mb-2">
-                                <span
-                                  className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${config.bgColor} ${config.color}`}
-                                >
-                                  {config.label}
-                                </span>
-                                <span className="text-sm text-gray-500">
-                                  Created: {createdAt}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 font-mono truncate bg-gray-50 p-2 rounded">
-                                {fullLink}
-                              </p>
-                              {link.expiresAt && (
-                                <p className="text-xs text-gray-400 mt-1">
-                                  Expires:{" "}
-                                  {new Date(link.expiresAt).toLocaleDateString(
-                                    "en-US",
-                                    {
-                                      year: "numeric",
-                                      month: "short",
-                                      day: "numeric",
-                                    }
-                                  )}
-                                </p>
-                              )}
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <button
-                              onClick={() => handleCopyLink(fullLink)}
-                              className="text-gray-500 hover:text-gray-700"
-                              title="Copy link"
-                            >
-                              <FiCopy className="w-4 h-4" />
-                            </button>
-                            <button
-                              onClick={() => handleRevokeLink(link.id)}
-                              className="text-red-500 hover:text-red-700"
-                              title="Revoke link"
-                            >
-                              <FiTrash2 className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      )
-                    })}
-                </div>
-              )}
-            </div>
-          )} */}
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default ShareModal
+export default ShareModal;

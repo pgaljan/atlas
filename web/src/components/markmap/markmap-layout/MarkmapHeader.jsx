@@ -79,7 +79,7 @@ const MarkmapHeader = ({
           setTitle(data?.title || '');
         })
         .catch((error) => {
-          cogoToast.error(`Failed to load structure: ${error}`);
+          // cogoToast.error(`Failed to load structure: ${error}`);
         });
     }
   }, [dispatch, structureId]);

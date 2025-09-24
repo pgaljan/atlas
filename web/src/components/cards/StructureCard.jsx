@@ -113,14 +113,6 @@ const StructureCard = () => {
             </div>
             <h2 className="text-2xl font-bold text-custom-text-grey mb-4">No structures found.</h2>
             <p className="text-lg text-custom-text-grey">Start creating your first structure!</p>
-            {/* <button
-              onClick={toggleImportModal}
-              disabled={isImporting}
-              className="flex items-center mt-4 gap-2 px-4 py-2 border-2 bg-transparent hover:bg-custom-main hover:text-white border-custom-main text-custom-main rounded-lg hover:bg-custom-dark transition"
-            >
-              <VscGitPullRequestCreate size={20} />
-              {isImporting ? "Importing..." : "Import backups"}
-            </button> */}
           </div>
         </div>
       ) : (
@@ -129,24 +121,6 @@ const StructureCard = () => {
             <div>
               <h2 className="text-[24px] font-bold text-black">Dashboard</h2>
             </div>
-            {/* <div className="flex items-center gap-3">
-              <button
-                onClick={handleExport}
-                disabled={isExporting}
-                className="flex items-center gap-2 px-4 py-2 bg-custom-main text-white rounded-lg shadow-md hover:bg-custom-dark transition"
-              >
-                <LuDatabaseBackup size={20} />
-                {isExporting ? "Exporting..." : "Export"}
-              </button>
-              <button
-                onClick={toggleImportModal}
-                disabled={isImporting}
-                className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-custom-main rounded-lg shadow-md hover:bg-gray-300 transition"
-              >
-                <VscGitPullRequestCreate size={20} />
-                {isImporting ? "Importing..." : "Import"}
-              </button>
-            </div> */}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {structures?.map((structure) => (

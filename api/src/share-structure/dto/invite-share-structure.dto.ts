@@ -1,4 +1,4 @@
-import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { SharePermissionDto } from './create-share-structure.dto';
 
 export class InviteShareDto {
@@ -6,8 +6,9 @@ export class InviteShareDto {
   @IsNotEmpty()
   structureId: string;
 
-  @IsEmail()
-  inviteeEmail: string;
+  @IsString()
+  @IsNotEmpty()
+  inviteeUsername: string;
 
   @IsEnum(SharePermissionDto)
   permission: SharePermissionDto;
