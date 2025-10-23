@@ -26,6 +26,7 @@ import { UserModule } from './user/user.module';
 import { ShareStructureModule } from './share-structure/share-structure.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { ScheduleModule } from '@nestjs/schedule';
+import { CleansheetModule } from './cleensheet/cleansheet.module';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -34,6 +35,7 @@ import { ScheduleModule } from '@nestjs/schedule';
     AuthModule,
     PrismaModule,
     RoleModule,
+    CleansheetModule,
     PlansModule,
     FileUploadModule,
     ServeStaticModule.forRoot({

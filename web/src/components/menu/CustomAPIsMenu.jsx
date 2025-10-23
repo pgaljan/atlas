@@ -11,6 +11,7 @@ const CustomAPIsMenu = ({ navigate, handleLogout }) => {
 
   const displayName = Cookies.get("displayName") || "User";
   const email = Cookies.get("atlas_email") || "user@example.com";
+  const username = Cookies.get('atlas_username') || 'username';
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -38,6 +39,7 @@ const CustomAPIsMenu = ({ navigate, handleLogout }) => {
             <p className="text-sm font-semibold text-gray-900 truncate">
               {displayName}
             </p>
+             <p className="text-xs text-gray-600 truncate">username: {username}</p>
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
 

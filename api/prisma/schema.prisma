@@ -64,6 +64,7 @@ model User {
   role                              Role                       @relation("UserRole", fields: [roleId], references: [id])
   roles                             Role[]                     @relation("UserRoles")
   StorageEvent                      StorageEvent[]
+  learnerProfile                    LearnerProfile?
 }
 
 model Invitation {
@@ -101,11 +102,12 @@ model Token {
 }
 
 model Role {
-  id          String  @id @default(uuid())
-  name        String  @unique
-  description String?
-  User        User[]  @relation("UserRole")
-  users       User[]  @relation("UserRoles")
+  id              String           @id @default(uuid())
+  name            String           @unique
+  description     String?
+  User            User[]           @relation("UserRole")
+  users           User[]           @relation("UserRoles")
+  rolePermissions RolePermission[]
 }
 
 model Team {
@@ -567,4 +569,44 @@ model StorageEvent {
 
   @@index([userId])
   @@index([createdAt])
+}
+
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  rolePermissions RolePermission[]
+}
+
+model RolePermission {
+  id           String     @id @default(uuid())
+  roleId       String
+  permissionId String
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([roleId, permissionId])
+  @@index([roleId])
+  @@index([permissionId])
+}
+
+model LearnerProfile {
+  id          String    @id @default(uuid())
+  userId      String    @unique
+  userName    String
+  userGoals   String
+  experiences Json
+  exportDate  DateTime
+  version     String
+  resumeJson  Json?
+  resumeAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }

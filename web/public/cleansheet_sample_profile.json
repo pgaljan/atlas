@@ -1,0 +1,324 @@
+{
+  "version": "1.0",
+  "userName": "Emma Chen",
+  "userGoals": "Leverage research, analytical, and communication skills developed through history education to contribute to a mission-driven organization in education, nonprofit, or public service sector.",
+  "exportDate": "2025-09-09T21:30:15.000Z",
+  "experiences": [
+    {
+      "role": "Research Assistant Intern",
+      "endDate": "2024-08",
+      "location": "Providence, RI",
+      "keySkills": [
+        "Digital Archive Management",
+        "Historical Research",
+        "Metadata Creation",
+        "Community Outreach",
+        "Database Management"
+      ],
+      "startDate": "2024-06",
+      "description": "Support digital archives initiative and provide research assistance to community members interested in local Providence history.",
+      "achievements": [
+        "Digitized and catalogued 300+ historical documents for the Providence History Digital Collection",
+        "Created metadata standards that improved search functionality by 40%",
+        "Assisted community members with genealogical and local history research requests"
+      ],
+      "competencies": [
+        "Research Methodology",
+        "Digital Humanities",
+        "Information Organization",
+        "Public History"
+      ],
+      "projectTypes": [
+        "Digital Archive Development",
+        "Community History Documentation",
+        "Research Support",
+        "Implementation"
+      ],
+      "technologies": [
+        {
+          "name": "Excel",
+          "type": "Core"
+        },
+        {
+          "name": "Google Workspace",
+          "type": "Core"
+        },
+        {
+          "name": "Dublin Core Metadata",
+          "type": "Core"
+        },
+        {
+          "name": "CONTENTdm",
+          "type": "Core"
+        },
+        {
+          "name": "Omeka S",
+          "type": "Peripheral"
+        },
+        {
+          "name": "JSTOR",
+          "type": "Peripheral"
+        }
+      ],
+      "organizationName": "Providence Public Library",
+      "externalStakeholders": [
+        "Local History Researchers",
+        "Community Members",
+        "Academic Researchers"
+      ],
+      "internalStakeholders": [
+        "Head Librarian",
+        "Digital Archives Team",
+        "Community Outreach Coordinator"
+      ]
+    },
+    {
+      "role": "Teaching Assistant",
+      "endDate": "2024-05",
+      "location": "Providence, RI",
+      "keySkills": [
+        "Academic Instruction",
+        "Student Mentoring",
+        "Essay Evaluation",
+        "Discussion Facilitation",
+        "Curriculum Support"
+      ],
+      "startDate": "2024-01",
+      "description": "Assist with undergraduate history course instruction, lead discussion sections, and provide academic support to students studying modern European history.",
+      "achievements": [
+        "Led weekly discussion sections for 60 students in 'Modern European History' course",
+        "Developed supplementary study materials that improved student test scores by 15%",
+        "Received 4.8/5.0 teaching evaluation rating from students"
+      ],
+      "competencies": [
+        "Educational Leadership",
+        "Communication",
+        "Critical Thinking Development",
+        "Academic Assessment"
+      ],
+      "projectTypes": [
+        "Course Instruction Support",
+        "Student Assessment",
+        "Academic Mentoring",
+        "Implementation"
+      ],
+      "technologies": [
+        {
+          "name": "Canvas LMS",
+          "type": "Core"
+        },
+        {
+          "name": "Zoom",
+          "type": "Core"
+        },
+        {
+          "name": "Google Workspace",
+          "type": "Core"
+        },
+        {
+          "name": "Turnitin",
+          "type": "Core"
+        },
+        {
+          "name": "PowerPoint",
+          "type": "Peripheral"
+        },
+        {
+          "name": "Word",
+          "type": "Peripheral"
+        }
+      ],
+      "organizationName": "Brown University History Department",
+      "externalStakeholders": [
+        "Student Families",
+        "Academic Advisors"
+      ],
+      "internalStakeholders": [
+        "Professor Johnson",
+        "Undergraduate Students",
+        "Department Administration"
+      ]
+    },
+    {
+      "role": "Museum Education Intern",
+      "endDate": "2023-12",
+      "location": "Providence, RI",
+      "keySkills": [
+        "Educational Program Development",
+        "Public Speaking",
+        "Museum Tour Leadership",
+        "K-12 Curriculum Design",
+        "Historical Interpretation"
+      ],
+      "startDate": "2023-09",
+      "description": "Design and deliver educational programs for K-12 students and community groups, focusing on Rhode Island's historical significance and industrial heritage.",
+      "achievements": [
+        "Developed interactive workshop on Rhode Island's industrial history for middle school students",
+        "Led 25+ museum tours for school groups and community organizations",
+        "Created educational materials that increased student engagement scores by 30%"
+      ],
+      "competencies": [
+        "Public History Education",
+        "Program Development",
+        "Youth Engagement",
+        "Historical Communication"
+      ],
+      "projectTypes": [
+        "Educational Program Development",
+        "Museum Tour Leadership",
+        "K-12 Outreach",
+        "Implementation"
+      ],
+      "technologies": [
+        {
+          "name": "Google Workspace",
+          "type": "Core"
+        },
+        {
+          "name": "Canva",
+          "type": "Core"
+        },
+        {
+          "name": "PowerPoint",
+          "type": "Core"
+        },
+        {
+          "name": "Excel",
+          "type": "Peripheral"
+        },
+        {
+          "name": "WordPress",
+          "type": "Peripheral"
+        }
+      ],
+      "organizationName": "Rhode Island Historical Society",
+      "externalStakeholders": [
+        "School Groups",
+        "Teachers",
+        "Museum Visitors",
+        "Student Groups"
+      ],
+      "internalStakeholders": [
+        "Education Director",
+        "Curator Team",
+        "Volunteer Coordinators"
+      ]
+    },
+    {
+      "role": "Shift Supervisor",
+      "endDate": "2024-05",
+      "location": "Providence, RI",
+      "keySkills": [
+        "Team Leadership",
+        "Customer Service",
+        "Inventory Management",
+        "Cash Handling",
+        "Training and Development"
+      ],
+      "startDate": "2022-09",
+      "description": "Lead shift operations for busy campus coffee shop, supervise staff, manage inventory, and ensure exceptional customer service during peak student hours.",
+      "achievements": [
+        "Supervised team of 8 part-time baristas and maintained 95% customer satisfaction rating",
+        "Implemented new inventory tracking system that reduced waste by 20%",
+        "Trained 12 new employees on customer service standards and coffee preparation techniques"
+      ],
+      "competencies": [
+        "Retail Operations",
+        "Team Management",
+        "Customer Relations",
+        "Problem Solving"
+      ],
+      "projectTypes": [
+        "Daily Operations Management",
+        "Staff Training Programs",
+        "Customer Service Enhancement",
+        "Implementation"
+      ],
+      "technologies": [
+        {
+          "name": "Square POS",
+          "type": "Core"
+        },
+        {
+          "name": "Excel",
+          "type": "Core"
+        },
+        {
+          "name": "Scheduling Software",
+          "type": "Core"
+        },
+        {
+          "name": "Inventory Management System",
+          "type": "Peripheral"
+        }
+      ],
+      "organizationName": "Campus Coffee Co.",
+      "externalStakeholders": [
+        "Students",
+        "Faculty",
+        "Local Customers"
+      ],
+      "internalStakeholders": [
+        "Store Manager",
+        "Barista Team",
+        "Assistant Managers"
+      ]
+    },
+    {
+      "role": "Camp Counselor",
+      "endDate": "2022-08",
+      "location": "East Greenwich, RI",
+      "keySkills": [
+        "Youth Leadership",
+        "Activity Planning",
+        "Safety Management",
+        "Conflict Resolution",
+        "Communication with Parents"
+      ],
+      "startDate": "2022-06",
+      "description": "Provide supervision, mentorship, and activity leadership for elementary-aged campers in summer day camp setting, ensuring safe and engaging experiences.",
+      "achievements": [
+        "Successfully supervised group of 15 children aged 8-12 with zero safety incidents",
+        "Organized weekly 'History Detective' activities that became the most popular camp program",
+        "Received 'Outstanding Counselor' recognition for creativity and leadership"
+      ],
+      "competencies": [
+        "Youth Development",
+        "Program Leadership",
+        "Safety Coordination",
+        "Family Communication"
+      ],
+      "projectTypes": [
+        "Youth Program Delivery",
+        "Activity Coordination",
+        "Safety Management",
+        "Implementation"
+      ],
+      "technologies": [
+        {
+          "name": "CampMinder",
+          "type": "Core"
+        },
+        {
+          "name": "Google Workspace",
+          "type": "Peripheral"
+        },
+        {
+          "name": "Basic First Aid Apps",
+          "type": "Peripheral"
+        }
+      ],
+      "organizationName": "Riverside Summer Camp",
+      "externalStakeholders": [
+        "Campers (ages 8-12)",
+        "Parent Families",
+        "Local Community Partners"
+      ],
+      "internalStakeholders": [
+        "Camp Director",
+        "Activity Coordinators",
+        "Senior Counselors"
+      ]
+    }
+  ]
+}
