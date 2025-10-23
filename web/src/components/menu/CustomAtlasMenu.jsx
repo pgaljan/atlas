@@ -1,7 +1,7 @@
 import Cookies from 'js-cookie';
 import { useEffect, useRef, useState } from 'react';
 import Avatar from 'react-avatar';
-import { FiKey, FiLogOut, FiSettings } from 'react-icons/fi';
+import { FiLogOut, FiSettings } from 'react-icons/fi';
 import { IoKeyOutline } from 'react-icons/io5';
 import { PiStudentBold } from 'react-icons/pi';
 import { useNavigate } from 'react-router-dom';
@@ -13,6 +13,7 @@ const CustomAtlasMenu = ({ handleLogout }) => {
 
   const displayName = Cookies.get('displayName') || 'User';
   const email = Cookies.get('atlas_email') || 'user@example.com';
+  const username = Cookies.get('atlas_username') || 'username';
 
   // Close on outside click
   useEffect(() => {
@@ -34,11 +35,14 @@ const CustomAtlasMenu = ({ handleLogout }) => {
 
       {open && (
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-50 animate-fade-in">
-          <div className="px-4 py-3 border-b border-gray-100">
+          {/* User info */}
+          <div className="px-4 py-3 border-b border-gray-100 space-y-0.5">
             <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+            <p className="text-xs text-gray-600 truncate">username: {username}</p>
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
 
+          {/* Menu items */}
           <div className="p-1 space-y-1">
             <button
               onClick={() => {
@@ -61,6 +65,7 @@ const CustomAtlasMenu = ({ handleLogout }) => {
               <IoKeyOutline className="text-base" />
               API Access
             </button>
+
             <button
               onClick={() => {
                 navigate('/learner/dashboard');

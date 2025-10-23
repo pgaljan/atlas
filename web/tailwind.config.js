@@ -8,6 +8,8 @@ module.exports = {
         custom: {
           main: "var(--primary-color)",
           secondary: "var(--secondary-color)",
+          blue: "#0066CC",
+         neutralMuteText: "#999999",
           text: {
             DEFAULT: "#393939",
             white: "#FDFCFC",

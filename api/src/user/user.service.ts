@@ -23,6 +23,62 @@ export class UserService {
   private bigintReplacer(_key: string, value: any): any {
     return typeof value === 'bigint' ? value.toString() : value;
   }
+  private buildRecordsByType(records: any[]): Record<string, any> {
+    const buckets: Record<
+      string,
+      {
+        total: number;
+        rendererCounts: Record<string, number>;
+        hasRenderer: boolean;
+      }
+    > = {};
+
+    for (const r of records || []) {
+      const editorRaw = r?.editorType;
+      const editor = (
+        typeof editorRaw === 'string' && editorRaw.trim() !== ''
+          ? editorRaw.trim()
+          : 'unknown'
+      ).toString();
+
+      const rendererRaw = r?.renderer;
+      let renderer: string | null = null;
+      if (rendererRaw !== undefined && rendererRaw !== null) {
+        const rr = String(rendererRaw).trim();
+        if (rr !== '' && rr.toLowerCase() !== 'none') {
+          renderer = rr;
+        } else {
+          renderer = null;
+        }
+      } else {
+        renderer = null;
+      }
+
+      if (!buckets[editor]) {
+        buckets[editor] = { total: 0, rendererCounts: {}, hasRenderer: false };
+      }
+
+      buckets[editor].total = (buckets[editor].total || 0) + 1;
+
+      if (renderer !== null) {
+        buckets[editor].hasRenderer = true;
+        buckets[editor].rendererCounts[renderer] =
+          (buckets[editor].rendererCounts[renderer] || 0) + 1;
+      }
+    }
+
+    const out: Record<string, any> = {};
+    for (const [editor, meta] of Object.entries(buckets)) {
+      if (meta.hasRenderer) {
+        out[editor] = { total: meta.total, ...meta.rendererCounts };
+      } else {
+        out[editor] = meta.total;
+      }
+    }
+
+    return out;
+  }
+
   async getAllUsers() {
     try {
       const users = await this.prisma.user.findMany({
@@ -194,7 +250,7 @@ export class UserService {
         this.prisma.backup.deleteMany({ where: { userId: id } }),
         this.prisma.attachment.deleteMany({ where: { userId: id } }),
         this.prisma.deletionLog.deleteMany({ where: { userId: id } }),
-
+        this.prisma.storageEvent.deleteMany({ where: { userId: id } }),
         // 3) finally delete the user
         this.prisma.user.delete({ where: { id } }),
       ]);
@@ -617,13 +673,8 @@ export class UserService {
         const userRecords = records.filter((r) =>
           r.Element?.some((e) => e.structure?.ownerId === user.id),
         );
-        const recordsByType = userRecords.reduce(
-          (acc, r) => {
-            acc[r.editorType] = (acc[r.editorType] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
+
+        const recordsByType = this.buildRecordsByType(userRecords);
 
         const tagCount = elements.reduce((sum: number, el) => {
           if (!el || !el.id) return sum;
@@ -637,7 +688,6 @@ export class UserService {
 
           if (credited !== user.id) return sum;
 
-          // parse tagsVal robustly
           if (Array.isArray(tagsVal)) return sum + tagsVal.length;
           if (typeof tagsVal === 'object') {
             try {
@@ -1084,13 +1134,8 @@ export class UserService {
             );
           }),
         );
-        const recordsByType = dayRecords.reduce(
-          (acc: any, r: any) => {
-            acc[r.editorType] = (acc[r.editorType] || 0) + 1;
-            return acc;
-          },
-          {} as Record<string, number>,
-        );
+
+        const recordsByType = this.buildRecordsByType(dayRecords);
 
         const dayTagCount = Object.values(elementsById).reduce(
           (sum: number, el: any) => {

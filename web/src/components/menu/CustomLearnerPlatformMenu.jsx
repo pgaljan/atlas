@@ -14,8 +14,9 @@ const CustomLearnerPlatformMenu = () => {
   const menuRef = useRef();
   const dispatch = useDispatch();
 
-  const displayName = Cookies.get('atlas_username') || 'User';
+  const displayName = Cookies.get('displayName') || 'User';
   const email = Cookies.get('atlas_email') || 'user@example.com';
+  const username = Cookies.get('atlas_username') || 'username';
 
   useEffect(() => {
     const handleClickOutside = (e) => {
@@ -57,6 +58,7 @@ const CustomLearnerPlatformMenu = () => {
         <div className="absolute right-0 mt-2 w-64 bg-white rounded-xl shadow-lg border border-gray-100 z-50 animate-fade-in">
           <div className="px-4 py-3 border-b border-gray-100">
             <p className="text-sm font-semibold text-gray-900 truncate">{displayName}</p>
+            <p className="text-xs text-gray-600 truncate">username: {username}</p>
             <p className="text-xs text-gray-500 truncate">{email}</p>
           </div>
 

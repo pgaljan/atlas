@@ -228,18 +228,24 @@ const Syncfusion = () => {
 
   useEffect(() => {
     const handleAutoSave = async () => {
-      const containerElement = diagramRef.current?.element
-      const svgElement = containerElement?.querySelector("svg")
+      const containerElement = diagramRef.current?.element;
+      const svgElement = containerElement?.querySelector('#orgDiagram_diagramLayer_svg');
 
       if (svgElement) {
-        await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch)
+        try {
+          await useCaptureAndUploadSnapshot(svgElement, structureId, dispatch);
+          console.log(' Snapshot function executed');
+        } catch (err) {
+          console.error(' Snapshot error:', err);
+        }
+      } else {
+        console.warn(' No SVG element found yet');
       }
-    }
+    };
 
-    const debounceTimer = setTimeout(handleAutoSave, 2000)
-
-    return () => clearTimeout(debounceTimer)
-  }, [structureId])
+    const debounceTimer = setTimeout(handleAutoSave, 2000);
+    return () => clearTimeout(debounceTimer);
+  }, [structureId]);
 
   useEffect(() => {
     const handleClickOutside = event => {

@@ -1,32 +1,33 @@
-import cogoToast from "@successtar/cogo-toast";
-import { useState } from "react";
-import { useDispatch } from "react-redux";
-import { Link } from "react-router-dom";
-import OnboardingHeader from "../../../components/common/OnboardingHeader";
-import { forgotPassword } from "../../../redux/slices/users";
+import cogoToast from '@successtar/cogo-toast';
+import { useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { Link } from 'react-router-dom';
+import OnboardingHeader from '../../../components/common/OnboardingHeader';
+import { forgotPassword } from '../../../redux/slices/users';
 
 const ForgotPassword = () => {
   const dispatch = useDispatch();
-  const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [email, setEmail] = useState('');
+  const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!email) return setError("Email is required");
+    if (!email) return setError('Email is required');
     if (!/\S+@\S+\.\S+/.test(email)) {
-      return setError("Please enter a valid email");
+      return setError('Please enter a valid email');
     }
 
-    setError("");
+    setError('');
     setIsSubmitting(true);
 
     try {
-      await dispatch(forgotPassword(email)).unwrap();
-      cogoToast.success("Reset link sent! Check your email.");
+      const normalizedEmail = email.trim().toLowerCase();
+      await dispatch(forgotPassword(normalizedEmail)).unwrap();
+      cogoToast.success('Reset link sent! Check your email.');
     } catch (err) {
-      cogoToast.error(err?.message || "Something went wrong");
+      cogoToast.error(err?.message || 'Something went wrong');
     } finally {
       setIsSubmitting(false);
     }
@@ -65,7 +66,7 @@ const ForgotPassword = () => {
               className="w-full bg-custom-main text-white py-2 cursor-pointer rounded-lg mt-2 hover:bg-custom-main transition duration-200 ease-in-out"
               disabled={isSubmitting}
             >
-              {isSubmitting ? "Sending..." : "Send Reset Link"}
+              {isSubmitting ? 'Sending...' : 'Send Reset Link'}
             </button>
           </form>
 

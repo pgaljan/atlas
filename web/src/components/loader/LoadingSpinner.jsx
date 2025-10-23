@@ -1,4 +1,5 @@
 import { FiLoader } from 'react-icons/fi';
+import React from 'react';
 
 const LoadingSpinner = ({
   size = 12,
@@ -22,7 +23,7 @@ const LoadingSpinner = ({
   };
 
   const SpinnerContent = (
-    <div className="flex flex-col items-center  justify-center text-center space-y-3">
+    <div className="flex flex-col items-center justify-center text-center space-y-3">
       <FiLoader className={`animate-spin ${sizeClasses[size]} ${color} ${className}`} />
       {message && <p className={messageClass}>{message}</p>}
     </div>
@@ -51,9 +52,9 @@ const LoadingSpinner = ({
   if (mode === 'fullscreen') {
     return (
       <div
-        className={`fixed inset-0 flex items-center justify-center z-50 bg-white bg-opacity-50 backdrop-blur-sm ${wrapperClassName}`}
+        className={`fixed inset-0 flex flex-col items-center justify-center z-50 bg-white bg-opacity-70 backdrop-blur-sm ${wrapperClassName}`}
       >
-        <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-custom-main border-t-transparent" />
         {message && <p className={`mt-3 ${messageClass}`}>{message}</p>}
       </div>
     );

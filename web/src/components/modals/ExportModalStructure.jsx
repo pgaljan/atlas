@@ -182,53 +182,62 @@ const ExportModalStructure = ({
       // Handle other formats (HTML, PDF, DOC)
       for (const format of formats) {
         if (format === "HTML") {
-          exportFns.push(() =>
-            exportAsHtml(
-              treeData,
-              includeWbs,
-              colorStrategy,
-              isMarkmap,
-              assemblyRef.current
-            )
-          )
-        }
+  exportFns.push(() =>
+    exportAsHtml(
+      treeDataWithWbs,
+      includeWbs,
+      colorStrategy,
+      isMarkmap,
+      assemblyRef.current
+    )
+  )
+}
 
-        if (format === "PDF") {
-          exportFns.push(() =>
-            assemblyRef.current === "Single"
-              ? exportAsSinglePdf(
-                  treeData,
-                  includeWbs,
-                  includeTags,
-                  svgContent,
-                  colorStrategy
-                )
-              : exportAsPdf(
-                  treeData,
-                  includeWbs,
-                  includeTags,
-                  colorStrategy,
-                  isMarkmap,
-                  svgContent
-                )
-          )
-        }
+if (format === "PDF") {
+  exportFns.push(() =>
+    assemblyRef.current === "Single"
+      ? exportAsSinglePdf(
+          treeDataWithWbs,
+          includeWbs,
+          includeTags,
+          svgContent,
+          colorStrategy
+        )
+      : exportAsPdf(
+          treeDataWithWbs,
+          includeWbs,
+          includeTags,
+          colorStrategy,
+          isMarkmap,
+          svgContent
+        )
+  )
+}
 
-        if (format === "DOC") {
-          exportFns.push(() =>
-            assemblyRef.current === "Single"
-              ? exportAllAsSingleDoc(treeData, includeWbs, includeTags)
-              : exportAsDoc(
-                  treeData,
-                  showWbs,
-                  includeWbs,
-                  includeTags,
-                  colorStrategy,
-                  isMarkmap,
-                  assemblyRef.current
-                )
-          )
-        }
+if (format === "DOC") {
+  exportFns.push(() =>
+    assemblyRef.current === "Single"
+      ? exportAllAsSingleDoc(
+          treeDataWithWbs,
+          showWbs,
+          includeWbs,
+          includeTags,
+          colorStrategy,
+          isMarkmap,
+          assemblyRef.current
+        )
+      : exportAsDoc(
+          treeDataWithWbs,
+          showWbs,
+          includeWbs,
+          includeTags,
+          colorStrategy,
+          isMarkmap,
+          assemblyRef.current
+        )
+  )
+}
+
       }
 
       for (const fn of exportFns) {

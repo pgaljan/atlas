@@ -34,7 +34,31 @@ export class AuthService {
   private getTokenKey(user: { isAdmin: boolean }): string {
     return user.isAdmin ? this.TOKEN_KEYS.ADMIN : this.TOKEN_KEYS.USER;
   }
-  // Audit log method
+
+  private sanitizeBaseUsername(input: string) {
+    if (!input) return '';
+    let base = input
+      .toLowerCase()
+      .replace(/[^a-z0-9._-]/g, '_')
+      .replace(/^[._-]+|[._-]+$/g, '');
+    if (!base) base = `user${Math.floor(1000 + Math.random() * 9000)}`;
+    return base;
+  }
+
+  private async ensureUniqueUsername(prisma, base: string) {
+    let candidate = base;
+    let counter = 0;
+    while (counter < 100) {
+      const existing = await prisma.user.findUnique({
+        where: { username: candidate },
+      });
+      if (!existing) return candidate;
+      counter += 1;
+      candidate = `${base}${counter}`;
+    }
+    return `${base}${Date.now().toString().slice(-4)}`;
+  }
+
   private async logAudit(
     action: string,
     element: string,
@@ -53,27 +77,53 @@ export class AuthService {
     });
   }
 
-  // AuthService
   async register(registerDto: RegisterDto) {
-    const { displayName, email, password, referralCode } = registerDto;
+    const {
+      username: requestedUsername,
+      displayName,
+      email,
+      password,
+      referralCode,
+    } = registerDto;
 
     try {
       return await this.prismaService.$transaction(async (prisma) => {
-        const existingUser = await prisma.user.findUnique({ where: { email } });
-        if (existingUser) {
+        const existingUserByEmail = await prisma.user.findUnique({
+          where: { email },
+        });
+        if (existingUserByEmail) {
           throw new ConflictException('User with this email already exists');
         }
 
-        let modifiedUsername = displayName;
-        if (displayName.includes(' ')) {
-          const parts = displayName.split(' ');
-          const baseUsername = parts
-            .map((word, index) =>
-              index === parts.length - 1 ? word : word.toLowerCase(),
-            )
-            .join('_');
-          const suffix = new Date().getFullYear() - 2000;
-          modifiedUsername = `${baseUsername}${suffix}`;
+        let finalUsername = '';
+        if (requestedUsername && requestedUsername.trim()) {
+          const candidate = this.sanitizeBaseUsername(requestedUsername.trim());
+          const existingByUsername = await prisma.user.findUnique({
+            where: { username: candidate },
+          });
+          if (existingByUsername) {
+            throw new ConflictException('Username already exists');
+          }
+          finalUsername = candidate;
+        } else if (displayName && displayName.trim()) {
+          let baseFromDisplay = displayName.trim();
+          if (baseFromDisplay.includes(' ')) {
+            const parts = baseFromDisplay.split(/\s+/);
+            const baseUsername = parts
+              .map((word, index) =>
+                index === parts.length - 1
+                  ? word.toLowerCase()
+                  : word.toLowerCase(),
+              )
+              .join('_');
+            baseFromDisplay = baseUsername;
+          }
+          const sanitized = this.sanitizeBaseUsername(baseFromDisplay);
+          finalUsername = await this.ensureUniqueUsername(prisma, sanitized);
+        } else {
+          const fromEmail = generateFromEmail(email, 5);
+          const sanitized = this.sanitizeBaseUsername(fromEmail);
+          finalUsername = await this.ensureUniqueUsername(prisma, sanitized);
         }
 
         const hashedPassword = await bcrypt.hash(password, 10);
@@ -87,12 +137,12 @@ export class AuthService {
         }
 
         const newWorkspace = await prisma.workspace.create({
-          data: { name: `${modifiedUsername}'s Workspace` },
+          data: { name: `${finalUsername}'s Workspace` },
         });
 
         const newUser = await prisma.user.create({
           data: {
-            username: modifiedUsername,
+            username: finalUsername,
             displayName,
             email,
             password: hashedPassword,
@@ -103,7 +153,7 @@ export class AuthService {
 
         await prisma.team.create({
           data: {
-            name: `${modifiedUsername}'s Team`,
+            name: `${finalUsername}'s Team`,
             ownerId: newUser.id,
             workspaceId: newWorkspace.id,
           },
@@ -131,7 +181,7 @@ export class AuthService {
         });
 
         await this.logAudit('User Registration', 'User', newUser.id, {
-          username: modifiedUsername,
+          username: finalUsername,
           email,
         });
 
@@ -259,7 +309,7 @@ export class AuthService {
     }
   }
 
-  // Login method
+  // Login method (unchanged)
   async login(user: any) {
     try {
       const payload = { email: user.email, sub: user.id };
@@ -319,7 +369,6 @@ export class AuthService {
     }
   }
 
-  // Reset Password method
   async resetPassword(resetPasswordDto: ResetPasswordDto) {
     const { email, newPassword } = resetPasswordDto;
 
@@ -369,7 +418,6 @@ export class AuthService {
         },
       });
 
-      // Log the audit action for password reset
       await this.logAudit('Password Reset', 'User', user.id, {
         email: user.email,
       });
@@ -391,11 +439,9 @@ export class AuthService {
     }
   }
 
-  // Logout method
   async logout(user: any) {
     const tokenKey = this.getTokenKey(user);
     try {
-      // Find and delete the access token for the user
       const existingToken = await this.prismaService.token.findUnique({
         where: {
           userId_key: {
@@ -406,20 +452,18 @@ export class AuthService {
       });
 
       if (existingToken) {
-        // Mark the token as expired or delete it from the database
         await this.prismaService.token.update({
           where: { id: existingToken.id },
           data: { expiresAt: new Date() },
         });
       }
 
-      // Optionally, you can also log the audit for logout
       await this.logAudit(
         'User Logout',
         'User',
-        user.id, // elementId
+        user.id,
         { email: user.email },
-        user.id, // userId
+        user.id,
       );
     } catch (error) {
       throw new InternalServerErrorException(
@@ -438,17 +482,26 @@ export class AuthService {
     });
 
     if (!existingUser) {
+      const profileName = user.name || user.displayName || '';
+      let base = profileName
+        ? this.sanitizeBaseUsername(profileName)
+        : this.sanitizeBaseUsername(generateFromEmail(user.email, 5));
+      const uniqueUsername = await this.ensureUniqueUsername(
+        this.prismaService,
+        base,
+      );
+
       existingUser = await this.prismaService.user.create({
         data: {
           email: user.email,
-          username: generateFromEmail(user.email, 5),
-          displayName: user.name || user.displayName,
+          username: uniqueUsername,
+          displayName: profileName || '',
           password: '',
           roleId: '',
         },
       });
 
-      await this.logAudit('Google Signup', 'User', existingUser.id, {
+      await this.logAudit('OAuth Signup', 'User', existingUser.id, {
         email: user.email,
       });
     }
@@ -480,20 +533,15 @@ export class AuthService {
           where: { name: { equals: defaultRoleName, mode: 'insensitive' } },
         });
 
-        // Ensure we have the displayName or default to displayName if it's missing
-        const displayName = user.name || user.displayName;
+        const displayName = user.name || user.displayName || 'User';
 
-        let modifiedUsername = displayName;
-        if (displayName && displayName.includes(' ')) {
-          const parts = displayName.split(' ');
-          const baseUsername = parts
-            .map((word, index) =>
-              index === parts.length - 1 ? word : word.toLowerCase(),
-            )
-            .join('_');
-          const suffix = new Date().getFullYear() - 2000;
-          modifiedUsername = `${baseUsername}${suffix}`;
-        }
+        const baseUsername = this.sanitizeBaseUsername(
+          displayName || generateFromEmail(user.email, 5),
+        );
+        const uniqueUsername = await this.ensureUniqueUsername(
+          this.prismaService,
+          baseUsername,
+        );
 
         if (!role) {
           throw new ConflictException(
@@ -503,15 +551,14 @@ export class AuthService {
 
         const newWorkspace = await this.prismaService.workspace.create({
           data: {
-            name: `${modifiedUsername}'s Workspace`,
+            name: `${uniqueUsername}'s Workspace`,
           },
         });
 
-        // Create new user entry
         existingUser = await this.prismaService.user.create({
           data: {
             email: user.email,
-            username: generateFromEmail(user.email, 5),
+            username: uniqueUsername,
             displayName: displayName,
             password: '',
             roleId: role.id,
@@ -519,7 +566,6 @@ export class AuthService {
           },
         });
 
-        // Assign a default payment plan (e.g., "Personal")
         const freePlan: Plan = await this.prismaService.plan.findFirst({
           where: { name: 'Personal' },
         });
@@ -550,7 +596,6 @@ export class AuthService {
       const payload = { email: existingUser.email, sub: existingUser.id };
       const accessToken = this.jwtService.sign(payload);
 
-      // Get frontend URL from ConfigService
       const frontendUrl = this.configService.get<string>('FRONTEND_URL');
       if (!frontendUrl) {
         throw new InternalServerErrorException(
@@ -558,7 +603,6 @@ export class AuthService {
         );
       }
 
-      // ✅ Convert Hex Key to a 32-byte Buffer
       const secretKeyHex = process.env.ENCRYPTION_SECRET;
       if (!secretKeyHex || secretKeyHex.length !== 64) {
         throw new InternalServerErrorException(
@@ -575,11 +619,9 @@ export class AuthService {
         workspaceId: existingUser.defaultWorkspaceId,
       });
 
-      // Generate IV
       const iv = crypto.randomBytes(16);
       const cipher = crypto.createCipheriv('aes-256-cbc', secretKey, iv);
 
-      // Encrypt and encode in base64
       let encryptedData = cipher.update(userData, 'utf-8', 'base64');
       encryptedData += cipher.final('base64');
 
@@ -617,40 +659,30 @@ export class AuthService {
           );
         }
 
-        const tempUsername = generateFromEmail(user.email, 5);
+        const profileName = user.name || user.displayName || 'User';
+        const baseUsername = this.sanitizeBaseUsername(
+          profileName || generateFromEmail(user.email, 5),
+        );
+        const uniqueUsername = await this.ensureUniqueUsername(
+          this.prismaService,
+          baseUsername,
+        );
 
         const newWorkspace = await this.prismaService.workspace.create({
           data: {
-            name: `${user.name}'s Workspace`,
+            name: `${uniqueUsername}'s Workspace`,
           },
         });
 
         existingUser = await this.prismaService.user.create({
           data: {
             email: user.email,
-            username: tempUsername,
-            displayName: user.name,
+            username: uniqueUsername,
+            displayName: profileName,
             password: '',
             roleId: role.id,
             defaultWorkspaceId: newWorkspace.id,
           },
-        });
-
-        let modifiedUsername = existingUser.displayName;
-        if (existingUser.displayName.includes(' ')) {
-          const parts = existingUser.displayName.split(' ');
-          const baseUsername = parts
-            .map((word, index) =>
-              index === parts.length - 1 ? word : word.toLowerCase(),
-            )
-            .join('_');
-          const suffix = new Date().getFullYear() - 2000;
-          modifiedUsername = `${baseUsername}${suffix}`;
-        }
-
-        await this.prismaService.workspace.update({
-          where: { id: newWorkspace.id },
-          data: { name: `${modifiedUsername}'s Workspace` },
         });
 
         const freePlan = await this.prismaService.plan.findFirst({

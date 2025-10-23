@@ -1,3 +1,4 @@
+// src/App.jsx
 import { registerLicense } from '@syncfusion/ej2-base';
 registerLicense(import.meta.env.VITE_SYNCFUSION_LICENSE_KEY);
 
@@ -10,6 +11,9 @@ import { fetchAppSettings } from './redux/slices/app-settings';
 // Layouts
 import Layout from './components/layout';
 import AdminLayout from './components/admin/admin-layout';
+import LearnerPlatformLayout from './components/learner-platform/learner-layout/LearnerPlatformLayout';
+import CleanSheetContentLayout from './components/cleansheet/layout-cleansheet/content-library-layout/CleanSheetContentLayout';
+import CleanSheetLayout from './components/cleansheet/layout-cleansheet';
 
 // Route wrappers
 import PublicRoute from './routes/PublicRoute';
@@ -18,9 +22,21 @@ import AdminPrivateRoute from './routes/AdminPrivateRoute';
 import APIKeyPrivateRoute from './routes/APIKeyPrivateRoute';
 import LearnerPrivateRoutes from './routes/LearnerPrivateRoutes';
 import { setFaviconWithFallback } from './utils/faviconFallback';
-import LearnerPlatformLayout from './components/learner-platform/learner-layout/LearnerPlatformLayout';
+import CleansheetPrivateRoute from './routes/CleanSheetPrivateRoute';
+import ExperienceTriggerLayout from './components/cleansheet/layout-cleansheet/experience-trigger-layout/ExperienceTriggerLayout';
+import CleansheetCanvasLayout from './components/cleansheet/layout-cleansheet/cleansheet-canvas-layout/CleanSheetCanvasLayout';
+import CleanSheetCanvas from './containers/common/cleansheet/cleansheet-canvas';
 
-// Lazy imports
+// --- CleanSheet ---
+const CleanSheetPlatform = lazy(() => import('./containers/common/cleansheet/cleansheet-platform'));
+
+const ContentLibrary = lazy(
+  () => import('./containers/common/cleansheet/cleansheet-content-library'),
+);
+const ExperienceTrigger = lazy(
+  () => import('./containers/common/cleansheet/cleansheet-experience-trigger'),
+);
+// Lazy imports (rest of app)
 const NotFound = lazy(() => import('./components/404-notfound/NotFound'));
 const ComingSoon = lazy(() => import('./components/comming-soon'));
 const PremiumModal = lazy(() => import('./components/modals/PremiumModal'));
@@ -150,6 +166,7 @@ const apiManagementRoutes = [
   { path: '/api-management/security/policies', element: <Policies /> },
   { path: '/api-management/security/certificates', element: <Certificates /> },
 ];
+
 const learnerPlatformRoutes = [
   { path: '/learner/dashboard', element: <LearnerMyPath /> },
   { path: '/learner/my-canvas', element: <LearnerCanvas /> },
@@ -236,18 +253,22 @@ const App = () => {
         }
       >
         <Routes>
+          {/*  Public Routes */}
           {publicRoutes?.map(({ path, element }) => (
             <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
           ))}
 
+          {/*  Callback Routes */}
           {callbackRoutes?.map(({ path, element }) => (
             <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
           ))}
+
+          {/*  Subscription Routes */}
           {subscriptionRoutes?.map(({ path, element }) => (
             <Route key={path} path={path} element={<PublicRoute>{element}</PublicRoute>} />
           ))}
 
-          {/* User portal routes nested under Layout and protected by PrivateRoute */}
+          {/*  User Portal (protected, inside main Layout) */}
           <Route
             element={
               <PrivateRoute>
@@ -260,7 +281,7 @@ const App = () => {
             ))}
           </Route>
 
-          {/* Admin portal routes nested under AdminLayout and protected by AdminPrivateRoute */}
+          {/*  Admin Portal */}
           <Route
             element={
               <AdminPrivateRoute>
@@ -273,13 +294,14 @@ const App = () => {
             ))}
           </Route>
 
-          {/* API management routes (no sidebar layout, just APIKeyPrivateRoute wrapper) */}
+          {/*  API Management */}
           <Route element={<APIKeyPrivateRoute />}>
             {apiManagementRoutes?.map(({ path, element }) => (
               <Route key={path} path={path} element={element} />
             ))}
           </Route>
 
+          {/*  Learner Platform */}
           <Route
             element={
               <LearnerPrivateRoutes>
@@ -292,11 +314,47 @@ const App = () => {
             ))}
           </Route>
 
-          {/* Learner platform routes */}
-          <Route element={<LearnerPrivateRoutes />}>
-            {learnerPlatformRoutes?.map(({ path, element }) => (
-              <Route key={path} path={path} element={element} />
-            ))}
+          {/*  CleanSheet — base dashboard */}
+          <Route
+            path="/cleansheet"
+            element={
+              <CleansheetPrivateRoute>
+                <CleanSheetLayout />
+              </CleansheetPrivateRoute>
+            }
+          >
+            <Route index element={<CleanSheetPlatform />} />
+          </Route>
+
+          <Route
+            path="/cleansheet/content-library"
+            element={
+              <CleansheetPrivateRoute>
+                <CleanSheetContentLayout />
+              </CleansheetPrivateRoute>
+            }
+          >
+            <Route index element={<ContentLibrary />} />
+          </Route>
+          <Route
+            path="/cleansheet/experience-trigger"
+            element={
+              <CleansheetPrivateRoute>
+                <ExperienceTriggerLayout />
+              </CleansheetPrivateRoute>
+            }
+          >
+            <Route index element={<ExperienceTrigger />} />
+          </Route>
+          <Route
+            path="/cleansheet/canvas"
+            element={
+              <CleansheetPrivateRoute>
+                <CleansheetCanvasLayout />
+              </CleansheetPrivateRoute>
+            }
+          >
+            <Route index element={<CleanSheetCanvas />} />
           </Route>
         </Routes>
 

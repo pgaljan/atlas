@@ -13,6 +13,7 @@ import {
   updateShareRole,
 } from '../../redux/slices/structure-sharing';
 import { PERMISSION_LEVELS, PERMISSION_CONFIG } from '../../types/permissions';
+import { fetchAllUsers } from '../../redux/slices/users';
 
 const isValidUsername = (u) => /^[a-zA-Z0-9._-]{3,30}$/.test(u?.trim());
 
@@ -33,12 +34,30 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
     shares = [],
     loading,
   } = useSelector((state) => state.structureShares || {});
-
+  const allUsersFromStore = useSelector(
+    (state) => state.user?.users || state.user?.usersList || state.user?.all || [],
+  );
   const displayCollaborators = Array.isArray(collaborators) ? collaborators : [];
 
-  // Fetch shares, collaborators, and pending invitations when modal opens
+  const isRegisteredUsername = useCallback(
+    (u) => {
+      if (!Array.isArray(allUsersFromStore) || allUsersFromStore.length === 0) return null;
+      const trimmed = (u || '').trim().toLowerCase();
+      return allUsersFromStore.some((usr) => {
+        if (!usr) return false;
+        if (typeof usr === 'string') return usr.toLowerCase() === trimmed;
+        const cand = (usr?.username || usr?.userName || (usr.user && usr.user.username) || '')
+          .toString()
+          .toLowerCase();
+        return cand === trimmed;
+      });
+    },
+    [allUsersFromStore],
+  );
+
   useEffect(() => {
     if (isOpen && structureId) {
+      dispatch(fetchAllUsers());
       dispatch(fetchSharesForStructure(structureId));
       dispatch(fetchCollaborators(structureId));
       dispatch(fetchPendingInvitations(structureId));
@@ -146,18 +165,39 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
   );
 
   const handleAddUsername = (e) => {
-    if (e?.key === 'Enter' && isValidUsername(username)) {
-      const duplicateCheck = checkDuplicateUsername(username);
+    if (e?.key !== 'Enter') return;
 
-      if (duplicateCheck.isDuplicate) {
-        cogoToast.warn(duplicateCheck.message);
-        setUsername('');
-        return;
-      }
-
-      setSelectedUsernames((prev) => [...prev, username.trim().toLowerCase()]);
-      setUsername('');
+    const raw = username?.trim();
+    if (!isValidUsername(raw)) {
+      cogoToast.warn('Invalid username. Use 3–30 chars: letters, numbers, . _ -');
+      return;
     }
+
+    const trimmed = raw.toLowerCase();
+
+    const duplicateCheck = checkDuplicateUsername(trimmed);
+    if (duplicateCheck.isDuplicate) {
+      cogoToast.warn(duplicateCheck.message);
+      setUsername('');
+      return;
+    }
+
+    const registered = isRegisteredUsername(trimmed);
+
+    if (registered === false) {
+      cogoToast.error('Invitee must be a registered user');
+      setUsername('');
+      return;
+    }
+
+    if (registered === null) {
+      console.warn(
+        'No global users list found in Redux (state.users.list or similar). Cannot validate registration on Enter — falling back to default behavior.',
+      );
+    }
+
+    setSelectedUsernames((prev) => [...prev, trimmed]);
+    setUsername('');
   };
 
   const handleCancelInvitation = async (invitationId) => {
@@ -337,7 +377,7 @@ const ShareModal = ({ isOpen, onClose, structureId }) => {
                 <div className="flex items-center mt-2 space-x-2">
                   <input
                     type="text"
-                    placeholder="Add people by username and press Enter (e.g. jdoe)"
+                    placeholder="Add people by username and press Enter (e.g. jdoe or john_doe25)"
                     value={username}
                     onChange={(e) => setUsername(e.target.value)}
                     onKeyDown={handleAddUsername}
