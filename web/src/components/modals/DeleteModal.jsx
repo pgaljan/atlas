@@ -1,18 +1,22 @@
+import React from 'react';
+import { createPortal } from 'react-dom';
+
 const DeleteModal = ({ isOpen, onClose, onConfirm, title, loading }) => {
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-lg p-6 w-80">
+  const node = (
+    <div className="fixed inset-0 bg-gray-800 bg-opacity-50 flex items-center justify-center z-[9999] p-4">
+      <div className="bg-white rounded-lg shadow-lg p-6 w-96 max-w-full">
         <h2 className="text-lg font-bold text-gray-800">Delete {title}</h2>
         <p className="text-gray-600 mt-2">
-          Are you sure you want to delete the <strong>{title}</strong>? This
-          action cannot be undone.
+          Are you sure you want to delete the <strong>{title}</strong>? This action cannot be
+          undone.
         </p>
         <div className="mt-4 flex justify-end gap-4">
           <button
             className="py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg border border-gray-200 bg-white text-gray-800 shadow-sm hover:bg-gray-50 focus:outline-none focus:bg-gray-50"
             onClick={onClose}
+            disabled={loading}
           >
             Cancel
           </button>
@@ -20,17 +24,19 @@ const DeleteModal = ({ isOpen, onClose, onConfirm, title, loading }) => {
             disabled={loading}
             className={`py-3 px-4 inline-flex items-center gap-x-2 text-sm font-medium rounded-lg ${
               loading
-                ? "bg-gray-300 cursor-not-allowed"
-                : "bg-custom-main text-white hover:bg-custom-secondary"
+                ? 'bg-gray-300 cursor-not-allowed'
+                : 'bg-custom-main text-white hover:bg-custom-secondary'
             }`}
             onClick={onConfirm}
           >
-            {loading ? "Deleting..." : "Yes, Delete"}
+            {loading ? 'Deleting...' : 'Yes, Delete'}
           </button>
         </div>
       </div>
     </div>
   );
+
+  return typeof document !== 'undefined' ? createPortal(node, document.body) : null;
 };
 
 export default DeleteModal;

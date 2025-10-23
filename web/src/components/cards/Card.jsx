@@ -109,7 +109,7 @@ const Card = ({
                   {permission !== 'owner' ? (
                     <>
                       <p className="text-xs text-gray-500 truncate">
-                        Shared by {owner?.displayName || 'Unknown'}
+                        Shared by {owner?.displayName || owner?.username || "Unknown"}
                       </p>
                       {owner?.email && (
                         <p className="text-xs text-gray-400 truncate italic" title={owner.email}>

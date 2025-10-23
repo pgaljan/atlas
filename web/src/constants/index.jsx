@@ -978,6 +978,7 @@ export const learnerProfile = {
   email: 'ayesha.k@example.com',
   title: 'Data Analyst',
   location: 'Minneapolis, MN',
+  goals: 'Become a senior data analyst focusing on product analytics and ML.',
 };
 
 export const learnerPositions = [
@@ -993,6 +994,14 @@ export const learnerPositions = [
     accomplishments: ['Revenue Growth', 'Team Leadership', 'Process Improvement'],
     tasks: ['Project Management', 'Data Analysis', 'Strategic Planning'],
     tools: ['Excel', 'Salesforce', 'PowerBI', 'SQL'],
+    technologies: [
+      { name: 'SQL', type: 'Core' },
+      { name: 'PowerBI', type: 'Core' },
+      { name: 'Salesforce', type: 'Peripheral' },
+      { name: 'Excel', type: 'Peripheral' },
+    ],
+    internalStakeholders: ['Product', 'Engineering'],
+    externalStakeholders: ['Analytics Vendor'],
     competencies: ['Leadership', 'Communication', 'Problem Solving'],
     priorities: ['Customer Satisfaction', 'Market Expansion', 'Cost Reduction', 'Innovation'],
   },
@@ -1008,6 +1017,13 @@ export const learnerPositions = [
     accomplishments: ['Feature Launch', 'Cross-team Collaboration'],
     tasks: ['Component Design', 'Code Reviews', 'Performance Tuning'],
     tools: ['React', 'TypeScript', 'Figma'],
+    technologies: [
+      { name: 'React', type: 'Core' },
+      { name: 'TypeScript', type: 'Core' },
+      { name: 'Figma', type: 'Peripheral' },
+    ],
+    internalStakeholders: ['Product', 'Design'],
+    externalStakeholders: ['Design Agency'],
     competencies: ['Attention to Detail', 'Collaboration'],
     priorities: ['Product Quality', 'Customer Feedback'],
   },
@@ -1029,4 +1045,52 @@ export default {
   learnerProfile,
   learnerPositions,
   learnerEducation,
+};
+
+// src/data/mockExperiences.js
+export const mockProfile = {
+  userId: 'mock-user-1',
+  userName: 'Alex Khan',
+  userGoals: 'Grow into a Senior Engineering Manager and work on platform-scale systems.',
+  exportDate: new Date().toISOString(),
+  version: '1.0',
+  experiences: [
+    {
+      organizationName: 'Atlas Labs',
+      role: 'Frontend Engineer',
+      location: 'Karachi, PK (Remote)',
+      startDate: '2021-05-01',
+      endDate: '2023-10-01',
+      description: 'Built UI components and design system pieces, improved performance.',
+      technologies: [
+        { name: 'React', type: 'Core' },
+        { name: 'TypeScript', type: 'Core' },
+        { name: 'TailwindCSS', type: 'Peripheral' },
+      ],
+      keySkills: ['Component Design', 'Testing', 'Performance'],
+      competencies: ['Technical Leadership', 'Frontend Architecture'],
+      projectTypes: ['Agile', 'Product Development'],
+      internalStakeholders: ['Product Team', 'Design'],
+      externalStakeholders: ['Customers'],
+      achievements: ['Reduced bundle size by 30%'],
+    },
+    {
+      organizationName: 'DataCrafters',
+      role: 'Data Analyst',
+      location: 'Lahore, PK',
+      startDate: '2018-03-01',
+      endDate: '2021-04-01',
+      description: 'Analytics, dashboards, ETL pipelines.',
+      technologies: [
+        { name: 'Python', type: 'Core' },
+        { name: 'SQL', type: 'Core' },
+      ],
+      keySkills: ['Data Modeling', 'Dashboards'],
+      competencies: ['Data Analytics'],
+      projectTypes: ['Research', 'Implementation'],
+      internalStakeholders: ['BI Team'],
+      externalStakeholders: [],
+      achievements: ['Built customer 360 dashboard'],
+    },
+  ],
 };
