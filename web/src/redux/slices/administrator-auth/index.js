@@ -1,7 +1,6 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import axiosInstance from "../../../middleware/axiosInstance";
 
-// Initial state for administrator auth slice
 const initialState = {
   administrator: null,
   token: null,
@@ -10,7 +9,6 @@ const initialState = {
   error: null,
 };
 
-// Async thunk for administrator registration
 export const registerAdministrator = createAsyncThunk(
   "administrator/register",
   async (registerData, { rejectWithValue }) => {
@@ -26,7 +24,6 @@ export const registerAdministrator = createAsyncThunk(
   }
 );
 
-// Async thunk for administrator login
 export const loginAdministrator = createAsyncThunk(
   "administrator/login",
   async (credentials, { rejectWithValue }) => {
@@ -42,7 +39,6 @@ export const loginAdministrator = createAsyncThunk(
   }
 );
 
-// Async thunk for administrator forgot password
 export const forgotPasswordAdministrator = createAsyncThunk(
   "administrator/forgotPassword",
   async (forgotData, { rejectWithValue }) => {
@@ -58,7 +54,6 @@ export const forgotPasswordAdministrator = createAsyncThunk(
   }
 );
 
-// Async thunk for administrator reset password
 export const resetPasswordAdministrator = createAsyncThunk(
   "administrator/resetPassword",
   async (resetData, { rejectWithValue }) => {
@@ -74,7 +69,6 @@ export const resetPasswordAdministrator = createAsyncThunk(
   }
 );
 
-// Async thunk for administrator change password
 export const changePasswordAdministrator = createAsyncThunk(
   "administrator/changePassword",
   async (changeData, { rejectWithValue }) => {
@@ -90,7 +84,6 @@ export const changePasswordAdministrator = createAsyncThunk(
   }
 );
 
-// Async thunk for updating administrator profile
 export const updateAdministratorProfile = createAsyncThunk(
   "administrator/updateProfile",
   async ({ id, updateData }, { rejectWithValue }) => {
@@ -106,7 +99,6 @@ export const updateAdministratorProfile = createAsyncThunk(
   }
 );
 
-// Async thunk for getting administrator profile
 export const getAdministratorProfile = createAsyncThunk(
   "administrator/getProfile",
   async (_, { rejectWithValue }) => {
@@ -119,7 +111,6 @@ export const getAdministratorProfile = createAsyncThunk(
   }
 );
 
-// Async thunk for fetching all administrators
 export const getAllAdministrators = createAsyncThunk(
   "administrator/getAll",
   async (_, { rejectWithValue }) => {
@@ -144,7 +135,6 @@ export const deleteAdministrator = createAsyncThunk(
   }
 );
 
-// Administrator auth slice
 const administratorAuthSlice = createSlice({
   name: "administratorAuth",
   initialState,

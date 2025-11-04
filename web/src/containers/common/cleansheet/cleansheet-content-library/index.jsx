@@ -122,7 +122,6 @@ const allTags = [
 ];
 
 const ContentLibrary = () => {
-  // state
   const [articles] = useState(mockArticles);
   const [expertise, setExpertise] = useState(null);
   const [minExpertise, setMinExpertise] = useState(0);

@@ -1,9 +1,5 @@
 const TemplatesIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    fill="currentColor"
-    viewBox="0 0 24 24"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 24 24">
     <path d="M4 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H4ZM20 2a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h7Zm0 9a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-7a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h7Z" />
   </svg>
 );
@@ -16,10 +12,10 @@ const StickyNotesIcon = () => (
     height="24"
     preserveAspectRatio="xMidYMid meet"
     style={{
-      width: "100%",
-      height: "100%",
-      transform: "translate3d(0px, 0px, 0px)",
-      contentVisibility: "visible",
+      width: '100%',
+      height: '100%',
+      transform: 'translate3d(0px, 0px, 0px)',
+      contentVisibility: 'visible',
     }}
   >
     <defs>
@@ -40,23 +36,13 @@ const StickyNotesIcon = () => (
       </filter>
       <mask id="__lottie_element_45" mask-type="alpha">
         <g filter="url(#__lottie_element_46)">
-          <rect
-            width="24"
-            height="24"
-            x="0"
-            y="0"
-            fill="#ffffff"
-            opacity="0"
-          ></rect>
+          <rect width="24" height="24" x="0" y="0" fill="#ffffff" opacity="0"></rect>
           <g
             transform="matrix(1,0,0,1,5.746500015258789,6.277500152587891)"
             opacity="1"
-            style={{ display: "block" }}
+            style={{ display: 'block' }}
           >
-            <g
-              opacity="1"
-              transform="matrix(0.17000000178813934,0,0,0.17000000178813934,6,10.5)"
-            >
+            <g opacity="1" transform="matrix(0.17000000178813934,0,0,0.17000000178813934,6,10.5)">
               <path
                 strokeLinecap="round"
                 strokeLinejoin="round"
@@ -86,11 +72,8 @@ const StickyNotesIcon = () => (
       </mask>
     </defs>
     <g clipPath="url(#__lottie_element_40)">
-      <g mask="url(#__lottie_element_45)" style={{ display: "block" }}>
-        <g
-          transform="matrix(1,0,0,1,1.746500015258789,1.7775001525878906)"
-          opacity="1"
-        >
+      <g mask="url(#__lottie_element_45)" style={{ display: 'block' }}>
+        <g transform="matrix(1,0,0,1,1.746500015258789,1.7775001525878906)" opacity="1">
           <g opacity="1" transform="matrix(1,0,0,1,10.25,10.25)">
             <path
               fill="rgb(255,255,255)"
@@ -103,12 +86,9 @@ const StickyNotesIcon = () => (
       <g
         transform="matrix(1,0,0,1,14.746500015258789,14.777999877929688)"
         opacity="1"
-        style={{ display: "block" }}
+        style={{ display: 'block' }}
       >
-        <g
-          opacity="1"
-          transform="matrix(1,0,0,1,3.6630001068115234,3.6630001068115234)"
-        >
+        <g opacity="1" transform="matrix(1,0,0,1,3.6630001068115234,3.6630001068115234)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity="1"
@@ -134,10 +114,10 @@ const ShapesIcon = () => (
     height={24}
     preserveAspectRatio="xMidYMid meet"
     style={{
-      width: "100%",
-      height: "100%",
-      transform: "translate3d(0px, 0px, 0px)",
-      contentVisibility: "visible",
+      width: '100%',
+      height: '100%',
+      transform: 'translate3d(0px, 0px, 0px)',
+      contentVisibility: 'visible',
     }}
   >
     <defs>
@@ -161,7 +141,7 @@ const ShapesIcon = () => (
           <rect width={24} height={24} x={0} y={0} fill="#ffffff" opacity={0} />
           <g
             style={{
-              display: "none",
+              display: 'none',
             }}
           >
             <g>
@@ -187,15 +167,12 @@ const ShapesIcon = () => (
           <rect width={24} height={24} x={0} y={0} fill="#ffffff" opacity={0} />
           <g
             style={{
-              display: "none",
+              display: 'none',
             }}
             transform="matrix(0.6711276173591614,0,0,0.6711276173591614,14.812660217285156,5.8206353187561035)"
             opacity={1}
           >
-            <g
-              opacity={1}
-              transform="matrix(1,0,0,1,0.906000018119812,0.906000018119812)"
-            >
+            <g opacity={1} transform="matrix(1,0,0,1,0.906000018119812,0.906000018119812)">
               <path
                 fill="rgb(69,109,0)"
                 fillOpacity={1}
@@ -224,13 +201,10 @@ const ShapesIcon = () => (
             transform="matrix(0.9976071715354919,0,0,0.9976071715354919,16.61751937866211,3.7712113857269287)"
             opacity={1}
             style={{
-              display: "block",
+              display: 'block',
             }}
           >
-            <g
-              opacity={1}
-              transform="matrix(1,0,0,1,0.906000018119812,0.906000018119812)"
-            >
+            <g opacity={1} transform="matrix(1,0,0,1,0.906000018119812,0.906000018119812)">
               <path
                 fill="rgb(69,109,0)"
                 fillOpacity={1}
@@ -246,13 +220,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,1.9995830059051514,9.611202239990234)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.88700008392334,1.843999981880188)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.88700008392334,1.843999981880188)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -262,15 +233,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6711276173591614,0,0,0.6711276173591614,4.9786272048950195,9.749415397644043)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.88700008392334,1.843999981880188)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.88700008392334,1.843999981880188)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -280,7 +248,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -290,17 +258,14 @@ const ShapesIcon = () => (
       <g
         mask="url(#__lottie_element_148)"
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
         <g
           transform="matrix(0.9976071715354919,0,0,0.9976071715354919,3.1508214473724365,1.774000883102417)"
           opacity={1}
         >
-          <g
-            opacity={1}
-            transform="matrix(1,0,0,1,8.984999656677246,8.222999572753906)"
-          >
+          <g opacity={1} transform="matrix(1,0,0,1,8.984999656677246,8.222999572753906)">
             <path
               fill="rgb(255,255,255)"
               fillOpacity={1}
@@ -312,17 +277,14 @@ const ShapesIcon = () => (
       <g
         mask="url(#__lottie_element_137)"
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g
           transform="matrix(0.6711276173591614,0,0,0.6711276173591614,5.753108501434326,4.4770379066467285)"
           opacity={1}
         >
-          <g
-            opacity={1}
-            transform="matrix(1,0,0,1,8.984999656677246,8.222999572753906)"
-          >
+          <g opacity={1} transform="matrix(1,0,0,1,8.984999656677246,8.222999572753906)">
             <path
               fill="rgb(255,255,255)"
               fillOpacity={1}
@@ -334,7 +296,7 @@ const ShapesIcon = () => (
       <g
         mask="url(#__lottie_element_126)"
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -347,13 +309,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,14.581404685974121,0.07707201689481735)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.1770000457763672,2.062000036239624)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.1770000457763672,2.062000036239624)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -363,15 +322,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6711276173591614,0,0,0.6711276173591614,13.442889213562012,3.3354501724243164)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.1770000457763672,2.062000036239624)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.1770000457763672,2.062000036239624)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -381,7 +337,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -392,13 +348,10 @@ const ShapesIcon = () => (
         transform="matrix(0.996239960193634,-0.0522107258439064,0.0522107258439064,0.996239960193634,2.7234716415405273,10.513890266418457)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.7109999656677246,3.5399999618530273)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.7109999656677246,3.5399999618530273)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -408,15 +361,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6702078580856323,-0.03512410447001457,0.03512410447001457,0.6702078580856323,5.465614318847656,10.356687545776367)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.7109999656677246,3.5399999618530273)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.7109999656677246,3.5399999618530273)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -426,7 +376,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -437,13 +387,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,10.773537635803223,10.761444091796875)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.3380000591278076,3.618000030517578)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.3380000591278076,3.618000030517578)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -453,15 +400,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6711276173591614,0,0,0.6711276173591614,10.881195068359375,10.523226737976074)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.3380000591278076,3.618000030517578)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.3380000591278076,3.618000030517578)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -471,7 +415,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -482,13 +426,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,15.106145858764648,9.321897506713867)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.2680000066757202,3.61899995803833)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.2680000066757202,3.61899995803833)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -498,15 +439,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6711276173591614,0,0,0.6711276173591614,13.795902252197266,9.554789543151855)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,1.2680000066757202,3.61899995803833)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,1.2680000066757202,3.61899995803833)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -516,7 +454,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -527,13 +465,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,3.6915242671966553,13.544767379760742)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.994999885559082,5.1539998054504395)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.994999885559082,5.1539998054504395)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -543,15 +478,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6709751486778259,0.014300827868282795,-0.01460748165845871,0.6853629946708679,6.170163154602051,12.29349136352539)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.994999885559082,5.1539998054504395)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.994999885559082,5.1539998054504395)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -561,7 +493,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -572,13 +504,10 @@ const ShapesIcon = () => (
         transform="matrix(0.9976071715354919,0,0,0.9976071715354919,12.071425437927246,14.489500999450684)"
         opacity={1}
         style={{
-          display: "block",
+          display: 'block',
         }}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.130000114440918,4.679999828338623)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.130000114440918,4.679999828338623)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -588,15 +517,12 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(0.6710136532783508,0.012368517927825451,-0.012448116205632687,0.6753319501876831,11.782106399536133,12.981074333190918)"
         opacity={1}
       >
-        <g
-          opacity={1}
-          transform="matrix(1,0,0,1,2.130000114440918,4.679999828338623)"
-        >
+        <g opacity={1} transform="matrix(1,0,0,1,2.130000114440918,4.679999828338623)">
           <path
             fill="rgb(255,255,255)"
             fillOpacity={1}
@@ -606,7 +532,7 @@ const ShapesIcon = () => (
       </g>
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g>
@@ -631,10 +557,10 @@ const ImagesIcon = () => (
     height={24}
     preserveAspectRatio="xMidYMid meet"
     style={{
-      width: "100%",
-      height: "100%",
-      transform: "translate3d(0px, 0px, 0px)",
-      contentVisibility: "visible",
+      width: '100%',
+      height: '100%',
+      transform: 'translate3d(0px, 0px, 0px)',
+      contentVisibility: 'visible',
     }}
   >
     <defs>
@@ -660,7 +586,7 @@ const ImagesIcon = () => (
             transform="matrix(0.9000036716461182,0,0,0.9000036716461182,12,12)"
             opacity={0.00003642449385012014}
             style={{
-              display: "none",
+              display: 'none',
             }}
           >
             <g opacity={1} transform="matrix(1,0,0,1,-2,-2)">
@@ -677,7 +603,7 @@ const ImagesIcon = () => (
     <g clipPath="url(#__lottie_element_209)">
       <g
         style={{
-          display: "none",
+          display: 'none',
         }}
         transform="matrix(1.0000075101852417,0,0,1.0000075101852417,12,12)"
         opacity={0.00003642449384997804}
@@ -692,7 +618,7 @@ const ImagesIcon = () => (
       </g>
       <g
         style={{
-          display: "block",
+          display: 'block',
         }}
         transform="matrix(1.0162498950958252,0,0,1.0162498950958252,12,12)"
         opacity={0.9187504461955698}
@@ -707,7 +633,7 @@ const ImagesIcon = () => (
       </g>
       <g
         style={{
-          display: "block",
+          display: 'block',
         }}
         transform="matrix(1.0000072717666626,0,0,1.0000072717666626,12.107999801635742,12)"
         opacity={0.08124955380443026}
@@ -723,7 +649,7 @@ const ImagesIcon = () => (
       <g
         mask="url(#__lottie_element_211)"
         style={{
-          display: "none",
+          display: 'none',
         }}
       >
         <g
@@ -755,7 +681,7 @@ const ImagesIcon = () => (
   </svg>
 );
 
-const IIcon = ({ className = "", color = "#000000" }) => (
+const IIcon = ({ className = '', color = '#000000' }) => (
   <svg
     version="1.0"
     xmlns="http://www.w3.org/2000/svg"
@@ -805,7 +731,7 @@ const NotificationIcon = () => (
   </svg>
 );
 
-const ViewFileIcon = ({ className = "", color = "" }) => (
+const ViewFileIcon = ({ className = '', color = '' }) => (
   <svg
     version="1.0"
     xmlns="http://www.w3.org/2000/svg"
@@ -862,13 +788,8 @@ c21 13 50 42 65 64 23 34 27 52 27 107 0 55 -4 73 -27 107 -15 22 -44 51 -65
   </svg>
 );
 
-const TrashIcon = ({ className = "", color = "" }) => (
-  <svg
-    className={className}
-    viewBox="0 0 20 20"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+const TrashIcon = ({ className = '', color = '' }) => (
+  <svg className={className} viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
     <path
       d="M16.875 3.75H13.75V3.125C13.75 2.62772 13.5525 2.15081 13.2008 1.79917C12.8492 1.44754 12.3723 1.25 11.875 1.25H8.125C7.62772 1.25 7.15081 1.44754 6.79917 1.79917C6.44754 2.15081 6.25 2.62772 6.25 3.125V3.75H3.125C2.95924 3.75 2.80027 3.81585 2.68306 3.93306C2.56585 4.05027 2.5 4.20924 2.5 4.375C2.5 4.54076 2.56585 4.69973 2.68306 4.81694C2.80027 4.93415 2.95924 5 3.125 5H3.75V16.25C3.75 16.5815 3.8817 16.8995 4.11612 17.1339C4.35054 17.3683 4.66848 17.5 5 17.5H15C15.3315 17.5 15.6495 17.3683 15.8839 17.1339C16.1183 16.8995 16.25 16.5815 16.25 16.25V5H16.875C17.0408 5 17.1997 4.93415 17.3169 4.81694C17.4342 4.69973 17.5 4.54076 17.5 4.375C17.5 4.20924 17.4342 4.05027 17.3169 3.93306C17.1997 3.81585 17.0408 3.75 16.875 3.75ZM7.5 3.125C7.5 2.95924 7.56585 2.80027 7.68306 2.68306C7.80027 2.56585 7.95924 2.5 8.125 2.5H11.875C12.0408 2.5 12.1997 2.56585 12.3169 2.68306C12.4342 2.80027 12.5 2.95924 12.5 3.125V3.75H7.5V3.125ZM15 16.25H5V5H15V16.25ZM8.75 8.125V13.125C8.75 13.2908 8.68415 13.4497 8.56694 13.5669C8.44973 13.6842 8.29076 13.75 8.125 13.75C7.95924 13.75 7.80027 13.6842 7.68306 13.5669C7.56585 13.4497 7.5 13.2908 7.5 13.125V8.125C7.5 7.95924 7.56585 7.80027 7.68306 7.68306C7.80027 7.56585 7.95924 7.5 8.125 7.5C8.29076 7.5 8.44973 7.56585 8.56694 7.68306C8.68415 7.80027 8.75 7.95924 8.75 8.125ZM12.5 8.125V13.125C12.5 13.2908 12.4342 13.4497 12.3169 13.5669C12.1997 13.6842 12.0408 13.75 11.875 13.75C11.7092 13.75 11.5503 13.6842 11.4331 13.5669C11.3158 13.4497 11.25 13.2908 11.25 13.125V8.125C11.25 7.95924 11.3158 7.80027 11.4331 7.68306C11.5503 7.56585 11.7092 7.5 11.875 7.5C12.0408 7.5 12.1997 7.56585 12.3169 7.68306C12.4342 7.80027 12.5 7.95924 12.5 8.125Z"
       fill={color}
@@ -878,7 +799,7 @@ const TrashIcon = ({ className = "", color = "" }) => (
   </svg>
 );
 
-const EditIcon = ({ className = "", color = "" }) => (
+const EditIcon = ({ className = '', color = '' }) => (
   <svg
     version="1.0"
     xmlns="http://www.w3.org/2000/svg"
@@ -913,13 +834,8 @@ const EditIcon = ({ className = "", color = "" }) => (
   </svg>
 );
 
-const ProCardIcon = ({ className = "" }) => (
-  <svg
-    className={className}
-    viewBox="0 0 129 129"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
+const ProCardIcon = ({ className = '' }) => (
+  <svg className={className} viewBox="0 0 129 129" fill="none" xmlns="http://www.w3.org/2000/svg">
     <g clipPath="url(#clip0_2_116)">
       <g filter="url(#filter0_dd_2_116)">
         <rect
@@ -966,15 +882,8 @@ const ProCardIcon = ({ className = "" }) => (
         <feOffset dy="5" />
         <feGaussianBlur stdDeviation="5" />
         <feComposite in2="hardAlpha" operator="out" />
-        <feColorMatrix
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0"
-        />
-        <feBlend
-          mode="normal"
-          in2="BackgroundImageFix"
-          result="effect1_dropShadow_2_116"
-        />
+        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.15 0" />
+        <feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_2_116" />
         <feColorMatrix
           in="SourceAlpha"
           type="matrix"
@@ -989,21 +898,9 @@ const ProCardIcon = ({ className = "" }) => (
         />
         <feOffset />
         <feComposite in2="hardAlpha" operator="out" />
-        <feColorMatrix
-          type="matrix"
-          values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0"
-        />
-        <feBlend
-          mode="normal"
-          in2="effect1_dropShadow_2_116"
-          result="effect2_dropShadow_2_116"
-        />
-        <feBlend
-          mode="normal"
-          in="SourceGraphic"
-          in2="effect2_dropShadow_2_116"
-          result="shape"
-        />
+        <feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.07 0" />
+        <feBlend mode="normal" in2="effect1_dropShadow_2_116" result="effect2_dropShadow_2_116" />
+        <feBlend mode="normal" in="SourceGraphic" in2="effect2_dropShadow_2_116" result="shape" />
       </filter>
       <linearGradient
         id="paint0_linear_2_116"
@@ -1034,7 +931,7 @@ const ProCardIcon = ({ className = "" }) => (
   </svg>
 );
 
-const DownArrowIcon = ({ className = "", color = "" }) => (
+const DownArrowIcon = ({ className = '', color = '' }) => (
   <svg
     version="1.0"
     xmlns="http://www.w3.org/2000/svg"
@@ -1056,7 +953,7 @@ const DownArrowIcon = ({ className = "", color = "" }) => (
   </svg>
 );
 
-const PriceCardTickIcons = ({ className = "", color = "" }) => (
+const PriceCardTickIcons = ({ className = '', color = '' }) => (
   <svg
     className={className}
     xmlns="http://www.w3.org/2000/svg"
@@ -1071,7 +968,7 @@ const PriceCardTickIcons = ({ className = "", color = "" }) => (
   </svg>
 );
 
-const PriceCardCrossIcons = ({ className = "", color = "" }) => (
+const PriceCardCrossIcons = ({ className = '', color = '' }) => (
   <svg
     className={className}
     xmlns="http://www.w3.org/2000/svg"
@@ -1091,7 +988,7 @@ const ClickMoreIcon = () => (
     xmlns="http://www.w3.org/2000/svg"
     width="288"
     height="288"
-    style={{ width: "100%", height: "100%", contentVisibility: "visible" }}
+    style={{ width: '100%', height: '100%', contentVisibility: 'visible' }}
     viewBox="0 0 288 288"
   >
     <defs>
@@ -1178,13 +1075,7 @@ const LoadingIcon = () => (
 );
 
 const GoogleIcon = () => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 512 512"
-    width="24"
-    height="24"
-    id="google"
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="24" height="24" id="google">
     <path
       fill="#fbbb00"
       d="M113.47 309.408 95.648 375.94l-65.139 1.378C11.042 341.211 0 299.9 0 256c0-42.451 10.324-82.483 28.624-117.732h.014L86.63 148.9l25.404 57.644c-5.317 15.501-8.215 32.141-8.215 49.456.002 18.792 3.406 36.797 9.651 53.408z"
@@ -1204,7 +1095,7 @@ const GoogleIcon = () => (
   </svg>
 );
 
-const GoogleServiceIcon = (className = "") => (
+const GoogleServiceIcon = (className = '') => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 500 500"
@@ -1232,7 +1123,7 @@ const GoogleServiceIcon = (className = "") => (
   </svg>
 );
 
-const MicrosoftIcon = ({ className = "" }) => (
+const MicrosoftIcon = ({ className = '' }) => (
   <svg
     version="1.1"
     xmlns="http://www.w3.org/2000/svg"
@@ -1255,7 +1146,7 @@ const MicrosoftIcon = ({ className = "" }) => (
   </svg>
 );
 
-const AppleIcon = ({ className = "" }) => (
+const AppleIcon = ({ className = '' }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 -3.552713678800501e-15 820 950"
@@ -1267,7 +1158,7 @@ const AppleIcon = ({ className = "" }) => (
   </svg>
 );
 
-const BiggerPlateIcon = ({ className = "" }) => (
+const BiggerPlateIcon = ({ className = '' }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 220 220"
@@ -1304,11 +1195,7 @@ const BiggerPlateIcon = ({ className = "" }) => (
 );
 
 const PremiumIcon = ({ className }) => (
-  <svg
-    xmlns="http://www.w3.org/2000/svg"
-    viewBox="0 0 256 256"
-    className={className}
-  >
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" className={className}>
     <g>
       <path
         fill="#660000"
@@ -1328,7 +1215,7 @@ const PremiumIcon = ({ className }) => (
   </svg>
 );
 
-const GithubIcon = ({ size = 24, className = "" }) => (
+const GithubIcon = ({ size = 24, className = '' }) => (
   <svg
     height={size}
     width={size}
@@ -1415,6 +1302,182 @@ const EditProfileIcon = () => (
     />
   </svg>
 );
+export const IconPlus = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M12 5v14M5 12h14"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const IconGrid = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <rect x="3" y="3" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <rect x="13" y="3" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <rect x="3" y="13" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+    <rect x="13" y="13" width="8" height="8" stroke="currentColor" strokeWidth="1.5" fill="none" />
+  </svg>
+);
+
+export const IconTable = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="18"
+    height="18"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <rect
+      x="3"
+      y="4"
+      width="18"
+      height="16"
+      rx="2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      fill="none"
+    />
+    <path d="M3 10h18M12 4v16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+export const IconSearch = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <circle cx="11" cy="11" r="6" stroke="currentColor" strokeWidth="1.5" />
+    <path d="M21 21l-4.35-4.35" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+  </svg>
+);
+
+export const IconBell = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M15 17H9a3 3 0 0 1-3-3V10a6 6 0 1 1 12 0v4a3 3 0 0 1-3 3z"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <path
+      d="M12 21v.01"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+
+export const IconClock = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="1.5" />
+    <path
+      d="M12 7v6l4 2"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    />
+  </svg>
+);
+// add to src/components/icons.jsx
+
+export const IconMapPin = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M12 21s8-5.5 8-11a8 8 0 1 0-16 0c0 5.5 8 11 8 11z"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <circle cx="12" cy="10" r="2.2" fill="currentColor" />
+  </svg>
+);
+
+export const IconDollar = (props) => (
+  <svg
+    {...props}
+    viewBox="0 0 24 24"
+    width="16"
+    height="16"
+    fill="none"
+    xmlns="http://www.w3.org/2000/svg"
+    aria-hidden
+  >
+    <path
+      d="M12 1v22"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+    <path
+      d="M17 5H9.5a2.5 2.5 0 1 0 0 5H14a2.5 2.5 0 1 1 0 5H6"
+      stroke="currentColor"
+      strokeWidth="1.25"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      fill="none"
+    />
+  </svg>
+);
 
 const Icons = {
   TemplatesIcon,
@@ -1445,6 +1508,10 @@ const Icons = {
   SupportIcon,
   AccountSettingIcon,
   EditProfileIcon,
+  IconTable,
+  IconSearch,
+  IconBell,
+  IconClock,
 };
 
 export default Icons;
