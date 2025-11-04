@@ -31,7 +31,6 @@ const TeamMembersPage = () => {
         setIsLoading(true);
         const result = await dispatch(fetchTeamMembers(workspaceId)).unwrap();
 
-        // Map the fetched data to match the existing teamMembers state structure
         const formattedMembers = result.map((member) => ({
           id: member.id,
           name: member.user?.displayName || member.user?.username || 'Unknown',
@@ -61,7 +60,6 @@ const TeamMembersPage = () => {
     fetchData();
   }, [dispatch, workspaceId, error]);
 
-  // Edit Modal Handler
   const handleEdit = (member) => {
     setSelectedMember(member);
     setFormData({ name: member?.user?.name, email: member?.user?.email });
@@ -77,7 +75,6 @@ const TeamMembersPage = () => {
     setIsEditModalOpen(false);
   };
 
-  // Delete Modal Handler
   const handleDelete = (member) => {
     setSelectedMember(member);
     setIsDeleteModalOpen(true);
@@ -109,7 +106,6 @@ const TeamMembersPage = () => {
     }
   };
 
-  // Attach Handlers to Actions
   const updatedTeamMembersConfig = {
     ...teamMembersConfig,
     actions: teamMembersConfig.actions.map((action) => {

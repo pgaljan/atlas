@@ -11,14 +11,14 @@ export default function CleansheetCanvasLayout({ children }) {
     localStorage.setItem('viewMode', mode);
   };
   return (
-    <div className="h-screen flex flex-col bg-gray-100 relative overflow-hidden">
+    <div className="h-screen flex flex-col bg-custom-neutralBackground relative overflow-hidden">
       <CleansheetCanvasHeader viewMode={viewMode} onModeChange={handleModeChange} />
 
-      <main className="flex-1 p-4 md:p-6 relative min-h-0">
-        <div className="bg-gray-50 rounded-xl shadow-inner p-4 md:p-6 h-full min-h-0 flex flex-col relative overflow-hidden">
+      <main className="flex-1 relative min-h-0 ">
+        <div className="rounded-xl shadow-inner p-4 md:p-6 h-full min-h-0 flex flex-col relative overflow-hidden">
           <div
             className={`grid gap-4 transition-[grid-template-columns] duration-500 ease-in-out h-full ${
-              collapsed ? 'grid-cols-[0_1fr]' : 'grid-cols-[350px_1fr]'
+              collapsed ? 'grid-cols-[0_1fr]' : 'grid-cols-[360px_1fr]'
             }`}
           >
             <aside

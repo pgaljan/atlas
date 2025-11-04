@@ -22,17 +22,14 @@ const useFeatureFlag = (feature, currentUsage = 0) => {
 
   const featureValue = currentPlan.features[feature];
 
-  // Handle boolean feature flags
   if (typeof featureValue === "boolean") {
     return featureValue;
   }
 
-  // Handle "Unlimited" case
   if (featureValue === "Unlimited") {
     return true;
   }
 
-  // Handle numeric feature limits
   if (typeof featureValue === "string" && /^\d+$/.test(featureValue)) {
     return parseInt(featureValue, 10) > currentUsage;
   }

@@ -180,7 +180,6 @@ export default function CleanSheetLearnerCanvas({
       .attr('flood-color', '#000')
       .attr('flood-opacity', 0.12);
 
-    // root group that we'll transform with d3.zoom
     const gRoot = svgEl
       .attr('viewBox', `0 0 ${width} ${height}`)
       .attr('preserveAspectRatio', 'xMidYMid meet')
@@ -606,7 +605,7 @@ export default function CleanSheetLearnerCanvas({
   return (
     <div
       ref={containerRef}
-      className="w-full h-full bg-white rounded-lg shadow-inner relative overflow-hidden p-6"
+      className="w-full h-full bg-white shadow-inner relative overflow-hidden"
       style={{ touchAction: 'none' }}
     >
       <svg ref={svgRef} className="w-full h-full block" />

@@ -479,7 +479,11 @@ export default function CanvasRenderer({ fixedChildren = [], heightHint = null, 
   }, [username, heightHint, JSON.stringify(fixedChildren)]);
 
   return (
-    <div ref={containerRef} style={{ width: '100%', height: '100%', overflow: 'hidden' }}>
+    <div
+      ref={containerRef}
+      style={{ width: '100%', height: '100%', overflow: 'hidden' }}
+      className="shadow-inner"
+    >
       <svg
         ref={svgRef}
         role="img"

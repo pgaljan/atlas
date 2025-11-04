@@ -15,11 +15,9 @@ const SharedStructureAccess = () => {
   const [error, setError] = useState(null);
   const [accessType, setAccessType] = useState(null);
 
-  // Check if user is logged in
   const isLoggedIn = !!Cookies.get('atlas_token');
   const user = useSelector((state) => state.auth?.user || null);
 
-  // Permission configuration for display
   const permissionConfig = {
     owner: {
       label: "Owner",
@@ -65,10 +63,8 @@ const SharedStructureAccess = () => {
     setError(null);
 
     try {
-      // Get current user ID if logged in
       const userId = isLoggedIn ? Cookies.get('atlas_userId') : null;
       
-      // Call backend API to access shared structure
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/structure/shared/${token}${userId ? `?userId=${userId}` : ''}`,
         {
@@ -91,16 +87,13 @@ const SharedStructureAccess = () => {
       setStructure(data.structure);
       setAccessType(data.accessType);
       
-      // If user has access, redirect to the structure view
       if (data.structure) {
-        // Store temporary access info if needed
         sessionStorage.setItem('shared_structure_access', JSON.stringify({
           token,
           permission: data.structure.permission,
           accessType: data.accessType
         }));
         
-        // Redirect to structure view with shared access
         const structureUrl = `/app/s/${data.structure.owner?.name || 'shared'}/${data.structure.id}?shared=${token}`;
         navigate(structureUrl);
       }
@@ -131,7 +124,6 @@ const SharedStructureAccess = () => {
     navigate(`/register?redirect=shared-structure&token=${token}`);
   };
 
-  // Loading state
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -146,7 +138,6 @@ const SharedStructureAccess = () => {
     );
   }
 
-  // Error state
   if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
@@ -198,7 +189,6 @@ const SharedStructureAccess = () => {
     );
   }
 
-  // Success state (though this might not show much since we redirect)
   if (structure) {
     const config = permissionConfig[structure.permission] || permissionConfig.viewer;
     const Icon = config.icon;
@@ -251,7 +241,6 @@ const SharedStructureAccess = () => {
     );
   }
 
-  // Default state (shouldn't happen)
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
       <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8">

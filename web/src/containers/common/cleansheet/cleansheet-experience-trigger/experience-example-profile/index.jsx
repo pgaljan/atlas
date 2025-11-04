@@ -87,7 +87,6 @@ const EXAMPLES = {
     ],
   },
 
-  // ⚗️ Chemist
   chemist: {
     version: '1.0.0',
     userName: 'Dr. Sarah Mitchell',
@@ -166,7 +165,6 @@ const EXAMPLES = {
     ],
   },
 
-  // 🎓 New Graduate
   'new-graduate': {
     version: '1.0.0',
     userName: 'Alex Rivera',
@@ -213,7 +211,6 @@ const EXAMPLES = {
     ],
   },
 
-  // 📊 Data Analyst
   'data-analyst': {
     version: '1.0.0',
     userName: 'Data Analyst Example',
