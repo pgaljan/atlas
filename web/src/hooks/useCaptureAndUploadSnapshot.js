@@ -13,7 +13,6 @@ const useCaptureAndUploadSnapshot = async (
   try {
     const clonedElement = svgElement.cloneNode(true);
 
-    // Set a subtle background (optional)
     clonedElement.style.background =
       "radial-gradient(circle, rgba(0,0,0,0.2) 1px, transparent 1px)";
     clonedElement.style.backgroundSize = "10px 10px";

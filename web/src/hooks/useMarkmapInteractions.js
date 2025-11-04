@@ -47,7 +47,6 @@ export default function useMarkmapInteractions({
       children: [],
     };
 
-    // Apply collapsed state from localStorage
     const applyCollapsedState = (nodes) => {
       if (nodes && Array.isArray(nodes)) {
         nodes.forEach((node) => {

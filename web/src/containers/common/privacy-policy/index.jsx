@@ -14,10 +14,8 @@ const PrivacyPolicy = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // Fetch app settings if not already loaded
       await dispatch(fetchAppSettings());
 
-      // Fetch privacy policy
       setLoading(true);
       const resultAction = await dispatch(fetchPrivacyPolicy());
       if (fetchPrivacyPolicy.fulfilled.match(resultAction)) {

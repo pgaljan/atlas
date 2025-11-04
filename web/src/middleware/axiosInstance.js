@@ -2,13 +2,11 @@
 import axios from "axios";
 import Cookies from "js-cookie";
 
-// Create Axios instance
 const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL,
   headers: {},
 });
 
-// Add interceptor for requests
 axiosInstance.interceptors.request.use(async (config) => {
   const token = Cookies.get("atlas_access_token");
 
@@ -25,7 +23,6 @@ axiosInstance.interceptors.request.use(async (config) => {
   return config;
 });
 
-// Logout helper function
 export const handleLogout = async () => {
   const keysToRemove = [
     "atlas_access_token",
@@ -40,13 +37,11 @@ export const handleLogout = async () => {
   window.location.href = "/";
 };
 
-// Token validation helper for regular users
 export const isTokenValid = async () => {
   const token = Cookies.get("atlas_access_token");
   return !!token;
 };
 
-// Admin token validation helper
 export const isAdminTokenValid = async () => {
   const token = Cookies.get("atlas_admin_token");
   return !!token;

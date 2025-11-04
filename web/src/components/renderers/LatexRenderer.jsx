@@ -1,70 +1,66 @@
-import { useState, useEffect, useRef } from "react"
-import { CustomLoader } from "../custom-loader"
-import VsCodeEditor from "../editors/vscode-editor"
-import katex from "katex"
-import "katex/dist/katex.min.css"
-import { toPng } from "html-to-image"
+import { useState, useEffect, useRef } from 'react';
+import { CustomLoader } from '../custom-loader';
+import VsCodeEditor from '../editors/vscode-editor';
+import katex from 'katex';
+import 'katex/dist/katex.min.css';
+import { toPng } from 'html-to-image';
 
 const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
-  const [latexCode, setLatexCode] = useState(content || "")
-  const [isEditorLoading, setIsEditorLoading] = useState(true)
-  const [renderedLatex, setRenderedLatex] = useState("")
+  const [latexCode, setLatexCode] = useState(content || '');
+  const [isEditorLoading, setIsEditorLoading] = useState(true);
+  const [renderedLatex, setRenderedLatex] = useState('');
 
-  const previewRef = useRef(null)
+  const previewRef = useRef(null);
 
-  const handleCodeChange = value => {
-    const val = value || ""
-    setLatexCode(val)
-    onEditorChange?.(val)
-  }
+  const handleCodeChange = (value) => {
+    const val = value || '';
+    setLatexCode(val);
+    onEditorChange?.(val);
+  };
 
   useEffect(() => {
-    setLatexCode(content || "")
-  }, [content])
+    setLatexCode(content || '');
+  }, [content]);
 
-  // ✅ Renders LaTeX to HTML (preview only)
   useEffect(() => {
     try {
       const html = katex.renderToString(latexCode, {
         displayMode: true,
         throwOnError: false,
-        output: "html",
-      })
-      setRenderedLatex(html)
+        output: 'html',
+      });
+      setRenderedLatex(html);
     } catch (error) {
-      setRenderedLatex(
-        `<pre style="color: red;">Error rendering LaTeX: ${error?.message}</pre>`
-      )
-      onSvgChange?.(null)
+      setRenderedLatex(`<pre style="color: red;">Error rendering LaTeX: ${error?.message}</pre>`);
+      onSvgChange?.(null);
     }
-  }, [latexCode])
+  }, [latexCode]);
 
-  // ✅ Converts updated preview to image AFTER DOM updates
   useEffect(() => {
-    if (!renderedLatex || !previewRef.current) return
+    if (!renderedLatex || !previewRef.current) return;
 
     const convertToImage = async () => {
-      await new Promise(r => requestAnimationFrame(r))
+      await new Promise((r) => requestAnimationFrame(r));
 
       try {
         const dataUrl = await toPng(previewRef.current, {
           pixelRatio: 3,
           cacheBust: true,
-        })
+        });
 
         const svgData = `<svg xmlns="http://www.w3.org/2000/svg" width="100%" height="100%">
           <image href="${dataUrl}" x="0" y="0" height="100%" width="100%" />
-        </svg>`
+        </svg>`;
 
-        onSvgChange?.(svgData)
+        onSvgChange?.(svgData);
       } catch (error) {
-        console.error("Error converting preview to PNG:", error)
-        onSvgChange?.(null)
+        console.error('Error converting preview to PNG:', error);
+        onSvgChange?.(null);
       }
-    }
+    };
 
-    convertToImage()
-  }, [renderedLatex])
+    convertToImage();
+  }, [renderedLatex]);
 
   return (
     <div className="relative flex flex-row h-[480px]">
@@ -76,7 +72,7 @@ const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
 
       <div
         className={`w-[30%] min-w-[540px] transition-opacity duration-300 ${
-          isEditorLoading ? "opacity-0 pointer-events-none" : "opacity-100"
+          isEditorLoading ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
         <VsCodeEditor
@@ -91,7 +87,7 @@ const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
 
       <div
         className={`flex-1 flex flex-col overflow-hidden pl-2 max-h-screen box-border transition-opacity duration-300 ${
-          isEditorLoading ? "opacity-0 pointer-events-none" : "opacity-100"
+          isEditorLoading ? 'opacity-0 pointer-events-none' : 'opacity-100'
         }`}
       >
         <h2 className="mb-2 text-gray-600 font-semibold">LaTeX Preview</h2>
@@ -99,25 +95,25 @@ const LatexRenderer = ({ content, onEditorChange, onSvgChange }) => {
           <div
             ref={previewRef}
             style={{
-              display: "inline-block",
-              padding: "8px",
-              backgroundColor: "white",
-              fontSize: "1.2rem",
-              fontFamily: "KaTeX_Main, serif",
-              WebkitFontSmoothing: "antialiased",
-              MozOsxFontSmoothing: "grayscale",
-              width: "fit-content",
-              height: "fit-content",
-              maxWidth: "none",
-              overflow: "visible",
-              whiteSpace: "nowrap",
+              display: 'inline-block',
+              padding: '8px',
+              backgroundColor: 'white',
+              fontSize: '1.2rem',
+              fontFamily: 'KaTeX_Main, serif',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale',
+              width: 'fit-content',
+              height: 'fit-content',
+              maxWidth: 'none',
+              overflow: 'visible',
+              whiteSpace: 'nowrap',
             }}
             dangerouslySetInnerHTML={{ __html: renderedLatex }}
           />
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default LatexRenderer
+export default LatexRenderer;

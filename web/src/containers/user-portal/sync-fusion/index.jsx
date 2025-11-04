@@ -548,7 +548,6 @@ const Syncfusion = () => {
       level,
       orderIndex: node.orderIndex ?? 0,
       recordId: node.recordId ?? null,
-      // Preserve fault-tree specific properties
       gateType: node.gateType ?? null,
       eventType: node.eventType ?? null,
       elementType: node.elementType ?? node.type ?? "event",

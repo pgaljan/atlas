@@ -9,7 +9,9 @@ module.exports = {
           main: "var(--primary-color)",
           secondary: "var(--secondary-color)",
           blue: "#0066CC",
+          neutralBackground: "#f5f5f7",
          neutralMuteText: "#999999",
+          dark:" #1a1a1a",
           text: {
             DEFAULT: "#393939",
             white: "#FDFCFC",
@@ -17,7 +19,7 @@ module.exports = {
             heading: "#000000",
           },
           background: {
-            white: "#FFFFFF",
+            white: "#FFFFFF"
           },
           navbar: {
             DEFAULT: "#222222",

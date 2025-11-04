@@ -1,6 +1,6 @@
 import React from 'react';
 
-export default function RightSlideout({ open, title, onClose, children }) {
+const RightSlideout = ({ open, title, onClose, children }) => {
   return (
     <aside
       aria-hidden={!open}
@@ -33,4 +33,5 @@ export default function RightSlideout({ open, title, onClose, children }) {
       </div>
     </aside>
   );
-}
+};
+export default RightSlideout;

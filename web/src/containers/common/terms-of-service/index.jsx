@@ -7,7 +7,6 @@ import { fetchAppSettings } from "../../../redux/slices/app-settings";
 const TermsOfService = () => {
   const dispatch = useDispatch();
 
-  // ✅ Get appName from Redux store instead of localStorage
   const appName = useSelector(
     (state) => state.appSettings.appSettings?.appName || "Atlas"
   );
@@ -18,10 +17,8 @@ const TermsOfService = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      // ✅ Fetch app settings if needed
       await dispatch(fetchAppSettings());
 
-      // ✅ Fetch terms of service
       setIsLoading(true);
       const resultAction = await dispatch(fetchTermsOfService());
       if (fetchTermsOfService.fulfilled.match(resultAction)) {
