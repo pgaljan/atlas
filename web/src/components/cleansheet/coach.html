@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<!-- Azure Application Insights -->
+<script type="text/javascript">
+!function(T,l,y){var S=T.location,k="script",D="instrumentationKey",C="ingestionendpoint",I="disableExceptionTracking",E="ai.device.",b="toLowerCase",w="crossOrigin",N="POST",e="appInsightsSDK",t=y.name||"appInsights";(y.name||T[e])&&(T[e]=t);var n=T[t]||function(d){var g=!1,f=!1,m={initialize:!0,queue:[],sv:"5",version:2,config:d};function v(e,t){var n={},a="Browser";return n[E+"id"]=a[b](),n[E+"type"]=a,n["ai.operation.name"]=S&&S.pathname||"_unknown_",n["ai.internal.sdkVersion"]="javascript:snippet_"+(m.sv||m.version),{time:function(){var e=new Date;function t(e){var t=""+e;return 1===t.length&&(t="0"+t),t}return e.getUTCFullYear()+"-"+t(1+e.getUTCMonth())+"-"+t(e.getUTCDate())+"T"+t(e.getUTCHours())+":"+t(e.getUTCMinutes())+":"+t(e.getUTCSeconds())+"."+((e.getUTCMilliseconds()/1e3).toFixed(3)+"").slice(2,5)+"Z"}(),iKey:e,name:"Microsoft.ApplicationInsights."+e.replace(/-/g,"")+"."+t,sampleRate:100,tags:n,data:{baseData:{ver:2}}}}var h=d.url||y.src;if(h){function a(e){var t,n,a,i,r,o,s,c,u,p,l;g=!0,m.queue=[],f||(f=!0,t=h,s=function(){var e={},t=d.connectionString;if(t)for(var n=t.split(";"),a=0;a<n.length;a++){var i=n[a].split("=");2===i.length&&(e[i[0][b]()]=i[1])}if(!e[C]){var r=e.endpointsuffix,o=r?e.location:null;e[C]="https://"+(o?o+".":"")+"dc."+(r||"services.visualstudio.com")}return e}(),c=s[D]||d[D]||"",u=s[C],p=u?u+"/v2/track":d.endpointUrl,(l=[]).push((n="SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details)",a=t,i=p,(o=(r=v(c,"Exception")).data).baseType="ExceptionData",o.baseData.exceptions=[{typeName:"SDKLoadFailed",message:n.replace(/\./g,"-"),hasFullStack:!1,stack:n+"\nSnippet failed to load ["+a+"] -- Telemetry is disabled\nHelp Link: https://go.microsoft.com/fwlink/?linkid=2128109\nHost: "+(S&&S.pathname||"_unknown_")+"\nEndpoint: "+i,parsedStack:[]}],r)),l.push(function(e,t,n,a){var i=v(c,"Message"),r=i.data;r.baseType="MessageData";var o=r.baseData;return o.message='AI (Internal): 99 message:"'+("SDK LOAD Failure: Failed to load Application Insights SDK script (See stack for details) ("+n+")").replace(/\"/g,"")+'"',o.properties={endpoint:a},i}(0,0,t,p)),function(e,t){if(JSON){var n=T.fetch;if(n&&!y.useXhr)n(t,{method:N,body:JSON.stringify(e),mode:"cors"});else if(XMLHttpRequest){var a=new XMLHttpRequest;a.open(N,t),a.setRequestHeader("Content-type","application/json"),a.send(JSON.stringify(e))}}}(l,p))}function i(e,t){f||setTimeout(function(){!t&&m.core||a()},500)}var e=function(){var n=l.createElement(k);n.src=h;var e=y[w];return!e&&""!==e||"undefined"==n[w]||(n[w]=e),n.onload=i,n.onerror=a,n.onreadystatechange=function(e,t){"loaded"!==n.readyState&&"complete"!==n.readyState||i(0,t)},n}();y.ld<0?l.getElementsByTagName("head")[0].appendChild(e):setTimeout(function(){l.getElementsByTagName(k)[0].parentNode.appendChild(e)},y.ld||0)}try{m.cookie=l.cookie}catch(p){}function t(e){for(;e.length;)!function(t){m[t]=function(){var e=arguments;g||m.queue.push(function(){m[t].apply(m,e)})}}(e.pop())}var n="track",r="TrackPage",o="TrackEvent";t([n+"Event",n+"PageView",n+"Exception",n+"Trace",n+"DependencyData",n+"Metric",n+"PageViewPerformance","start"+r,"stop"+r,"start"+o,"stop"+o,"addTelemetryInitializer","setAuthenticatedUserContext","clearAuthenticatedUserContext","flush"]),m.SeverityLevel={Verbose:0,Information:1,Warning:2,Error:3,Critical:4};var s=(d.extensionConfig||{}).ApplicationInsightsAnalytics||{};if(!0!==d[I]&&!0!==s[I]){var c="onerror";t(["_"+c]);var u=T[c];T[c]=function(e,t,n,a,i){var r=u&&u(e,t,n,a,i);return!0!==r&&m["_"+c]({message:e,url:t,lineNumber:n,columnNumber:a,error:i}),r},d.autoExceptionInstrumented=!0}return m}(y.cfg);function a(){y.onInit&&y.onInit(n)}(T[t]=n).queue&&0===n.queue.length?(n.queue.push(a),n.trackPageView({})):a()}(window,document,{
+src: "https://js.monitor.azure.com/scripts/b/ai.2.min.js",
+crossOrigin: "anonymous",
+cfg: {
+connectionString: "InstrumentationKey=104926d6-679a-4baa-919e-665bea6facac;IngestionEndpoint=https://eastus-8.in.applicationinsights.azure.com/;LiveEndpoint=https://eastus.livediagnostics.monitor.azure.com/;ApplicationId=2e7de093-fa39-4859-a48b-515db3520828"
+}
+});
+</script>
+<!-- End Application Insights -->
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cleansheet Quarters - Coaching Program</title>
+    <link rel="icon" type="image/png" href="assets/high-resolution-logo-files/white-on-transparent.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Barlow:wght@300&family=Questrial&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+
+    <style>
+        /* Cleansheet Design System - Corporate Professional */
+        :root {
+            /* Brand Colors */
+            --color-primary-blue: #0066CC;
+            --color-accent-blue: #004C99;
+            --color-dark: #1a1a1a;
+
+            /* Neutral Colors */
+            --color-neutral-text: #333333;
+            --color-neutral-text-light: #666666;
+            --color-neutral-text-muted: #999999;
+            --color-neutral-background: #f5f5f7;
+            --color-neutral-background-secondary: #f8f8f8;
+            --color-neutral-border: #e5e5e7;
+            --color-neutral-white: #ffffff;
+
+            /* Typography */
+            --font-family-ui: 'Questrial', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            --font-family-body: 'Barlow', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: var(--font-family-body);
+            font-weight: 300;
+            background: var(--color-neutral-background);
+            color: var(--color-neutral-text);
+            line-height: 1.6;
+        }
+
+        header {
+            background: var(--color-dark);
+            color: white;
+            padding: 20px 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .header-text h1 {
+            font-family: var(--font-family-ui);
+            font-size: clamp(24px, 4vw, 32px);
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .header-text p {
+            font-size: clamp(14px, 2.5vw, 16px);
+            opacity: 0.9;
+        }
+
+        .header-logo {
+            height: 60px;
+        }
+
+        .floating-home-btn {
+            position: fixed;
+            top: 16px;
+            left: 16px;
+            padding: 8px 16px;
+            background: rgba(26, 26, 26, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 8px;
+            color: white;
+            text-decoration: none;
+            font-family: var(--font-family-ui);
+            font-size: 12px;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s;
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .floating-home-btn:hover {
+            background: rgba(0, 102, 204, 0.95);
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .progress-container {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--color-neutral-border);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 12px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-accent-blue) 0%, var(--color-primary-blue) 100%);
+            transition: width 0.5s ease;
+            width: 0%;
+        }
+
+        .progress-stages {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            gap: 4px;
+            margin-bottom: 12px;
+        }
+
+        .progress-stages .stage {
+            font-family: var(--font-family-ui);
+            font-size: 11px;
+            color: var(--color-neutral-text-muted);
+            text-align: center;
+            line-height: 1.3;
+            padding: 4px 2px;
+            transition: all 0.3s ease;
+        }
+
+        .progress-stages .stage.active {
+            color: var(--color-primary-blue);
+            font-weight: 600;
+        }
+
+        .progress-text {
+            font-family: var(--font-family-ui);
+            font-size: 14px;
+            color: var(--color-neutral-text-light);
+            text-align: center;
+            margin-bottom: 16px;
+        }
+
+        /* Progress Bar / Week Markers */
+        .timeline-progress-bar {
+            position: relative;
+            background: var(--color-neutral-background);
+            border-radius: 12px;
+            padding: 24px 16px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .week-markers {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            position: relative;
+            margin-bottom: 12px;
+        }
+
+        .week-marker {
+            flex: 1;
+            text-align: center;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .week-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--color-neutral-border);
+            margin-bottom: 8px;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .week-marker.milestone .week-dot {
+            background: var(--color-primary-blue);
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 2px 4px rgba(0, 102, 204, 0.3);
+        }
+
+        .week-marker.session .week-dot {
+            background: #dc2626;
+            width: 16px;
+            height: 16px;
+            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3);
+        }
+
+        .week-label {
+            font-size: 11px;
+            font-weight: 600;
+            font-family: var(--font-family-ui);
+            color: var(--color-neutral-text-light);
+        }
+
+        .week-marker.milestone .week-label,
+        .week-marker.session .week-label {
+            color: var(--color-dark);
+        }
+
+        .progress-line {
+            position: absolute;
+            top: 6px;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: var(--color-neutral-border);
+            z-index: 1;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--color-primary-blue), #7c3aed);
+            transition: width 0.5s ease;
+            border-radius: 2px;
+        }
+
+        .progress-legend {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .progress-legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            font-family: var(--font-family-body);
+            color: var(--color-neutral-text);
+        }
+
+        .progress-legend-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .timeline {
+            position: relative;
+            overflow: hidden;
+            min-height: 500px;
+        }
+
+        .timeline-wrapper {
+            display: flex;
+            transition: transform 0.5s ease;
+            width: 100%;
+        }
+
+        .timeline-item {
+            min-width: 100%;
+            flex-shrink: 0;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+
+        .timeline-item.active {
+            opacity: 1;
+        }
+
+        .timeline-marker {
+            display: none;
+        }
+
+        .timeline-content {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            max-width: 700px;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+
+        .timeline-item.active .timeline-content {
+            box-shadow: 0 8px 24px rgba(0, 102, 204, 0.15);
+        }
+
+        .timeline-content h3 {
+            font-family: var(--font-family-ui);
+            font-size: clamp(18px, 3vw, 24px);
+            color: var(--color-dark);
+            margin-bottom: 12px;
+        }
+
+        .week-badge {
+            display: inline-block;
+            background: var(--color-primary-blue);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+
+        .timeline-content p {
+            font-size: 15px;
+            margin-bottom: 12px;
+        }
+
+        .timeline-content ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .timeline-content li {
+            padding: 8px 0 8px 24px;
+            position: relative;
+            font-size: 14px;
+            color: var(--color-neutral-text-light);
+        }
+
+        .timeline-content li::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 8px;
+            height: 8px;
+            background: var(--color-primary-blue);
+            border-radius: 50%;
+        }
+
+        .meeting-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #e3f2fd;
+            color: var(--color-primary-blue);
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 600;
+            margin-top: 8px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: var(--font-family-ui);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: var(--color-primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--color-accent-blue);
+            box-shadow: 0 4px 12px rgba(0, 102, 204, 0.3);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: var(--color-neutral-text);
+            border: 1px solid var(--color-neutral-border);
+        }
+
+        .btn-secondary:hover:not(:disabled) {
+            border-color: var(--color-primary-blue);
+            color: var(--color-primary-blue);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .summary-card {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            text-align: center;
+            margin-top: 32px;
+            display: none;
+        }
+
+        .summary-card.active {
+            display: block;
+        }
+
+        .summary-card h2 {
+            font-family: var(--font-family-ui);
+            font-size: clamp(24px, 3.5vw, 28px);
+            color: var(--color-dark);
+            margin-bottom: 16px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-top: 32px;
+        }
+
+        .summary-item .icon {
+            width: 60px;
+            height: 60px;
+            background: #e3f2fd;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+            font-size: 28px;
+            color: var(--color-primary-blue);
+        }
+
+        .summary-item h3 {
+            font-family: var(--font-family-ui);
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        @media (max-width: 768px) {
+            html, body {
+                overflow-x: hidden;
+                width: 100%;
+            }
+
+            body {
+                font-size: 14px;
+            }
+
+            .container {
+                padding: 16px 12px;
+                overflow-x: hidden;
+            }
+
+            .header-content {
+                flex-direction: column;
+                text-align: center;
+                padding: 16px 12px;
+            }
+
+            .header-logo {
+                height: 40px;
+            }
+
+            .progress-container {
+                padding: 16px;
+            }
+
+            .progress-stages {
+                grid-template-columns: repeat(4, 1fr);
+                gap: 4px 2px;
+            }
+
+            .progress-stages .stage {
+                font-size: 10px;
+                padding: 4px 2px;
+                line-height: 1.2;
+            }
+
+            .nav-buttons {
+                flex-direction: row;
+                gap: 8px;
+            }
+
+            .btn {
+                padding: 10px 16px;
+                font-size: 13px;
+                flex: 1;
+            }
+
+            .btn span {
+                display: none;
+            }
+
+            .btn i {
+                margin: 0;
+            }
+
+            .timeline {
+                min-height: 400px;
+                overflow-x: hidden;
+            }
+
+            .timeline-wrapper {
+                width: 100%;
+                min-height: 400px;
+            }
+
+            .timeline-item {
+                padding: 16px 12px;
+                min-width: 100%;
+                width: 100%;
+                box-sizing: border-box;
+                transition: opacity 0.5s ease 0.3s;
+            }
+
+            .timeline-item.active {
+                opacity: 1 !important;
+                transition: opacity 0.5s ease 0.2s;
+            }
+
+            .timeline-content {
+                padding: 20px 16px;
+                max-width: 100%;
+                width: 100%;
+                box-sizing: border-box;
+            }
+
+            .timeline-content h3 {
+                font-size: 18px;
+            }
+
+            .timeline-content p {
+                font-size: 14px;
+            }
+
+            .timeline-content li {
+                font-size: 13px;
+            }
+
+            .summary-card {
+                padding: 20px 16px;
+            }
+
+            .summary-grid {
+                grid-template-columns: 1fr;
+                gap: 16px;
+            }
+
+            .floating-home-btn {
+                top: 8px;
+                left: 8px;
+                padding: 6px 12px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <a href="index.html" class="floating-home-btn" id="floatingHomeBtn">
+        <i class="ph ph-arrow-left"></i>
+        <span>Home</span>
+    </a>
+
+    <header id="pageHeader">
+        <div class="header-content">
+            <div class="header-text">
+                <h1>Cleansheet Quarters</h1>
+                <p>Your 12-week journey to professional growth with personalized coaching</p>
+            </div>
+            <img src="assets/high-resolution-logo-files/white-on-transparent.png" alt="Cleansheet Logo" class="header-logo">
+        </div>
+    </header>
+
+    <div class="container" id="mainContainer">
+        <div class="progress-container">
+            <!-- Week Progress Bar -->
+            <div class="timeline-progress-bar">
+                <div class="week-markers">
+                    <div class="progress-line">
+                        <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+                    </div>
+
+                    <div class="week-marker milestone" data-week="0">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W0</div>
+                    </div>
+                    <div class="week-marker milestone" data-week="1">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W1</div>
+                    </div>
+                    <div class="week-marker milestone" data-week="2">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W2</div>
+                    </div>
+                    <div class="week-marker session" data-week="3">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W3</div>
+                    </div>
+                    <div class="week-marker" data-week="4">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W4</div>
+                    </div>
+                    <div class="week-marker" data-week="5">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W5</div>
+                    </div>
+                    <div class="week-marker session" data-week="6">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W6</div>
+                    </div>
+                    <div class="week-marker" data-week="7">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W7</div>
+                    </div>
+                    <div class="week-marker" data-week="8">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W8</div>
+                    </div>
+                    <div class="week-marker session" data-week="9">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W9</div>
+                    </div>
+                    <div class="week-marker" data-week="10">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W10</div>
+                    </div>
+                    <div class="week-marker" data-week="11">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W11</div>
+                    </div>
+                    <div class="week-marker session milestone" data-week="12">
+                        <div class="week-dot"></div>
+                        <div class="week-label">W12</div>
+                    </div>
+                </div>
+
+                <div class="progress-legend">
+                    <div class="progress-legend-item">
+                        <div class="progress-legend-dot" style="background: var(--color-primary-blue);"></div>
+                        <span>Milestones</span>
+                    </div>
+                    <div class="progress-legend-item">
+                        <div class="progress-legend-dot" style="background: #dc2626;"></div>
+                        <span>Coaching Sessions</span>
+                    </div>
+                    <div class="progress-legend-item">
+                        <div class="progress-legend-dot" style="background: var(--color-neutral-border);"></div>
+                        <span>Ongoing Work</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="progress-text" id="progressText" style="margin-top: 16px;">Step 1 of 8</div>
+            <div class="nav-buttons">
+                <button class="btn btn-secondary" id="prevBtn" disabled>
+                    <i class="ph ph-arrow-left"></i> Previous
+                </button>
+                <button class="btn btn-primary" id="nextBtn">
+                    Next <i class="ph ph-arrow-right"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="timeline" id="timeline">
+            <div class="timeline-wrapper">
+            <div class="timeline-item active" data-step="1">
+                <div class="timeline-marker"><i class="ph ph-user-circle-gear"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 0</span>
+                    <h3>Success Manager Consultation</h3>
+                    <p>Begin your journey with a dedicated Success Manager who understands your career aspirations.</p>
+                    <ul>
+                        <li>Initial career assessment</li>
+                        <li>Professional background review</li>
+                        <li>Learning style evaluation</li>
+                        <li>Success criteria discussion</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="2">
+                <div class="timeline-marker"><i class="ph ph-target"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 1</span>
+                    <h3>Detailed Goal Setting</h3>
+                    <p>Define clear, measurable objectives for your 12-week quarter.</p>
+                    <ul>
+                        <li>SMART goal definition</li>
+                        <li>Skill development priorities</li>
+                        <li>Career milestone identification</li>
+                        <li>Success metrics establishment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="3">
+                <div class="timeline-marker"><i class="ph ph-lightbulb"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 1-2</span>
+                    <h3>Capstone Project Planning</h3>
+                    <p>Design a real-world project that demonstrates your skills.</p>
+                    <ul>
+                        <li>Project scope definition</li>
+                        <li>Technical requirements mapping</li>
+                        <li>Deliverable timeline creation</li>
+                        <li>Resource needs assessment</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="4">
+                <div class="timeline-marker"><i class="ph ph-handshake"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 2</span>
+                    <h3>Coach Match on Profile & Goals</h3>
+                    <p>Matched with an experienced coach based on your background and goals.</p>
+                    <ul>
+                        <li>Industry expertise alignment</li>
+                        <li>Technical skill compatibility</li>
+                        <li>Mentoring style fit</li>
+                        <li>Coach introduction meeting</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="5">
+                <div class="timeline-marker"><i class="ph ph-video-camera"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 3</span>
+                    <h3>First Coaching Session</h3>
+                    <p>Kick off your coaching relationship with alignment and guidance.</p>
+                    <div class="meeting-badge"><i class="ph ph-clock"></i> 30-45 minutes</div>
+                    <ul>
+                        <li>Relationship building</li>
+                        <li>Quarter roadmap review</li>
+                        <li>Initial guidance session</li>
+                        <li>First milestone setting</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="6">
+                <div class="timeline-marker"><i class="ph ph-chats-circle"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Weeks 3-12</span>
+                    <h3>Ongoing Asynchronous Collaboration</h3>
+                    <p>Work independently with continuous support.</p>
+                    <ul>
+                        <li>Weekly progress updates</li>
+                        <li>Code/work reviews</li>
+                        <li>Q&A via messaging</li>
+                        <li>Resource recommendations</li>
+                        <li>Blocker troubleshooting</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="7">
+                <div class="timeline-marker"><i class="ph ph-calendar-check"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Weeks 6, 9, 12</span>
+                    <h3>Three Additional Coaching Sessions</h3>
+                    <p>Continue momentum with strategically scheduled meetings.</p>
+                    <div class="meeting-badge"><i class="ph ph-clock"></i> 30-45 minutes each</div>
+                    <ul>
+                        <li>Mid-quarter progress review (Week 6)</li>
+                        <li>Final push guidance (Week 9)</li>
+                        <li>Capstone completion (Week 12)</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="timeline-item" data-step="8">
+                <div class="timeline-marker"><i class="ph ph-trophy"></i></div>
+                <div class="timeline-content">
+                    <span class="week-badge">Week 12</span>
+                    <h3>Quarter Completion & Next Steps</h3>
+                    <p>Celebrate achievements and plan continued growth.</p>
+                    <ul>
+                        <li>Capstone project presentation</li>
+                        <li>Goal achievement review</li>
+                        <li>Skills growth assessment</li>
+                        <li>Portfolio integration</li>
+                        <li>Next quarter planning (optional)</li>
+                    </ul>
+                </div>
+            </div>
+            </div>
+        </div>
+
+        <div class="summary-card" id="summaryCard">
+            <h2>Ready to Start Your Cleansheet Quarter?</h2>
+            <p style="font-size: 16px; color: #666; margin-bottom: 32px;">
+                Transform your career with personalized coaching, hands-on project work, and professional mentorship.
+            </p>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <div class="icon"><i class="ph ph-calendar-blank"></i></div>
+                    <h3>12 Weeks</h3>
+                    <p>Structured engagement timeline</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon"><i class="ph ph-video-camera"></i></div>
+                    <h3>4 Sessions</h3>
+                    <p>30-45 min virtual meetings</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon"><i class="ph ph-chats"></i></div>
+                    <h3>Continuous Support</h3>
+                    <p>Asynchronous collaboration</p>
+                </div>
+                <div class="summary-item">
+                    <div class="icon"><i class="ph ph-graduation-cap"></i></div>
+                    <h3>Capstone Project</h3>
+                    <p>Portfolio-ready deliverable</p>
+                </div>
+            </div>
+            <div style="margin-top: 40px;">
+                <button class="btn btn-primary" onclick="alert('Enrollment coming soon!')">
+                    <i class="ph ph-rocket-launch"></i> Enroll in a Quarter
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStep = 1;
+        const totalSteps = 8;
+        const timelineItems = document.querySelectorAll('.timeline-item');
+        const prevBtn = document.getElementById('prevBtn');
+        const nextBtn = document.getElementById('nextBtn');
+        const progressFill = document.getElementById('progressFill');
+        const progressText = document.getElementById('progressText');
+        const summaryCard = document.getElementById('summaryCard');
+        const timeline = document.getElementById('timeline');
+        const stageLabels = document.querySelectorAll('.progress-stages .stage');
+
+        // Map timeline steps to weeks for progress bar
+        const stepToWeekMap = {
+            1: 0,   // Success Manager Consultation - Week 0
+            2: 1,   // Goal Setting - Week 1
+            3: 2,   // Capstone Planning - Week 1-2
+            4: 2,   // Coach Match - Week 2
+            5: 3,   // First Coaching Session - Week 3
+            6: 6,   // Ongoing Async - Weeks 3-12 (show at midpoint)
+            7: 9,   // Additional Sessions - Weeks 6, 9, 12 (show at Week 9)
+            8: 12   // Completion - Week 12
+        };
+
+        function updateProgress() {
+            // Update step text
+            progressText.textContent = `Step ${currentStep} of ${totalSteps}`;
+
+            // Update week progress bar
+            const currentWeek = stepToWeekMap[currentStep] || 0;
+            const weekProgressFill = document.getElementById('progressFill');
+            if (weekProgressFill) {
+                // Calculate percentage based on week (0-12)
+                const weekPercentage = (currentWeek / 12) * 100;
+                weekProgressFill.style.width = weekPercentage + '%';
+            }
+        }
+
+        function showStep(step) {
+            // Slide to the current step using CSS transform
+            const wrapper = document.querySelector('.timeline-wrapper');
+            const offset = (step - 1) * -100;
+            wrapper.style.transform = `translateX(${offset}%)`;
+
+            // Update active states
+            timelineItems.forEach((item, i) => {
+                item.classList.toggle('active', i === step - 1);
+            });
+
+            prevBtn.disabled = step === 1;
+            nextBtn.innerHTML = step === totalSteps
+                ? 'View Summary <i class="ph ph-check-circle"></i>'
+                : 'Next <i class="ph ph-arrow-right"></i>';
+
+            updateProgress();
+        }
+
+        prevBtn.addEventListener('click', () => {
+            if (currentStep > 1) {
+                if (summaryCard.classList.contains('active')) {
+                    summaryCard.classList.remove('active');
+                    timeline.style.display = 'block';
+                }
+                showStep(--currentStep);
+            }
+        });
+
+        nextBtn.addEventListener('click', () => {
+            if (currentStep < totalSteps) {
+                showStep(++currentStep);
+            } else {
+                timeline.style.display = 'none';
+                summaryCard.classList.add('active');
+            }
+        });
+
+        showStep(currentStep);
+
+        // Check if embedded and hide header/home button
+        const urlParams = new URLSearchParams(window.location.search);
+        const isEmbedded = urlParams.get('embed') === 'true';
+
+        if (isEmbedded) {
+            document.getElementById('floatingHomeBtn').style.display = 'none';
+            document.getElementById('pageHeader').style.display = 'none';
+            document.getElementById('mainContainer').style.paddingTop = '16px';
+        }
+    </script>
+</body>
+</html>
