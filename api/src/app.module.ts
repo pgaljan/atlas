@@ -27,6 +27,9 @@ import { ShareStructureModule } from './share-structure/share-structure.module';
 import { TelemetryModule } from './telemetry/telemetry.module';
 import { ScheduleModule } from '@nestjs/schedule';
 import { CleansheetModule } from './cleensheet/cleansheet.module';
+import { AuditModule } from './audit-log-azure/audit.module';
+import { AuditInterceptor } from './audit-log-azure/audit.interceptor';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 @Module({
   imports: [
     ConfigModule.forRoot(),
@@ -38,6 +41,7 @@ import { CleansheetModule } from './cleensheet/cleansheet.module';
     CleansheetModule,
     PlansModule,
     FileUploadModule,
+    AuditModule,
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'public'),
       serveRoot: '/api/public',
@@ -59,6 +63,12 @@ import { CleansheetModule } from './cleensheet/cleansheet.module';
     TelemetryModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_INTERCEPTOR,
+      useClass: AuditInterceptor,
+    },
+  ],
 })
 export class AppModule {}

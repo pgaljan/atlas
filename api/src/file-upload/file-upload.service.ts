@@ -7,6 +7,8 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageAccountingService } from 'src/storage/storage-accounting.service';
 import { getAttachmentBytesBigInt } from 'src/storage/storage-size.util';
+import { AzureBlobService } from 'src/azure-blob-storage/azure-blob.service';
+import { v4 as uuidv4 } from 'uuid';
 
 @Injectable()
 export class FileUploadService {
@@ -15,6 +17,7 @@ export class FileUploadService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageAccounting: StorageAccountingService,
+    private readonly azureBlobService: AzureBlobService,
   ) {}
 
   private async getNextOrderIndex(
@@ -52,7 +55,7 @@ export class FileUploadService {
         0n,
       );
 
-      await this.storageAccounting.adjustStoredBytes(userId, totalBytes);
+      await this.storageAccounting.setStoredBytes(userId, totalBytes);
 
       return totalBytes;
     } catch (err) {
@@ -68,23 +71,39 @@ export class FileUploadService {
   async saveRawFile(
     userId: string,
     file: Express.Multer.File,
-    fileUrl: string,
+    fileUrlFromRequest?: string,
   ) {
     try {
-      const bytes = BigInt(file?.size ?? 0);
+      if (!file) throw new InternalServerErrorException('No file provided');
+
+      const buffer = (file as any).buffer as Buffer | undefined;
+      const sizeBytes = BigInt(file.size ?? (buffer ? buffer.length : 0));
+
+      let fileUrl = fileUrlFromRequest ?? null;
+      let blobMeta: any = null;
+      if (buffer) {
+        const blobName = `media/${uuidv4()}-${file.originalname}`;
+        const uploadRes = await this.azureBlobService.uploadBuffer(
+          buffer,
+          blobName,
+          file.mimetype,
+        );
+        fileUrl = uploadRes.url;
+        blobMeta = { blobName, container: uploadRes.container };
+      }
 
       const attachment = await this.prisma.attachment.create({
         data: {
           userId,
           fileUrl,
           fileType: file.mimetype,
-          sizeBytes: bytes,
-          data: {},
+          sizeBytes,
+          data: blobMeta ?? {},
         },
       });
 
       try {
-        await this.storageAccounting.adjustStoredBytes(userId, bytes);
+        await this.storageAccounting.adjustStoredBytes(userId, sizeBytes);
       } catch (err) {
         this.logger.error(
           `Failed to adjust storedBytes after saveRawFile: ${err}`,
@@ -97,7 +116,7 @@ export class FileUploadService {
           data: {
             userId,
             type: 'attachment-create',
-            bytes: bytes,
+            bytes: sizeBytes,
             sign: 1,
           },
         });
@@ -105,7 +124,6 @@ export class FileUploadService {
         this.logger.error(
           `Failed to create storageEvent for attachment create: ${err}`,
         );
-        // do not block the operation
       }
 
       return attachment;
@@ -118,44 +136,46 @@ export class FileUploadService {
   async createAttachment(
     userId: string,
     file: Express.Multer.File,
-    fileUrl: string,
+    fileUrlFromRequest?: string,
   ) {
     try {
-      const user = await this.prisma.user.findUnique({
-        where: { id: userId },
-      });
+      const user = await this.prisma.user.findUnique({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
 
-      if (!user) {
-        throw new NotFoundException('User not found');
+      const buffer = (file as any).buffer as Buffer | undefined;
+      const sizeBytes = BigInt(file.size ?? (buffer ? buffer.length : 0));
+      let fileUrl = fileUrlFromRequest ?? null;
+      let blobMeta: any = null;
+
+      if (buffer) {
+        const blobName = `media/${uuidv4()}-${file.originalname}`;
+        const uploadRes = await this.azureBlobService.uploadBuffer(
+          buffer,
+          blobName,
+          file.mimetype,
+        );
+        fileUrl = uploadRes.url;
+        blobMeta = { blobName, container: uploadRes.container };
       }
-
-      const bytes = BigInt(file?.size ?? 0);
 
       const attachment = await this.prisma.attachment.create({
         data: {
           userId,
           fileUrl,
           fileType: file.mimetype,
-          sizeBytes: bytes,
-          data: {},
+          sizeBytes,
+          data: blobMeta ?? {},
         },
       });
 
-      try {
-         await this.recalcStoredBytesForUser(userId);
-      } catch (err) {
-        this.logger.error(
-          `Failed to adjust storedBytes after createAttachment: ${err}`,
-        );
-        throw err;
-      }
+      await this.recalcStoredBytesForUser(userId);
 
       try {
         await this.prisma.storageEvent.create({
           data: {
             userId,
             type: 'attachment-create',
-            bytes: bytes,
+            bytes: sizeBytes,
             sign: 1,
           },
         });
@@ -163,7 +183,6 @@ export class FileUploadService {
         this.logger.error(
           `Failed to create storageEvent for attachment create: ${err}`,
         );
-        // do not block the operation
       }
 
       return attachment;
@@ -176,20 +195,16 @@ export class FileUploadService {
   async updateStructureTitle(structureId: string, parsedData: any[]) {
     try {
       const titleRow = parsedData.find((row) => /^#\s*(.+)$/.test(row.element));
-
       if (!titleRow) {
         throw new NotFoundException(
           'No level 1 title found in the uploaded data.',
         );
       }
-
       const titleMatch = titleRow.element.match(/^#\s*(.+)$/);
       const name = titleMatch ? titleMatch[1].trim() : null;
-
       if (!name) {
         throw new NotFoundException('Invalid title format in uploaded data.');
       }
-
       return await this.prisma.structure.update({
         where: { id: structureId },
         data: { name, title: name },
@@ -231,7 +246,7 @@ export class FileUploadService {
       const levelStack: { level: number; id: string }[] = [];
 
       for (const row of parsedData) {
-        const match = row.element.match(/^(#+)\s*(.*)$/);
+        const match = row.element?.match?.(/^(#+)\s*(.*)$/);
         if (!match) continue;
 
         const level = match[1].length;
@@ -316,7 +331,6 @@ export class FileUploadService {
       });
     } catch (error) {
       this.logger.error('Error logging audit:', error as any);
-      throw new InternalServerErrorException('Failed to log audit.');
     }
   }
 
@@ -358,7 +372,6 @@ export class FileUploadService {
     }
   }
 
- 
   async deleteMedia(id: string) {
     try {
       const media = await this.prisma.attachment.findUnique({
@@ -367,6 +380,15 @@ export class FileUploadService {
 
       if (!media) {
         throw new NotFoundException('Media not found.');
+      }
+
+      try {
+        const blobName = (media.data as any)?.blobName;
+        if (blobName) {
+          await this.azureBlobService.deleteBlob(blobName);
+        }
+      } catch (err) {
+        this.logger.error(`Failed to delete azure blob for media ${id}`, err);
       }
 
       let sizeBytesBigInt: bigint = 0n;
@@ -387,7 +409,6 @@ export class FileUploadService {
           );
         }
 
-        // 2) create a storageEvent for delete (non-fatal)
         try {
           await this.prisma.storageEvent.create({
             data: {
@@ -411,44 +432,55 @@ export class FileUploadService {
     }
   }
 
-  async uploadAnonymousFile(file: Express.Multer.File, fileUrl: string) {
+  async uploadAnonymousFile(
+    file: Express.Multer.File,
+    fileUrlFromRequest?: string,
+  ) {
     const defaultAdmin = await this.prisma.user.findFirst({
       where: { isAdmin: true },
     });
 
     if (!defaultAdmin) {
-      throw new Error('No default admin found for anonymous uploads.');
+      throw new InternalServerErrorException(
+        'No default admin found for anonymous uploads.',
+      );
     }
 
     try {
-      const bytes = BigInt(file.size ?? 0);
+      const buffer = (file as any).buffer as Buffer | undefined;
+      const bytes = BigInt(file.size ?? (buffer ? buffer.length : 0));
+      let fileUrl = fileUrlFromRequest ?? null;
+      let blobMeta = null;
+
+      if (buffer) {
+        const blobName = `media/${uuidv4()}-${file.originalname}`;
+        const uploadRes = await this.azureBlobService.uploadBuffer(
+          buffer,
+          blobName,
+          file.mimetype,
+        );
+        fileUrl = uploadRes.url;
+        blobMeta = { blobName, container: uploadRes.container };
+      }
+
       const attachment = await this.prisma.attachment.create({
         data: {
           userId: defaultAdmin.id,
           fileUrl,
           fileType: file.mimetype,
           sizeBytes: bytes,
-          data: {},
+          data: blobMeta ?? {},
         },
       });
 
-      // bump storedBytes for default admin
-      try {
-       await this.recalcStoredBytesForUser(defaultAdmin.id);
-      } catch (err) {
-        this.logger.error(
-          `Failed to adjust storedBytes for anonymous upload: ${err}`,
-        );
-        throw err;
-      }
+      await this.recalcStoredBytesForUser(defaultAdmin.id);
 
-      // create a storageEvent for anonymous upload (non-fatal)
       try {
         await this.prisma.storageEvent.create({
           data: {
             userId: defaultAdmin.id,
             type: 'attachment-create',
-            bytes: bytes,
+            bytes,
             sign: 1,
           },
         });
@@ -456,7 +488,6 @@ export class FileUploadService {
         this.logger.error(
           `Failed to create storageEvent for anonymous attachment create: ${err}`,
         );
-        // do not block the operation
       }
 
       return attachment;

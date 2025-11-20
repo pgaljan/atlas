@@ -50,7 +50,7 @@ module.exports = {
       fontFamily: {
         inter: ["Inter", "sans-serif"],
         poppins: ["Poppins", "sans-serif"],
-      },
+      }, 
       transitionProperty: {
         borderColor: "border-color",
       },

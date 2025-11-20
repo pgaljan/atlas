@@ -19,7 +19,7 @@ async function bootstrap() {
     allowedHeaders: ['Content-Type', 'Authorization', 'x-feature'],
     credentials: true,
   });
- app.useGlobalInterceptors(new BigIntSerializerInterceptor());
+  app.useGlobalInterceptors(new BigIntSerializerInterceptor());
   app.setGlobalPrefix('api/v1');
 
   app.enableVersioning({

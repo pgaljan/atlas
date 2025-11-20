@@ -1,4 +1,3 @@
-// src/backup/backup.service.ts
 import {
   BadRequestException,
   Injectable,
@@ -8,12 +7,10 @@ import {
 } from '@nestjs/common';
 import * as AdmZip from 'adm-zip';
 import * as crypto from 'crypto';
-import * as fs from 'fs';
 import * as path from 'path';
 import { v4 as uuidv4 } from 'uuid';
 import * as xlsx from 'xlsx';
 import { PrismaService } from '../prisma/prisma.service';
-import { SearchDateQueryDto, SearchQueryDto } from './dto/search-query-dto';
 import { Prisma } from '@prisma/client';
 import {
   getAttachmentBytesBigInt,
@@ -21,6 +18,8 @@ import {
   bigIntBytesToMiBNumber,
 } from '../storage/storage-size.util';
 import { StorageAccountingService } from '../storage/storage-accounting.service';
+import { AzureBlobService } from '../azure-blob-storage/azure-blob.service';
+import * as fs from 'fs';
 
 const MAX_CELL_LENGTH = 32767;
 
@@ -38,6 +37,7 @@ export class BackupService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storageAccounting: StorageAccountingService,
+    private readonly azureBlobService: AzureBlobService,
   ) {}
 
   private getDayRangeFromDateString(dateStr: string) {
@@ -58,9 +58,9 @@ export class BackupService {
       );
       return Buffer.concat([cipher.update(data), cipher.final()]);
     } catch (error) {
+      this.logger.error('Encryption failed', error as any);
       throw new InternalServerErrorException(
         'Failed to encrypt the backup data',
-        error.message,
       );
     }
   }
@@ -83,7 +83,6 @@ export class BackupService {
     });
   }
 
-  // src/backup/backup.service.ts
   private async recalcStoredBytes(userId: string): Promise<bigint> {
     const [backups, attachments] = await Promise.all([
       this.prisma.backup.findMany({
@@ -106,7 +105,6 @@ export class BackupService {
         0n,
       );
 
-    // Atomically set absolute value
     await this.storageAccounting.setStoredBytes(userId, totalBytes);
 
     this.logger.log(
@@ -116,7 +114,6 @@ export class BackupService {
     return totalBytes;
   }
 
-  /** Create backup of user structures, elements, and records */
   async createBackup(
     userId: string,
     structureId?: string,
@@ -175,7 +172,7 @@ export class BackupService {
           eventType: e.eventType || null,
           gateType: e.gateType || null,
           eventValue: e.eventValue ?? null,
-          eventValueType: e.eventValueType || null,
+          eventValueType: e.eventValueType ?? null,
           mttr: e.mttr ?? null,
           missionTime: e.missionTime ?? null,
           description: e.description || null,
@@ -207,10 +204,6 @@ export class BackupService {
         ),
       );
 
-      const backupDir = path.resolve(__dirname, '../../public/backups');
-      if (!fs.existsSync(backupDir))
-        fs.mkdirSync(backupDir, { recursive: true });
-
       const workbook = xlsx.utils.book_new();
       xlsx.utils.book_append_sheet(
         workbook,
@@ -233,33 +226,27 @@ export class BackupService {
 
       const structure = user.structures[0];
 
-      // Generate file name using structure name and timestamp
       const timestamp = new Date()
         .toISOString()
         .replace('T', '_')
         .replace(/\..+/, '')
         .replace(/:/g, '-');
-      const filename = `${structure.title || structure.name}.${timestamp}.zip`;
-
-      const encryptedFilePath = path.resolve(
-        backupDir,
-        `backup-${uuidv4()}.enc`,
-      );
-      fs.writeFileSync(encryptedFilePath, encryptedBuffer);
+      const filename = `${(structure.title || structure.name)
+        .replace(/\s+/g, '_')
+        .replace(/[^a-zA-Z0-9_\-\.]/g, '')}.${timestamp}`;
 
       const zip = new AdmZip();
-      const zipFilePath = path.resolve(backupDir, filename);
-      zip.addLocalFile(encryptedFilePath);
-      zip.writeZip(zipFilePath);
+      zip.addFile(`${path.basename(filename, '.zip')}.enc`, encryptedBuffer);
+      const zipBuffer: Buffer = zip.toBuffer();
 
-      fs.unlinkSync(encryptedFilePath);
-
-      const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
-      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
-        .replace(/^https?:\/+/, '')
-        .replace(/^\/|\/$/, '');
-      const fileUrl = `${protocol}://${baseUrl}/public/backups/${filename}`;
-      const title = `${structure.title || structure.name}-${timestamp}`;
+      // Upload to Azure
+      const blobName = `backups/${filename}-${uuidv4()}.zip`;
+      const uploadRes = await this.azureBlobService.uploadBuffer(
+        zipBuffer,
+        blobName,
+        'application/zip',
+      );
+      const fileUrl = uploadRes.url;
 
       const validWorkspaceId = workspaceId || user.defaultWorkspaceId;
       if (!validWorkspaceId)
@@ -267,22 +254,19 @@ export class BackupService {
           'No valid workspaceId provided for backup creation',
         );
 
-      // Get the file size in bytes
-      const stats = fs.statSync(zipFilePath);
-      const sizeBytes = BigInt(stats.size);
+      const sizeBytes = BigInt(zipBuffer.length);
 
       const backup = await this.prisma.backup.create({
         data: {
           userId,
-          title,
-          backupData: { filePath: zipFilePath },
+          title: `${structure.title || structure.name}-${timestamp}`,
+          backupData: { blobName, container: uploadRes.container },
           fileUrl,
           workspaceId: validWorkspaceId,
           sizeBytes,
         },
       });
 
-      // Update stored bytes centrally
       try {
         await this.storageAccounting.adjustStoredBytes(userId, sizeBytes);
       } catch (err) {
@@ -292,40 +276,41 @@ export class BackupService {
         throw err;
       }
 
-      // after sizeBytes is known and after backup record created
       try {
-        // create a storage event so exported metrics count this upload
         await this.prisma.storageEvent.create({
           data: {
             userId,
             type: 'backup-create',
-            bytes: sizeBytes, // BigInt
-            sign: 1, // positive for upload
+            bytes: sizeBytes,
+            sign: 1,
           },
         });
       } catch (err) {
-        // don't block backup operation if storage event creation fails,
-        // but log for later debugging
         this.logger.error(
           `Failed to create storageEvent for backup create: ${err}`,
         );
       }
 
-      await this.logAudit('create', 'backup', backup.id, { fileUrl, userId });
+      await this.logAudit(
+        'CREATE',
+        'Backup',
+        backup.id,
+        { fileUrl, blobName },
+        userId,
+      );
 
-      return { message: 'Backup created successfully', fileUrl };
+      return { message: 'Backup created successfully', fileUrl, filename };
     } catch (error) {
       if (
         error instanceof NotFoundException ||
         error instanceof BadRequestException
       )
         throw error;
-      this.logger.error('createBackup error', error);
+      this.logger.error('createBackup error', error as any);
       throw new InternalServerErrorException('Failed to create backup');
     }
   }
 
-  /** Full user backup (all structures) */
   async createFullUserBackup(userId: string) {
     try {
       const user = await this.prisma.user.findUnique({
@@ -351,55 +336,40 @@ export class BackupService {
       const jsonBuffer = Buffer.from(JSON.stringify(backupData, null, 2));
       const encryptedBuffer = this.encrypt(jsonBuffer);
 
-      const backupDir = path.resolve(__dirname, '../../public/backups');
-      if (!fs.existsSync(backupDir))
-        fs.mkdirSync(backupDir, { recursive: true });
-
       const timestamp = new Date()
         .toISOString()
         .replace('T', '_')
         .replace(/\..+/, '')
         .replace(/:/g, '-');
-      const encryptedFilePath = path.resolve(
-        backupDir,
-        `backup-${uuidv4()}.enc`,
-      );
       const filePrefix = user.username || user.email || 'user';
-      const zipFilePath = path.resolve(
-        backupDir,
-        `${filePrefix}-${timestamp}.zip`,
-      );
+      const filename = `${filePrefix}-${timestamp}`;
 
-      fs.writeFileSync(encryptedFilePath, encryptedBuffer);
       const zip = new AdmZip();
-      zip.addLocalFile(encryptedFilePath);
-      zip.writeZip(zipFilePath);
-      fs.unlinkSync(encryptedFilePath);
+      zip.addFile(`${filePrefix}.enc`, encryptedBuffer);
+      const zipBuffer = zip.toBuffer();
 
-      const protocol = (process.env.PROTOCOL || 'http').replace(/:\/*$/, '');
-      const baseUrl = (process.env.BASE_URL || 'localhost:4001')
-        .replace(/^https?:\/+/, '')
-        .replace(/^\/|\/$/, '');
-      const fileUrl = `${protocol}://${baseUrl}/public/backups/${path.basename(zipFilePath)}`;
+      const blobName = `backups/${filename}-${uuidv4()}.zip`;
+      const uploadRes = await this.azureBlobService.uploadBuffer(
+        zipBuffer,
+        blobName,
+        'application/zip',
+      );
+      const fileUrl = uploadRes.url;
 
-      // Get the file size in bytes
-      const stats = fs.statSync(zipFilePath);
-      const sizeBytes = BigInt(stats.size);
-
-      // Create a backup record in the database, providing a valid workspaceId
+      const sizeBytes = BigInt(zipBuffer.length);
       const title = `${filePrefix}-${timestamp}`;
+
       const backup = await this.prisma.backup.create({
         data: {
           userId,
           title,
-          backupData: { filePath: zipFilePath },
+          backupData: { blobName, container: uploadRes.container },
           fileUrl,
           workspaceId: validWorkspaceId,
           sizeBytes,
         },
       });
 
-      // Update stored bytes centrally
       try {
         await this.storageAccounting.adjustStoredBytes(userId, sizeBytes);
       } catch (err) {
@@ -409,32 +379,31 @@ export class BackupService {
         throw err;
       }
 
-      // after sizeBytes is known and after backup record created
       try {
-        // create a storage event so exported metrics count this upload
         await this.prisma.storageEvent.create({
           data: {
             userId,
             type: 'backup-create',
-            bytes: sizeBytes, // BigInt
-            sign: 1, // positive for upload
+            bytes: sizeBytes,
+            sign: 1,
           },
         });
       } catch (err) {
-        // don't block backup operation if storage event creation fails,
-        // but log for later debugging
         this.logger.error(
           `Failed to create storageEvent for full-user backup create: ${err}`,
         );
       }
 
-      await this.logAudit('create', 'full-user-backup', backup.id, {
-        fileUrl,
+      await this.logAudit(
+        'CREATE',
+        'Full-user-backup',
+        backup.id,
+        { fileUrl, blobName },
         userId,
-      });
+      );
       return { message: 'Full user backup created successfully', fileUrl };
     } catch (error) {
-      this.logger.error('createFullUserBackup error', error);
+      this.logger.error('createFullUserBackup error', error as any);
       throw new InternalServerErrorException(
         'Failed to create full user backup',
       );
@@ -474,19 +443,34 @@ export class BackupService {
         throw new NotFoundException(`Backup with ID ${backupId} not found`);
       }
 
-      // Remove the backup file
-      const backupData = backup.backupData as { filePath: string };
-      if (fs.existsSync(backupData.filePath)) {
-        fs.unlinkSync(backupData.filePath);
+      const backupData = backup.backupData as any;
+
+      if (backupData && backupData.blobName) {
+        try {
+          await this.azureBlobService.deleteBlob(backupData.blobName);
+        } catch (err) {
+          this.logger.error(
+            `Failed to delete Azure blob for backup ${backupId}`,
+            err as any,
+          );
+        }
+      } else if (backupData && backupData.filePath) {
+        if (fs.existsSync(backupData.filePath)) {
+          try {
+            fs.unlinkSync(backupData.filePath);
+          } catch (err) {
+            this.logger.error(
+              `Failed to delete local backup file ${backupData.filePath}`,
+              err as any,
+            );
+          }
+        }
       }
 
-      // Delete backup record from DB
       await this.prisma.backup.delete({ where: { id: backupId } });
 
-      // Recalculate stored bytes for the user
       await this.recalcStoredBytes(backup.userId);
 
-      // Create storage event for metrics
       try {
         const sizeBytes = backup.sizeBytes
           ? BigInt(backup.sizeBytes)
@@ -505,14 +489,22 @@ export class BackupService {
         );
       }
 
-      // Log audit
-      await this.logAudit('delete', 'backup', backupId, {
-        userId: backup.userId,
-      });
-
+      await this.logAudit(
+        'DELETE',
+        'Backup',
+        backupId,
+        {
+          title: backup.title,
+          fileUrl: backup.fileUrl,
+          workspaceId: backup.workspaceId,
+          sizeBytes: backup.sizeBytes?.toString() ?? null,
+          deletedAt: new Date().toISOString(),
+        },
+        backup.userId,
+      );
       return { message: `Backup with ID ${backupId} deleted successfully` };
     } catch (error) {
-      this.logger.error('deleteBackup error', error);
+      this.logger.error('deleteBackup error', error as any);
       throw new InternalServerErrorException('Failed to delete the backup');
     }
   }
@@ -529,7 +521,11 @@ export class BackupService {
     }
   }
 
-  async searchByTitle(dto: SearchQueryDto) {
+  async searchByTitle(dto: {
+    query?: string;
+    sortBy?: string;
+    order?: string;
+  }) {
     const sortBy = dto.sortBy ?? 'createdAt';
     const order: Prisma.SortOrder = dto.order === 'asc' ? 'asc' : 'desc';
 
@@ -553,7 +549,10 @@ export class BackupService {
     }
   }
 
-  async searchByDate(dateStr: string, dto: SearchDateQueryDto) {
+  async searchByDate(
+    dateStr: string,
+    dto: { sortBy?: string; order?: string },
+  ) {
     const sortBy = dto.sortBy ?? 'createdAt';
     const order: Prisma.SortOrder = dto.order === 'asc' ? 'asc' : 'desc';
 
