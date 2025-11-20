@@ -63,12 +63,6 @@ export class BackupController {
     }
   }
 
-  private isValidUUID(uuid: string): boolean {
-    const uuidRegex =
-      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-    return uuidRegex.test(uuid);
-  }
-
   @Post('user/:userId/full-backup')
   async createFullUserBackup(@Param('userId') userId: string) {
     try {
@@ -164,5 +158,11 @@ export class BackupController {
     } catch (error) {
       this.handleException(error, 'Failed to search backups by date');
     }
+  }
+
+  private isValidUUID(uuid: string): boolean {
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+    return uuidRegex.test(uuid);
   }
 }

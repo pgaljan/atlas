@@ -25,7 +25,6 @@ import { setFaviconWithFallback } from './utils/faviconFallback';
 import CleansheetPrivateRoute from './routes/CleanSheetPrivateRoute';
 import ExperienceTriggerLayout from './components/cleansheet/layout-cleansheet/experience-trigger-layout/ExperienceTriggerLayout';
 import CleansheetCanvasLayout from './components/cleansheet/layout-cleansheet/cleansheet-canvas-layout/CleanSheetCanvasLayout';
-import CleanSheetCanvas from './containers/common/cleansheet/cleansheet-canvas';
 
 // --- CleanSheet ---
 const CleanSheetPlatform = lazy(() => import('./containers/common/cleansheet/cleansheet-platform'));
@@ -36,6 +35,7 @@ const ContentLibrary = lazy(
 const ExperienceTrigger = lazy(
   () => import('./containers/common/cleansheet/cleansheet-experience-trigger'),
 );
+const CleanSheetCanvas = lazy(() => import('./containers/common/cleansheet/cleansheet-canvas'));
 // Lazy imports (rest of app)
 const NotFound = lazy(() => import('./components/404-notfound/NotFound'));
 const ComingSoon = lazy(() => import('./components/comming-soon'));
@@ -347,7 +347,7 @@ const App = () => {
             <Route index element={<ExperienceTrigger />} />
           </Route>
           <Route
-            path="/cleansheet/canvas"
+            path="/cleansheet/career-canvas"
             element={
               <CleansheetPrivateRoute>
                 <CleansheetCanvasLayout />

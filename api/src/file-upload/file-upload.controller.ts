@@ -14,12 +14,11 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { FileInterceptor } from '@nestjs/platform-express';
-import * as fs from 'fs';
-import { diskStorage } from 'multer';
+import { memoryStorage } from 'multer';
 import * as Papa from 'papaparse';
-import { extname, join } from 'path';
-import { v4 as uuidv4 } from 'uuid';
+import { extname } from 'path';
 import * as XLSX from 'xlsx';
+import { v4 as uuidv4 } from 'uuid';
 import { FileUploadService } from './file-upload.service';
 import { StructurePermissionGuard } from 'src/auth/guards/structure-permission.guard';
 
@@ -31,16 +30,38 @@ export class FileUploadController {
     private readonly configService: ConfigService,
   ) {}
 
+  private async parseCSVBuffer(buffer: Buffer): Promise<any[]> {
+    return new Promise((resolve, reject) => {
+      const fileContent = buffer.toString('utf8');
+      Papa.parse(fileContent, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (result) => resolve(result.data),
+        error: (error: any) => reject(error),
+      });
+    });
+  }
+
+  private parseExcelBuffer(buffer: Buffer): any[] {
+    const workbook = XLSX.read(buffer, { type: 'buffer' });
+    const sheetName = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[sheetName];
+    return XLSX.utils.sheet_to_json(sheet);
+  }
+
+  private parseJSONBuffer(buffer: Buffer): any[] {
+    const fileContent = buffer.toString('utf8');
+    return JSON.parse(fileContent);
+  }
+
   @Post('upload')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: 'public/',
-        filename: (req, file, callback) => {
-          const uniqueName = uuidv4() + extname(file.originalname);
-          callback(null, uniqueName);
-        },
-      }),
+      storage: memoryStorage(),
+      fileFilter: (req, file, cb) => {
+        cb(null, true);
+      },
+      limits: { fileSize: 200 * 1024 * 1024 },
     }),
   )
   async uploadFileAndParse(
@@ -52,7 +73,6 @@ export class FileUploadController {
     if (!file) {
       throw new BadRequestException('No file uploaded.');
     }
-
     if (!userId) {
       throw new BadRequestException('UserId is required.');
     }
@@ -74,21 +94,16 @@ export class FileUploadController {
       'video/mpeg',
     ];
 
-    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
-      (req.headers as any).host
-    }/api/public/${file.filename}`;
-    const filePath = join('public', file.filename);
-
     try {
       if (allowedParseTypes.includes(fileType)) {
         let parsedData: any[];
 
         if (fileType === 'text/csv') {
-          parsedData = await this.parseCSV(filePath);
+          parsedData = await this.parseCSVBuffer((file as any).buffer);
         } else if (fileType === 'application/json') {
-          parsedData = this.parseJSON(filePath);
+          parsedData = this.parseJSONBuffer((file as any).buffer);
         } else {
-          parsedData = this.parseExcel(filePath);
+          parsedData = this.parseExcelBuffer((file as any).buffer);
         }
 
         const structure =
@@ -98,7 +113,6 @@ export class FileUploadController {
             structureId,
           );
 
-        // Log audit
         await this.fileUploadService.logAudit(
           'CREATE',
           'Structure',
@@ -112,22 +126,27 @@ export class FileUploadController {
           structureId: structure.id,
         };
       } else if (imageAndVideoTypes.includes(fileType)) {
-        await this.fileUploadService.createAttachment(userId, file, fileUrl);
+        const attachment = await this.fileUploadService.createAttachment(
+          userId,
+          file,
+        );
         return {
           message: 'File uploaded successfully as an attachment.',
-          fileUrl,
+          fileUrl: attachment.fileUrl,
+          attachment,
         };
       } else {
-        await this.fileUploadService.createAttachment(userId, file, fileUrl);
+        const attachment = await this.fileUploadService.createAttachment(
+          userId,
+          file,
+        );
         return {
           message: 'File uploaded successfully as an attachment.',
-          fileUrl,
+          fileUrl: attachment.fileUrl,
+          attachment,
         };
       }
     } catch (error) {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
       throw error;
     }
   }
@@ -135,13 +154,8 @@ export class FileUploadController {
   @Post('upload-raw')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: 'public/',
-        filename: (req, file, callback) => {
-          const uniqueName = uuidv4() + extname(file.originalname);
-          callback(null, uniqueName);
-        },
-      }),
+      storage: memoryStorage(),
+      limits: { fileSize: 200 * 1024 * 1024 },
     }),
   )
   async uploadRaw(
@@ -156,53 +170,16 @@ export class FileUploadController {
       throw new BadRequestException('UserId is required.');
     }
 
-    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
-      (req.headers as any).host
-    }/api/public/${file.filename}`;
-    const filePath = join('public', file.filename);
-
     try {
-      const record = await this.fileUploadService.saveRawFile(
-        userId,
-        file,
-        fileUrl,
-      );
+      const record = await this.fileUploadService.saveRawFile(userId, file);
       return {
         message: 'File uploaded successfully.',
-        fileUrl,
-        filePath,
+        fileUrl: record.fileUrl,
         record,
       };
     } catch (error) {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
       throw error;
     }
-  }
-
-  private async parseCSV(filePath: string): Promise<any[]> {
-    return new Promise((resolve, reject) => {
-      const fileContent = fs.readFileSync(filePath, 'utf8');
-      Papa.parse(fileContent, {
-        header: true,
-        skipEmptyLines: true,
-        complete: (result) => resolve(result.data),
-        error: (error: any) => reject(error),
-      });
-    });
-  }
-
-  private parseExcel(filePath: string): any[] {
-    const workbook = XLSX.readFile(filePath);
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    return XLSX.utils.sheet_to_json(sheet);
-  }
-
-  private parseJSON(filePath: string): any[] {
-    const fileContent = fs.readFileSync(filePath, 'utf8');
-    return JSON.parse(fileContent);
   }
 
   @Get('user/:userId')
@@ -229,13 +206,8 @@ export class FileUploadController {
   @Post('upload-anonymous')
   @UseInterceptors(
     FileInterceptor('file', {
-      storage: diskStorage({
-        destination: 'public/',
-        filename: (req, file, callback) => {
-          const uniqueName = uuidv4() + extname(file.originalname);
-          callback(null, uniqueName);
-        },
-      }),
+      storage: memoryStorage(),
+      limits: { fileSize: 200 * 1024 * 1024 },
     }),
   )
   async uploadAnonymous(
@@ -246,26 +218,14 @@ export class FileUploadController {
       throw new BadRequestException('No file uploaded.');
     }
 
-    const fileUrl = `${this.configService.get('PROTOCOL', 'http')}://${
-      (req.headers as any).host
-    }/api/public/${file.filename}`;
-    const filePath = join('public', file.filename);
-
     try {
-      const record = await this.fileUploadService.uploadAnonymousFile(
-        file,
-        fileUrl,
-      );
+      const record = await this.fileUploadService.uploadAnonymousFile(file);
       return {
         message: 'Anonymous file uploaded successfully.',
-        fileUrl,
-        filePath,
+        fileUrl: record.fileUrl,
         record,
       };
     } catch (error) {
-      if (fs.existsSync(filePath)) {
-        fs.unlinkSync(filePath);
-      }
       throw error;
     }
   }
