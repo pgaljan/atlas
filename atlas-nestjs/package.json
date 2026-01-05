@@ -26,7 +26,7 @@
     "@nestjs/jwt": "^11.0.0",
     "@nestjs/mapped-types": "^2.0.6",
     "@nestjs/passport": "^11.0.5",
-    "@nestjs/platform-express": "^10.4.15",
+    "@nestjs/platform-express": "^11.0.13",
     "@nestjs/serve-static": "^4.0.2",
     "@prisma/client": "^6.0.1",
     "@types/adm-zip": "^0.5.7",
